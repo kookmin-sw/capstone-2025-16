@@ -45,9 +45,11 @@
 	<div class="h-full w-full px-2">
 		<div class="flex flex-col rounded-sm border-r border-t border-l border-zinc-200 bg-zinc-50">
 			{#each users as user}
-				<button class="w-full border-b border-zinc-200 px-2 py-2 text-left text-xs overflow-wrap">
-					남 (만 22) | {user} 
-				</button>
+				<a href="/{user}">
+					<button class="w-full border-b border-zinc-200 px-2 py-2 text-left text-xs overflow-wrap">
+						남 (만 22) | {user}
+					</button>
+				</a>
 			{/each}
 		</div>
 	</div>
