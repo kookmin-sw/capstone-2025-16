@@ -2,28 +2,13 @@
 	import { page } from '$app/stores';
 	import { onMount } from "svelte";
 
-	let { data } = $props();
+	export let data;
 	const tables = ['Person', 'Condition', 'Drug'];
 	let clickIndex = 0;
 
 	function setIndex(index) {
 		clickIndex = index;
 	}
-
-	let layout = "horizontal"; // 'horizontal' (좌우) 또는 'vertical' (위아래)
-	let panelSize = 50; // 패널 크기 조절 (비율 %)
-
-	function toggleLayout() {
-		layout = layout === "horizontal" ? "vertical" : "horizontal";
-	}
-
-	function handleResize(event) {
-		if (layout === "horizontal") {
-			panelSize = Math.min(80, Math.max(20, (event.clientX / window.innerWidth) * 100));
-		} else {
-			panelSize = Math.min(80, Math.max(20, (event.clientY / window.innerHeight) * 100));
-		}
-}
 </script>
 
 <div class="flex h-full w-full flex-col items-center border border-black">
