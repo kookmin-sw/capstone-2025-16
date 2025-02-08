@@ -1,10 +1,9 @@
 <script>
 	import '../app.css';
 	import { page } from '$app/state';
-	import {data} from './data';
 
-	let { children } = $props();
-
+	let { children, data } = $props();
+	
 	let pathname = $state(page.url.pathname);
 
 	let users = [12312321, 12523432, 25235235, 23523523, 325235, 32523523523532, 523523523, 523523];
@@ -45,7 +44,7 @@
 	</div>
 	<div class="h-full w-full px-2">
 		<div class="flex flex-col rounded-sm border-r border-t border-l border-zinc-200 bg-zinc-50">
-			{#each data as user}
+			{#each data.userData as user}
 				<a href="/{user.id}">
 					<button class="w-full border-b border-zinc-200 px-2 py-2 text-left text-xs overflow-wrap">
 						{user.gender} (만 {user.age}) | {user.id}
