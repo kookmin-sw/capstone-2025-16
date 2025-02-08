@@ -43,7 +43,7 @@
 			</svg> -->
 	</div>
 	<div class="h-full w-full px-2">
-		<div class="flex flex-col rounded-sm border-r border-t border-l border-zinc-200 bg-zinc-50">
+		<div class="flex flex-col rounded-sm border-r border-t border-l border-zinc-200 bg-zinc-50 max-h-full overflow-y-auto">
 			{#each data.userData as user}
 				<a href="/{user.id}">
 					<button class="w-full border-b border-zinc-200 px-2 py-2 text-left text-xs overflow-wrap">
