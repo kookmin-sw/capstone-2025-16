@@ -56,7 +56,7 @@
   />
   <button class="search-btn" on:click={filterData}>🔍</button>
   <button class="my-btn">MY</button>
-  <button class="new-btn">New</button>
+  <a href="/new" class="new-btn">New</a>
 </div>
 
 <table class="data-table">
