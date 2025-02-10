@@ -106,49 +106,238 @@
 			<p class="mb-4 ml-2">
 				{#each added_events as event}
 					<p>{event}</p>
+					<div class="flex flex-col gap-1 text-lg text-zinc-700 *:before:content-['-']">
+						<p>날짜 조정: 시작일 2023-01-01 + 30일, 종료일 2023-12-31 + 60일</p>
+						<p>환자의 병원 기록상 가장 처음으로</p>
+						<p>기간 시작: 2023-06-15</p>
+						<p>기간 종료: 2023-12-31</p>
+						<p>발생(occurrence) 횟수: 5</p>
+						<p>기간(era length): 90일</p>
+						<p>기간(era)의 시작시 나이: 35</p>
+						<p>기간(era)이 종료시 나이: 45</p>
+						<p>성별: 남성</p>
+					</div>
 				{/each}
 			</p>
 		</div>
 		<div
-			class="flex h-full w-[400px] flex-col items-center overflow-y-scroll border-l border-zinc-200 py-3"
+			class="flex h-full w-[700px] flex-col items-center overflow-y-scroll border-l border-zinc-200 py-3"
 		>
-			<p class="text-lg font-bold">진입 이벤트 목록</p>
-			<p class="mb-3 text-sm text-zinc-700">추가할 이벤트를 클릭하여 주세요.</p>
-			<div class="flex w-full flex-col gap-4 p-4">
-				{#each events as event}
+			{#if expandedEvent === null}
+				<p class="text-lg font-bold">진입 이벤트 목록</p>
+				<p class="mb-3 text-sm text-zinc-700">추가할 이벤트를 클릭하여 주세요.</p>
+				<div class="flex w-full flex-col gap-4 p-4">
+					{#each events as event}
+						<button
+							on:click={() => (expandedEvent = expandedEvent === event ? null : event)}
+							class="flex w-full flex-col justify-between rounded-md border border-zinc-200 p-2 text-left text-sm text-zinc-700 shadow-sm transition-all duration-300 ease-in-out hover:bg-zinc-100"
+						>
+							<div class="flex w-full justify-between">
+								<p class="text-sm text-zinc-700">+ {event} Event</p>
+								<p class="groups relative text-xs font-bold text-zinc-500">
+									<span
+										class="absolute bottom-full left-1/2 hidden -translate-x-full whitespace-nowrap rounded bg-zinc-400 bg-opacity-20 px-2 py-1 text-xs font-normal text-zinc-800 backdrop-blur-sm group-hover:block"
+										>{descriptions[event]}</span
+									>
+									?
+								</p>
+							</div>
+						</button>
+					{/each}
+				</div>
+			{:else}
+				<div class="flex w-full items-center justify-between px-2 text-lg font-bold text-zinc-800">
 					<button
-						on:click={() => (expandedEvent = expandedEvent === event ? null : event)}
-						class="flex w-full flex-col justify-between rounded-md border border-zinc-200 p-2 text-left text-sm text-zinc-700 shadow-sm transition-all duration-300 ease-in-out hover:bg-zinc-100"
+						on:click={() => {
+							expandedEvent = null;
+						}}
+						class="text-xl text-zinc-500 hover:text-zinc-700"
 					>
-						<div class="flex w-full justify-between">
-							<p class="text-sm text-zinc-700">+ {event} Event</p>
-							<p class="groups relative text-xs font-bold text-zinc-500">
-								<span
-									class="absolute bottom-full left-1/2 hidden -translate-x-full whitespace-nowrap rounded bg-zinc-400 bg-opacity-20 px-2 py-1 text-xs font-normal text-zinc-800 backdrop-blur-sm group-hover:block"
-									>{descriptions[event]}</span
-								>
-								?
-							</p>
-						</div>
-						{#if expandedEvent === event}
-							<p class="mt-2 text-xs text-zinc-600 z-10" on:click={(e) => e.stopPropagation()}>
-								with continuous observation of at least <input
-									type="number"
-									class="w-16 rounded-md border border-zinc-200 px-2 text-sm"
-								/>
-								days before and
-								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-								days after event index date Limit initial events to:
-								<select class=" rounded-md border border-zinc-200 px-2 text-sm">
-									<option value="earliest">all event</option>
-									<option value="earliest">earliest event</option>
-									<option value="latest">latest event</option>
-								</select> per person.
-							</p>
-						{/if}
+						←
 					</button>
-				{/each}
-			</div>
+					<p class="text-2xl font-bold">{expandedEvent} Event 추가</p>
+					<div />
+				</div>
+
+				<div class="text-normal mt-2 text-zinc-700" on:click={(e) => e.stopPropagation()}>
+					<p>with continuous observation of at least</p>
+					<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
+					<p>days before and</p>
+					<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
+					<p>days after event index date Limit initial events to:</p>
+					<select class=" rounded-md border border-zinc-200 px-2 text-sm">
+						<option value="earliest">all event</option>
+						<option value="earliest">earliest event</option>
+						<option value="latest">latest event</option>
+					</select>
+					<p>per person.</p>
+
+					<p class="mt-4 text-lg font-bold">Addtional attributes</p>
+					<div class="flex flex-col gap-4 text-sm">
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>날짜 조정:</span>
+								<div class="flex items-center gap-2">
+									<span>시작:</span>
+									<select class="rounded-md border border-zinc-200 px-2 text-sm">
+										<option value="START_DATE">시작일</option>
+										<option value="END_DATE">종료일</option>
+									</select>
+									<span>+</span>
+									<input
+										type="number"
+										class="w-16 rounded-md border border-zinc-200 px-2 text-sm"
+									/>
+									<span>일</span>
+								</div>
+								<div class="flex items-center gap-2">
+									<span>종료:</span>
+									<select class="rounded-md border border-zinc-200 px-2 text-sm">
+										<option value="START_DATE">시작일</option>
+										<option value="END_DATE">종료일</option>
+									</select>
+									<span>+</span>
+									<input
+										type="number"
+										class="w-16 rounded-md border border-zinc-200 px-2 text-sm"
+									/>
+									<span>일</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<span>환자의 병원 기록상 가장 처음으로</span>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>기간 시작:</span>
+								<select class="rounded-md border border-zinc-200 px-2 text-sm">
+									<option value="lt">전에</option>
+									<option value="lte">이전에</option>
+									<option value="eq">~에</option>
+									<option value="gt">다음</option>
+									<option value="gte">이후</option>
+									<option value="bt">사이에</option>
+									<option value="!bt">사이에 없는</option>
+								</select>
+								<input type="date" class="rounded-md border border-zinc-200 px-2 text-sm" />
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>기간 종료:</span>
+								<select class="rounded-md border border-zinc-200 px-2 text-sm">
+									<option value="lt">전에</option>
+									<option value="lte">이전에</option>
+									<option value="eq">~에</option>
+									<option value="gt">다음</option>
+									<option value="gte">이후</option>
+									<option value="bt">사이에</option>
+									<option value="!bt">사이에 없는</option>
+								</select>
+								<input type="date" class="rounded-md border border-zinc-200 px-2 text-sm" />
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>발생(occurrence) 횟수</span>
+								<select class="rounded-md border border-zinc-200 px-2 text-sm">
+									<option value="lt">더 작은</option>
+									<option value="lte">작거나 같음</option>
+									<option value="eq">같음</option>
+									<option value="gt">더 큰</option>
+									<option value="gte">크거나 같음</option>
+									<option value="bt">사이에</option>
+									<option value="!bt">사이에 없는</option>
+								</select>
+								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>기간(era length)</span>
+								<select class="rounded-md border border-zinc-200 px-2 text-sm">
+									<option value="lt">더 작은</option>
+									<option value="lte">작거나 같음</option>
+									<option value="eq">같음</option>
+									<option value="gt">더 큰</option>
+									<option value="gte">크거나 같음</option>
+									<option value="bt">사이에</option>
+									<option value="!bt">사이에 없는</option>
+								</select>
+								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
+								<span>일</span>
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>기간(era)의 시작시 나이</span>
+								<select class="rounded-md border border-zinc-200 px-2 text-sm">
+									<option value="lt">더 작은</option>
+									<option value="lte">작거나 같음</option>
+									<option value="eq">같음</option>
+									<option value="gt">더 큰</option>
+									<option value="gte">크거나 같음</option>
+									<option value="bt">사이에</option>
+									<option value="!bt">사이에 없는</option>
+								</select>
+								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>기간(era)이 종료시 나이</span>
+								<select class="rounded-md border border-zinc-200 px-2 text-sm">
+									<option value="lt">더 작은</option>
+									<option value="lte">작거나 같음</option>
+									<option value="eq">같음</option>
+									<option value="gt">더 큰</option>
+									<option value="gte">크거나 같음</option>
+									<option value="bt">사이에</option>
+									<option value="!bt">사이에 없는</option>
+								</select>
+								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
+							<div class="flex items-center gap-2">
+								<span>성별:</span>
+								<button class="rounded-md border border-zinc-200 px-2 py-1 text-sm">추가</button>
+								<button class="rounded-md border border-zinc-200 px-2 py-1 text-sm">불러오기</button
+								>
+							</div>
+						</div>
+					</div>
+					<div class="flex w-full justify-center">
+						<button
+							on:click={() => {
+								added_events.push(expandedEvent);
+								expandedEvent = null;
+							}}
+							class="mt-4 rounded-md border border-zinc-200 px-4 py-2 text-sm text-zinc-700"
+						>
+							추가
+						</button>
+					</div>
+				</div>
+			{/if}
 		</div>
 	</div>
 </div>

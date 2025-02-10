@@ -30,7 +30,7 @@
 	</div>
 </header>
 
-{#if !(pathname === '/new')}
+{#if !(pathname.startsWith('/new'))}
 	<div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
 		{#if !(pathname === '/cohort')}
 			<div class=" flex w-full px-2 py-2">
