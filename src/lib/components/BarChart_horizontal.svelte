@@ -61,6 +61,7 @@
       position: relative;
       width: 100%;
       max-width: 700px;
+      padding-bottom: 30px;
     }
   
     rect {
