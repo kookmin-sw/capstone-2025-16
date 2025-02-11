@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import * as d3 from "d3";
+  import { fade } from "svelte/transition";
 
   export let data = [];
   let width = 600;
@@ -9,12 +10,12 @@
 
   // X축과 Y축 설정
   let xScale = d3.scaleBand()
-    .domain(data.map(d => d.letter))
+    .domain(data.map(d => d.label))
     .range([margin.left, width - margin.right])
     .padding(0.1);
 
   let yScale = d3.scaleLinear()
-    .domain([0, d3.max(data, d => d.frequency)])
+    .domain([0, d3.max(data, d => d.value)])
     .nice()
     .range([height - margin.bottom, margin.top]);
 
@@ -32,13 +33,20 @@
   <g fill="steelblue">
     {#each data as d}
       <rect
-        x={xScale(d.letter)}
-        y={yScale(d.frequency)}
+        x={xScale(d.label)}
+        y={yScale(d.value)}
         width={xScale.bandwidth()}
-        height={height - margin.bottom - yScale(d.frequency)}
+        height={height - margin.bottom - yScale(d.value)}
+        tabindex="0" 
+        role="button"
         rx="5" ry="5"
         on:click={(event) => handleClick(d, event)}
-        transition:all={{ duration: 300 }}
+        on:keydown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            console.log(d.label + " activated via keyboard");
+          }
+        }}
+        transition:fade={{ duration: 300 }}
       />
     {/each}
   </g>
@@ -47,13 +55,13 @@
   <g transform="translate(0,{height - margin.bottom})">
     {#each data as d}
       <text
-        x={xScale(d.letter) + xScale.bandwidth() / 2}
+        x={xScale(d.label) + xScale.bandwidth() / 2}
         y="20"
         text-anchor="middle"
         font-size="14"
         fill="black"
       >
-        {d.letter}
+        {d.label}
       </text>
     {/each}
   </g>
@@ -70,15 +78,15 @@
   <!-- 선택한 막대 위에 숫자 표시 -->
   {#if selectedBar}
     <text
-      x={xScale(selectedBar.letter) + xScale.bandwidth() / 2}
-      y={yScale(selectedBar.frequency) - 10}
+      x={xScale(selectedBar.label) + xScale.bandwidth() / 2}
+      y={yScale(selectedBar.value) - 10}
       text-anchor="middle"
       font-size="14"
       font-weight="bold"
       fill="red"
-      transition:all={{ duration: 200 }}
+      transition:fade={{ duration: 200 }}
     >
-      {selectedBar.frequency}
+      {selectedBar.value}
     </text>
   {/if}
 </svg>
