@@ -1,6 +1,8 @@
 <script>
 	import '../app.css';
 	import { page } from '$app/state';
+	import {data} from './data';
+	import { goto } from '$app/navigation';
 
 	let { children, data } = $props();
 	
@@ -8,6 +10,34 @@
 
 	let users = [12312321, 12523432, 25235235, 23523523, 325235, 32523523523532, 523523523, 523523];
 </script>
+
+
+<style>
+	.button {
+		display: inline-block;
+		padding: 7px 20px;
+		margin: 10px;
+		font-size: 13px;
+		font-weight: bold;
+		color: black;
+		background-color: white;
+		border: 2px solid grey;
+		border-color: black;
+		border-radius: 8px;
+		cursor: pointer;
+		text-align: center;
+		transition: background-color 0.3s ease;
+	}
+	.button-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.button:hover {
+		background-color: lightgrey;
+	}
+</style>
 
 <header class="fixed left-0 top-0 flex h-10 w-full border-b border-zinc-200 bg-zinc-100 z-10" >
 	<p
@@ -31,6 +61,13 @@
 	</div>
 </header>
 <div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
+	<div>
+		<div class="button-container">
+		<button class="button" onclick={() => goto('/chart')}>
+			Analysis Report
+		</button>
+		</div>
+	</div>
 	<div class=" flex w-full px-2 py-2">
 		<input
 			type="text"
