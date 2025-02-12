@@ -103,22 +103,17 @@
 		<div class="flex w-full flex-col overflow-y-scroll p-8 text-lg">
 			<p class="mb-4 text-2xl font-bold">코호트 진입</p>
 			<p class="mb-4 ml-2">- 진단발생: OMOPUveitis</p>
+			<p class="flex">with continuous observation of at least <input type="number" class="mx-2 w-16 rounded-md border border-zinc-200 px-2 text-sm" /> days before and <input type="number" class="ml-2 w-16 rounded-md border border-zinc-200 px-2 text-sm" /></p>
+			<p class="flex">days after event index date Limit initial events to: 
+			<select class="mx-2 rounded-md border border-zinc-200 px-2 text-sm">
+				<option value="earliest">all event</option>
+				<option value="earliest">earliest event</option>
+				<option value="latest">latest event</option>
+			</select> per person.</p>
 			{#each added_events as event}
 				<div class="mb-4 ml-2 rounded-lg border border-zinc-200 p-4">
-					<p>{event}</p>
+					<p class="text-lg font-bold">{event}</p>
 					<div class="text-normal mt-2 text-zinc-700" on:click={(e) => e.stopPropagation()}>
-						<p>with continuous observation of at least</p>
-						<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-						<p>days before and</p>
-						<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-						<p>days after event index date Limit initial events to:</p>
-						<select class=" rounded-md border border-zinc-200 px-2 text-sm">
-							<option value="earliest">all event</option>
-							<option value="earliest">earliest event</option>
-							<option value="latest">latest event</option>
-						</select>
-						<p>per person.</p>
-
 						<p class="mt-4 text-lg font-bold">Addtional attributes</p>
 						<div class="flex flex-col gap-4 text-sm">
 							<div class="flex items-center gap-2">

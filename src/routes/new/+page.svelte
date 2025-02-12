@@ -44,6 +44,7 @@
 
 	const added_events = $state([]);
 	let expandedEvent = $state(null);
+	let editedEvent = $state(null);
 </script>
 
 <header class="fixed left-0 top-0 z-10 flex h-10 w-full border-b border-zinc-200 bg-zinc-100">
@@ -67,7 +68,7 @@
 		>
 	</div>
 </header>
-<div
+<!-- <div
 	class="fixed left-0 top-10 flex h-full w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
 >
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
@@ -97,28 +98,113 @@
 			- 약물 기간<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
 		</p>
 	</div>
-</div>
+</div> -->
 <div class="fixed left-[200px] top-10 h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
 	<div class="flex h-full w-full">
 		<div class="flex w-full flex-col overflow-y-scroll p-8 text-lg">
 			<p class="mb-4 text-2xl font-bold">코호트 진입</p>
 			<p class="mb-4 ml-2">- 진단발생: OMOPUveitis</p>
-			<p class="mb-4 ml-2">
-				{#each added_events as event}
-					<p>{event}</p>
-					<div class="flex flex-col gap-1 text-lg text-zinc-700 *:before:content-['-']">
-						<p>날짜 조정: 시작일 2023-01-01 + 30일, 종료일 2023-12-31 + 60일</p>
-						<p>환자의 병원 기록상 가장 처음으로</p>
-						<p>기간 시작: 2023-06-15</p>
-						<p>기간 종료: 2023-12-31</p>
-						<p>발생(occurrence) 횟수: 5</p>
-						<p>기간(era length): 90일</p>
-						<p>기간(era)의 시작시 나이: 35</p>
-						<p>기간(era)이 종료시 나이: 45</p>
-						<p>성별: 남성</p>
-					</div>
-				{/each}
+			<p class="flex">
+				with continuous observation of at least <input
+					type="number"
+					class="mx-2 w-16 rounded-md border border-zinc-200 px-2 text-sm"
+				/>
+				days before and
+				<input type="number" class="ml-2 w-16 rounded-md border border-zinc-200 px-2 text-sm" />
 			</p>
+			<p class="flex">
+				days after event index date Limit initial events to:
+				<select class="mx-2 rounded-md border border-zinc-200 px-2 text-sm">
+					<option value="earliest">all event</option>
+					<option value="earliest">earliest event</option>
+					<option value="latest">latest event</option>
+				</select> per person.
+			</p>
+			{#each added_events as event}
+				<div class="mb-4 ml-2 flex flex-col">
+					<p class="mb-4 text-lg font-bold">{event}</p>
+					<div
+						class="ml-2 flex flex-col justify-start gap-1 text-sm text-zinc-700 *:before:content-['o']"
+					>
+						<p class="flex">
+							날짜 조정: <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>시작일 +30일</button
+							>,
+							<button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2">종료일 +60일</button>
+						</p>
+						<p>
+							<button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>환자의 병원 기록상 가장 처음으로</button
+							>
+						</p>
+						<p>
+							기간 시작: <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>2023-06-15 이전</button
+							>
+						</p>
+						<p>
+							기간 종료: <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>2023-12-31 이후</button
+							>
+						</p>
+						<p>
+							발생(occurrence) 횟수: <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>5회 이상</button
+							>
+						</p>
+						<p>
+							기간(era length): <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>90일 미만</button
+							>
+						</p>
+						<p>
+							기간(era)의 시작시 나이: <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>35 이상</button
+							>
+						</p>
+						<p>
+							기간(era)이 종료시 나이: <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>45 이하</button
+							>
+						</p>
+						<p>
+							성별: <button on:click={() => {
+								editedEvent = event;
+								expandedEvent = event;
+							}} class="underline decoration-zinc-800 underline-offset-2"
+								>남성</button
+							>
+						</p>
+					</div>
+				</div>
+			{/each}
 		</div>
 		<div
 			class="flex h-full w-[700px] flex-col items-center overflow-y-scroll border-l border-zinc-200 py-3"
@@ -150,28 +236,23 @@
 					<button
 						on:click={() => {
 							expandedEvent = null;
+							editedEvent = null;
 						}}
 						class="text-xl text-zinc-500 hover:text-zinc-700"
 					>
 						←
 					</button>
-					<p class="text-2xl font-bold">{expandedEvent} Event 추가</p>
+					<p class="text-2xl font-bold">
+						{expandedEvent} Event {#if editedEvent === expandedEvent}
+							수정
+						{:else}
+							추가
+						{/if}
+					</p>
 					<div />
 				</div>
 
 				<div class="text-normal mt-2 text-zinc-700" on:click={(e) => e.stopPropagation()}>
-					<p>with continuous observation of at least</p>
-					<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-					<p>days before and</p>
-					<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-					<p>days after event index date Limit initial events to:</p>
-					<select class=" rounded-md border border-zinc-200 px-2 text-sm">
-						<option value="earliest">all event</option>
-						<option value="earliest">earliest event</option>
-						<option value="latest">latest event</option>
-					</select>
-					<p>per person.</p>
-
 					<p class="mt-4 text-lg font-bold">Addtional attributes</p>
 					<div class="flex flex-col gap-4 text-sm">
 						<div class="flex items-center gap-2">
@@ -328,12 +409,21 @@
 					<div class="flex w-full justify-center">
 						<button
 							on:click={() => {
-								added_events.push(expandedEvent);
+								if (editedEvent === expandedEvent) {
+									editedEvent = null;
+									expandedEvent = null;
+								} else {
+									added_events.push(expandedEvent);
+								}
 								expandedEvent = null;
 							}}
 							class="mt-4 rounded-md border border-zinc-200 px-4 py-2 text-sm text-zinc-700"
 						>
-							추가
+							{#if editedEvent === expandedEvent}
+								수정
+							{:else}
+								추가
+							{/if}
 						</button>
 					</div>
 				</div>
