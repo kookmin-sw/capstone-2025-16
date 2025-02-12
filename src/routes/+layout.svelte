@@ -1,7 +1,6 @@
 <script>
 	import '../app.css';
 	import { page } from '$app/state';
-	import {data} from './data';
 	import { goto } from '$app/navigation';
 
 	let { children, data } = $props();
