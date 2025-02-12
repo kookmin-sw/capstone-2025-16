@@ -33,7 +33,7 @@
 	.card-body {
 		flex-grow: 1;
 		display: flex;
-		justify-content: center;
+		justify-content: flex-start;
 		align-items: center;
 		background-color: white;
 		padding: 10px;
