@@ -1,5 +1,6 @@
 <script>
     import { onMount } from "svelte";
+	import {tooltip} from '$lib/components/tootip.js';
 
     export let data;
     const tables = ['Person', 'Condition', 'Drug'];
@@ -118,13 +119,26 @@
                         {#each data.userCdms as user}
 							{#if viewMode === "year" && user.date.startsWith(date)}
 							<div class="dot" 
+								name="{user.name}"
+								gender="{user.gender}"
+								age="{user.age}"
+								date="{user.date}"
+								domain="{user.domain}"
+								use:tooltip
 								style="left: calc(50% + {getYearProgress(user.date) * 40}px); top: {domains_heightY[user.domain]}; background-color: {domains_colors[user.domain]};">
 							</div>
 							{/if}
 
                             {#if viewMode === "month" && user.date.startsWith(date.slice(0, 7))}
                                 <div class="dot" 
-                                    style="left: calc(50% + {getMonthProgress(user.date) * 50}px); top: {domains_heightY[user.domain]}; background-color: {domains_colors[user.domain]};">
+                                    style="left: calc(50% + {getMonthProgress(user.date) * 50}px); top: {domains_heightY[user.domain]}; background-color: {domains_colors[user.domain]};"
+									name="{user.name}"
+									gender="{user.gender}"
+									age="{user.age}"
+									date="{user.date}"
+									domain="{user.domain}"
+									use:tooltip
+									>
                                 </div>
                             {/if}
                         {/each}
