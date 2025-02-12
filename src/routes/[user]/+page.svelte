@@ -3,7 +3,27 @@
 
     export let data;
     const tables = ['Person', 'Condition', 'Drug'];
-    const domains = ["conditions", "conditioneras", "devices", "drugs", "measurements", "observations", "procedures", "visits"];
+    const domains = ["Condition", "ConditionEra", "Device", "Drug", "Measurement", "Observation", "Procedure", "Visit"];
+	const domains_heightY = {
+		"Condition" : "-138px",
+		"ConditionEra" : "-120px",
+		"Device" : "-101px",
+		"Drug" : "-83px",
+		"Measurement" : "-65px",
+		"Observation" : "-47px",
+		"Procedure" : "-28px",
+		"Visit" : "-10px",
+	}
+	const domains_colors = {
+        "Condition": "#FF0000", // 빨강
+        "ConditionEra": "#FF7F00", // 주황
+        "Device": "#FFFF00", // 노랑
+        "Drug": "#00FF00", // 초록
+        "Measurement": "#0000FF", // 파랑
+        "Observation": "#4B0082", // 남색
+        "Procedure": "#9400D3", // 보라
+        "Visit": "#8B4513" // 갈색
+    };
 
     // ✅ 보기 모드 상태 (연도별 / 월별)
     let viewMode = "year"; // 기본값: 연도별 보기 (year)
@@ -31,7 +51,7 @@
         let tempDate = new Date(startDate);
         if (viewMode === "year") {
 			tempDate.setFullYear(tempDate.getFullYear()-1);
-            while (tempDate.getFullYear() <= endDate.getFullYear()) {
+            while (tempDate.getFullYear() <= endDate.getFullYear()+1) {
                 dates.push(tempDate.getFullYear().toString()); // YYYY 형식
                 tempDate.setFullYear(tempDate.getFullYear() + 1);
             }
@@ -82,21 +102,29 @@
 			</button>
 		</div>
         <div id="top-box" class="relative w-[90%] h-[70%] flex border border-black overflow-x-scroll justify-center">
+			<!-- ✅ CDM 도메인 별로 행을 나누는 부분 -->
+			<div class="absolute top-0 left-0 w-full h-[85%] grid grid-rows-8 border-b border-black">
+				{#each domains as domain}
+					<div class="border-b border-gray-500 text-center uppercase text-xs text-gray-500/50">
+						{domain}
+					</div>
+				{/each}
+			</div>
             <!-- ✅ X축 날짜 라벨 (연도별 / 월별 토글 적용) -->
-            <div class="flex gap-2 self-end">
+            <div class="flex gap-2 self-end h-[15%]">
                 {#each dates as date, i}
                     <div class="date-container">
                         <!-- ✅ 연도별 및 월별 점(●) 표시 -->
                         {#each data.userCdms as user}
 							{#if viewMode === "year" && user.date.startsWith(date)}
 							<div class="dot" 
-								style="left: calc(50% + {getYearProgress(user.date) * 50}px); top: -20px;">
+								style="left: calc(50% + {getYearProgress(user.date) * 40}px); top: {domains_heightY[user.domain]}; background-color: {domains_colors[user.domain]};">
 							</div>
 							{/if}
 
                             {#if viewMode === "month" && user.date.startsWith(date.slice(0, 7))}
                                 <div class="dot" 
-                                    style="left: calc(50% + {getMonthProgress(user.date) * 50}px); top: -20px;">
+                                    style="left: calc(50% + {getMonthProgress(user.date) * 50}px); top: {domains_heightY[user.domain]}; background-color: {domains_colors[user.domain]};">
                                 </div>
                             {/if}
                         {/each}
