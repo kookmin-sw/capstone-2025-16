@@ -47,7 +47,7 @@
 		width: 100%; /* 부모 컨테이너가 화면 전체 너비 사용 */
         max-width: 1000px;
 		padding-top: 40px;
-		padding-bottom: 40px;
+		padding-bottom: 70px;
 		margin: 0 auto; /* 중앙 정렬 */
         
 	}
@@ -83,7 +83,9 @@
 <div class="title">Cohort Analysis Report</div>
 <!-- 설명 -->
 <div class="description">
-    The charts below visualize the results of cohort analysis data. Each item is generated based on the data, providing various statistics depending on the chart type.</div>
+    This cohort was selected to evaluate the effectiveness of ESA (Erythropoiesis-Stimulating Agent) therapy in patients with anemia due to renal failure.
+    The charts below visualize the results of cohort analysis data. Each item is generated based on the data, providing various statistics depending on the chart type.
+</div>
 
     <div class="chart-row">
         <!-- 도넛 차트를 카드로 표시 -->
@@ -103,7 +105,7 @@
 
     <!-- 세로형 차트를 카드로 표시 -->
     <ChartCard
-        title="Distribution by patient age">
+        title="Distribution by First Occurrence Age">
         {#if patientAgeData.length > 0}
             <BarChartVertical data={patientAgeData} />
         {:else}
