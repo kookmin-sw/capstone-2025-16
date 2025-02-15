@@ -67,13 +67,28 @@
 	}
 
     .chart-row {
-	display: flex;
-	justify-content: center; /* 중앙 정렬 */
-	align-items: stretch;
-	gap: 20px; /* 차트 사이 여백 */
-    margin: 0 auto;
-	width: 1000px;
-	flex-wrap: wrap; /* 화면이 좁아지면 아래로 떨어지도록 설정 */
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        gap: 20px;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 1000px;
+        flex-wrap: wrap;
+    }
+
+    /* 768px 이하일 때 적용되는 스타일 */
+    @media (max-width: 768px) {
+        .chart-row {
+            flex-direction: column; /* 세로 방향으로 변경 */
+            align-items: center;
+            width: 100%;
+        }
+
+        .chart-row :global(> *) {
+            width: 100% !important;
+            max-width: 500px;
+        }
     }
 
 </style>
