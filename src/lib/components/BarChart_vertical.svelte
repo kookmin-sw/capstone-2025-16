@@ -7,6 +7,7 @@
   let width = 600;
   let height = 400;
   let margin = { top: 20, right: 30, bottom: 40, left: 40 };
+  let hoveredBar = null;
 
   // X축과 Y축 설정
   let xScale = d3.scaleBand()
@@ -18,36 +19,38 @@
     .domain([0, d3.max(data, d => d.value)])
     .nice()
     .range([height - margin.bottom, margin.top]);
-
-  // 클릭된 막대 저장 (확대 효과)
-  let selectedBar = null;
-
-  function handleClick(d, event) {
-    // 현재 선택한 막대를 확인하고 업데이트
-    selectedBar = selectedBar === d ? null : d;
-  }
 </script>
 
 <svg width="100%" height="100%" viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet">
   <!-- 막대 그래프 -->
   <g fill="steelblue">
-    {#each data as d}
+    {#each data as d, i}
       <rect
         x={xScale(d.label)}
         y={yScale(d.value)}
         width={xScale.bandwidth()}
         height={height - margin.bottom - yScale(d.value)}
-        tabindex="0" 
-        role="button"
+        class="bar"
+        role="presentation"
         rx="5" ry="5"
-        on:click={(event) => handleClick(d, event)}
-        on:keydown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            console.log(d.label + " activated via keyboard");
-          }
-        }}
-        transition:fade={{ duration: 300 }}
+        on:mouseenter={() => hoveredBar = d}
+        on:mouseleave={() => hoveredBar = null}
+        style="animation: slideUp {300 + i * 100}ms cubic-bezier(0.4, 0, 0.2, 1) forwards;"
       />
+      
+      <!-- 호버 시 값 표시 -->
+      {#if hoveredBar === d}
+        <text
+          x={xScale(d.label) + xScale.bandwidth() / 2}
+          y={yScale(d.value) - 10}
+          text-anchor="middle"
+          class="value-text"
+          in:fade={{ duration: 200 }}
+          out:fade={{ duration: 150 }}
+        >
+          {d.value}
+        </text>
+      {/if}
     {/each}
   </g>
 
@@ -58,8 +61,7 @@
         x={xScale(d.label) + xScale.bandwidth() / 2}
         y="20"
         text-anchor="middle"
-        font-size="14"
-        fill="black"
+        class="axis-label {hoveredBar === d ? 'bold' : ''}"
       >
         {d.label}
       </text>
@@ -69,37 +71,65 @@
   <!-- Y축 -->
   <g transform="translate({margin.left},0)">
     {#each yScale.ticks(5) as tick}
-      <text x="-10" y={yScale(tick)} text-anchor="end" alignment-baseline="middle">
+      <text 
+        x="-10" 
+        y={yScale(tick)} 
+        text-anchor="end" 
+        alignment-baseline="middle"
+        class="axis-label"
+      >
         {tick}
       </text>
     {/each}
   </g>
-
-  <!-- 선택한 막대 위에 숫자 표시 -->
-  {#if selectedBar}
-    <text
-      x={xScale(selectedBar.label) + xScale.bandwidth() / 2}
-      y={yScale(selectedBar.value) - 10}
-      text-anchor="middle"
-      font-size="14"
-      font-weight="bold"
-      fill="red"
-      transition:fade={{ duration: 200 }}
-    >
-      {selectedBar.value}
-    </text>
-  {/if}
 </svg>
 
 <style>
-  rect {
-    transition: transform 0.3s ease, fill 0.3s ease;
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  rect:hover {
-    transform: scale(1.008);
-    fill: orange;
+  .bar {
+    fill: #2980b9;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
   }
 
-  
+  .bar:hover {
+    fill: #3498db;
+    filter: brightness(1.1);
+    cursor: pointer;
+    transform: scale(1.005);
+  }
+
+  .value-text {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #333;
+    filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.1));
+  }
+
+  .axis-label {
+    font-size: 12px;
+    fill: #666;
+    transition: all 0.3s ease;
+  }
+
+  .axis-label.bold {
+    font-size: 13px;
+    font-weight: 600;
+    fill: #333;
+  }
+
+  .axis-label:hover {
+    fill: #333;
+    font-weight: 500;
+  }
 </style>
