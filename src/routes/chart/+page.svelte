@@ -10,30 +10,32 @@
 	let patientAgeData = [];
     let genderData = {};
     let deathRatioData = {};
+
+    // API에서 데이터를 로드하는 함수
+    async function loadData() {
+        try {
+            const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
+                fetch("/api/chartdata/topTenDrug"),
+                fetch("/api/chartdata/patientAge"),
+                fetch("/api/chartdata/gender"),
+                fetch("/api/chartdata/deathRatio")
+            ]);
+
+            if (!topTenDrugRes.ok || !patientAgeRes.ok || !genderRes.ok || !deathRatioRes.ok) {
+                throw new Error("데이터 로드 실패");
+            }
+
+            topTenDrugData = await topTenDrugRes.json();
+            patientAgeData = await patientAgeRes.json();
+            genderData = await genderRes.json();
+            deathRatioData = await deathRatioRes.json();
+        } catch (error) {
+            console.error("❌ 데이터 로딩 에러:", error);
+        }
+    }
     
 	// 데이터 불러오기
-    onMount(async () => {
-    try {
-        const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
-            fetch("/topTenDrug-testdata.json"),
-            fetch("/patientAge-testdata.json"),
-            fetch("/gender-testdata.json"),
-            fetch("/deathRatio-testdata.json")
-        ]);
-
-        if (!topTenDrugRes.ok || !patientAgeRes.ok || !genderRes.ok || !deathRatioRes.ok) {
-            throw new Error("One or more fetch requests failed");
-        }
-
-        topTenDrugData = await topTenDrugRes.json();
-        patientAgeData = await patientAgeRes.json();
-        genderData = await genderRes.json();
-        deathRatioData = await deathRatioRes.json();
-    } catch (error) {
-        console.error("❌ Error loading data:", error);
-    }
-    });
-
+    onMount(loadData);
 
 </script>
 
