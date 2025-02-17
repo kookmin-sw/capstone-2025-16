@@ -45,6 +45,39 @@
 	const added_events = $state([]);
 	let expandedEvent = $state(null);
 	let editedEvent = $state(null);
+
+	let mouseYCoordinate = $state(null); // pointer y coordinate within client
+	let distanceTopGrabbedVsPointer = $state(null);
+
+	let draggingItem = $state(null);
+	let draggingItemId = $state(null);
+	let draggingItemIndex = $state(null);
+
+	let hoveredItemIndex = $state(null);
+
+	$effect(() => {
+		// prevents the ghost flickering at the top
+		if (mouseYCoordinate == null || mouseYCoordinate == 0) {
+			// showGhost = false;
+		}
+	});
+
+	$effect(() => {
+		if (
+			draggingItemIndex != null &&
+			hoveredItemIndex != null &&
+			draggingItemIndex != hoveredItemIndex
+		) {
+			// swap items
+			[added_events[draggingItemIndex], added_events[hoveredItemIndex]] = [
+				added_events[hoveredItemIndex],
+				added_events[draggingItemIndex]
+			];
+
+			// balance
+			draggingItemIndex = hoveredItemIndex;
+		}
+	});
 </script>
 
 <header class="fixed left-0 top-0 z-10 flex h-10 w-full border-b border-zinc-200 bg-zinc-100">
@@ -120,86 +153,206 @@
 					<option value="latest">latest event</option>
 				</select> per person.
 			</p>
-			{#each added_events as event}
-				<div class="mb-4 ml-2 flex flex-col">
-					<p class="mb-4 text-lg font-bold">{event}</p>
+			{#if mouseYCoordinate && draggingItemId}
+				
+				<div
+					class="pointer-events-none absolute top-[400px] mb-4 ml-2 flex flex-col rounded-md border p-4 border-zinc-200 shadow-lg"
+					style="top: {mouseYCoordinate + distanceTopGrabbedVsPointer}px;"
+					>
+					<p class="mb-4 text-lg font-bold">{draggingItem.event_name}</p>
 					<div
 						class="ml-2 flex flex-col justify-start gap-1 text-sm text-zinc-700 *:before:content-['o']"
 					>
 						<p class="flex">
-							날짜 조정: <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
+							날짜 조정: <button
+							
+								class="underline decoration-zinc-800 underline-offset-2 hover:font-bold"
 								>시작일 +30일</button
 							>,
-							<button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2">종료일 +60일</button>
+							<button
+								
+								class="underline decoration-zinc-800 underline-offset-2">종료일 +60일</button
+							>
 						</p>
 						<p>
-							<button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
+							<button
+							
+								class="underline decoration-zinc-800 underline-offset-2"
 								>환자의 병원 기록상 가장 처음으로</button
 							>
 						</p>
 						<p>
-							기간 시작: <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
-								>2023-06-15 이전</button
+							기간 시작: <button
+						
+								class="underline decoration-zinc-800 underline-offset-2">2023-06-15 이전</button
 							>
 						</p>
 						<p>
-							기간 종료: <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
-								>2023-12-31 이후</button
+							기간 종료: <button
+					
+							
+								class="underline decoration-zinc-800 underline-offset-2">2023-12-31 이후</button
 							>
 						</p>
 						<p>
-							발생(occurrence) 횟수: <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
-								>5회 이상</button
+							발생(occurrence) 횟수: <button
+					
+								class="underline decoration-zinc-800 underline-offset-2">5회 이상</button
 							>
 						</p>
 						<p>
-							기간(era length): <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
-								>90일 미만</button
+							기간(era length): <button
+						
+								class="underline decoration-zinc-800 underline-offset-2">90일 미만</button
 							>
 						</p>
 						<p>
-							기간(era)의 시작시 나이: <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
-								>35 이상</button
+							기간(era)의 시작시 나이: <button
+								class="underline decoration-zinc-800 underline-offset-2">35 이상</button
 							>
 						</p>
 						<p>
-							기간(era)이 종료시 나이: <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
-								>45 이하</button
+							기간(era)이 종료시 나이: <button
+				
+								class="underline decoration-zinc-800 underline-offset-2">45 이하</button
 							>
 						</p>
 						<p>
-							성별: <button on:click={() => {
-								editedEvent = event;
-								expandedEvent = event;
-							}} class="underline decoration-zinc-800 underline-offset-2"
-								>남성</button
+							성별: <button
+				
+								class="underline decoration-zinc-800 underline-offset-2">남성</button
+							>
+						</p>
+					</div>
+				</div>
+			{/if}
+			<p>
+				{draggingItemId} asedd
+			</p>
+			{#each added_events as event, index}
+				<div
+					class="mb-4 ml-2 flex flex-col rounded-md border border-transparent p-4 transition-all duration-300 ease-in-out hover:border-zinc-200 hover:shadow-lg
+						{draggingItemId === event.id ? 'opacity-0' : ''}"
+					draggable="true"
+					on:dragstart={(e) => {
+						mouseYCoordinate = e.clientY;
+						console.log('dragstart', mouseYCoordinate);
+
+						draggingItem = event;
+						draggingItemIndex = index;
+						draggingItemId = event.id;
+
+						distanceTopGrabbedVsPointer = e.target.getBoundingClientRect().y - e.clientY;
+					}}
+					on:drag={(e) => {
+						mouseYCoordinate = e.clientY;
+						console.log('drag', mouseYCoordinate);
+					}}
+					on:dragover={(e) => {
+						hoveredItemIndex = index;
+					}}
+					on:dragend={(e) => {
+						console.log('dragend', mouseYCoordinate);
+						//console.log('\n');
+
+						mouseYCoordinate = e.clientY;
+
+						draggingItemId = null; // makes item visible
+						hoveredItemIndex = null; // prevents instant swap
+					}}
+				>
+					<p class="mb-4 text-lg font-bold">{event.event_name}</p>
+					<div
+						class="ml-2 flex flex-col justify-start gap-1 text-sm text-zinc-700 *:before:content-['o']"
+					>
+						<p class="flex">
+							날짜 조정: <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2 hover:font-bold"
+								>시작일 +30일</button
+							>,
+							<button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">종료일 +60일</button
+							>
+						</p>
+						<p>
+							<button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2"
+								>환자의 병원 기록상 가장 처음으로</button
+							>
+						</p>
+						<p>
+							기간 시작: <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">2023-06-15 이전</button
+							>
+						</p>
+						<p>
+							기간 종료: <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">2023-12-31 이후</button
+							>
+						</p>
+						<p>
+							발생(occurrence) 횟수: <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">5회 이상</button
+							>
+						</p>
+						<p>
+							기간(era length): <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">90일 미만</button
+							>
+						</p>
+						<p>
+							기간(era)의 시작시 나이: <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">35 이상</button
+							>
+						</p>
+						<p>
+							기간(era)이 종료시 나이: <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">45 이하</button
+							>
+						</p>
+						<p>
+							성별: <button
+								on:click={() => {
+									editedEvent = event;
+									expandedEvent = event;
+								}}
+								class="underline decoration-zinc-800 underline-offset-2">남성</button
 							>
 						</p>
 					</div>
@@ -413,7 +566,7 @@
 									editedEvent = null;
 									expandedEvent = null;
 								} else {
-									added_events.push(expandedEvent);
+									added_events.push({id : crypto.randomUUID(),event_name : expandedEvent, });
 								}
 								expandedEvent = null;
 							}}
