@@ -36,6 +36,20 @@
 	.button:hover {
 		background-color: lightgrey;
 	}
+
+	:global(body) {
+		overflow: hidden; /* 전체 페이지의 스크롤 방지 */
+	}
+
+	.content-area {
+		position: absolute;
+		left: 200px;
+		top: 40px;
+		height: calc(100vh - 40px);
+		width: calc(100vw - 200px);
+		overflow-x: auto; /* 가로 스크롤 허용 */
+		overflow-y: auto; /* 세로 스크롤 허용 */
+	}
 </style>
 
 <header class="fixed left-0 top-0 flex h-10 w-full border-b border-zinc-200 bg-zinc-100 z-10" >
@@ -90,6 +104,6 @@
 		</div>
 	</div>
 </div>
-<div class="absolute left-[200px] top-10 h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
+<div class="content-area">
 	{@render children()}
 </div>

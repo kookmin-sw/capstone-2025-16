@@ -10,30 +10,32 @@
 	let patientAgeData = [];
     let genderData = {};
     let deathRatioData = {};
+
+    // API에서 데이터를 로드하는 함수
+    async function loadData() {
+        try {
+            const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
+                fetch("/api/chartdata/topTenDrug"),
+                fetch("/api/chartdata/patientAge"),
+                fetch("/api/chartdata/gender"),
+                fetch("/api/chartdata/deathRatio")
+            ]);
+
+            if (!topTenDrugRes.ok || !patientAgeRes.ok || !genderRes.ok || !deathRatioRes.ok) {
+                throw new Error("데이터 로드 실패");
+            }
+
+            topTenDrugData = await topTenDrugRes.json();
+            patientAgeData = await patientAgeRes.json();
+            genderData = await genderRes.json();
+            deathRatioData = await deathRatioRes.json();
+        } catch (error) {
+            console.error("❌ 데이터 로딩 에러:", error);
+        }
+    }
     
 	// 데이터 불러오기
-    onMount(async () => {
-    try {
-        const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
-            fetch("/topTenDrug-testdata.json"),
-            fetch("/patientAge-testdata.json"),
-            fetch("/gender-testdata.json"),
-            fetch("/deathRatio-testdata.json")
-        ]);
-
-        if (!topTenDrugRes.ok || !patientAgeRes.ok || !genderRes.ok || !deathRatioRes.ok) {
-            throw new Error("One or more fetch requests failed");
-        }
-
-        topTenDrugData = await topTenDrugRes.json();
-        patientAgeData = await patientAgeRes.json();
-        genderData = await genderRes.json();
-        deathRatioData = await deathRatioRes.json();
-    } catch (error) {
-        console.error("❌ Error loading data:", error);
-    }
-    });
-
+    onMount(loadData);
 
 </script>
 
@@ -67,13 +69,28 @@
 	}
 
     .chart-row {
-	display: flex;
-	justify-content: center; /* 중앙 정렬 */
-	align-items: stretch;
-	gap: 20px; /* 차트 사이 여백 */
-    margin: 0 auto;
-	width: 1000px;
-	flex-wrap: wrap; /* 화면이 좁아지면 아래로 떨어지도록 설정 */
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        gap: 20px;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 1000px;
+        flex-wrap: wrap;
+    }
+
+    /* 768px 이하일 때 적용되는 스타일 */
+    @media (max-width: 768px) {
+        .chart-row {
+            flex-direction: column; /* 세로 방향으로 변경 */
+            align-items: center;
+            width: 100%;
+        }
+
+        .chart-row :global(> *) {
+            width: 100% !important;
+            max-width: 500px;
+        }
     }
 
 </style>
