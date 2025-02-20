@@ -1,5 +1,7 @@
+import { API_ADDRESS } from '$env/static/private';
+
 export async function GET(event) {
-    const res = await event.fetch('http://localhost:5173/user-testdata.json');
+    const res = await event.fetch(`${API_ADDRESS}/user-testdata.json`);
     if (!res.ok) {
         return new Response(JSON.stringify({ error: "Failed to load data" }), {
             status: 500,
