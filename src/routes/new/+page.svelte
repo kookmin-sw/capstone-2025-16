@@ -9,6 +9,7 @@
 	import '../../app.css';
 	import { page } from '$app/state';
 	import ConditionEraEvent from './@components/events/editable/ConditionEraEvent.svelte';
+	import ConditionEraEventDisplay from './@components/events/display/ConditionEraEvent.svelte';
 	let pathname = $state(page.url.pathname);
 
 	const events = [
@@ -122,11 +123,19 @@
 			hoveredItemIndex != null &&
 			draggingItemIndex != hoveredItemIndex
 		) {
-			// swap items
+			// added_events 배열의 항목 순서 변경
 			[added_events[draggingItemIndex], added_events[hoveredItemIndex]] = [
 				added_events[hoveredItemIndex],
 				added_events[draggingItemIndex]
 			];
+
+			// cohort.entry.and 배열의 항목도 같은 순서로 변경
+			[cohort.entry.and[draggingItemIndex], cohort.entry.and[hoveredItemIndex]] = [
+				cohort.entry.and[hoveredItemIndex],
+				cohort.entry.and[draggingItemIndex]
+			];
+
+			console.log(cohort.entry.and);
 
 			// balance
 			draggingItemIndex = hoveredItemIndex;
@@ -155,19 +164,16 @@
 		>
 	</div>
 </header>
-<!-- <div
+<div
 	class="fixed left-0 top-10 flex h-full w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
 >
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
-		<p class="mb-4 text-sm font-bold">코호트 진입</p>
-		<p class="mb-4 ml-2 text-xs leading-4">
-			- 진단발생: OMOPUveitis<br />
-			o 환자의 병원 기록상 처음<br />
-			o 관찰기록<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-			o 약물 기간<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-			- Toggle 사용<br />
-			- 관찰기록<br /><span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span>
-		</p>
+		<p class="mb-4 text-sm font-bold">cohort initial</p>
+		{#each cohort.entry.and as event}
+			<p class="mb-4 ml-2 text-xs leading-4">
+				- {event.type.replace('_', ' ')}<br />
+			</p>
+		{/each}
 	</div>
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
 		<p class="mb-4 text-sm font-bold">포함 기준</p>
@@ -185,7 +191,7 @@
 			- 약물 기간<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
 		</p>
 	</div>
-</div> -->
+</div>
 
 <svelte:window
 	on:mousemove={(e) => {
@@ -244,55 +250,9 @@
 					>
 						<p class="mb-4 text-lg font-bold">{draggingItem.event_name}</p>
 						<div
-							class="ml-2 flex flex-col justify-start gap-1 text-sm text-zinc-700 *:before:content-['o']"
+							class="ml-2 flex flex-col text-sm text-zinc-700"
 						>
-							<p class="flex">
-								날짜 조정: <button
-									class="underline decoration-zinc-800 underline-offset-2 hover:font-bold"
-									>시작일 +30일</button
-								>,
-								<button class="underline decoration-zinc-800 underline-offset-2"
-									>종료일 +60일</button
-								>
-							</p>
-							<p>
-								<button class="underline decoration-zinc-800 underline-offset-2"
-									>환자의 병원 기록상 가장 처음으로</button
-								>
-							</p>
-							<p>
-								기간 시작: <button class="underline decoration-zinc-800 underline-offset-2"
-									>2023-06-15 이전</button
-								>
-							</p>
-							<p>
-								기간 종료: <button class="underline decoration-zinc-800 underline-offset-2"
-									>2023-12-31 이후</button
-								>
-							</p>
-							<p>
-								발생(occurrence) 횟수: <button
-									class="underline decoration-zinc-800 underline-offset-2">5회 이상</button
-								>
-							</p>
-							<p>
-								기간(era length): <button class="underline decoration-zinc-800 underline-offset-2"
-									>90일 미만</button
-								>
-							</p>
-							<p>
-								기간(era)의 시작시 나이: <button
-									class="underline decoration-zinc-800 underline-offset-2">35 이상</button
-								>
-							</p>
-							<p>
-								기간(era)이 종료시 나이: <button
-									class="underline decoration-zinc-800 underline-offset-2">45 이하</button
-								>
-							</p>
-							<p>
-								성별: <button class="underline decoration-zinc-800 underline-offset-2">남성</button>
-							</p>
+							<ConditionEraEventDisplay eventdata={cohort.entry.and[draggingItemIndex]} />
 						</div>
 					</div>
 				{/if}
@@ -334,98 +294,9 @@
 					>
 						<p class="mb-4 text-lg font-bold">{event.event_name}</p>
 						<div
-							class="ml-2 flex flex-col justify-start gap-1 text-sm text-zinc-700 *:before:content-['o']"
+							class="ml-2 flex flex-col text-sm text-zinc-700"
 						>
-							<p class="flex">
-								날짜 조정: <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2 hover:font-bold"
-									>시작일 +30일</button
-								>,
-								<button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">종료일 +60일</button
-								>
-							</p>
-							<p>
-								<button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2"
-									>환자의 병원 기록상 가장 처음으로</button
-								>
-							</p>
-							<p>
-								기간 시작: <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">2023-06-15 이전</button
-								>
-							</p>
-							<p>
-								기간 종료: <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">2023-12-31 이후</button
-								>
-							</p>
-							<p>
-								발생(occurrence) 횟수: <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">5회 이상</button
-								>
-							</p>
-							<p>
-								기간(era length): <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">90일 미만</button
-								>
-							</p>
-							<p>
-								기간(era)의 시작시 나이: <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">35 이상</button
-								>
-							</p>
-							<p>
-								기간(era)이 종료시 나이: <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">45 이하</button
-								>
-							</p>
-							<p>
-								성별: <button
-									on:click={() => {
-										editedEvent = event;
-										expandedEvent = event;
-									}}
-									class="underline decoration-zinc-800 underline-offset-2">남성</button
-								>
-							</p>
+							<ConditionEraEventDisplay eventdata={cohort.entry.and[index]?? {}} />
 						</div>
 					</div>
 				{/each}
