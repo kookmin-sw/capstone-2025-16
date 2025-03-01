@@ -1,7 +1,14 @@
+<!-- 
+	TODO:
+		토글 형식으로 이벤트 자세한 정보 접었다 펴기
+		좌측 페이지에 바로가기 페이지 만들기
+
+-->
+
 <script>
 	import '../../app.css';
 	import { page } from '$app/state';
-
+	import ConditionEraEvent from './@components/events/editable/ConditionEraEvent.svelte';
 	let pathname = $state(page.url.pathname);
 
 	const events = [
@@ -45,6 +52,14 @@
 	const added_events = $state([]);
 	let expandedEvent = $state(null);
 	let editedEvent = $state(null);
+
+	let eventdata = $state({});
+
+	let cohort = $state({
+		entry: {
+			and: []
+		}
+	});
 
 	let mouseYCoordinate = $state(null); // pointer y coordinate within client
 
@@ -178,10 +193,12 @@
 			const eventsContainer = document.querySelector('.events-container');
 			const containerRect = eventsContainer.getBoundingClientRect();
 			const containerPadding = parseInt(window.getComputedStyle(eventsContainer).paddingTop);
-			
+
 			// events-container 영역 안에 있는지 확인 (패딩 포함)
-			if (e.clientY >= (containerRect.top + containerPadding) && 
-				e.clientY <= (containerRect.bottom - containerPadding)) {
+			if (
+				e.clientY >= containerRect.top + containerPadding &&
+				e.clientY <= containerRect.bottom - containerPadding
+			) {
 				// padding 값을 포함하여 Y 좌표 계산
 				mouseYCoordinate = e.target.offsetTop + e.offsetY;
 				handleAutoScroll(e.clientY);
@@ -199,7 +216,7 @@
 />
 <div class="fixed left-[200px] top-10 h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
 	<div class="flex h-full w-full">
-		<div class="flex w-full flex-col overflow-y-scroll p-8 text-lg main-container ">
+		<div class="main-container flex w-full flex-col overflow-y-scroll p-8 text-lg">
 			<p class="mb-4 text-2xl font-bold">코호트 진입</p>
 			<p class="mb-4 ml-2">- 진단발생: OMOPUveitis</p>
 			<p class="flex">
@@ -219,14 +236,11 @@
 				</select> per person.
 			</p>
 
-			<p>
-				{draggingItemId} asedd
-			</p>
-			<div class="relative flex flex-col events-container py-10">
+			<div class="events-container relative flex flex-col py-10">
 				{#if mouseYCoordinate && draggingItemId}
 					<div
-						class="pointer-events-none absolute flex w-full flex-col rounded-md border border-zinc-200 p-4 shadow-lg bg-white z-50"
-						style="top: {mouseYCoordinate }px;"
+						class="pointer-events-none absolute z-50 flex w-full flex-col rounded-md border border-zinc-200 bg-white p-4 shadow-lg"
+						style="top: {mouseYCoordinate}px;"
 					>
 						<p class="mb-4 text-lg font-bold">{draggingItem.event_name}</p>
 						<div
@@ -463,159 +477,13 @@
 					<div />
 				</div>
 
-				<div class="text-normal mt-2 text-zinc-700" on:click={(e) => e.stopPropagation()}>
+				<div
+					class="text-normal mt-2 w-full px-4 py-6 text-zinc-700"
+					on:click={(e) => e.stopPropagation()}
+				>
 					<p class="mt-4 text-lg font-bold">Addtional attributes</p>
-					<div class="flex flex-col gap-4 text-sm">
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>날짜 조정:</span>
-								<div class="flex items-center gap-2">
-									<span>시작:</span>
-									<select class="rounded-md border border-zinc-200 px-2 text-sm">
-										<option value="START_DATE">시작일</option>
-										<option value="END_DATE">종료일</option>
-									</select>
-									<span>+</span>
-									<input
-										type="number"
-										class="w-16 rounded-md border border-zinc-200 px-2 text-sm"
-									/>
-									<span>일</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<span>종료:</span>
-									<select class="rounded-md border border-zinc-200 px-2 text-sm">
-										<option value="START_DATE">시작일</option>
-										<option value="END_DATE">종료일</option>
-									</select>
-									<span>+</span>
-									<input
-										type="number"
-										class="w-16 rounded-md border border-zinc-200 px-2 text-sm"
-									/>
-									<span>일</span>
-								</div>
-							</div>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<span>환자의 병원 기록상 가장 처음으로</span>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>기간 시작:</span>
-								<select class="rounded-md border border-zinc-200 px-2 text-sm">
-									<option value="lt">전에</option>
-									<option value="lte">이전에</option>
-									<option value="eq">~에</option>
-									<option value="gt">다음</option>
-									<option value="gte">이후</option>
-									<option value="bt">사이에</option>
-									<option value="!bt">사이에 없는</option>
-								</select>
-								<input type="date" class="rounded-md border border-zinc-200 px-2 text-sm" />
-							</div>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>기간 종료:</span>
-								<select class="rounded-md border border-zinc-200 px-2 text-sm">
-									<option value="lt">전에</option>
-									<option value="lte">이전에</option>
-									<option value="eq">~에</option>
-									<option value="gt">다음</option>
-									<option value="gte">이후</option>
-									<option value="bt">사이에</option>
-									<option value="!bt">사이에 없는</option>
-								</select>
-								<input type="date" class="rounded-md border border-zinc-200 px-2 text-sm" />
-							</div>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>발생(occurrence) 횟수</span>
-								<select class="rounded-md border border-zinc-200 px-2 text-sm">
-									<option value="lt">더 작은</option>
-									<option value="lte">작거나 같음</option>
-									<option value="eq">같음</option>
-									<option value="gt">더 큰</option>
-									<option value="gte">크거나 같음</option>
-									<option value="bt">사이에</option>
-									<option value="!bt">사이에 없는</option>
-								</select>
-								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-							</div>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>기간(era length)</span>
-								<select class="rounded-md border border-zinc-200 px-2 text-sm">
-									<option value="lt">더 작은</option>
-									<option value="lte">작거나 같음</option>
-									<option value="eq">같음</option>
-									<option value="gt">더 큰</option>
-									<option value="gte">크거나 같음</option>
-									<option value="bt">사이에</option>
-									<option value="!bt">사이에 없는</option>
-								</select>
-								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-								<span>일</span>
-							</div>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>기간(era)의 시작시 나이</span>
-								<select class="rounded-md border border-zinc-200 px-2 text-sm">
-									<option value="lt">더 작은</option>
-									<option value="lte">작거나 같음</option>
-									<option value="eq">같음</option>
-									<option value="gt">더 큰</option>
-									<option value="gte">크거나 같음</option>
-									<option value="bt">사이에</option>
-									<option value="!bt">사이에 없는</option>
-								</select>
-								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-							</div>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>기간(era)이 종료시 나이</span>
-								<select class="rounded-md border border-zinc-200 px-2 text-sm">
-									<option value="lt">더 작은</option>
-									<option value="lte">작거나 같음</option>
-									<option value="eq">같음</option>
-									<option value="gt">더 큰</option>
-									<option value="gte">크거나 같음</option>
-									<option value="bt">사이에</option>
-									<option value="!bt">사이에 없는</option>
-								</select>
-								<input type="number" class="w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-							</div>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button class="text-zinc-500 hover:text-zinc-700"> - </button>
-							<div class="flex items-center gap-2">
-								<span>성별:</span>
-								<button class="rounded-md border border-zinc-200 px-2 py-1 text-sm">추가</button>
-								<button class="rounded-md border border-zinc-200 px-2 py-1 text-sm">불러오기</button
-								>
-							</div>
-						</div>
+					<div class="w-full px-4 text-sm">
+						<ConditionEraEvent on:add={(e) => (eventdata = e.detail)} />
 					</div>
 					<div class="flex w-full justify-center">
 						<button
@@ -624,7 +492,13 @@
 									editedEvent = null;
 									expandedEvent = null;
 								} else {
-									added_events.push({ id: crypto.randomUUID(), event_name: expandedEvent });
+									cohort.entry.and.push(eventdata);
+									added_events.push({
+										id: crypto.randomUUID(),
+										event_name: expandedEvent,
+										eventdata: eventdata
+									});
+									console.log(cohort);
 								}
 								expandedEvent = null;
 							}}
