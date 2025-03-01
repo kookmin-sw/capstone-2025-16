@@ -8,6 +8,8 @@
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
+  import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
+  import cohortStats from '$lib/data/cohortStats.json';
 
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -50,6 +52,21 @@
     .scaleOrdinal()
     .domain(["Male", "Female", "Unknown"])
     .range(["#3498db", "#F9A7B0", "#808080"]);
+
+  const chartsData = [
+    {
+      data: cohortStats["10001"].statistics.gender,
+      cohortName: cohortStats["10001"].basicInfo.name
+    },
+    {
+      data: cohortStats["10002"].statistics.gender,
+      cohortName: cohortStats["10002"].basicInfo.name
+    },
+    {
+      data: cohortStats["10003"].statistics.gender,
+      cohortName: cohortStats["10003"].basicInfo.name
+    }
+  ];
 
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
@@ -329,41 +346,12 @@
               title="Gender Ratio" 
               description="Comparison of gender distribution across selected cohorts"
               chartId={1}
-              type="full"
-              on:close={handleChartClose}
+              type="full",
+              
+              on:close={() => {}}
             >
-              <div class="flex items-center w-full gap-4">
-                <!-- 도넛 차트들 -->
-                <div class="flex justify-around items-center flex-1">
-                  {#each selectedCohorts as cohort, i}
-                    {#if genderDataMap[`cohort${i + 1}`]}
-                      <div class="flex flex-col items-center">
-                        <DonutChart 
-                          data={genderDataMap[`cohort${i + 1}`]} 
-                          showLegend={false}
-                          hoveredLabel={hoveredLabel}
-                          cohortName={cohort.name}
-                        />
-                      </div>
-                    {/if}
-                  {/each}
-                </div>
-
-                <!-- 통합된 범례 -->
-                <div class="flex flex-col gap-2">
-                  {#each uniqueGenderLabels as label}
-                    <div 
-                      class="flex items-center gap-2 cursor-pointer transition-transform duration-200 ease-in-out outline-none hover:translate-x-1 focus:translate-x-1"
-                      role="button"
-                      tabindex="0"
-                      on:mouseenter={() => hoveredLabel = label}
-                      on:mouseleave={() => hoveredLabel = null}
-                    >
-                      <span class="w-4 h-4 rounded-full inline-block" style="background-color: {color(label)};"></span>
-                      <span class="text-base text-gray-800">{label}</span>
-                    </div>
-                  {/each}
-                </div>
+              <div class="w-full">
+                <DonutChartGroup {chartsData} showCohortNames={true} />
               </div>
             </ChartCard>
           {/if}
