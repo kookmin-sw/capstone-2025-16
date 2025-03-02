@@ -12,6 +12,14 @@
         44818517: "#0000FF", // 파랑
     };
 
+    const visitTypes = {
+        9201: "Inpatient",
+        9202: "Outpatient",
+        9203: "Emergency Room Visit",
+        581477: "Home Visit",
+        44818517: "Other Visit Type"
+    };
+
     export let data;
         
     function calculateYPositions(data) {
@@ -121,7 +129,7 @@
                     .attr("x", 15)
                     .attr("y", 9)
                     .attr("font-size", "10px")
-                    .text(`ID: ${d[0]}`);
+                    .text(`${visitTypes[d[0]] || "Unknown Type"}`);
             });
 
         // 🔹 최소/최대 날짜 계산
