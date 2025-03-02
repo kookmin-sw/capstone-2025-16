@@ -14,7 +14,47 @@
 
     export let data;
         
-    
+    function calculateYPositions(data) {
+        let rows = [];
+        const maxRows = 5; // ✅ 최대 Y축 줄 개수 제한
+        const xOffset = 3; // ✅ 가로 이동 간격
+
+        data.forEach(d => {
+            let start = new Date(d.visit_start_date);
+            let end = new Date(d.visit_end_date);
+            let placed = false;
+
+            for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                let lastItemInRow = rows[rowIndex][rows[rowIndex].length - 1];
+
+                if (new Date(lastItemInRow.visit_end_date) < start) {
+                    rows[rowIndex].push(d);
+                    d.yIndex = rowIndex;
+                    d.xOffset = 0;
+                    placed = true;
+                    break;
+                }
+            }
+
+            if (!placed) {
+                if (rows.length < maxRows) {
+                    // 새로운 줄 추가 (최대 maxRows까지만)
+                    rows.push([d]);
+                    d.yIndex = rows.length - 1;
+                    d.xOffset = 0;
+                } else {
+                    // ✅ 최대 줄 개수를 넘으면 겹치지 않도록 xOffset 추가
+                    let sameDateItems = rows[maxRows - 1].filter(item => item.visit_start_date === d.visit_start_date);
+                    d.yIndex = maxRows - 1;
+                    d.xOffset = sameDateItems.length * xOffset;
+                    rows[maxRows - 1].push(d);
+                }
+            }
+        });
+
+        return data;
+    }
+
     async function drawTimeline(){
         await tick();
 
@@ -87,10 +127,10 @@
         // 🔹 최소/최대 날짜 계산
         let minStartDate = new Date(Math.min(...data.personVisits.map(d => new Date(d.visit_start_date))));
         let maxEndDate = new Date(Math.max(...data.personVisits.map(d => new Date(d.visit_end_date))));
-        minStartDate.setDate(minStartDate.getDate() - 30);
+        minStartDate.setDate(minStartDate.getDate() - 360);
         minStartDate.setHours(0, 0, 0, 0);
         maxEndDate.setHours(23, 59, 59, 999);
-        maxEndDate.setDate(maxEndDate.getDate() + 30);
+        maxEndDate.setDate(maxEndDate.getDate() + 360);
 
         // 🔹 X축 스케일 설정
         const xScale = d3.scaleTime()
@@ -108,19 +148,22 @@
             .attr("transform", `translate(0,${margin.top})`)
             .attr("clip-path", "url(#clip-timeline)"); // ✅ 클리핑 적용
             
+        let processedData = calculateYPositions(data.personVisits);
         barGroup.selectAll("rect")
-            .data(data.personVisits)
+            .data(processedData)
             .enter()
             .append("rect")
-            .attr("x", d => xScale(new Date(d.visit_start_date))) // 정확한 X축 위치 조정
-            .attr("y", 10)
+            .attr("x", d => xScale(new Date(d.visit_start_date)))
+            .attr("y", d => 10 + d.yIndex * 25) // 🚀 같은 줄에 배치되면 y값 유지, 겹치면 다음 줄로 이동
             .attr("width", d => {
                 let startX = xScale(new Date(d.visit_start_date));
                 let endX = xScale(new Date(d.visit_end_date));
-                return Math.max(endX - startX, 5); // 🔥 최소 width 5 보장
+                return Math.max(endX - startX, 5);
             })
             .attr("height", 20)
             .attr("fill", d => bar_colors[d.visit_concept_id] || "grey")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
             .on("mouseover", (event, d) => {
                 tooltip.style("visibility", "visible")
                     .style("white-space", "pre")
@@ -129,8 +172,10 @@
             .on("mousemove", (event) => {
                 const tooltipWidth = tooltip.node().offsetWidth;
                 const tooltipHeight = tooltip.node().offsetHeight;
-                const pageX = event.pageX;
-                const pageY = event.pageY;
+
+                const svgRect = timelineContainer.getBoundingClientRect();
+                const pageX = event.clientX - svgRect.left; // 컨테이너 내부 상대 좌표
+                const pageY = event.clientY - svgRect.top;  // 컨테이너 내부 상대 좌표
                 
                 let tooltipX = pageX + 10; // 기본적으로 오른쪽에 표시
                 let tooltipY = pageY - 10; // 기본적으로 마우스보다 약간 위로 표시
@@ -154,8 +199,8 @@
 
         // 🔹 줌(Zoom) 기능 추가
         const zoom = d3.zoom()
-            .scaleExtent([0.5, 5]) // 최소 0.5배, 최대 5배 확대 가능
-            .translateExtent([[margin.left, 0], [width - margin.right, height]])
+            .scaleExtent([0.5, 20]) // 최소 0.5배, 최대 5배 확대 가능
+            .translateExtent([[xScale(minStartDate), 0], [xScale(maxEndDate), height]]) // 🚀 최소/최대 날짜 기준으로 이동 제한
             .on("zoom", (event) => {
                 const transform = event.transform;
                 const newXScale = transform.rescaleX(xScale); // ✅ 기존 xScale을 변환하여 새로운 xScale 생성
@@ -174,8 +219,11 @@
         svg.call(zoom); // ✅ SVG에 zoom 기능 적용
     }
 
-    // ✅ 마운트 시 실행
-    onMount(drawTimeline);
+    // ✅ 화면 크기 변경 감지 → 타임라인 다시 그리기
+    onMount(() => {
+        drawTimeline();
+        window.addEventListener("resize", drawTimeline);
+    });
 
     // ✅ 데이터 변경 시마다 실행
     $: if (data) {
@@ -186,6 +234,7 @@
         const svg = d3.select(timelineContainer).select("svg");
         svg.on(".zoom", null); // ✅ 줌 이벤트 제거
         svg.remove();
+        window.removeEventListener("resize", drawTimeline);
     });
 </script>
 
