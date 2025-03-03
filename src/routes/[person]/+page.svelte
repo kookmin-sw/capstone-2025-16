@@ -27,16 +27,24 @@
         const maxRows = 5; // ✅ 최대 Y축 줄 개수 제한
         const xOffset = 3; // ✅ 가로 이동 간격
 
+        // ✅ 시작일 기준으로 정렬
+        data.sort((a, b) => new Date(a.visit_start_date) - new Date(b.visit_start_date));
+
         data.forEach(d => {
             let start = new Date(d.visit_start_date);
             let end = new Date(d.visit_end_date);
             let placed = false;
 
+            // ✅ 현재 데이터를 배치할 수 있는 가장 낮은 yIndex 찾기
             for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                let lastItemInRow = rows[rowIndex][rows[rowIndex].length - 1];
+                let row = rows[rowIndex];
 
-                if (new Date(lastItemInRow.visit_end_date) < start) {
-                    rows[rowIndex].push(d);
+                let hasOverlap = row.some(item =>
+                    new Date(item.visit_end_date) >= start  // 종료일이 현재 시작일 이후까지 지속되면 겹침
+                );
+
+                if (!hasOverlap) {
+                    row.push(d);
                     d.yIndex = rowIndex;
                     d.xOffset = 0;
                     placed = true;
@@ -44,15 +52,17 @@
                 }
             }
 
+            // ✅ 기존 row에 배치되지 않은 경우 새 row 추가
             if (!placed) {
                 if (rows.length < maxRows) {
-                    // 새로운 줄 추가 (최대 maxRows까지만)
                     rows.push([d]);
                     d.yIndex = rows.length - 1;
                     d.xOffset = 0;
                 } else {
-                    // ✅ 최대 줄 개수를 넘으면 겹치지 않도록 xOffset 추가
-                    let sameDateItems = rows[maxRows - 1].filter(item => item.visit_start_date === d.visit_start_date);
+                    // ✅ 최대 줄 개수를 넘으면 xOffset을 증가시켜 가로 이동
+                    let sameDateItems = rows[maxRows - 1].filter(item =>
+                        new Date(item.visit_start_date) < end && new Date(item.visit_end_date) > start
+                    );
                     d.yIndex = maxRows - 1;
                     d.xOffset = sameDateItems.length * xOffset;
                     rows[maxRows - 1].push(d);
@@ -62,6 +72,9 @@
 
         return data;
     }
+
+
+
 
     async function drawTimeline(){
         await tick();
@@ -242,7 +255,7 @@
         const svg = d3.select(timelineContainer).select("svg");
         svg.on(".zoom", null); // ✅ 줌 이벤트 제거
         svg.remove();
-        window.removeEventListener("resize", drawTimeline);
+        // window.removeEventListener("resize", drawTimeline);
     });
 </script>
 
