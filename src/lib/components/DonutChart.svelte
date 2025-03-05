@@ -3,11 +3,11 @@
     import { tick } from "svelte";
 
     export let data = {};
+    export let hoveredLabel = null;
 
-    let width = 450;
-    let height = 450;
-    let margin = 40;
-    let hoveredSlice = null;
+    let width = 200;
+    let height = 200;
+    let margin = 0;
 
     // The radius of the pie plot
     let radius = Math.min(width, height) / 2 - margin;
@@ -16,8 +16,8 @@
     $: processedData = data && Object.keys(data).length > 0 ? Object.entries(data) : [];
     $: color = d3
         .scaleOrdinal()
-        .domain(["Male", "Female", "Alive", "Deceased"])
-        .range(["#3498db", "#F9A7B0","#4CAF50", "#5E6C7F"]);
+        .domain(["Male", "Female", "Unknown", "Alive", "Deceased"])
+        .range(["#3498db", "#F9A7B0","#808080","#4CAF50", "#5E6C7F"]);
 
     // 데이터가 있을 때만 실행하도록 수정
     $: data_ready = processedData.length > 0 ? d3.pie().sort(null).value(d => d[1])(processedData) : [];
@@ -43,9 +43,14 @@
 
     // `data` 변경 시 UI 갱신을 강제
     $: tick();
+
+    // hoveredSlice를 hoveredLabel에 따라 업데이트
+    $: hoveredSlice = hoveredLabel ? 
+        data_ready.find(slice => slice.data[0] === hoveredLabel) : 
+        null;
 </script>
 
-<div class="chart-container">
+<div class="chart-container flex flex-col items-center">
     {#if processedData.length > 0}
         <svg {width} {height} viewBox="{-width / 2}, {-height / 2}, {width}, {height}" style:max-width="100%" style:height="auto">
             <g class="chart-inner">
@@ -70,26 +75,10 @@
                             <tspan x="0" dy="1.2em" class="value">{slice.data[1]}</tspan>
                             <tspan x="0" dy="1.2em" class="percent">({calculatePercent(slice.data[1])})</tspan>
                         </text>
-                    {/if}
-                {/each}
-            </g>
-        </svg>
-
-        <!-- 범주(legend) 추가 -->
-        <div class="legend">
-            {#each processedData as [key, value]}
-                <div 
-                    class="legend-item"
-                    role="button"
-                    tabindex="0"
-                    on:mouseenter={() => hoveredSlice = data_ready.find(slice => slice.data[0] === key)}
-                    on:mouseleave={() => hoveredSlice = null}
-                >
-                    <span class="legend-color" style="background-color: {color(key)};"></span>
-                    <span class="legend-label">{key}</span>
-                </div>
-            {/each}
-        </div>
+                        {/if}
+                        {/each}
+                    </g>
+                </svg>
     {:else}
         <p>Loading chart...</p>
     {/if}
@@ -126,42 +115,11 @@
 
     .value-text .label {
         font-weight: bold;
-        font-size: 18px;
+        font-size: 13px;
     }
 
     .value-text .value,
     .value-text .percent {
-        font-size: 14px;
-    }
-
-    .legend {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        outline: none;
-    }
-
-    .legend-item:hover, .legend-item:focus {
-        transform: translateX(5px);
-    }
-
-    .legend-color {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
-    .legend-label {
-        font-size: 16px;
-        color: #333;
+        font-size: 12px;
     }
 </style>

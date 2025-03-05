@@ -1,0 +1,148 @@
+{
+  "10001": {
+    "basicInfo": {
+      "id": "10001",
+      "name": "Diabetes Group",
+      "description": "Type 2 Diabetes patients from Seoul National University Hospital",
+      "createdAt": "2024-01-15T09:00:00Z",
+      "updatedAt": "2024-03-20T15:30:00Z",
+      "author": {
+        "id": "user123",
+        "name": "Dr. Smith",
+        "department": "Endocrinology"
+      }
+    },
+    "totalPatients": 1000,
+    "statistics": {
+      "gender": {
+        "Male": 600,
+        "Female": 350,
+        "Unknown": 50
+      },
+      "age": [
+        { "label": "0-9", "value": 17 },
+        { "label": "10-19", "value": 7 },
+        { "label": "20-29", "value": 15 },
+        { "label": "30-39", "value": 103 },
+        { "label": "40-49", "value": 212 },
+        { "label": "50-59", "value": 310 },
+        { "label": "60-69", "value": 204 },
+        { "label": "70-79", "value": 93 },
+        { "label": "80+", "value": 39 }
+      ],
+      "mortality": {
+        "Alive": 985,
+        "Deceased": 15
+      },
+      "topTenDrugs": [
+        { "label": "Metformin", "value": 850 },
+        { "label": "Insulin Glargine", "value": 720 },
+        { "label": "Glimepiride", "value": 500 },
+        { "label": "Sitagliptin", "value": 450 },
+        { "label": "Empagliflozin", "value": 380 },
+        { "label": "Linagliptin", "value": 350 },
+        { "label": "Glipizide", "value": 300 },
+        { "label": "Dulaglutide", "value": 250 },
+        { "label": "Pioglitazone", "value": 200 },
+        { "label": "Glyburide", "value": 150 }
+      ]
+    }
+  },
+  "10002": {
+    "basicInfo": {
+      "id": "10002",
+      "name": "Hypertension Group",
+      "description": "Hypertension patients from Seoul National University Hospital",
+      "createdAt": "2024-02-01T10:00:00Z",
+      "updatedAt": "2024-03-20T15:30:00Z",
+      "author": {
+        "id": "user456",
+        "name": "Dr. Johnson",
+        "department": "Cardiology"
+      }
+    },
+    "totalPatients": 800,
+    "statistics": {
+      "gender": {
+        "Male": 450,
+        "Female": 350
+      },
+      "age": [
+        { "label": "0-9", "value": 5 },
+        { "label": "10-19", "value": 10 },
+        { "label": "20-29", "value": 20 },
+        { "label": "30-39", "value": 85 },
+        { "label": "40-49", "value": 180 },
+        { "label": "50-59", "value": 250 },
+        { "label": "60-69", "value": 150 },
+        { "label": "70-79", "value": 70 },
+        { "label": "80+", "value": 30 }
+      ],
+      "mortality": {
+        "Alive": 780,
+        "Deceased": 20
+      },
+      "topTenDrugs": [
+        { "label": "Amlodipine", "value": 600 },
+        { "label": "Losartan", "value": 550 },
+        { "label": "Hydrochlorothiazide", "value": 400 },
+        { "label": "Valsartan", "value": 350 },
+        { "label": "Lisinopril", "value": 300 },
+        { "label": "Telmisartan", "value": 250 },
+        { "label": "Ramipril", "value": 200 },
+        { "label": "Olmesartan", "value": 150 },
+        { "label": "Atenolol", "value": 100 },
+        { "label": "Nifedipine", "value": 80 }
+      ]
+    }
+  },
+  "10003": {
+    "basicInfo": {
+      "id": "10003",
+      "name": "Control Group",
+      "description": "Control group for comparison studies",
+      "createdAt": "2024-02-15T11:00:00Z",
+      "updatedAt": "2024-03-20T15:30:00Z",
+      "author": {
+        "id": "user789",
+        "name": "Dr. Lee",
+        "department": "Research"
+      }
+    },
+    "totalPatients": 500,
+    "statistics": {
+      "gender": {
+        "Male": 250,
+        "Female": 200,
+        "Unknown": 50
+      },
+      "age": [
+        { "label": "0-9", "value": 50 },
+        { "label": "10-19", "value": 55 },
+        { "label": "20-29", "value": 65 },
+        { "label": "30-39", "value": 70 },
+        { "label": "40-49", "value": 75 },
+        { "label": "50-59", "value": 65 },
+        { "label": "60-69", "value": 55 },
+        { "label": "70-79", "value": 40 },
+        { "label": "80+", "value": 25 }
+      ],
+      "mortality": {
+        "Alive": 495,
+        "Deceased": 5
+      },
+      "topTenDrugs": [
+        { "label": "Acetaminophen", "value": 200 },
+        { "label": "Ibuprofen", "value": 180 },
+        { "label": "Omeprazole", "value": 150 },
+        { "label": "Amoxicillin", "value": 120 },
+        { "label": "Lisinopril", "value": 100 },
+        { "label": "Metformin", "value": 80 },
+        { "label": "Amlodipine", "value": 70 },
+        { "label": "Metoprolol", "value": 60 },
+        { "label": "Sertraline", "value": 50 },
+        { "label": "Gabapentin", "value": 40 }
+      ]
+    }
+  }
+} 

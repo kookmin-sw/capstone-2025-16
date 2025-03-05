@@ -1,65 +1,51 @@
 <script>
-	export let title = ''; // 카드의 제목
-	export let description = ''; // 카드의 설명
-	export let type = 'full'; // 기본값: "full" (가로 전체 사용)
+	import { createEventDispatcher } from 'svelte';
 
-	$: cardWidth = type === 'half' ? '490px' : '1000px';
+	export let title = '';
+	export let description = '';
+	export let type = 'full';
+	export let chartId;
+
+	const dispatch = createEventDispatcher();
+
+	let visible = true;
+
+	function closeCard() {
+		dispatch('close', { id: chartId });
+		visible = false;
+	}
+
 </script>
 
-<style>
-	.card {
-		display: flex;
-		flex-direction: column;
-		border: 1px solid #ccc;
-		border-radius: 8px;
-		box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-		overflow: hidden;
-		width: var(--card-width); /* ✅ 동적으로 변경 */
-		height: 400px;
-		background-color: white;
-		margin: 0 auto;
-        min-width: 490px;
-	}
+{#if visible}
+<div 
+	class="bg-white border border-gray-300 rounded-lg shadow-md p-6 h-[350px] relative mb-7 w-full"
+	class:col-span-2={type === 'full'}
+	class:col-span-1={type === 'half'}>
 
-	.card-header {
-		background-color: lightskyblue;
-		color: black;
-		font-size: 18px;
-		font-weight: bold;
-		text-align: center;
-		padding: 10px;
-	}
-
-	.card-body {
-		flex-grow: 1;
-		display: flex;
-		justify-content: flex-start;
-		align-items: center;
-		background-color: white;
-		padding: 10px;
-		overflow: hidden;
-	}
-
-	.card-footer {
-		background-color: #f2f2f2;
-		color: #333;
-		font-size: 14px;
-		text-align: center;
-		padding: 10px;
-	}
-</style>
-
-<div class="card" style="--card-width: {cardWidth}">
-	<!-- 제목 -->
-	<div class="card-header">{title}</div>
-
-	<!-- 그래프 영역 -->
-	<div class="card-body">
-		<slot />
+	<!-- 헤더 영역 -->
+	<div class="flex items-center justify-between mb-4">
+		<div class="flex items-center gap-2">
+			<span class="text-lg font-semibold">{title}</span>
+			<div class="group relative">
+				<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
+				<div class="absolute bottom-full mb-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+					{description}
+				</div>
+			</div>
+		</div>
+		
+		<button 
+			class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer absolute right-6 top-6"
+			on:click={closeCard}
+		>
+			✕
+		</button>
 	</div>
 
-	<!-- 설명 -->
-    {#if description}
-		<div class="card-footer">{description}</div>
-	{/if}
+	<!-- 차트 컨텐츠 영역 -->
+	<div class="h-[calc(100%-3rem)] flex flex-col">
+		<slot />
+	</div>
 </div>
+{/if}
