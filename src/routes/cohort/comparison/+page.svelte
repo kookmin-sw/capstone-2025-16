@@ -141,30 +141,16 @@
     }
   }
 
-  async function loadGenderData() { // 선택된 코호트의 성별 데이터 로드 함수
+  async function loadGenderData() {
     try {
-      console.log('Selected Cohorts:', selectedCohorts); // 선택된 코호트 확인
+      const genderData = selectedCohorts.map((cohortId) => ({
+        data: cohortStats[cohortId].statistics.gender,
+        cohortName: cohortStats[cohortId].basicInfo.name
+      }));
 
-      const promises = selectedCohorts.map(async (cohort) => {
-        // 임시로 cohort1, cohort2, cohort3 사용
-        const cohortId = `cohort${selectedCohorts.indexOf(cohort) + 1}`;
-        console.log('Fetching data for cohort:', cohortId);
-        
-        const response = await fetch(`/api/chartdata/gender/${cohortId}`);
-        if (!response.ok) throw new Error('Failed to load gender data');
-        const data = await response.json();
-        return { cohortId, data };
-      });
-
-      const results = await Promise.all(promises);
-      genderDataMap = { ...genderDataMap };
-      results.forEach(({ cohortId, data }) => {
-        genderDataMap[cohortId] = data;
-      });
-
-      console.log('Loaded gender data:', genderDataMap);
+      setChartsData(genderData);
     } catch (error) {
-      console.error("❌ Gender data loading error:", error);
+      console.error('Error loading gender data:', error);
     }
   }
 
