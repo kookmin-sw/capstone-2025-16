@@ -24,7 +24,7 @@
 	class:col-span-1={type === 'half'}>
 
 	<!-- 헤더 영역 -->
-	<div class="flex items-center justify-between mb-4">
+	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-2">
 			<span class="text-lg font-semibold">{title}</span>
 			<div class="group relative">
