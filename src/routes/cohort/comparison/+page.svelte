@@ -11,6 +11,61 @@
   import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
 
+
+  import LineChart from "$lib/components/LineChart.svelte";
+              
+  let sampleData = [
+    // 0-9세
+    { x: "0-9", value: 150, series: "cohort1" },
+    { x: "0-9", value: 120, series: "cohort2" },
+    { x: "0-9", value: 180, series: "cohort3" },
+    // 10-19세
+    { x: "10-19", value: 220, series: "cohort1" },
+    { x: "10-19", value: 280, series: "cohort2" },
+    { x: "10-19", value: 190, series: "cohort3" },
+    // 20-29세
+    { x: "20-29", value: 350, series: "cohort1" },
+    { x: "20-29", value: 320, series: "cohort2" },
+    { x: "20-29", value: 420, series: "cohort3" },
+    // 30-39세
+    { x: "30-39", value: 480, series: "cohort1" },
+    { x: "30-39", value: 450, series: "cohort2" },
+    { x: "30-39", value: 380, series: "cohort3" },
+    // 40-49세
+    { x: "40-49", value: 420, series: "cohort1" },
+    { x: "40-49", value: 520, series: "cohort2" },
+    { x: "40-49", value: 480, series: "cohort3" },
+    // 50-59세
+    { x: "50-59", value: 380, series: "cohort1" },
+    { x: "50-59", value: 450, series: "cohort2" },
+    { x: "50-59", value: 520, series: "cohort3" },
+    // 60-69세
+    { x: "60-69", value: 420, series: "cohort1" },
+    { x: "60-69", value: 350, series: "cohort2" },
+    { x: "60-69", value: 380, series: "cohort3" },
+    // 70-79세
+    { x: "70-79", value: 280, series: "cohort1" },
+    { x: "70-79", value: 320, series: "cohort2" },
+    { x: "70-79", value: 250, series: "cohort3" },
+    // 80-89세
+    { x: "80-89", value: 180, series: "cohort1" },
+    { x: "80-89", value: 150, series: "cohort2" },
+    { x: "80-89", value: 220, series: "cohort3" },
+    // 90-99세
+    { x: "90-99", value: 120, series: "cohort1" },
+    { x: "90-99", value: 85, series: "cohort2" },
+    { x: "90-99", value: 95, series: "cohort3" },
+    // 100-109세
+    { x: "100-109", value: 40, series: "cohort1" },
+    { x: "100-109", value: 25, series: "cohort2" },
+    { x: "100-109", value: 35, series: "cohort3" },
+    // 110-119세
+    { x: "110-119", value: 10, series: "cohort1" },
+    { x: "110-119", value: 15, series: "cohort2" },
+    { x: "110-119", value: 8, series: "cohort3" }
+  ];
+            
+
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
@@ -336,13 +391,14 @@
               
               on:close={() => {}}
             >
-              <div class="w-full">
+              <div class="w-full h-full flex flex-col">
+                <div class="mt-4 flex-grow flex items-center justify-center">
                 <DonutChartGroup {chartsData} showCohortNames={true} />
+                </div>
               </div>
             </ChartCard>
-          {/if}
-          
-          <!-- 각 차트 컨텐츠 -->
+          {/if}          
+
           {#if selectItems[1].checked}
             <ChartCard 
               title="Death Ratio" 
@@ -368,27 +424,31 @@
           {/if}
 
           {#if selectItems[3].checked}
-            <ChartCard 
-              title="Distribution of First Occurrence Age"
-              description="Age distribution analysis"
-              chartId={4}
-              type="full"
-              on:close={handleChartClose}
+          <ChartCard 
+            title="Distribution of First Occurrence Age"
+            description="Age distribution analysis"
+            chartId={5}
+            type="full"
+            on:close={handleChartClose}
             >
-              <!-- <BarChartVertical data={patientAgeData} /> -->
-            </ChartCard>
+          <div class="w-full h-full flex flex-col">
+          <div class="mt-4 flex-grow flex items-center justify-center">
+            <LineChart data={sampleData} />
+          </div>
+        </div>
+        </ChartCard>
           {/if}
+          
 
           {#if selectItems[4].checked}
-            <ChartCard 
-              title="Number of Visits during cohort period"
-              description="Visit frequency analysis"
-              chartId={5}
-              type="full"
-              on:close={handleChartClose}
-            >
-              <!-- <BarChartVertical data={patientAgeData} /> -->
-            </ChartCard>
+          <ChartCard 
+            title="Number of Visits during cohort period"
+            description="Visit frequency analysis"
+            chartId={4}
+            type="full"
+            on:close={handleChartClose}
+          ></ChartCard>
+            
           {/if}
 
           {#if selectItems[5].checked}
