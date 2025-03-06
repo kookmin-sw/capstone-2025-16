@@ -123,6 +123,60 @@
     }
   ];
 
+  // 방문 횟수 데이터
+  let visitData = [
+    // cohort1의 방문 횟수 분포
+    { x: 1, value: 150, series: "cohort1" },
+    { x: 2, value: 120, series: "cohort1" },
+    { x: 3, value: 95, series: "cohort1" },
+    { x: 4, value: 85, series: "cohort1" },
+    { x: 5, value: 70, series: "cohort1" },
+    { x: 6, value: 55, series: "cohort1" },
+    { x: 7, value: 45, series: "cohort1" },
+    { x: 8, value: 35, series: "cohort1" },
+    { x: 9, value: 28, series: "cohort1" },
+    { x: 10, value: 20, series: "cohort1" },
+    { x: 11, value: 15, series: "cohort1" },
+    { x: 12, value: 10, series: "cohort1" },
+    { x: 13, value: 7, series: "cohort1" },
+    { x: 14, value: 5, series: "cohort1" },
+    { x: 15, value: 3, series: "cohort1" },
+    
+    // cohort2의 방문 횟수 분포
+    { x: 1, value: 140, series: "cohort2" },
+    { x: 2, value: 125, series: "cohort2" },
+    { x: 3, value: 105, series: "cohort2" },
+    { x: 4, value: 90, series: "cohort2" },
+    { x: 5, value: 80, series: "cohort2" },
+    { x: 6, value: 65, series: "cohort2" },
+    { x: 7, value: 52, series: "cohort2" },
+    { x: 8, value: 42, series: "cohort2" },
+    { x: 9, value: 33, series: "cohort2" },
+    { x: 10, value: 25, series: "cohort2" },
+    { x: 11, value: 18, series: "cohort2" },
+    { x: 12, value: 12, series: "cohort2" },
+    { x: 13, value: 8, series: "cohort2" },
+    { x: 14, value: 5, series: "cohort2" },
+    { x: 15, value: 3, series: "cohort2" },
+
+    // cohort3의 방문 횟수 분포
+    { x: 1, value: 160, series: "cohort3" },
+    { x: 2, value: 130, series: "cohort3" },
+    { x: 3, value: 100, series: "cohort3" },
+    { x: 4, value: 80, series: "cohort3" },
+    { x: 5, value: 65, series: "cohort3" },
+    { x: 6, value: 50, series: "cohort3" },
+    { x: 7, value: 40, series: "cohort3" },
+    { x: 8, value: 32, series: "cohort3" },
+    { x: 9, value: 25, series: "cohort3" },
+    { x: 10, value: 18, series: "cohort3" },
+    { x: 11, value: 13, series: "cohort3" },
+    { x: 12, value: 9, series: "cohort3" },
+    { x: 13, value: 6, series: "cohort3" },
+    { x: 14, value: 4, series: "cohort3" },
+    { x: 15, value: 2, series: "cohort3" }
+  ];
+
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
@@ -424,18 +478,18 @@
           {/if}
 
           {#if selectItems[3].checked}
-          <ChartCard 
-            title="Distribution of First Occurrence Age"
-            description="Age distribution analysis"
-            chartId={5}
-            type="full"
-            on:close={handleChartClose}
-            >
-          <div class="w-full h-full flex flex-col">
-          <div class="mt-4 flex-grow flex items-center justify-center">
-            <LineChart data={sampleData} />
+            <ChartCard 
+              title="Distribution of First Occurrence Age"
+              description="Age distribution analysis"
+              chartId={5}
+              type="full"
+              on:close={handleChartClose}
+              >
+            <div class="w-full h-full flex flex-col">
+            <div class="mt-4 flex-grow flex items-center justify-center">
+              <LineChart data={sampleData} />
+            </div>
           </div>
-        </div>
         </ChartCard>
           {/if}
           
@@ -447,7 +501,13 @@
             chartId={4}
             type="full"
             on:close={handleChartClose}
-          ></ChartCard>
+          >
+            <div class="w-full h-full flex flex-col">
+              <div class="mt-4 flex-grow flex items-center justify-center">
+                <LineChart data={visitData} />
+              </div>
+            </div>
+          </ChartCard>
             
           {/if}
 
