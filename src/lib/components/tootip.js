@@ -1,30 +1,22 @@
 export function tooltip(element) {
 	let div;
-	let name;
-    let gender;
-    let age;
-    let date;
-    let domain;
+    let start_date;
+    let end_date;
+    let visit_concept_id;
 	function mouseOver(event) {
 		// NOTE: remove the `title` attribute, to prevent showing the default browser tooltip
 		// remember to set it back on `mouseleave`
-		name = element.getAttribute('name');
-		element.removeAttribute('name');
+        start_date = element.getAttribute('start_date');
+		element.removeAttribute('start_date');
 
-        gender = element.getAttribute('gender');
-		element.removeAttribute('gender');
+        end_date = element.getAttribute('end_date');
+		element.removeAttribute('end_date');
 
-        age = element.getAttribute('age');
-		element.removeAttribute('age');
-
-        date = element.getAttribute('date');
-		element.removeAttribute('date');
-
-        domain = element.getAttribute('domain');
-		element.removeAttribute('domain');
+        visit_concept_id = element.getAttribute('visit_concept_id');
+		element.removeAttribute('visit_concept_id');
 
 		div = document.createElement('div');
-		div.textContent = `name : ${name}\ngender : ${gender}\nage : ${age}\ndate : ${date}\ndomain : ${domain}`;
+		div.textContent = `visit_concept_id : ${visit_concept_id}\nstart_date : ${start_date}\nend_date : ${end_date}`;
 		div.style = `
 			border: 1px solid #ddd;
 			box-shadow: 1px 1px 1px #ddd;
@@ -46,11 +38,9 @@ export function tooltip(element) {
 	function mouseLeave() {
 		document.body.removeChild(div);
 		// NOTE: restore the `title` attribute
-		element.setAttribute('name', name);
-        element.setAttribute('gender', gender);
-        element.setAttribute('age', age);
-        element.setAttribute('date', date);
-        element.setAttribute('domain', domain);
+        element.setAttribute('visit_concept_id', visit_concept_id);
+		element.setAttribute('start_date', start_date);
+        element.setAttribute('end_date', end_date);
 	}
 	
 	element.addEventListener('mouseover', mouseOver);
