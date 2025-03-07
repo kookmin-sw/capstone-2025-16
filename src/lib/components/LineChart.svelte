@@ -55,7 +55,7 @@
             // 스케일 설정
         const x = d3
             .scaleBand()
-            .domain(data.map(d => d.x))
+            .domain(data.map(d => d.label))
             .range([margin.left, width - margin.right])
             .padding(0.1);
     
@@ -87,7 +87,7 @@
         // 선 생성
         const line = d3
             .line()
-            .x(d => x(d.x) + x.bandwidth() / 2)
+            .x(d => x(d.label) + x.bandwidth() / 2)
             .y(d => y(d.value));
     
         const seriesData = d3.groups(data, d => d.series);
@@ -110,7 +110,7 @@
             .data(values)
             .enter()
             .append("circle")
-            .attr("cx", d => x(d.x) + x.bandwidth() / 2)
+            .attr("cx", d => x(d.label) + x.bandwidth() / 2)
             .attr("cy", d => y(d.value))
             .attr("r", 4)
             .attr("fill", color(key))
@@ -120,7 +120,7 @@
                 .style("display", "block")
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px")
-                .html(`Cohort: ${d.series}<br>Age: ${d.x}<br>Value: ${d.value}`);
+                .html(`Cohort: ${d.series}<br>Age: ${d.label}<br>Value: ${d.value}`);
             })
             .on("mouseout", function () {
                 tooltip.style("display", "none");
