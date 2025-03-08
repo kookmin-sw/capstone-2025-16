@@ -46,7 +46,8 @@
   let genderChartData = [];
   let mortalityChartData = [];
   let visitTypeChartData = [];
-  let visitTypeData = [];
+  let ageDistributionChartData = [];
+  let visitCountChartData = [];
 
   
   let hoveredLabel = null;
@@ -89,6 +90,8 @@
         genderChartData = await loadGenderData();
         mortalityChartData = await loadMortalityData();
         visitTypeChartData = await loadVisitTypeData();
+        ageDistributionChartData = await loadAgeDistributionData();
+        visitCountChartData = await loadVisitCountData();
       }
 
       
@@ -197,6 +200,53 @@
     return visitData;
   } catch (error) {
       console.error('Error loading visit type data:', error);
+      return [];
+    }
+  }
+
+  async function loadAgeDistributionData() {
+  try {
+    const ageData = [];
+    const ageGroups = [
+      "0-9", "10-19", "20-29", "30-39", "40-49", 
+      "50-59", "60-69", "70-79", "80-89", "90-99",
+      "100-109", "110-119", "120+"
+    ];
+    
+    selectedCohorts.forEach((cohortId) => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
+      ageGroups.forEach(ageGroup => {
+        ageData.push({
+          label: ageGroup,
+          value: cohortStats[cohortId].statistics.age[ageGroup],
+          series: cohortName
+        });
+      });
+    });
+    
+    return ageData;
+  } catch (error) {
+      console.error('Error loading age distribution data:', error);
+      return [];
+    }
+  }
+
+  async function loadVisitCountData() {
+  try {
+    const visitData = [];
+    selectedCohorts.forEach((cohortId) => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
+      Object.entries(cohortStats[cohortId].statistics.visitCount).forEach(([count, value]) => {
+        visitData.push({
+          label: count,
+          value: value,
+          series: cohortName
+        });
+      });
+    });
+    return visitData;
+  } catch (error) {
+      console.error('Error loading visit count data:', error);
       return [];
     }
   }
@@ -436,10 +486,10 @@
               >
             <div class="w-full h-full flex flex-col">
             <div class="mt-4 flex-grow flex items-center justify-center">
-              <LineChart data={sampleData} />
+                <LineChart data={ageDistributionChartData} />
+              </div>
             </div>
-          </div>
-        </ChartCard>
+          </ChartCard>
           {/if}
           
 
@@ -453,7 +503,9 @@
           >
             <div class="w-full h-full flex flex-col">
               <div class="mt-4 flex-grow flex items-center justify-center">
-                <LineChart data={visitData} />
+                {#if visitCountChartData && visitCountChartData.length > 0}
+                  <LineChart data={visitCountChartData} />
+                {/if}
               </div>
             </div>
           </ChartCard>
