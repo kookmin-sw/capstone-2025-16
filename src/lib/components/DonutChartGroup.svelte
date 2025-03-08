@@ -8,11 +8,11 @@
   
   // 모든 차트에서 사용할 공통 색상 매핑
   const colorMap = {
-    'Male': '#4299E1',     // blue-500
+    'Male': '#3498db',     // blue
     'Female': '#F9A7B0',   // pink
     'Unknown': '#808080',  // gray
-    'Alive': '#48BB78',    // green-500
-    'Deceased': '#F56565'  // red-500
+    'Alive': '#4CAF50',    // green
+    'Deceased': '#5E6C7F' // gray
   };
 </script>
 
