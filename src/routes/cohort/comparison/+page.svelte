@@ -13,59 +13,7 @@
 
 
   import LineChart from "$lib/components/LineChart.svelte";
-              
-  let sampleData = [
-    // 0-9세
-    { label: "0-9", value: 150, series: "cohort1" },
-    { label: "0-9", value: 120, series: "cohort2" },
-    { label: "0-9", value: 180, series: "cohort3" },
-    // 10-19세
-    { label: "10-19", value: 220, series: "cohort1" },
-    { label: "10-19", value: 280, series: "cohort2" },
-    { label: "10-19", value: 190, series: "cohort3" },
-    // 20-29세
-    { label: "20-29", value: 350, series: "cohort1" },
-    { label: "20-29", value: 320, series: "cohort2" },
-    { label: "20-29", value: 420, series: "cohort3" },
-    // 30-39세
-    { label: "30-39", value: 480, series: "cohort1" },
-    { label: "30-39", value: 450, series: "cohort2" },
-    { label: "30-39", value: 380, series: "cohort3" },
-    // 40-49세
-    { label: "40-49", value: 420, series: "cohort1" },
-    { label: "40-49", value: 520, series: "cohort2" },
-    { label: "40-49", value: 480, series: "cohort3" },
-    // 50-59세
-    { label: "50-59", value: 380, series: "cohort1" },
-    { label: "50-59", value: 450, series: "cohort2" },
-    { label: "50-59", value: 520, series: "cohort3" },
-    // 60-69세
-    { label: "60-69", value: 420, series: "cohort1" },
-    { label: "60-69", value: 350, series: "cohort2" },
-    { label: "60-69", value: 380, series: "cohort3" },
-    // 70-79세
-    { label: "70-79", value: 280, series: "cohort1" },
-    { label: "70-79", value: 320, series: "cohort2" },
-    { label: "70-79", value: 250, series: "cohort3" },
-    // 80-89세
-    { label: "80-89", value: 180, series: "cohort1" },
-    { label: "80-89", value: 150, series: "cohort2" },
-    { label: "80-89", value: 220, series: "cohort3" },
-    // 90-99세
-    { label: "90-99", value: 120, series: "cohort1" },
-    { label: "90-99", value: 85, series: "cohort2" },
-    { label: "90-99", value: 95, series: "cohort3" },
-    // 100-109세
-    { label: "100-109", value: 40, series: "cohort1" },
-    { label: "100-109", value: 25, series: "cohort2" },
-    { label: "100-109", value: 35, series: "cohort3" },
-    // 110-119세
-    { label: "110-119", value: 10, series: "cohort1" },
-    { label: "110-119", value: 15, series: "cohort2" },
-    { label: "110-119", value: 8, series: "cohort3" }
-  ];
-            
-
+  
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
@@ -128,61 +76,6 @@
   //   }
   // ];
   
-
-  // 방문 횟수 데이터
-  let visitData = [
-    // cohort1의 방문 횟수 분포
-    { label: 1, value: 150, series: "cohort1" },
-    { label: 2, value: 120, series: "cohort1" },
-    { label: 3, value: 95, series: "cohort1" },
-    { label: 4, value: 85, series: "cohort1" },
-    { label: 5, value: 70, series: "cohort1" },
-    { label: 6, value: 55, series: "cohort1" },
-    { label: 7, value: 45, series: "cohort1" },
-    { label: 8, value: 35, series: "cohort1" },
-    { label: 9, value: 28, series: "cohort1" },
-    { label: 10, value: 20, series: "cohort1" },
-    { label: 11, value: 15, series: "cohort1" },
-    { label: 12, value: 10, series: "cohort1" },
-    { label: 13, value: 7, series: "cohort1" },
-    { label: 14, value: 5, series: "cohort1" },
-    { label: 15, value: 3, series: "cohort1" },
-    
-    // cohort2의 방문 횟수 분포
-    { label: 1, value: 140, series: "cohort2" },
-    { label: 2, value: 125, series: "cohort2" },
-    { label: 3, value: 105, series: "cohort2" },
-    { label: 4, value: 90, series: "cohort2" },
-    { label: 5, value: 80, series: "cohort2" },
-    { label: 6, value: 65, series: "cohort2" },
-    { label: 7, value: 52, series: "cohort2" },
-    { label: 8, value: 42, series: "cohort2" },
-    { label: 9, value: 33, series: "cohort2" },
-    { label: 10, value: 25, series: "cohort2" },
-    { label: 11, value: 18, series: "cohort2" },
-    { label: 12, value: 12, series: "cohort2" },
-    { label: 13, value: 8, series: "cohort2" },
-    { label: 14, value: 5, series: "cohort2" },
-    { label: 15, value: 3, series: "cohort2" },
-
-    // cohort3의 방문 횟수 분포
-    { label: 1, value: 160, series: "cohort3" },
-    { label: 2, value: 130, series: "cohort3" },
-    { label: 3, value: 100, series: "cohort3" },
-    { label: 4, value: 80, series: "cohort3" },
-    { label: 5, value: 65, series: "cohort3" },
-    { label: 6, value: 50, series: "cohort3" },
-    { label: 7, value: 40, series: "cohort3" },
-    { label: 8, value: 32, series: "cohort3" },
-    { label: 9, value: 25, series: "cohort3" },
-    { label: 10, value: 18, series: "cohort3" },
-    { label: 11, value: 13, series: "cohort3" },
-    { label: 12, value: 9, series: "cohort3" },
-    { label: 13, value: 6, series: "cohort3" },
-    { label: 14, value: 4, series: "cohort3" },
-    { label: 15, value: 2, series: "cohort3" }
-  ];
-
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
