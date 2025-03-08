@@ -34,6 +34,13 @@
         "Alive": 985,
         "Deceased": 15
       },
+      "visitType": {
+        "Inpatient": 250,
+        "Outpatient": 1200,
+        "Emergency Room Visit": 180,
+        "Home Visit": 50,
+        "Other Visit Type": 20
+      },
       "topTenDrugs": [
         { "label": "Metformin", "value": 850 },
         { "label": "Insulin Glargine", "value": 720 },
@@ -81,6 +88,13 @@
       "mortality": {
         "Alive": 780,
         "Deceased": 20
+      },
+      "visitType": {
+        "Inpatient": 180,
+        "Outpatient": 950,
+        "Emergency Room Visit": 120,
+        "Home Visit": 30,
+        "Other Visit Type": 15
       },
       "topTenDrugs": [
         { "label": "Amlodipine", "value": 600 },
@@ -130,6 +144,13 @@
       "mortality": {
         "Alive": 495,
         "Deceased": 5
+      },
+      "visitType": {
+        "Inpatient": 300,
+        "Outpatient": 800,
+        "Emergency Room Visit": 220,
+        "Home Visit": 40,
+        "Other Visit Type": 25
       },
       "topTenDrugs": [
         { "label": "Acetaminophen", "value": 200 },
