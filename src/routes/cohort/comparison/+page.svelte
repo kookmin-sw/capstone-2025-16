@@ -95,6 +95,7 @@
   let selectChartRef; // 드롭다운 메뉴의 참조를 저장할 변수
 
   let genderDataMap = {};
+  let genderChartData = [];
 
   let hoveredLabel = null;
   
@@ -186,6 +187,10 @@
     try {
       cohortData = loadCohortListData(cohortStats, cohortIds);
       console.log('load cohortData', cohortData);
+
+      if (selectedCohorts.length > 0) {
+        genderChartData = await loadGenderData();
+      }
       
       // 차트 데이터 로드
       const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
@@ -203,9 +208,6 @@
       console.error("Error loading data:", error);
     }
 
-    // if (selectedCohorts.length > 0) {
-    //   await loadGenderData();
-    // }
   });
 
   function loadCohortListData(cohortStats, selectedCohortIds) {
@@ -263,14 +265,13 @@
 
   async function loadGenderData() {
     try {
-      const genderData = selectedCohorts.map((cohortId) => ({
+      return selectedCohorts.map((cohortId) => ({
         data: cohortStats[cohortId].statistics.gender,
         cohortName: cohortStats[cohortId].basicInfo.name
       }));
-
-      setChartsData(genderData);
     } catch (error) {
       console.error('Error loading gender data:', error);
+      return [];
     }
   }
 
@@ -458,7 +459,7 @@
             >
               <div class="w-full h-full flex flex-col">
                 <div class="mt-4 flex-grow flex items-center justify-center">
-                <!-- <DonutChartGroup {chartsData} showCohortNames={true} /> -->
+                  <DonutChartGroup chartsData={genderChartData} showCohortNames={true} />
                 </div>
               </div>
             </ChartCard>
