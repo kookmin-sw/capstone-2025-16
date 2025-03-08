@@ -75,14 +75,14 @@
   let topTenDrugData = [];
   let patientAgeData = [];
   let genderData = {};
-  let deathRatioData = {};
+  let mortalityChartData = [];
   
   let activeTab = 'default'; // 탭 활성화 상태 관리
 
   let selectedForDeletion = {}; // 삭제할 코호트를 체크박스로 선택할 때 상태 관리
   let selectItems = [
     {id: 1, name: 'Gender Ratio', checked: true},
-    {id: 2, name: 'Death Ratio', checked: true},
+    {id: 2, name: 'Mortality', checked: true},
     {id: 3, name: 'Visit Type Ratio', checked: true},
     {id: 4, name: 'Distribution of First Occurrence Age', checked: true},
     {id: 5, name: 'Number of Visits during cohort period', checked: true},
@@ -190,20 +190,22 @@
 
       if (selectedCohorts.length > 0) {
         genderChartData = await loadGenderData();
+        mortalityChartData = await loadMortalityData();
       }
-      
-      // 차트 데이터 로드
-      const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
-        fetch("/api/chartdata/topTenDrug"),
-        fetch("/api/chartdata/patientAge"),
-        fetch("/api/chartdata/gender"),
-        fetch("/api/chartdata/deathRatio")
-      ]);
 
-      topTenDrugData = await topTenDrugRes.json();
-      patientAgeData = await patientAgeRes.json();
-      genderData = await genderRes.json();
-      deathRatioData = await deathRatioRes.json();
+      
+      // // 차트 데이터 로드
+      // const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
+      //   fetch("/api/chartdata/topTenDrug"),
+      //   fetch("/api/chartdata/patientAge"),
+      //   fetch("/api/chartdata/gender"),
+      //   fetch("/api/chartdata/deathRatio")
+      // ]);
+
+      // topTenDrugData = await topTenDrugRes.json();
+      // patientAgeData = await patientAgeRes.json();
+      // genderData = await genderRes.json();
+      // deathRatioData = await deathRatioRes.json();
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -274,6 +276,20 @@
       return [];
     }
   }
+
+  async function loadMortalityData() {
+  try {
+    const mortalityData = selectedCohorts.map((cohortId) => ({
+      data: cohortStats[cohortId].statistics.mortality,
+      cohortName: cohortStats[cohortId].basicInfo.name
+    }));
+    return mortalityData;
+  } catch (error) {
+      console.error('Error loading mortality data:', error);
+      return [];
+    }
+  }
+  
 
 </script>
 
@@ -467,13 +483,19 @@
 
           {#if selectItems[1].checked}
             <ChartCard 
-              title="Death Ratio" 
-              description="Comparison of death ratios across selected cohorts"
+              title="Mortality" 
+              description="Comparison of mortality across selected cohorts"
               chartId={2}
               type="full"
               on:close={handleChartClose}
             >
-              <!-- <DonutChart data={deathRatioData} /> -->
+            <div class="w-full h-full flex flex-col">
+              <div class="mt-4 flex-grow flex items-center justify-center">
+                {#if mortalityChartData && mortalityChartData.length > 0}
+                  <DonutChartGroup chartsData={mortalityChartData} showCohortNames={true} />
+                {/if}
+              </div>
+            </div>
             </ChartCard>
           {/if}
 
