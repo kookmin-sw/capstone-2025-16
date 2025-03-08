@@ -75,10 +75,9 @@
   let topTenDrugData = [];
   let patientAgeData = [];
   let genderData = {};
-  let mortalityChartData = [];
   
   let activeTab = 'default'; // 탭 활성화 상태 관리
-
+  
   let selectedForDeletion = {}; // 삭제할 코호트를 체크박스로 선택할 때 상태 관리
   let selectItems = [
     {id: 1, name: 'Gender Ratio', checked: true},
@@ -93,10 +92,15 @@
   ]
   let isSelectChartOpen = false; // 차트 선택 드롭다운 메뉴 상태 관리
   let selectChartRef; // 드롭다운 메뉴의 참조를 저장할 변수
-
+  
   let genderDataMap = {};
-  let genderChartData = [];
 
+  let genderChartData = [];
+  let mortalityChartData = [];
+  let visitTypeChartData = [];
+  let visitTypeData = [];
+
+  
   let hoveredLabel = null;
   
   $: uniqueGenderLabels = Object.values(genderDataMap)
@@ -191,6 +195,7 @@
       if (selectedCohorts.length > 0) {
         genderChartData = await loadGenderData();
         mortalityChartData = await loadMortalityData();
+        visitTypeChartData = await loadVisitTypeData();
       }
 
       
@@ -289,8 +294,19 @@
       return [];
     }
   }
-  
 
+  async function loadVisitTypeData() {
+  try {
+    const visitData = selectedCohorts.map((cohortId) => ({
+      data: cohortStats[cohortId].statistics.visitType,
+      cohortName: cohortStats[cohortId].basicInfo.name
+    }));
+    return visitData;
+  } catch (error) {
+      console.error('Error loading visit type data:', error);
+      return [];
+    }
+  }
 </script>
 
 <style>
@@ -507,7 +523,13 @@
               type="full"
               on:close={handleChartClose}
             >
-              <!-- <DonutChart data={deathRatioData} /> -->
+            <div class="w-full h-full flex flex-col">
+              <div class="mt-4 flex-grow flex items-center justify-center">
+                {#if visitTypeChartData && visitTypeChartData.length > 0}
+                  <DonutChartGroup chartsData={visitTypeChartData} showCohortNames={true} />
+                {/if}
+              </div>
+            </div>
             </ChartCard>
           {/if}
 
