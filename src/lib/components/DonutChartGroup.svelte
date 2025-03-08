@@ -2,7 +2,7 @@
   import DonutChart from './DonutChart.svelte';
   
   export let chartsData = []; // [{data: {}, cohortName: ''}, ...]
-  export let showLegend = true;
+  export let showCohortNames = true;
   
   let hoveredLabel = null;
   
@@ -25,7 +25,7 @@
           {hoveredLabel}
           {colorMap}
           on:labelHover={(e) => hoveredLabel = e.detail}
-          showLegend={false}
+          showCohortNames={false}
           size={200}
         />
         <span class="text-sm font-medium text-gray-600">{cohortName}</span>
@@ -33,7 +33,7 @@
     {/each}
   </div>
 
-  {#if showLegend && chartsData.length > 0}
+  {#if showCohortNames && chartsData.length > 0}
     <div class="flex flex-row md:flex-col gap-3 mt-4 md:mt-0">
       {#each Object.entries(chartsData[0].data) as [label, _]}
         <div 
