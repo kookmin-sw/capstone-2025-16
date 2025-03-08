@@ -108,20 +108,21 @@
     .domain(["Male", "Female", "Unknown"])
     .range(["#3498db", "#F9A7B0", "#808080"]);
 
-  const chartsData = [
-    {
-      data: cohortStats["10001"].statistics.gender,
-      cohortName: cohortStats["10001"].basicInfo.name
-    },
-    {
-      data: cohortStats["10002"].statistics.gender,
-      cohortName: cohortStats["10002"].basicInfo.name
-    },
-    {
-      data: cohortStats["10003"].statistics.gender,
-      cohortName: cohortStats["10003"].basicInfo.name
-    }
-  ];
+  // const chartsData = [
+  //   {
+  //     data: cohortStats["10001"].statistics.gender,
+  //     cohortName: cohortStats["10001"].basicInfo.name
+  //   },
+  //   {
+  //     data: cohortStats["10002"].statistics.gender,
+  //     cohortName: cohortStats["10002"].basicInfo.name
+  //   },
+  //   {
+  //     data: cohortStats["10003"].statistics.gender,
+  //     cohortName: cohortStats["10003"].basicInfo.name
+  //   }
+  // ];
+  
 
   // 방문 횟수 데이터
   let visitData = [
@@ -183,10 +184,8 @@
     expandedStates = new Array(cohortIds.length).fill(false);
 
     try {
-      const response = await fetch('/cohort-list-testdata.json');
-      const allData = await response.json();
-      cohortData = allData.filter(cohort => cohortIds.includes(cohort.id));
-      console.log('cohortData', cohortData);
+      cohortData = loadCohortListData(cohortStats, cohortIds);
+      console.log('load cohortData', cohortData);
       
       // 차트 데이터 로드
       const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
@@ -204,10 +203,22 @@
       console.error("Error loading data:", error);
     }
 
-    if (selectedCohorts.length > 0) {
-      await loadGenderData();
-    }
+    // if (selectedCohorts.length > 0) {
+    //   await loadGenderData();
+    // }
   });
+
+  function loadCohortListData(cohortStats, selectedCohortIds) {
+    return selectedCohortIds.map(id => ({
+      id: id,
+      name: cohortStats[id].basicInfo.name,
+      description: cohortStats[id].basicInfo.description,
+      author: cohortStats[id].basicInfo.author.name,
+      createdAt: cohortStats[id].basicInfo.createdAt,
+      updatedAt: cohortStats[id].basicInfo.updatedAt,
+      totalPatients: cohortStats[id].totalPatients
+    }))
+  }
 
   async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
     await tick();
@@ -324,7 +335,7 @@
                 </div>
                 
                 <div class="text-blue-600 font-medium">{cohort.name}</div>
-                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">150,000</span>
+                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">{cohort.totalPatients}</span>
                 <span class="text-sm text-gray-500">Updated: {cohort.updatedAt}</span>
               </div>
             </div>
@@ -447,7 +458,7 @@
             >
               <div class="w-full h-full flex flex-col">
                 <div class="mt-4 flex-grow flex items-center justify-center">
-                <DonutChartGroup {chartsData} showCohortNames={true} />
+                <!-- <DonutChartGroup {chartsData} showCohortNames={true} /> -->
                 </div>
               </div>
             </ChartCard>
