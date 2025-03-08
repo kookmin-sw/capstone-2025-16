@@ -6,13 +6,22 @@
   
   let hoveredLabel = null;
   
-  // 모든 차트에서 사용할 공통 색상 매핑
   const colorMap = {
+    // Gender colors
     'Male': '#3498db',     // blue
     'Female': '#F9A7B0',   // pink
     'Unknown': '#808080',  // gray
+    
+    // Mortality colors
     'Alive': '#4CAF50',    // green
-    'Deceased': '#5E6C7F' // gray
+    'Deceased': '#5E6C7F', // gray
+    
+    // Visit Type colors
+    'Inpatient': '#FF6B6B',         // 빨간색 계열 (입원 - 중증)
+    'Outpatient': '#4ECDC4',        // 청록색 (외래 - 일반)
+    'Emergency Room Visit': '#FFB236', // 주황색 (응급실 - 긴급)
+    'Home Visit': '#95A5A6',        // 회색빛 파랑 (재택)
+    'Other Visit Type': '#BDC3C7'   // 밝은 회색 (기타)
   };
 </script>
 

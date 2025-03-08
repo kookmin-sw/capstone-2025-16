@@ -16,8 +16,22 @@
     $: processedData = data && Object.keys(data).length > 0 ? Object.entries(data) : [];
     $: color = d3
         .scaleOrdinal()
-        .domain(["Male", "Female", "Unknown", "Alive", "Deceased"])
-        .range(["#3498db", "#F9A7B0","#808080","#4CAF50", "#5E6C7F"]);
+        .domain([
+          // Gender
+          "Male", "Female", "Unknown",
+          // Mortality
+          "Alive", "Deceased",
+          // Visit Type
+          "Inpatient", "Outpatient", "Emergency Room Visit", "Home Visit", "Other Visit Type"
+        ])
+        .range([
+          // Gender colors
+          "#3498db", "#F9A7B0", "#808080",
+          // Mortality colors
+          "#4CAF50", "#5E6C7F",
+          // Visit Type colors
+          "#FF6B6B", "#4ECDC4", "#FFB236", "#95A5A6", "#BDC3C7"
+        ]);
 
     // 데이터가 있을 때만 실행하도록 수정
     $: data_ready = processedData.length > 0 ? d3.pie().sort(null).value(d => d[1])(processedData) : [];
@@ -108,18 +122,18 @@
     }
 
     .value-text {
-        font-size: 16px;
+        font-size: 13px;
         fill: white;
         pointer-events: none;
     }
 
     .value-text .label {
         font-weight: bold;
-        font-size: 13px;
+        font-size: 10px;
     }
 
     .value-text .value,
     .value-text .percent {
-        font-size: 12px;
+        font-size: 9px;
     }
 </style>
