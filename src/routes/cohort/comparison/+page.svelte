@@ -18,11 +18,11 @@
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
   let expandedStates = []; // 코호트 목록 toggle 펼치거나 접기 위한 상태 배열
-  
-  let activeTab = 'default'; // 탭 활성화 상태 관리
-  
   let selectedForDeletion = {}; // 삭제할 코호트를 체크박스로 선택할 때 상태 관리
-  let selectItems = [
+  
+  // 탭 관련
+  let activeTab = 'default'; // 탭 활성화 상태 관리
+  let selectItems = [ // default 차트에서 차트 선택 박스
     {id: 1, name: 'Gender Ratio', checked: true},
     {id: 2, name: 'Mortality', checked: true},
     {id: 3, name: 'Visit Type Ratio', checked: true},
@@ -36,20 +36,14 @@
   let isSelectChartOpen = false; // 차트 선택 드롭다운 메뉴 상태 관리
   let selectChartRef; // 드롭다운 메뉴의 참조를 저장할 변수
   
-  let genderDataMap = {};
-
+  // 차트 데이터
   let genderChartData = [];
   let mortalityChartData = [];
   let visitTypeChartData = [];
   let ageDistributionChartData = [];
   let visitCountChartData = [];
-
+  let topTenDrugsData = [];
   
-  let hoveredLabel = null;
-  
-  $: uniqueGenderLabels = Object.values(genderDataMap)
-    .flatMap(data => Object.keys(data))
-    .filter((value, index, self) => self.indexOf(value) === index);
 
   // DonutChart와 동일한 색상 매핑 사용
   const color = d3
@@ -57,10 +51,6 @@
     .domain(["Male", "Female", "Unknown"])
     .range(["#3498db", "#F9A7B0", "#808080"]);
 
-  //     cohortName: cohortStats["10003"].basicInfo.name
-  //   }
-  // ];
-  
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
@@ -78,19 +68,7 @@
         visitCountChartData = await loadVisitCountData();
       }
 
-      
-      // // 차트 데이터 로드
-      // const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
-      //   fetch("/api/chartdata/topTenDrug"),
-      //   fetch("/api/chartdata/patientAge"),
-      //   fetch("/api/chartdata/gender"),
-      //   fetch("/api/chartdata/deathRatio")
-      // ]);
-
-      // topTenDrugData = await topTenDrugRes.json();
-      // patientAgeData = await patientAgeRes.json();
-      // genderData = await genderRes.json();
-      // deathRatioData = await deathRatioRes.json();
+      }
     } catch (error) {
       console.error("Error loading data:", error);
     }
