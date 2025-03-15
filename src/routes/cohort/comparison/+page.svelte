@@ -10,79 +10,22 @@
   import * as d3 from 'd3';
   import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
+  import DataTable from '$lib/components/DataTable.svelte';
 
 
   import LineChart from "$lib/components/LineChart.svelte";
-              
-  let sampleData = [
-    // 0-9세
-    { label: "0-9", value: 150, series: "cohort1" },
-    { label: "0-9", value: 120, series: "cohort2" },
-    { label: "0-9", value: 180, series: "cohort3" },
-    // 10-19세
-    { label: "10-19", value: 220, series: "cohort1" },
-    { label: "10-19", value: 280, series: "cohort2" },
-    { label: "10-19", value: 190, series: "cohort3" },
-    // 20-29세
-    { label: "20-29", value: 350, series: "cohort1" },
-    { label: "20-29", value: 320, series: "cohort2" },
-    { label: "20-29", value: 420, series: "cohort3" },
-    // 30-39세
-    { label: "30-39", value: 480, series: "cohort1" },
-    { label: "30-39", value: 450, series: "cohort2" },
-    { label: "30-39", value: 380, series: "cohort3" },
-    // 40-49세
-    { label: "40-49", value: 420, series: "cohort1" },
-    { label: "40-49", value: 520, series: "cohort2" },
-    { label: "40-49", value: 480, series: "cohort3" },
-    // 50-59세
-    { label: "50-59", value: 380, series: "cohort1" },
-    { label: "50-59", value: 450, series: "cohort2" },
-    { label: "50-59", value: 520, series: "cohort3" },
-    // 60-69세
-    { label: "60-69", value: 420, series: "cohort1" },
-    { label: "60-69", value: 350, series: "cohort2" },
-    { label: "60-69", value: 380, series: "cohort3" },
-    // 70-79세
-    { label: "70-79", value: 280, series: "cohort1" },
-    { label: "70-79", value: 320, series: "cohort2" },
-    { label: "70-79", value: 250, series: "cohort3" },
-    // 80-89세
-    { label: "80-89", value: 180, series: "cohort1" },
-    { label: "80-89", value: 150, series: "cohort2" },
-    { label: "80-89", value: 220, series: "cohort3" },
-    // 90-99세
-    { label: "90-99", value: 120, series: "cohort1" },
-    { label: "90-99", value: 85, series: "cohort2" },
-    { label: "90-99", value: 95, series: "cohort3" },
-    // 100-109세
-    { label: "100-109", value: 40, series: "cohort1" },
-    { label: "100-109", value: 25, series: "cohort2" },
-    { label: "100-109", value: 35, series: "cohort3" },
-    // 110-119세
-    { label: "110-119", value: 10, series: "cohort1" },
-    { label: "110-119", value: 15, series: "cohort2" },
-    { label: "110-119", value: 8, series: "cohort3" }
-  ];
-            
-
+  
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
   let expandedStates = []; // 코호트 목록 toggle 펼치거나 접기 위한 상태 배열
-
-  // 차트 데이터
-  let topTenDrugData = [];
-  let patientAgeData = [];
-  let genderData = {};
-  let deathRatioData = {};
-  
-  let activeTab = 'default'; // 탭 활성화 상태 관리
-
   let selectedForDeletion = {}; // 삭제할 코호트를 체크박스로 선택할 때 상태 관리
-  let selectItems = [
+  
+  // 탭 관련
+  let activeTab = 'default'; // 탭 활성화 상태 관리
+  let selectItems = [ // default 차트에서 차트 선택 박스
     {id: 1, name: 'Gender Ratio', checked: true},
-    {id: 2, name: 'Death Ratio', checked: true},
+    {id: 2, name: 'Mortality', checked: true},
     {id: 3, name: 'Visit Type Ratio', checked: true},
     {id: 4, name: 'Distribution of First Occurrence Age', checked: true},
     {id: 5, name: 'Number of Visits during cohort period', checked: true},
@@ -93,14 +36,28 @@
   ]
   let isSelectChartOpen = false; // 차트 선택 드롭다운 메뉴 상태 관리
   let selectChartRef; // 드롭다운 메뉴의 참조를 저장할 변수
-
-  let genderDataMap = {};
-
-  let hoveredLabel = null;
   
-  $: uniqueGenderLabels = Object.values(genderDataMap)
-    .flatMap(data => Object.keys(data))
-    .filter((value, index, self) => self.indexOf(value) === index);
+  // 차트 데이터
+  let genderChartData = [];
+  let mortalityChartData = [];
+  let visitTypeChartData = [];
+  let ageDistributionChartData = [];
+  let visitCountChartData = [];
+  let topTenDrugsData = [];
+  
+  let selectedCohortStates = {
+    drugs: '',
+    conditions: '',
+    procedures: '',
+    measurements: '',
+  };
+
+  let chartData = {
+    drugs: [],
+    conditions: [],
+    procedures: [],
+    measurements: []
+  }
 
   // DonutChart와 동일한 색상 매핑 사용
   const color = d3
@@ -108,74 +65,11 @@
     .domain(["Male", "Female", "Unknown"])
     .range(["#3498db", "#F9A7B0", "#808080"]);
 
-  const chartsData = [
-    {
-      data: cohortStats["10001"].statistics.gender,
-      cohortName: cohortStats["10001"].basicInfo.name
-    },
-    {
-      data: cohortStats["10002"].statistics.gender,
-      cohortName: cohortStats["10002"].basicInfo.name
-    },
-    {
-      data: cohortStats["10003"].statistics.gender,
-      cohortName: cohortStats["10003"].basicInfo.name
-    }
-  ];
-
-  // 방문 횟수 데이터
-  let visitData = [
-    // cohort1의 방문 횟수 분포
-    { label: 1, value: 150, series: "cohort1" },
-    { label: 2, value: 120, series: "cohort1" },
-    { label: 3, value: 95, series: "cohort1" },
-    { label: 4, value: 85, series: "cohort1" },
-    { label: 5, value: 70, series: "cohort1" },
-    { label: 6, value: 55, series: "cohort1" },
-    { label: 7, value: 45, series: "cohort1" },
-    { label: 8, value: 35, series: "cohort1" },
-    { label: 9, value: 28, series: "cohort1" },
-    { label: 10, value: 20, series: "cohort1" },
-    { label: 11, value: 15, series: "cohort1" },
-    { label: 12, value: 10, series: "cohort1" },
-    { label: 13, value: 7, series: "cohort1" },
-    { label: 14, value: 5, series: "cohort1" },
-    { label: 15, value: 3, series: "cohort1" },
-    
-    // cohort2의 방문 횟수 분포
-    { label: 1, value: 140, series: "cohort2" },
-    { label: 2, value: 125, series: "cohort2" },
-    { label: 3, value: 105, series: "cohort2" },
-    { label: 4, value: 90, series: "cohort2" },
-    { label: 5, value: 80, series: "cohort2" },
-    { label: 6, value: 65, series: "cohort2" },
-    { label: 7, value: 52, series: "cohort2" },
-    { label: 8, value: 42, series: "cohort2" },
-    { label: 9, value: 33, series: "cohort2" },
-    { label: 10, value: 25, series: "cohort2" },
-    { label: 11, value: 18, series: "cohort2" },
-    { label: 12, value: 12, series: "cohort2" },
-    { label: 13, value: 8, series: "cohort2" },
-    { label: 14, value: 5, series: "cohort2" },
-    { label: 15, value: 3, series: "cohort2" },
-
-    // cohort3의 방문 횟수 분포
-    { label: 1, value: 160, series: "cohort3" },
-    { label: 2, value: 130, series: "cohort3" },
-    { label: 3, value: 100, series: "cohort3" },
-    { label: 4, value: 80, series: "cohort3" },
-    { label: 5, value: 65, series: "cohort3" },
-    { label: 6, value: 50, series: "cohort3" },
-    { label: 7, value: 40, series: "cohort3" },
-    { label: 8, value: 32, series: "cohort3" },
-    { label: 9, value: 25, series: "cohort3" },
-    { label: 10, value: 18, series: "cohort3" },
-    { label: 11, value: 13, series: "cohort3" },
-    { label: 12, value: 9, series: "cohort3" },
-    { label: 13, value: 6, series: "cohort3" },
-    { label: 14, value: 4, series: "cohort3" },
-    { label: 15, value: 2, series: "cohort3" }
-  ];
+  const drugTableHeaders = [
+    {key: 'rank', label: 'Rank'},
+    {key: 'name', label: 'Name'},
+    {key: 'count', label: 'Count'}
+  ]
 
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
@@ -183,31 +77,53 @@
     expandedStates = new Array(cohortIds.length).fill(false);
 
     try {
-      const response = await fetch('/cohort-list-testdata.json');
-      const allData = await response.json();
-      cohortData = allData.filter(cohort => cohortIds.includes(cohort.id));
-      console.log('cohortData', cohortData);
-      
-      // 차트 데이터 로드
-      const [topTenDrugRes, patientAgeRes, genderRes, deathRatioRes] = await Promise.all([
-        fetch("/api/chartdata/topTenDrug"),
-        fetch("/api/chartdata/patientAge"),
-        fetch("/api/chartdata/gender"),
-        fetch("/api/chartdata/deathRatio")
-      ]);
+      cohortData = loadCohortListData(cohortStats, cohortIds);
+      console.log('load cohortData', cohortData);
 
-      topTenDrugData = await topTenDrugRes.json();
-      patientAgeData = await patientAgeRes.json();
-      genderData = await genderRes.json();
-      deathRatioData = await deathRatioRes.json();
+      if (selectedCohorts.length > 0) {
+        genderChartData = await loadGenderData();
+        mortalityChartData = await loadMortalityData();
+        visitTypeChartData = await loadVisitTypeData();
+        ageDistributionChartData = await loadAgeDistributionData();
+        visitCountChartData = await loadVisitCountData();
+        topTenDrugsData = await loadTopTenDrugsData();
+
+        // 각 차트별로 초기 코호트 선택 설정
+        Object.keys(selectedCohortStates).forEach(chartType => {
+          if (!selectedCohortStates[chartType]) {
+            selectedCohortStates[chartType] = selectedCohorts[0];
+          }
+        });
+
+        // 각 차트별 데이터 초기화
+        chartData.drugs = selectedCohorts.map(cohortId => ({
+          cohortName: cohortStats[cohortId].basicInfo.name,
+          drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
+            .map(([name, count], index) => ({
+              rank: index + 1,
+              name,
+              count
+            }))
+        }));
+
+      }
     } catch (error) {
       console.error("Error loading data:", error);
     }
 
-    if (selectedCohorts.length > 0) {
-      await loadGenderData();
-    }
   });
+
+  function loadCohortListData(cohortStats, selectedCohortIds) {
+    return selectedCohortIds.map(id => ({
+      id: id,
+      name: cohortStats[id].basicInfo.name,
+      description: cohortStats[id].basicInfo.description,
+      author: cohortStats[id].basicInfo.author.name,
+      createdAt: cohortStats[id].basicInfo.createdAt,
+      updatedAt: cohortStats[id].basicInfo.updatedAt,
+      totalPatients: cohortStats[id].totalPatients
+    }))
+  }
 
   async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
     await tick();
@@ -252,14 +168,128 @@
 
   async function loadGenderData() {
     try {
-      const genderData = selectedCohorts.map((cohortId) => ({
+      return selectedCohorts.map((cohortId) => ({
         data: cohortStats[cohortId].statistics.gender,
         cohortName: cohortStats[cohortId].basicInfo.name
       }));
-
-      setChartsData(genderData);
     } catch (error) {
       console.error('Error loading gender data:', error);
+      return [];
+    }
+  }
+
+  async function loadMortalityData() {
+  try {
+    const mortalityData = selectedCohorts.map((cohortId) => ({
+      data: cohortStats[cohortId].statistics.mortality,
+      cohortName: cohortStats[cohortId].basicInfo.name
+    }));
+    return mortalityData;
+  } catch (error) {
+      console.error('Error loading mortality data:', error);
+      return [];
+    }
+  }
+
+  async function loadVisitTypeData() {
+  try {
+    const visitData = selectedCohorts.map((cohortId) => ({
+      data: cohortStats[cohortId].statistics.visitType,
+      cohortName: cohortStats[cohortId].basicInfo.name
+    }));
+    return visitData;
+  } catch (error) {
+      console.error('Error loading visit type data:', error);
+      return [];
+    }
+  }
+
+  async function loadAgeDistributionData() {
+  try {
+    const ageData = [];
+    const ageGroups = [
+      "0-9", "10-19", "20-29", "30-39", "40-49", 
+      "50-59", "60-69", "70-79", "80-89", "90-99",
+      "100-109", "110-119", "120+"
+    ];
+    
+    selectedCohorts.forEach((cohortId) => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
+      ageGroups.forEach(ageGroup => {
+        ageData.push({
+          label: ageGroup,
+          value: cohortStats[cohortId].statistics.age[ageGroup],
+          series: cohortName
+        });
+      });
+    });
+    
+    return ageData;
+  } catch (error) {
+      console.error('Error loading age distribution data:', error);
+      return [];
+    }
+  }
+
+  async function loadVisitCountData() {
+  try {
+    const visitData = [];
+    selectedCohorts.forEach((cohortId) => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
+      Object.entries(cohortStats[cohortId].statistics.visitCount).forEach(([count, value]) => {
+        visitData.push({
+          label: count,
+          value: value,
+          series: cohortName
+        });
+      });
+    });
+    return visitData;
+  } catch (error) {
+      console.error('Error loading visit count data:', error);
+      return [];
+    }
+  }
+
+  async function loadTopTenDrugsData() {
+    try {
+      return selectedCohorts.map((cohortId) => ({
+        cohortName: cohortStats[cohortId].basicInfo.name,
+        drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
+          .map(([name, count], index) => ({
+            rank: index + 1,
+            name,
+            count
+          }))
+      }));
+    } catch (error) {
+      console.error('Error loading top drugs data:', error);
+      return [];
+    }
+  }
+
+  function handleCohortChange(chartType, event) {
+    selectedCohortStates[chartType] = event.target.value;
+    console.log(`Selected cohort for ${chartType} changed to:`, selectedCohortStates[chartType]);
+  }
+
+  function handleCohortSelect(event) {
+    const { chartId, optionId } = event.detail;
+    
+    // chartId에 따라 적절한 상태 업데이트
+    switch (chartId) {
+      case 6:  // Top 10 Drugs
+        selectedCohortStates.drugs = optionId;
+        break;
+      case 7:  // Top 10 Conditions
+        selectedCohortStates.conditions = optionId;
+        break;
+      case 8:  // Top 10 Procedures
+        selectedCohortStates.procedures = optionId;
+        break;
+      case 9:  // Top 10 Measurements
+        selectedCohortStates.measurements = optionId;
+        break;
     }
   }
 
@@ -324,7 +354,7 @@
                 </div>
                 
                 <div class="text-blue-600 font-medium">{cohort.name}</div>
-                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">150,000</span>
+                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">{cohort.totalPatients}</span>
                 <span class="text-sm text-gray-500">Updated: {cohort.updatedAt}</span>
               </div>
             </div>
@@ -447,7 +477,7 @@
             >
               <div class="w-full h-full flex flex-col">
                 <div class="mt-4 flex-grow flex items-center justify-center">
-                <DonutChartGroup {chartsData} showCohortNames={true} />
+                  <DonutChartGroup chartsData={genderChartData} showCohortNames={true} />
                 </div>
               </div>
             </ChartCard>
@@ -455,13 +485,19 @@
 
           {#if selectItems[1].checked}
             <ChartCard 
-              title="Death Ratio" 
-              description="Comparison of death ratios across selected cohorts"
+              title="Mortality" 
+              description="Comparison of mortality across selected cohorts"
               chartId={2}
               type="full"
               on:close={handleChartClose}
             >
-              <!-- <DonutChart data={deathRatioData} /> -->
+            <div class="w-full h-full flex flex-col">
+              <div class="mt-4 flex-grow flex items-center justify-center">
+                {#if mortalityChartData && mortalityChartData.length > 0}
+                  <DonutChartGroup chartsData={mortalityChartData} showCohortNames={true} />
+                {/if}
+              </div>
+            </div>
             </ChartCard>
           {/if}
 
@@ -473,7 +509,13 @@
               type="full"
               on:close={handleChartClose}
             >
-              <!-- <DonutChart data={deathRatioData} /> -->
+            <div class="w-full h-full flex flex-col">
+              <div class="mt-4 flex-grow flex items-center justify-center">
+                {#if visitTypeChartData && visitTypeChartData.length > 0}
+                  <DonutChartGroup chartsData={visitTypeChartData} showCohortNames={true} />
+                {/if}
+              </div>
+            </div>
             </ChartCard>
           {/if}
 
@@ -487,16 +529,16 @@
               >
             <div class="w-full h-full flex flex-col">
             <div class="mt-4 flex-grow flex items-center justify-center">
-              <LineChart data={sampleData} />
+                <LineChart data={ageDistributionChartData} />
+              </div>
             </div>
-          </div>
-        </ChartCard>
+          </ChartCard>
           {/if}
           
 
           {#if selectItems[4].checked}
           <ChartCard 
-            title="Number of Visits during cohort period"
+            title="Distribution of Visit Count"
             description="Visit frequency analysis"
             chartId={4}
             type="full"
@@ -504,7 +546,9 @@
           >
             <div class="w-full h-full flex flex-col">
               <div class="mt-4 flex-grow flex items-center justify-center">
-                <LineChart data={visitData} />
+                {#if visitCountChartData && visitCountChartData.length > 0}
+                  <LineChart data={visitCountChartData} />
+                {/if}
               </div>
             </div>
           </ChartCard>
@@ -513,20 +557,43 @@
 
           {#if selectItems[5].checked}
             <ChartCard 
-              title="Top 10 Common Condition"
-              description="Most frequent medical conditions"
+              title="Top 10 Drugs"
+              description="Most frequently prescribed medications"
               chartId={6}
               type="half"
+              showSelector={true}
+              options={selectedCohorts.map(cohortId => ({
+                id: cohortId,
+                name: cohortStats[cohortId].basicInfo.name
+              }))}
+              selectedOption = {selectedCohortStates.drugs}
+              on:optionSelect={handleCohortSelect}
               on:close={handleChartClose}
             >
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
+            
+              <div class="w-full h-full flex flex-col p-4">
+                {#if topTenDrugsData.length > 0}
+                <div class="flex-1 overflow-y-auto">
+                  <DataTable 
+                    headers={drugTableHeaders}
+                    data={chartData.drugs.find(d => d.cohortName === cohortStats[selectedCohortStates.drugs]?.basicInfo.name)?.drugs || []}
+                    options={selectedCohorts.map(cohortId => ({
+                      id: cohortId,
+                      label: cohortStats[cohortId].basicInfo.name
+                    }))}
+                    selectedOption={selectedCohorts[1]}
+                    onOptionChange={(cohortId) => selectedCohorts[0] = cohortId}
+                  />
+                </div>
+                {/if}
+              </div>
             </ChartCard>
           {/if}
 
           {#if selectItems[6].checked}
             <ChartCard 
-              title="Top 10 Common Prescribed drug"
-              description="Most frequently prescribed medications"
+              title="Top 10 Conditions"
+              description="Most frequent conditions"
               chartId={7}
               type="half"
               on:close={handleChartClose}
@@ -537,8 +604,8 @@
 
           {#if selectItems[7].checked}
             <ChartCard 
-              title="Top 10 Common Procedure"
-              description="Most common medical procedures"
+              title="Top 10 Procedures"
+              description="Most frequent procedures"
               chartId={8}
               type="half"
               on:close={handleChartClose}
@@ -549,7 +616,7 @@
 
           {#if selectItems[8].checked}
             <ChartCard 
-              title="Top 10 Common Measurement"
+              title="Top 10 Measurements"
               description="Most frequent measurements"
               chartId={9}
               type="half"

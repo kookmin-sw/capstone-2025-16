@@ -2,17 +2,26 @@
   import DonutChart from './DonutChart.svelte';
   
   export let chartsData = []; // [{data: {}, cohortName: ''}, ...]
-  export let showLegend = true;
+  export let showCohortNames = true;
   
   let hoveredLabel = null;
   
-  // 모든 차트에서 사용할 공통 색상 매핑
   const colorMap = {
-    'Male': '#4299E1',     // blue-500
+    // Gender colors
+    'Male': '#3498db',     // blue
     'Female': '#F9A7B0',   // pink
     'Unknown': '#808080',  // gray
-    'Alive': '#48BB78',    // green-500
-    'Deceased': '#F56565'  // red-500
+    
+    // Mortality colors
+    'Alive': '#4CAF50',    // green
+    'Deceased': '#5E6C7F', // gray
+    
+    // Visit Type colors
+    'Inpatient': '#FF6B6B',         // 빨간색 계열 (입원 - 중증)
+    'Outpatient': '#4ECDC4',        // 청록색 (외래 - 일반)
+    'Emergency Room Visit': '#FFB236', // 주황색 (응급실 - 긴급)
+    'Home Visit': '#95A5A6',        // 회색빛 파랑 (재택)
+    'Other Visit Type': '#BDC3C7'   // 밝은 회색 (기타)
   };
 </script>
 
@@ -25,7 +34,7 @@
           {hoveredLabel}
           {colorMap}
           on:labelHover={(e) => hoveredLabel = e.detail}
-          showLegend={false}
+          showCohortNames={false}
           size={200}
         />
         <span class="text-sm font-medium text-gray-600">{cohortName}</span>
@@ -33,7 +42,7 @@
     {/each}
   </div>
 
-  {#if showLegend && chartsData.length > 0}
+  {#if showCohortNames && chartsData.length > 0}
     <div class="flex flex-row md:flex-col gap-3 mt-4 md:mt-0">
       {#each Object.entries(chartsData[0].data) as [label, _]}
         <div 

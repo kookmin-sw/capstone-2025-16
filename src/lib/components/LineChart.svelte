@@ -3,14 +3,14 @@
     import { browser } from "$app/environment";
     import * as d3 from "d3";
   
-    export let data = []; // 부모 컴포넌트에서 데이터 전달
+    export let data = [];
     let chartContainer;
     let width;
     let height;
     export let margin = { top: 30, right: 120, bottom: 50, left: 50 };  // 오른쪽 여백 증가
 
-    // 시리즈별 가시성 상태 관리
-    let visibleSeries = new Set(data.map(d => d.series));
+    $: uniqueSeries = [...new Set(data.map(d => d.series))];
+    $: visibleSeries = new Set(uniqueSeries);
 
     function handleResize(){
         if(chartContainer){
@@ -28,6 +28,25 @@
             visibleSeries.add(series);
         }
         visibleSeries = visibleSeries; // Svelte 반응성 트리거
+        updateChart(); // 차트 업데이트 함수 호출
+    }
+
+    // 차트 업데이트 함수
+    function updateChart() {
+        if (!chartContainer || !data || data.length === 0) return;
+
+        const svg = d3.select(chartContainer).select("svg");
+        
+        // 기존 차트 요소들 업데이트
+        seriesData.forEach(([key, values]) => {
+            // 선 업데이트
+            svg.select(`path.line-${key}`)
+                .style("opacity", visibleSeries.has(key) ? 1 : 0);
+
+            // 점 업데이트
+            svg.selectAll(`.point-${key}`)
+                .style("opacity", visibleSeries.has(key) ? 1 : 0);
+        });
     }
 
     onMount(() => {
@@ -102,7 +121,9 @@
             .attr("fill", "none")
             .attr("stroke", color(key))
             .attr("stroke-width", 2)
-            .attr("d", line);
+            .attr("d", line)
+            .attr("class", `line-${key}`)
+            .attr("opacity", visibleSeries.has(key) ? 1 : 0);
   
             // 데이터 포인트 (원) 그리기
             svg
@@ -115,6 +136,7 @@
             .attr("r", 4)
             .attr("fill", color(key))
             .attr("stroke", "white")
+            .attr("opacity", visibleSeries.has(key) ? 1 : 0)
             .on("mouseover", function (event, d) {
                 tooltip
                 .style("display", "block")
@@ -137,45 +159,33 @@
           .join("g")
           .attr("transform", (d, i) => `translate(${width - margin.right + 10},${margin.top + i * 20})`);
   
-      // 범례 색상 표시
+      // 범례 색상 표시 및 체크박스
       legend.append("rect")
           .attr("x", 0)
           .attr("width", 12)
           .attr("height", 12)
-          .attr("fill", d => color(d[0]));
+          .attr("fill", d => color(d[0]))
+          .attr("stroke", d => color(d[0]))
+          .attr("cursor", "pointer")
+          .on("click", (event, d) => toggleSeries(d[0]));
+  
+      // 체크마크
+      legend.append("path")
+          .attr("d", "M2 6l3 3 5-5")
+          .attr("stroke", "white")
+          .attr("stroke-width", 1.5)
+          .attr("fill", "none")
+          .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0);
   
       // 범례 텍스트
       legend.append("text")
-          .attr("x", 16)
+          .attr("x", 20)
           .attr("y", 9.5)
           .attr("dy", "0.02em")
-          .text(d => d[0]);
-  
-      // 토글 스위치 배경 (트랙)
-      legend.append("rect")
-          .attr("x", 60)  // 70 -> 60으로 수정
-          .attr("y", 4)
-          .attr("width", 20)
-          .attr("height", 8)
-          .attr("rx", 4)
-          .attr("fill", d => visibleSeries.has(d[0]) ? "#90EE90" : "#FFB6C1")  // 연한 초록색과 연한 빨간색
+          .text(d => d[0])
+          .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0.5)
           .style("cursor", "pointer")
-          .on("click", (event, d) => toggleSeries(d[0]));
-  
-      // 토글 스위치 핸들 (동그라미)
-      legend.append("circle")
-          .attr("cx", d => visibleSeries.has(d[0]) ? 76 : 64)  // 86,74 -> 76,64로 수정
-          .attr("cy", 8)
-          .attr("r", 5)
-          .attr("fill", "white")
-          .attr("stroke", "#999")
-          .attr("stroke-width", 1)
-          .style("cursor", "pointer")
-          .style("transition", "cx 0.2s ease")
-          .on("click", (event, d) => toggleSeries(d[0]));
-  
-      // 범례 전체 항목의 투명도 조정
-      legend.style("opacity", 1);  // 항상 완전히 보이게 수정
+          .on("click", (event, d) => toggleSeries(d[0])); // 텍스트 클릭으로도 토글 가능하게
   
       // 툴팁 설정
       const tooltip = d3
