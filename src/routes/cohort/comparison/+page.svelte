@@ -18,11 +18,6 @@
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
   let expandedStates = []; // 코호트 목록 toggle 펼치거나 접기 위한 상태 배열
-
-  // 차트 데이터
-  let topTenDrugData = [];
-  let patientAgeData = [];
-  let genderData = {};
   
   let activeTab = 'default'; // 탭 활성화 상태 관리
   
@@ -62,17 +57,6 @@
     .domain(["Male", "Female", "Unknown"])
     .range(["#3498db", "#F9A7B0", "#808080"]);
 
-  // const chartsData = [
-  //   {
-  //     data: cohortStats["10001"].statistics.gender,
-  //     cohortName: cohortStats["10001"].basicInfo.name
-  //   },
-  //   {
-  //     data: cohortStats["10002"].statistics.gender,
-  //     cohortName: cohortStats["10002"].basicInfo.name
-  //   },
-  //   {
-  //     data: cohortStats["10003"].statistics.gender,
   //     cohortName: cohortStats["10003"].basicInfo.name
   //   }
   // ];
