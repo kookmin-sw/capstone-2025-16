@@ -10,6 +10,7 @@
   import * as d3 from 'd3';
   import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
+  import DataTable from '$lib/components/DataTable.svelte';
 
 
   import LineChart from "$lib/components/LineChart.svelte";
@@ -44,12 +45,31 @@
   let visitCountChartData = [];
   let topTenDrugsData = [];
   
+  let selectedCohortStates = {
+    drugs: '',
+    conditions: '',
+    procedures: '',
+    measurements: '',
+  };
+
+  let chartData = {
+    drugs: [],
+    conditions: [],
+    procedures: [],
+    measurements: []
+  }
 
   // DonutChart와 동일한 색상 매핑 사용
   const color = d3
     .scaleOrdinal()
     .domain(["Male", "Female", "Unknown"])
     .range(["#3498db", "#F9A7B0", "#808080"]);
+
+  const drugTableHeaders = [
+    {key: 'rank', label: 'Rank'},
+    {key: 'name', label: 'Name'},
+    {key: 'count', label: 'Count'}
+  ]
 
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
@@ -66,7 +86,25 @@
         visitTypeChartData = await loadVisitTypeData();
         ageDistributionChartData = await loadAgeDistributionData();
         visitCountChartData = await loadVisitCountData();
-      }
+        topTenDrugsData = await loadTopTenDrugsData();
+
+        // 각 차트별로 초기 코호트 선택 설정
+        Object.keys(selectedCohortStates).forEach(chartType => {
+          if (!selectedCohortStates[chartType]) {
+            selectedCohortStates[chartType] = selectedCohorts[0];
+          }
+        });
+
+        // 각 차트별 데이터 초기화
+        chartData.drugs = selectedCohorts.map(cohortId => ({
+          cohortName: cohortStats[cohortId].basicInfo.name,
+          drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
+            .map(([name, count], index) => ({
+              rank: index + 1,
+              name,
+              count
+            }))
+        }));
 
       }
     } catch (error) {
@@ -212,6 +250,49 @@
       return [];
     }
   }
+
+  async function loadTopTenDrugsData() {
+    try {
+      return selectedCohorts.map((cohortId) => ({
+        cohortName: cohortStats[cohortId].basicInfo.name,
+        drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
+          .map(([name, count], index) => ({
+            rank: index + 1,
+            name,
+            count
+          }))
+      }));
+    } catch (error) {
+      console.error('Error loading top drugs data:', error);
+      return [];
+    }
+  }
+
+  function handleCohortChange(chartType, event) {
+    selectedCohortStates[chartType] = event.target.value;
+    console.log(`Selected cohort for ${chartType} changed to:`, selectedCohortStates[chartType]);
+  }
+
+  function handleCohortSelect(event) {
+    const { chartId, optionId } = event.detail;
+    
+    // chartId에 따라 적절한 상태 업데이트
+    switch (chartId) {
+      case 6:  // Top 10 Drugs
+        selectedCohortStates.drugs = optionId;
+        break;
+      case 7:  // Top 10 Conditions
+        selectedCohortStates.conditions = optionId;
+        break;
+      case 8:  // Top 10 Procedures
+        selectedCohortStates.procedures = optionId;
+        break;
+      case 9:  // Top 10 Measurements
+        selectedCohortStates.measurements = optionId;
+        break;
+    }
+  }
+
 </script>
 
 <style>
@@ -480,9 +561,32 @@
               description="Most frequently prescribed medications"
               chartId={6}
               type="half"
+              showSelector={true}
+              options={selectedCohorts.map(cohortId => ({
+                id: cohortId,
+                name: cohortStats[cohortId].basicInfo.name
+              }))}
+              selectedOption = {selectedCohortStates.drugs}
+              on:optionSelect={handleCohortSelect}
               on:close={handleChartClose}
             >
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
+            
+              <div class="w-full h-full flex flex-col p-4">
+                {#if topTenDrugsData.length > 0}
+                <div class="flex-1 overflow-y-auto">
+                  <DataTable 
+                    headers={drugTableHeaders}
+                    data={chartData.drugs.find(d => d.cohortName === cohortStats[selectedCohortStates.drugs]?.basicInfo.name)?.drugs || []}
+                    options={selectedCohorts.map(cohortId => ({
+                      id: cohortId,
+                      label: cohortStats[cohortId].basicInfo.name
+                    }))}
+                    selectedOption={selectedCohorts[1]}
+                    onOptionChange={(cohortId) => selectedCohorts[0] = cohortId}
+                  />
+                </div>
+                {/if}
+              </div>
             </ChartCard>
           {/if}
 
