@@ -495,7 +495,7 @@
 
           {#if selectItems[4].checked}
           <ChartCard 
-            title="Number of Visits during cohort period"
+            title="Distribution of Visit Count"
             description="Visit frequency analysis"
             chartId={4}
             type="full"
@@ -514,8 +514,8 @@
 
           {#if selectItems[5].checked}
             <ChartCard 
-              title="Top 10 Common Condition"
-              description="Most frequent medical conditions"
+              title="Top 10 Drugs"
+              description="Most frequently prescribed medications"
               chartId={6}
               type="half"
               on:close={handleChartClose}
@@ -526,8 +526,8 @@
 
           {#if selectItems[6].checked}
             <ChartCard 
-              title="Top 10 Common Prescribed drug"
-              description="Most frequently prescribed medications"
+              title="Top 10 Conditions"
+              description="Most frequent conditions"
               chartId={7}
               type="half"
               on:close={handleChartClose}
@@ -538,8 +538,8 @@
 
           {#if selectItems[7].checked}
             <ChartCard 
-              title="Top 10 Common Procedure"
-              description="Most common medical procedures"
+              title="Top 10 Procedures"
+              description="Most frequent procedures"
               chartId={8}
               type="half"
               on:close={handleChartClose}
@@ -550,7 +550,7 @@
 
           {#if selectItems[8].checked}
             <ChartCard 
-              title="Top 10 Common Measurement"
+              title="Top 10 Measurements"
               description="Most frequent measurements"
               chartId={9}
               type="half"
