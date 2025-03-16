@@ -23,15 +23,15 @@
   // 탭 관련
   let activeTab = 'default'; // 탭 활성화 상태 관리
   let selectItems = [ // default 차트에서 차트 선택 박스
-    {id: 1, name: 'Gender Ratio', checked: true},
-    {id: 2, name: 'Mortality', checked: true},
-    {id: 3, name: 'Visit Type Ratio', checked: true},
-    {id: 4, name: 'Distribution of First Occurrence Age', checked: true},
-    {id: 5, name: 'Number of Visits during cohort period', checked: true},
-    {id: 6, name: 'Top 10 Common Condition', checked: true},
-    {id: 7, name: 'Top 10 Common Prescribed drug', checked: true},
-    {id: 8, name: 'Top 10 Common Procedure', checked: true},
-    {id: 9, name: 'Top 10 Common Measurement', checked: true},
+    {id: 0, name: 'Gender Ratio', checked: true},
+    {id: 1, name: 'Mortality', checked: true},
+    {id: 2, name: 'Visit Type Ratio', checked: true},
+    {id: 3, name: 'Distribution of First Occurrence Age', checked: true},
+    {id: 4, name: 'Distribution of Visit Count', checked: true},
+    {id: 5, name: 'Top 10 Conditions', checked: true},
+    {id: 6, name: 'Top 10 Procedures', checked: true},
+    {id: 7, name: 'Top 10 Procedures', checked: true},
+    {id: 8, name: 'Top 10 Measurements', checked: true},
   ]
 
   let isSelectChartOpen = false; // 차트 선택 드롭다운 메뉴 상태 관리
@@ -500,10 +500,9 @@
             <ChartCard 
               title="Gender Ratio" 
               description="Comparison of gender distribution across selected cohorts"
-              chartId={1}
+              chartId={0}
               type="full",
-              
-              on:close={() => {}}
+              on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col">
                 <div class="mt-4 flex-grow flex items-center justify-center">
@@ -517,7 +516,7 @@
             <ChartCard 
               title="Mortality" 
               description="Comparison of mortality across selected cohorts"
-              chartId={2}
+              chartId={1}
               type="full"
               on:close={handleChartClose}
             >
@@ -535,7 +534,7 @@
             <ChartCard 
               title="Visit Type Ratio"
               description="Comparison of visit types across selected cohorts"
-              chartId={3}
+              chartId={2}
               type="full"
               on:close={handleChartClose}
             >
@@ -553,7 +552,7 @@
             <ChartCard 
               title="Distribution of First Occurrence Age"
               description="Age distribution analysis"
-              chartId={5}
+              chartId={3}
               type="full"
               on:close={handleChartClose}
               >
@@ -587,7 +586,7 @@
             <ChartCard 
               title="Top 10 Drugs"
               description="Most frequently prescribed medications"
-              chartId={6}
+              chartId={5}
               type="half"
               showSelector={true}
               options={selectedCohorts.map(cohortId => ({
@@ -621,7 +620,7 @@
             <ChartCard 
               title="Top 10 Conditions"
               description="Most frequent conditions"
-              chartId={7}
+              chartId={6}
               type="full"
               on:close={handleChartClose}
             >
@@ -643,7 +642,7 @@
             <ChartCard 
               title="Top 10 Procedures"
               description="Most frequent procedures"
-              chartId={8}
+              chartId={7}
               type="half"
               on:close={handleChartClose}
             >
@@ -655,7 +654,7 @@
             <ChartCard 
               title="Top 10 Measurements"
               description="Most frequent measurements"
-              chartId={9}
+              chartId={8}
               type="half"
               on:close={handleChartClose}
             >
