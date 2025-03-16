@@ -11,9 +11,8 @@
   import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
-
-
   import LineChart from "$lib/components/LineChart.svelte";
+  import StackedBarChartHorizontal from "$lib/components/StackedBarChart_horizontal.svelte";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -34,6 +33,7 @@
     {id: 8, name: 'Top 10 Common Procedure', checked: true},
     {id: 9, name: 'Top 10 Common Measurement', checked: true},
   ]
+
   let isSelectChartOpen = false; // 차트 선택 드롭다운 메뉴 상태 관리
   let selectChartRef; // 드롭다운 메뉴의 참조를 저장할 변수
   
@@ -44,6 +44,7 @@
   let ageDistributionChartData = [];
   let visitCountChartData = [];
   let topTenDrugsData = [];
+  let stackedConditionsData = [];
   
   let selectedCohortStates = {
     drugs: '',
@@ -57,6 +58,10 @@
     conditions: [],
     procedures: [],
     measurements: []
+  }
+
+  $: if(selectedCohorts.length > 0){
+    stackedConditionsData = prepareStackedDomainData('condition');
   }
 
   // DonutChart와 동일한 색상 매핑 사용
@@ -110,7 +115,6 @@
     } catch (error) {
       console.error("Error loading data:", error);
     }
-
   });
 
   function loadCohortListData(cohortStats, selectedCohortIds) {
@@ -291,6 +295,32 @@
         selectedCohortStates.measurements = optionId;
         break;
     }
+  }
+
+  function prepareStackedDomainData(domainKey) {
+    const result = [];
+    const statsFieldMap = {
+      'condition': 'topTenConditions',
+      'drug': 'topTenDrugs',
+      'procedure': 'topTenProcedures',
+      'measurement': 'topTenMeasurements'
+    };
+    const statsField = statsFieldMap[domainKey];
+
+    selectedCohorts.forEach(cohortId => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
+
+      Object.entries(cohortStats[cohortId].statistics[statsField])
+        .forEach(([domainName, count]) => {
+          result.push({
+            cohort: cohortName,
+            [domainKey]: domainName,
+            count: count
+          });
+        });
+    });
+
+    return result;
   }
 
 </script>
@@ -535,7 +565,6 @@
           </ChartCard>
           {/if}
           
-
           {#if selectItems[4].checked}
           <ChartCard 
             title="Distribution of Visit Count"
@@ -552,7 +581,6 @@
               </div>
             </div>
           </ChartCard>
-            
           {/if}
 
           {#if selectItems[5].checked}
@@ -570,7 +598,6 @@
               on:optionSelect={handleCohortSelect}
               on:close={handleChartClose}
             >
-            
               <div class="w-full h-full flex flex-col p-4">
                 {#if topTenDrugsData.length > 0}
                 <div class="flex-1 overflow-y-auto">
@@ -595,9 +622,19 @@
               title="Top 10 Conditions"
               description="Most frequent conditions"
               chartId={7}
-              type="half"
+              type="full"
               on:close={handleChartClose}
             >
+            <div class = "w-full h-full flex flex-col p-2">
+              {#if stackedConditionsData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedConditionsData}
+                    domainKey="condition"
+                  />
+                </div>
+                {/if}
+            </div>
               <!-- <BarChartHorizontal data={topTenDrugData} /> -->
             </ChartCard>
           {/if}
