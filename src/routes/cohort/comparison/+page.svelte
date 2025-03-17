@@ -44,7 +44,10 @@
   let ageDistributionChartData = [];
   let visitCountChartData = [];
   let topTenDrugsData = [];
+  let stackedDrugsData = [];
   let stackedConditionsData = [];
+  let stackedMeasurementsData = [];
+  let stackedProceduresData = [];
   
   let selectedCohortStates = {
     drugs: '',
@@ -61,7 +64,10 @@
   }
 
   $: if(selectedCohorts.length > 0){
+    stackedDrugsData = prepareStackedDomainData('drug');
     stackedConditionsData = prepareStackedDomainData('condition');
+    stackedMeasurementsData = prepareStackedDomainData('measurement');
+    stackedProceduresData = prepareStackedDomainData('procedure');
   }
 
   // DonutChart와 동일한 색상 매핑 사용
@@ -621,7 +627,7 @@
               title="Top 10 Conditions"
               description="Most frequent conditions"
               chartId={6}
-              type="full"
+              type="half"
               on:close={handleChartClose}
             >
             <div class = "w-full h-full flex flex-col p-2">
@@ -634,7 +640,6 @@
                 </div>
                 {/if}
             </div>
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
             </ChartCard>
           {/if}
 
@@ -646,7 +651,15 @@
               type="half"
               on:close={handleChartClose}
             >
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
+            <div class = "w-full h-full flex flex-col p-2">
+              {#if stackedProceduresData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedProceduresData}
+                    domainKey="procedure"
+                  />
+                </div>
+              {/if}
             </ChartCard>
           {/if}
 
@@ -658,7 +671,16 @@
               type="half"
               on:close={handleChartClose}
             >
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
+            <div class = "w-full h-full flex flex-col p-2">
+              {#if stackedMeasurementsData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedMeasurementsData}
+                    domainKey="measurement"
+                  />
+                </div>
+                {/if}
+            </div>
             </ChartCard>
           {/if}
         </div>
