@@ -109,6 +109,18 @@
         "Gliclazide": 150,
         "Pioglitazone": 120
       },
+      "topTenConditions": {
+        "Type 2 Diabetes": 520,
+        "Hypertension": 480,
+        "Obesity": 420,
+        "Dyslipidemia": 380,
+        "Diabetic Neuropathy": 350,
+        "Diabetic Retinopathy": 320,
+        "Chronic Kidney Disease": 290,
+        "Cardiovascular Disease": 260,
+        "Diabetic Foot": 230,
+        "Depression": 200
+      },
       "topTenProcedures": {
         "Blood Glucose Test": 850,
         "HbA1c Measurement": 780,
@@ -132,18 +144,6 @@
         "Temperature": 580,
         "Respiratory Rate": 520,
         "Blood Oxygen": 480
-      },
-      "topTenConditions": {
-        "Type 2 Diabetes": 520,
-        "Hypertension": 480,
-        "Obesity": 420,
-        "Dyslipidemia": 380,
-        "Diabetic Neuropathy": 350,
-        "Diabetic Retinopathy": 320,
-        "Chronic Kidney Disease": 290,
-        "Cardiovascular Disease": 260,
-        "Diabetic Foot": 230,
-        "Depression": 200
       }
     }
   },
@@ -266,6 +266,18 @@
         "Nifedipine": 150,
         "Irbesartan": 120
       },
+      "topTenConditions": {
+        "Hypertension": 480,
+        "Coronary Artery Disease": 450,
+        "Heart Failure": 400,
+        "Atrial Fibrillation": 350,
+        "Chronic Kidney Disease": 320,
+        "Diabetes": 290,
+        "Obesity": 260,
+        "Dyslipidemia": 230,
+        "Stroke": 200,
+        "Sleep Apnea": 180
+      },
       "topTenProcedures": {
         "Blood Pressure Check": 800,
         "ECG": 750,
@@ -289,26 +301,14 @@
         "Respiratory Rate": 520,
         "Blood Oxygen": 460,
         "Ejection Fraction": 400
-      },
-      "topTenConditions": {
-        "Hypertension": 480,
-        "Coronary Artery Disease": 450,
-        "Heart Failure": 400,
-        "Atrial Fibrillation": 350,
-        "Chronic Kidney Disease": 320,
-        "Diabetes": 290,
-        "Obesity": 260,
-        "Dyslipidemia": 230,
-        "Stroke": 200,
-        "Sleep Apnea": 180
       }
     }
   },
   "100003": {
     "basicInfo": {
       "id": "100003",
-      "name": "Control Group",
-      "description": "Control group for comparison studies",
+      "name": "Respiratory Disease Group",
+      "description": "Respiratory disease patients from Seoul National University Hospital",
       "createdAt": "2024-02-15T11:00:00Z",
       "updatedAt": "2024-03-20T15:30:00Z",
       "author": {
@@ -415,6 +415,18 @@
         "Furosemide": 150,
         "Spironolactone": 120
       },
+      "topTenConditions": {
+        "Common Cold": 420,
+        "Hypertension": 380,
+        "Allergic Rhinitis": 340,
+        "Gastritis": 300,
+        "Back Pain": 270,
+        "Anxiety": 240,
+        "Headache": 210,
+        "Arthritis": 180,
+        "Insomnia": 150,
+        "Depression": 120
+      },
       "topTenProcedures": {
         "Blood Pressure Check": 700,
         "Blood Test": 650,
@@ -438,18 +450,6 @@
         "Height": 450,
         "Respiratory Rate": 400,
         "Blood Oxygen": 350
-      },
-      "topTenConditions": {
-        "Common Cold": 420,
-        "Hypertension": 380,
-        "Allergic Rhinitis": 340,
-        "Gastritis": 300,
-        "Back Pain": 270,
-        "Anxiety": 240,
-        "Headache": 210,
-        "Arthritis": 180,
-        "Insomnia": 150,
-        "Depression": 120
       }
     }
   }
