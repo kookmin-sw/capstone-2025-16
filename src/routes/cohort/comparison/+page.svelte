@@ -639,26 +639,18 @@
               chartId={5}
               type="half"
               showSelector={true}
-              options={selectedCohorts.map(cohortId => ({
-                id: cohortId,
-                name: cohortStats[cohortId].basicInfo.name
-              }))}
-              selectedOption = {selectedCohortStates.drugs}
-              on:optionSelect={handleCohortSelect}
+              options={getViewOptions('drug')}
+              selectedOption={topTenDrugViewType}
+              on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col p-4">
                 {#if topTenDrugsData.length > 0}
-                <div class="flex-1 overflow-y-auto">
-                  <DataTable 
-                    headers={drugTableHeaders}
-                    data={chartData.drugs.find(d => d.cohortName === cohortStats[selectedCohortStates.drugs]?.basicInfo.name)?.drugs || []}
-                    options={selectedCohorts.map(cohortId => ({
-                      id: cohortId,
-                      label: cohortStats[cohortId].basicInfo.name
-                    }))}
-                    selectedOption={selectedCohorts[1]}
-                    onOptionChange={(cohortId) => selectedCohorts[0] = cohortId}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedDrugsData}
+                    domainKey="drug"
+                    viewType={topTenDrugViewType}
                   />
                 </div>
                 {/if}
@@ -681,13 +673,11 @@
               <div class = "w-full h-full flex flex-col p-2">
                 {#if stackedConditionsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    {#key topTenConditionViewType}
                     <StackedBarChartHorizontal
                       data={stackedConditionsData}
                       domainKey="condition"
                       viewType={topTenConditionViewType}
                     />
-                    {/key}
                   </div>
                   {/if}
               </div>
@@ -700,6 +690,10 @@
               description="Most frequent procedures"
               chartId={7}
               type="half"
+              showSelector={true}
+              options={getViewOptions('procedure')}
+              selectedOption={topTenProcedureViewType}
+              on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
             <div class = "w-full h-full flex flex-col p-2">
@@ -708,6 +702,7 @@
                   <StackedBarChartHorizontal
                     data={stackedProceduresData}
                     domainKey="procedure"
+                    viewType={topTenProcedureViewType}
                   />
                 </div>
               {/if}
@@ -720,6 +715,10 @@
               description="Most frequent measurements"
               chartId={8}
               type="half"
+              showSelector={true}
+              options={getViewOptions('measurement')}
+              selectedOption={topTenMeasurementViewType}
+              on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
             <div class = "w-full h-full flex flex-col p-2">
@@ -728,6 +727,7 @@
                   <StackedBarChartHorizontal
                     data={stackedMeasurementsData}
                     domainKey="measurement"
+                    viewType={topTenMeasurementViewType}
                   />
                 </div>
                 {/if}
