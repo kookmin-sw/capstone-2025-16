@@ -342,9 +342,10 @@
     
     // 각 코호트별 Anchor View 옵션 추가
     selectedCohorts.forEach(cohortId => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
       options.push({
-        id: cohortId,
-        name: `${cohortStats[cohortId].basicInfo.name} View`
+        id: cohortName,
+        name: `${cohortName} View`
       });
     });
 
@@ -680,10 +681,13 @@
               <div class = "w-full h-full flex flex-col p-2">
                 {#if stackedConditionsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    {#key topTenConditionViewType}
                     <StackedBarChartHorizontal
                       data={stackedConditionsData}
                       domainKey="condition"
+                      viewType={topTenConditionViewType}
                     />
+                    {/key}
                   </div>
                   {/if}
               </div>

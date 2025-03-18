@@ -7,7 +7,8 @@
   // props 정의
   export let data = [];
   export let domainKey; // 도메인 키 (condition, drug, procedure, measurement)
-  
+  export let viewType = 'combined';
+    
   // drawChart 함수 인자
   let transformedData;
   let top10ItemNames;
@@ -23,6 +24,8 @@
   let tooltipX = 0;
   let tooltipY = 0;
   let tooltipContent = '';
+
+  let orderedCohorts;
 
   function handleResize(){
     if(chartContainer){
@@ -48,7 +51,16 @@
   // 데이터 변환: Top 10 아이템 추출
   $: if (data.length > 0) {
     const cohorts = [...new Set(data.map(d => d.cohort))];
+    console.log('cohorts', cohorts);
+    orderedCohorts = viewType === 'combined' 
+      ? cohorts  // combined view에서는 원래 순서 유지
+      : [
+          viewType,  // anchor 코호트를 첫 번째로
+          ...cohorts.filter(c => c !== viewType)  // 나머지 코호트들
+        ];
+    console.log('orderedCohorts', orderedCohorts);
 
+    if(viewType === 'combined'){ // Combined Cohorts View인 경우 
     const totalItemCounts = d3.rollup(
       data,
       v => d3.sum(v, d => d.count), // 각 그룹의 count를 합산
@@ -63,13 +75,25 @@
 
     // 선택된 Top 10 이름 목록
     top10ItemNames = top10Items.map(d => d.item);
+    } else { // Anchor Cohort View인 경우
+      const anchorCohortData = data.filter(d => d.cohort === viewType);
+      console.log('data', data);
+      console.log('viewType', viewType);
+      console.log('anchorCohortData', anchorCohortData);
+      const anchorTop10 = anchorCohortData
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+        .map(d => d[domainKey]);
+
+      top10ItemNames = anchorTop10;
+    }
 
     // 각 코호트별로 Top 10의 count를 가져오기
     transformedData = top10ItemNames.map(itemName => {
       let itemData = { [domainKey]: itemName };  // 동적 키 사용
       
       // 모든 코호트에 대해 0으로 초기화
-      cohorts.forEach(cohort => {
+      orderedCohorts.forEach(cohort => {
         itemData[cohort] = 0;
       });
       
@@ -96,12 +120,9 @@
     // 기존 SVG 초기화
     d3.select(chartContainer).selectAll("*").remove();
 
-    // 코호트와 질병 목록 추출
-    const cohorts = [...new Set(data.map(d => d.cohort))];
-
     // 스택 생성
     const stack = d3.stack()
-      .keys(cohorts)
+      .keys(orderedCohorts)
       .value((d, key)=> +d[key] || 0)
 
     const series = stack(stackData);
@@ -119,7 +140,7 @@
 
     // 색상 스케일
     const colorScale = d3.scaleOrdinal()
-      .domain(cohorts)
+      .domain(orderedCohorts)
       .range(d3.schemeCategory10);
 
     // SVG 생성
@@ -148,6 +169,7 @@
       .data(series)
       .join("g")
       .attr("fill", (d, i) => colorScale(cohorts[i]));
+      .attr("fill", (d, i) => colorScale(orderedCohorts[i]));
 
     groups.selectAll("rect")
     .data(d => d)
@@ -190,7 +212,7 @@
     const legend = svg.append("g")
       .attr("transform", `translate(${width - margin.right + 10}, ${margin.top})`)
       .selectAll("g")
-      .data(cohorts)
+      .data(orderedCohorts)
       .join("g")
       .attr("transform", (d, i) => `translate(0, ${i * 20})`);
 
