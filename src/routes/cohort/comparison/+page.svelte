@@ -48,6 +48,11 @@
   let stackedConditionsData = [];
   let stackedMeasurementsData = [];
   let stackedProceduresData = [];
+
+  let topTenDrugViewType = 'combined';
+  let topTenConditionViewType = 'combined';
+  let topTenProcedureViewType = 'combined';
+  let topTenMeasurementViewType = 'combined';
   
   let selectedCohortStates = {
     drugs: '',
@@ -328,6 +333,44 @@
 
     return result;
   }
+
+  function getViewOptions(domainKey) {
+    // 기본 Combined View 옵션
+    const options = [
+      { id: 'combined', name: 'Combined Cohorts View' }
+    ];
+    
+    // 각 코호트별 Anchor View 옵션 추가
+    selectedCohorts.forEach(cohortId => {
+      options.push({
+        id: cohortId,
+        name: `${cohortStats[cohortId].basicInfo.name} View`
+      });
+    });
+
+    console.log('options', options);
+    
+    return options;
+  }
+
+  function handleViewTypeChange(event) {
+  const { chartId, optionId } = event.detail;
+  
+  switch (chartId) {
+    case 5:  // Top 10 Drugs
+      topTenDrugViewType = optionId;
+      break;
+    case 6:  // Top 10 Conditions
+      topTenConditionViewType = optionId;
+      break;
+    case 7:  // Top 10 Procedures
+      topTenProcedureViewType = optionId;
+      break;
+    case 8:  // Top 10 Measurements
+      topTenMeasurementViewType = optionId;
+      break;
+  }
+}
 
 </script>
 
@@ -623,24 +666,28 @@
           {/if}
 
           {#if selectItems[6].checked}
-            <ChartCard 
-              title="Top 10 Conditions"
-              description="Most frequent conditions"
-              chartId={6}
-              type="half"
-              on:close={handleChartClose}
-            >
-            <div class = "w-full h-full flex flex-col p-2">
-              {#if stackedConditionsData.length > 0}
-                <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartHorizontal
-                    data={stackedConditionsData}
-                    domainKey="condition"
-                  />
-                </div>
-                {/if}
-            </div>
-            </ChartCard>
+              <ChartCard 
+                title="Top 10 Conditions"
+                description="Most frequent conditions"
+                chartId={6}
+                type="half"
+                showSelector={true}
+                options={getViewOptions('condition')}
+                selectedOption={topTenConditionViewType}
+                on:optionSelect={handleViewTypeChange}
+                on:close={handleChartClose}
+              >
+              <div class = "w-full h-full flex flex-col p-2">
+                {#if stackedConditionsData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <StackedBarChartHorizontal
+                      data={stackedConditionsData}
+                      domainKey="condition"
+                    />
+                  </div>
+                  {/if}
+              </div>
+              </ChartCard>
           {/if}
 
           {#if selectItems[7].checked}
