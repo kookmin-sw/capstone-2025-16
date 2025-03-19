@@ -51,14 +51,12 @@
   // 데이터 변환: Top 10 아이템 추출
   $: if (data.length > 0) {
     const cohorts = [...new Set(data.map(d => d.cohort))];
-    console.log('cohorts', cohorts);
     orderedCohorts = viewType === 'combined' 
       ? cohorts  // combined view에서는 원래 순서 유지
       : [
           viewType,  // anchor 코호트를 첫 번째로
           ...cohorts.filter(c => c !== viewType)  // 나머지 코호트들
         ];
-    console.log('orderedCohorts', orderedCohorts);
 
     if(viewType === 'combined'){ // Combined Cohorts View인 경우 
     const totalItemCounts = d3.rollup(
@@ -77,9 +75,6 @@
     top10ItemNames = top10Items.map(d => d.item);
     } else { // Anchor Cohort View인 경우
       const anchorCohortData = data.filter(d => d.cohort === viewType);
-      console.log('data', data);
-      console.log('viewType', viewType);
-      console.log('anchorCohortData', anchorCohortData);
       const anchorTop10 = anchorCohortData
         .sort((a, b) => b.count - a.count)
         .slice(0, 10)

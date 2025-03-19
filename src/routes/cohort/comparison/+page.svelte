@@ -285,7 +285,6 @@
 
   function handleCohortChange(chartType, event) {
     selectedCohortStates[chartType] = event.target.value;
-    console.log(`Selected cohort for ${chartType} changed to:`, selectedCohortStates[chartType]);
   }
 
   function handleCohortSelect(event) {
@@ -348,8 +347,6 @@
         name: `${cohortName} View`
       });
     });
-
-    console.log('options', options);
     
     return options;
   }
