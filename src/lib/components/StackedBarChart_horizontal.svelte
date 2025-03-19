@@ -177,9 +177,12 @@
       const cohort = d3.select(this.parentNode).datum().key;
       const value = d[1] - d[0];
 
-      tooltipVisible = true;
-      tooltipX = event.pageX;
-      tooltipY = event.pageY;
+      const rect = this.getBoundingClientRect();
+      const containerRect = chartContainer.getBoundingClientRect();
+
+      tooltipX = rect.right - containerRect.left;
+      tooltipY = event.clientY - containerRect.top;
+      
       tooltipContent = `
         <div class="p-2">
           <div class="font-bold">${d.data[domainKey]}</div>
@@ -187,14 +190,18 @@
         </div>
       `;
 
+      tooltipVisible = true;
       d3.select(this)
         .attr("opacity", 1)
         .style("stroke", "#666")
         .style("stroke-width", "2px");
     })
     .on("mousemove", function(event) {
-      tooltipX = event.pageX - 150;
-      tooltipY = event.pageY - 320;
+      const rect = this.getBoundingClientRect();
+      const containerRect = chartContainer.getBoundingClientRect();
+
+      tooltipX = rect.right - containerRect.left;
+      tooltipY = event.clientY - containerRect.top;
     })
     .on("mouseout", function() {
       tooltipVisible = false;
@@ -225,10 +232,8 @@
 
 </script>
 
-<div class="w-full h-full">
-  <div class="relative w-full h-full">
-    <div bind:this={chartContainer} class="w-full h-full"></div>
-  </div>
+<div class="relative w-full h-full">
+  <div bind:this={chartContainer} class="w-full h-full"></div>
 
   <!-- 툴팁 -->
   {#if tooltipVisible}
