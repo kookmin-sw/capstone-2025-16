@@ -648,6 +648,12 @@
                     data={stackedDrugsData}
                     domainKey="drug"
                     viewType={topTenDrugViewType}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                   />
                 </div>
                 {/if}
@@ -674,6 +680,12 @@
                       data={stackedConditionsData}
                       domainKey="condition"
                       viewType={topTenConditionViewType}
+                      cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                     />
                   </div>
                   {/if}
@@ -700,6 +712,12 @@
                     data={stackedProceduresData}
                     domainKey="procedure"
                     viewType={topTenProcedureViewType}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                   />
                 </div>
               {/if}
@@ -725,6 +743,12 @@
                     data={stackedMeasurementsData}
                     domainKey="measurement"
                     viewType={topTenMeasurementViewType}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                   />
                 </div>
                 {/if}

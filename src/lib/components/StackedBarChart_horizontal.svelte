@@ -8,6 +8,7 @@
   export let data = [];
   export let domainKey; // 도메인 키 (condition, drug, procedure, measurement)
   export let viewType = 'combined';
+  export let cohortTotalCounts = {};
     
   // drawChart 함수 인자
   let transformedData;
@@ -176,6 +177,8 @@
     .on("mouseover", function(event, d) {
       const cohort = d3.select(this.parentNode).datum().key;
       const value = d[1] - d[0];
+      const total = cohortTotalCounts[currentCohort];
+      const percentage = ((value / total) * 100).toFixed(2);
 
       const rect = this.getBoundingClientRect();
       const containerRect = chartContainer.getBoundingClientRect();
