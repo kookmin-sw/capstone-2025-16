@@ -187,10 +187,17 @@
       tooltipY = event.clientY - containerRect.top;
       
       tooltipContent = `
-        <div class="p-2">
-          <div class="font-bold">${d.data[domainKey]}</div>
-          <div>${cohort}: ${value.toLocaleString()}</div>
-        </div>
+        <div class="p-1">
+            <div class="text-[10px] font-semibold mb-0.5">${d.data[domainKey]}</div>
+            <div class="text-[9px] text-gray-600">
+              ${currentCohort}:
+              <span class="ml-0.5 font-medium">${value.toLocaleString()}</span>
+              </br>
+              <span class="text-gray-400 ml-0.5">
+                (${value}/${total} ${percentage}%)
+              </span>
+            </div>
+          </div>
       `;
 
       tooltipVisible = true;
@@ -240,9 +247,8 @@
 
   <!-- 툴팁 -->
   {#if tooltipVisible}
-    <div 
-      class="absolute bg-white shadow-lg rounded-md border border-gray-200 z-50 pointer-events-none transition-all duration-100"
-      style="left: {tooltipX}px; top: {tooltipY}px;"
+    <div class="absolute bg-white/95 shadow-sm rounded-md border border-gray-100 z-50 pointer-events-none transition-all duration-75 backdrop-blur-sm"
+    style="left: {tooltipX}px; top: {tooltipY}px;"
     >
       {@html tooltipContent}
     </div>
