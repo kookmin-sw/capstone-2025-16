@@ -18,7 +18,7 @@
 	let chartContainer;
 	let width;
 	let height;
-  const margin = { top: 30, right: 150, bottom: 10, left: 120 };
+  const margin = { top: 30, right: 80, bottom: 10, left: 120 };
 
   // 툴팁 상태 관리를 위한 변수들
   let tooltipVisible = false;
@@ -235,25 +235,6 @@
         .attr("opacity", 1)
         .style("stroke", "none")
     });
-
-    // 범례 추가
-    const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right + 10}, ${margin.top})`)
-      .selectAll("g")
-      .data(orderedCohorts)
-      .join("g")
-      .attr("transform", (d, i) => `translate(0, ${i * 20})`);
-
-    legend.append("rect")
-      .attr("width", 15)
-      .attr("height", 15)
-      .attr("fill", d => colorScale(d));
-
-    legend.append("text")
-      .attr("x", 20)
-      .attr("y", 12)
-      .text(d => d)
-      .style("font-size", "12px");
   }
 
 </script>
