@@ -11,9 +11,8 @@
   import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
-
-
   import LineChart from "$lib/components/LineChart.svelte";
+  import StackedBarChartHorizontal from "$lib/components/StackedBarChart_horizontal.svelte";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -24,16 +23,17 @@
   // 탭 관련
   let activeTab = 'default'; // 탭 활성화 상태 관리
   let selectItems = [ // default 차트에서 차트 선택 박스
-    {id: 1, name: 'Gender Ratio', checked: true},
-    {id: 2, name: 'Mortality', checked: true},
-    {id: 3, name: 'Visit Type Ratio', checked: true},
-    {id: 4, name: 'Distribution of First Occurrence Age', checked: true},
-    {id: 5, name: 'Number of Visits during cohort period', checked: true},
-    {id: 6, name: 'Top 10 Common Condition', checked: true},
-    {id: 7, name: 'Top 10 Common Prescribed drug', checked: true},
-    {id: 8, name: 'Top 10 Common Procedure', checked: true},
-    {id: 9, name: 'Top 10 Common Measurement', checked: true},
+    {id: 0, name: 'Gender Ratio', checked: true},
+    {id: 1, name: 'Mortality', checked: true},
+    {id: 2, name: 'Visit Type Ratio', checked: true},
+    {id: 3, name: 'Distribution of First Occurrence Age', checked: true},
+    {id: 4, name: 'Distribution of Visit Count', checked: true},
+    {id: 5, name: 'Top 10 Conditions', checked: true},
+    {id: 6, name: 'Top 10 Procedures', checked: true},
+    {id: 7, name: 'Top 10 Procedures', checked: true},
+    {id: 8, name: 'Top 10 Measurements', checked: true},
   ]
+
   let isSelectChartOpen = false; // 차트 선택 드롭다운 메뉴 상태 관리
   let selectChartRef; // 드롭다운 메뉴의 참조를 저장할 변수
   
@@ -44,6 +44,15 @@
   let ageDistributionChartData = [];
   let visitCountChartData = [];
   let topTenDrugsData = [];
+  let stackedDrugsData = [];
+  let stackedConditionsData = [];
+  let stackedMeasurementsData = [];
+  let stackedProceduresData = [];
+
+  let topTenDrugViewType = 'combined';
+  let topTenConditionViewType = 'combined';
+  let topTenProcedureViewType = 'combined';
+  let topTenMeasurementViewType = 'combined';
   
   let selectedCohortStates = {
     drugs: '',
@@ -57,6 +66,13 @@
     conditions: [],
     procedures: [],
     measurements: []
+  }
+
+  $: if(selectedCohorts.length > 0){
+    stackedDrugsData = prepareStackedDomainData('drug');
+    stackedConditionsData = prepareStackedDomainData('condition');
+    stackedMeasurementsData = prepareStackedDomainData('measurement');
+    stackedProceduresData = prepareStackedDomainData('procedure');
   }
 
   // DonutChart와 동일한 색상 매핑 사용
@@ -110,7 +126,6 @@
     } catch (error) {
       console.error("Error loading data:", error);
     }
-
   });
 
   function loadCohortListData(cohortStats, selectedCohortIds) {
@@ -270,7 +285,6 @@
 
   function handleCohortChange(chartType, event) {
     selectedCohortStates[chartType] = event.target.value;
-    console.log(`Selected cohort for ${chartType} changed to:`, selectedCohortStates[chartType]);
   }
 
   function handleCohortSelect(event) {
@@ -292,6 +306,69 @@
         break;
     }
   }
+
+  function prepareStackedDomainData(domainKey) {
+    const result = [];
+    const statsFieldMap = {
+      'condition': 'topTenConditions',
+      'drug': 'topTenDrugs',
+      'procedure': 'topTenProcedures',
+      'measurement': 'topTenMeasurements'
+    };
+    const statsField = statsFieldMap[domainKey];
+
+    selectedCohorts.forEach(cohortId => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
+
+      Object.entries(cohortStats[cohortId].statistics[statsField])
+        .forEach(([domainName, count]) => {
+          result.push({
+            cohort: cohortName,
+            [domainKey]: domainName,
+            count: count
+          });
+        });
+    });
+
+    return result;
+  }
+
+  function getViewOptions(domainKey) {
+    // 기본 Combined View 옵션
+    const options = [
+      { id: 'combined', name: 'Combined Cohorts View' }
+    ];
+    
+    // 각 코호트별 Anchor View 옵션 추가
+    selectedCohorts.forEach(cohortId => {
+      const cohortName = cohortStats[cohortId].basicInfo.name;
+      options.push({
+        id: cohortName,
+        name: `${cohortName} View`
+      });
+    });
+    
+    return options;
+  }
+
+  function handleViewTypeChange(event) {
+  const { chartId, optionId } = event.detail;
+  
+  switch (chartId) {
+    case 5:  // Top 10 Drugs
+      topTenDrugViewType = optionId;
+      break;
+    case 6:  // Top 10 Conditions
+      topTenConditionViewType = optionId;
+      break;
+    case 7:  // Top 10 Procedures
+      topTenProcedureViewType = optionId;
+      break;
+    case 8:  // Top 10 Measurements
+      topTenMeasurementViewType = optionId;
+      break;
+  }
+}
 
 </script>
 
@@ -470,10 +547,9 @@
             <ChartCard 
               title="Gender Ratio" 
               description="Comparison of gender distribution across selected cohorts"
-              chartId={1}
+              chartId={0}
               type="full",
-              
-              on:close={() => {}}
+              on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col">
                 <div class="mt-4 flex-grow flex items-center justify-center">
@@ -487,7 +563,7 @@
             <ChartCard 
               title="Mortality" 
               description="Comparison of mortality across selected cohorts"
-              chartId={2}
+              chartId={1}
               type="full"
               on:close={handleChartClose}
             >
@@ -505,7 +581,7 @@
             <ChartCard 
               title="Visit Type Ratio"
               description="Comparison of visit types across selected cohorts"
-              chartId={3}
+              chartId={2}
               type="full"
               on:close={handleChartClose}
             >
@@ -523,7 +599,7 @@
             <ChartCard 
               title="Distribution of First Occurrence Age"
               description="Age distribution analysis"
-              chartId={5}
+              chartId={3}
               type="full"
               on:close={handleChartClose}
               >
@@ -535,7 +611,6 @@
           </ChartCard>
           {/if}
           
-
           {#if selectItems[4].checked}
           <ChartCard 
             title="Distribution of Visit Count"
@@ -552,37 +627,27 @@
               </div>
             </div>
           </ChartCard>
-            
           {/if}
 
           {#if selectItems[5].checked}
             <ChartCard 
               title="Top 10 Drugs"
               description="Most frequently prescribed medications"
-              chartId={6}
+              chartId={5}
               type="half"
               showSelector={true}
-              options={selectedCohorts.map(cohortId => ({
-                id: cohortId,
-                name: cohortStats[cohortId].basicInfo.name
-              }))}
-              selectedOption = {selectedCohortStates.drugs}
-              on:optionSelect={handleCohortSelect}
+              options={getViewOptions('drug')}
+              selectedOption={topTenDrugViewType}
+              on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
-            
               <div class="w-full h-full flex flex-col p-4">
                 {#if topTenDrugsData.length > 0}
-                <div class="flex-1 overflow-y-auto">
-                  <DataTable 
-                    headers={drugTableHeaders}
-                    data={chartData.drugs.find(d => d.cohortName === cohortStats[selectedCohortStates.drugs]?.basicInfo.name)?.drugs || []}
-                    options={selectedCohorts.map(cohortId => ({
-                      id: cohortId,
-                      label: cohortStats[cohortId].basicInfo.name
-                    }))}
-                    selectedOption={selectedCohorts[1]}
-                    onOptionChange={(cohortId) => selectedCohorts[0] = cohortId}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedDrugsData}
+                    domainKey="drug"
+                    viewType={topTenDrugViewType}
                   />
                 </div>
                 {/if}
@@ -591,26 +656,53 @@
           {/if}
 
           {#if selectItems[6].checked}
-            <ChartCard 
-              title="Top 10 Conditions"
-              description="Most frequent conditions"
-              chartId={7}
-              type="half"
-              on:close={handleChartClose}
-            >
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
-            </ChartCard>
+              <ChartCard 
+                title="Top 10 Conditions"
+                description="Most frequent conditions"
+                chartId={6}
+                type="half"
+                showSelector={true}
+                options={getViewOptions('condition')}
+                selectedOption={topTenConditionViewType}
+                on:optionSelect={handleViewTypeChange}
+                on:close={handleChartClose}
+              >
+              <div class = "w-full h-full flex flex-col p-2">
+                {#if stackedConditionsData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <StackedBarChartHorizontal
+                      data={stackedConditionsData}
+                      domainKey="condition"
+                      viewType={topTenConditionViewType}
+                    />
+                  </div>
+                  {/if}
+              </div>
+              </ChartCard>
           {/if}
 
           {#if selectItems[7].checked}
             <ChartCard 
               title="Top 10 Procedures"
               description="Most frequent procedures"
-              chartId={8}
+              chartId={7}
               type="half"
+              showSelector={true}
+              options={getViewOptions('procedure')}
+              selectedOption={topTenProcedureViewType}
+              on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
+            <div class = "w-full h-full flex flex-col p-2">
+              {#if stackedProceduresData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedProceduresData}
+                    domainKey="procedure"
+                    viewType={topTenProcedureViewType}
+                  />
+                </div>
+              {/if}
             </ChartCard>
           {/if}
 
@@ -618,11 +710,25 @@
             <ChartCard 
               title="Top 10 Measurements"
               description="Most frequent measurements"
-              chartId={9}
+              chartId={8}
               type="half"
+              showSelector={true}
+              options={getViewOptions('measurement')}
+              selectedOption={topTenMeasurementViewType}
+              on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
-              <!-- <BarChartHorizontal data={topTenDrugData} /> -->
+            <div class = "w-full h-full flex flex-col p-2">
+              {#if stackedMeasurementsData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedMeasurementsData}
+                    domainKey="measurement"
+                    viewType={topTenMeasurementViewType}
+                  />
+                </div>
+                {/if}
+            </div>
             </ChartCard>
           {/if}
         </div>
