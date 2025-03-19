@@ -1,6 +1,6 @@
 <script>
   import * as d3 from "d3";
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, tick } from "svelte";
   import { browser } from "$app/environment";
   import { fade } from 'svelte/transition';
 
@@ -25,6 +25,7 @@
   let tooltipX = 0;
   let tooltipY = 0;
   let tooltipContent = '';
+  let tooltipElement;
 
   let orderedCohorts;
 
@@ -182,10 +183,16 @@
 
       const rect = this.getBoundingClientRect();
       const containerRect = chartContainer.getBoundingClientRect();
+      const tooltipHeight = tooltipElement?.offsetHeight || 40;
+      const spaceBelow = containerRect.bottom - event.clientY;
 
       tooltipX = rect.right - containerRect.left;
-      tooltipY = event.clientY - containerRect.top;
-      
+        if(spaceBelow < tooltipHeight){
+            tooltipY = event.clientY - containerRect.top - tooltipHeight;
+        }else{
+          tooltipY = event.clientY - containerRect.top;
+        }
+
       tooltipContent = `
         <div class="p-1">
             <div class="text-[10px] font-semibold mb-0.5">${d.data[domainKey]}</div>
@@ -206,12 +213,21 @@
         .style("stroke", "#666")
         .style("stroke-width", "2px");
     })
-    .on("mousemove", function(event) {
+    .on("mousemove", async function(event) {
       const rect = this.getBoundingClientRect();
       const containerRect = chartContainer.getBoundingClientRect();
 
+      const tooltipHeight = tooltipElement?.offsetHeight || 40;
+      const spaceBelow = containerRect.bottom - event.clientY;
+
       tooltipX = rect.right - containerRect.left;
-      tooltipY = event.clientY - containerRect.top;
+
+        if(spaceBelow < tooltipHeight){
+            tooltipY = event.clientY - containerRect.top - tooltipHeight;
+        }else{
+          tooltipY = event.clientY - containerRect.top;
+        }
+      
     })
     .on("mouseout", function() {
       tooltipVisible = false;
@@ -247,7 +263,8 @@
 
   <!-- 툴팁 -->
   {#if tooltipVisible}
-    <div class="absolute bg-white/95 shadow-sm rounded-md border border-gray-100 z-50 pointer-events-none transition-all duration-75 backdrop-blur-sm"
+    <div bind:this={tooltipElement}
+    class="absolute bg-white/95 shadow-sm rounded-md border border-gray-100 z-50 pointer-events-none transition-all duration-75 backdrop-blur-sm"
     style="left: {tooltipX}px; top: {tooltipY}px;"
     >
       {@html tooltipContent}
