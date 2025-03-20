@@ -1,0 +1,11 @@
+[
+    { "label": "0-9", "value": 17 },
+    { "label": "10-29", "value": 7 },
+    { "label": "20-29", "value": 15 },
+    { "label": "30-39", "value": 3 },
+    { "label": "40-49", "value": 12 },
+    { "label": "50-59", "value": 10 },
+    { "label": "60-69", "value": 4 },
+    { "label": "70-79", "value": 3 },
+    { "label": "80+", "value": 3 }
+  ]

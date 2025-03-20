@@ -1,0 +1,42 @@
+[
+  {
+    "label": "sennosides, USP 8.6 MG Oral Tablet",
+    "value": 60707
+  },
+  {
+    "label": "acetaminophen 325 MG Oral Tablet",
+    "value": 69609
+  },
+  {
+    "label": "insulin lispro 100 UNT/ML Injectable Solution [Humalog]",
+    "value": 78595
+  },
+  {
+    "label": "50 ML sodium chloride 9 MG/ML Injection",
+    "value": 86086
+  },
+  {
+    "label": "1000 ML sodium chloride 9 MG/ML Injection",
+    "value": 88712
+  },
+  {
+    "label": "heparin sodium, porcine 5000 UNT/ML Injectable Solution",
+    "value": 90672
+  },
+  {
+    "label": "insulin glargine 100 UNT/ML Injectable Solution [Lantus]",
+    "value": 122170
+  },
+  {
+    "label": "sodium chloride Prefilled Syringe",
+    "value": 123600
+  },
+  {
+    "label": "docusate sodium 100 MG Oral Capsule [DOK]",
+    "value": 129352
+  },
+  {
+    "label": "50 ML magnesium sulfate 40 MG/ML Injection",
+    "value": 131858
+  }
+]

@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
 
   let searchQuery = "";
 
@@ -15,6 +16,14 @@
   ];
 
   let filteredData = [...data];
+
+  // 체크박스 상태를 관리하기 위한 객체 추가
+  let selectedItems = {};
+
+  // 체크박스 상태 변경 핸들러
+  function handleCheckboxChange(id) {
+    selectedItems[id] = !selectedItems[id];
+  }
 
   // JSON 파일에서 데이터를 로드 함수
   async function loadData() {
@@ -41,75 +50,86 @@
     );
   }
 
+  function handleComparison() {
+    const selectedCount = Object.values(selectedItems).filter(Boolean).length;
+    
+    if (selectedCount < 2) {
+      alert("최소 2개의 코호트를 선택해주세요.");
+      return;
+    }
+    if (selectedCount > 5) {
+      alert("최대 5개까지만 선택 가능합니다.");
+      return;
+    }
+
+    // 선택된 코호트들의 ID를 배열로 만들기
+    const selectedCohorts = Object.entries(selectedItems)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([id]) => id);
+
+    // 쿼리 파라미터로 선택된 코호트 ID들을 전달
+    goto(`/cohort/comparison?cohorts=${selectedCohorts.join(',')}`);
+  }
+
   // 컴포넌트가 마운트될 때 데이터 로드
   onMount(() => {
     loadData();
   });
 </script>
 
-<div class="header">
+<div class="flex gap-2 mb-5">
   <input
     type="text"
     bind:value={searchQuery}
     placeholder="코호트 이름을 입력하세요."
-    class="search-bar"
+    class="flex-1 p-2 text-base border border-gray-300 rounded"
   />
-  <button class="search-btn" on:click={filterData}>🔍</button>
-  <button class="my-btn">MY</button>
-  <a href="/new" class="new-btn">New</a>
+  <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100" on:click={filterData}>🔍</button>
+  <button 
+    class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100"
+    on:click={handleComparison}
+  >
+    Comparison
+  </button>
+  <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100">New</button>
 </div>
 
 <table class="data-table">
   <thead>
     <tr>
+      <th></th>
       <th>ID</th>
       <th>Name</th>
       <th>Description</th>
       <th>Author</th>
       <th>Created At</th>
       <th>Updated At</th>
+      
     </tr>
   </thead>
   <tbody>
     {#each filteredData as item (item.id)}
       <tr>
+        <td>
+          <input
+            type="checkbox"
+            checked={selectedItems[item.id] || false}
+            on:change={() => handleCheckboxChange(item.id)}
+          />
+        </td>
         <td>{item.id}</td>
         <td>{item.name}</td>
         <td>{item.description}</td>
         <td>{item.author}</td>
         <td>{item.createdAt}</td>
         <td>{item.updatedAt}</td>
+        
       </tr>
     {/each}
   </tbody>
 </table>
-
 <style>
-  .header {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .search-bar {
-    flex: 1;
-    padding: 8px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  .search-btn,
-  .my-btn,
-  .new-btn {
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #f9f9f9;
-  }
-
+  
   table {
     width: 100%;
     border-collapse: collapse;
@@ -122,8 +142,17 @@
     text-align: left;
     border: 1px solid #ccc;
   }
+  td input[type="checkbox"] {
+    display: block;
+    margin: 0 auto;
+  }  
 
   th {
     background-color: #f4f4f4;
   }
+
+  td:last-child {
+    text-align: center;
+  }
 </style>
+
