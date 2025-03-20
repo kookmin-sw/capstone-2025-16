@@ -7,19 +7,19 @@
 
   {#each specimen as spec}
     <div class="specimen-row">
-      <span class="info"><strong>📌 Specimen ID:</strong> {spec.specimen_id}</span>
+      <span class="info"><strong>Specimen ID:</strong> {spec.specimen_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📅 Date:</strong> {spec.specimen_date}</span>
+      <span class="info"><strong>Date:</strong> {spec.specimen_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🔬 Concept ID:</strong> 
+      <span class="info"><strong>Concept ID:</strong> 
         <span class="highlight">{spec.specimen_concept_id}</span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>⚖ Quantity:</strong> 
+      <span class="info"><strong>Quantity:</strong> 
         <span class="highlight-blue">{spec.quantity}</span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>🧪 Unit Concept ID:</strong> {spec.unit_concept_id}</span>
+      <span class="info"><strong>Unit Concept ID:</strong> {spec.unit_concept_id}</span>
     </div>
   {/each}
 </div>

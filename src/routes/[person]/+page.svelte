@@ -311,13 +311,6 @@
 </header>
 <div class="pt-[300px] pl-[16px] pr-[16px] pb-[16px]">
     <CDMInfo careSite={cdmSample.care_site} location={cdmSample.location} visitOccurrence={cdmSample.visit_occurrence} />
-    <!-- <Condition conditionEra={cdmSample.condition_era} conditionOccurrence={cdmSample.condition_occurrence}/>
-    <Drug drugEra={cdmSample.drug_era} drugExposure={cdmSample.drug_exposure} drugStrength={cdmSample.drug_strength}/>
-    <Measurement measurement={cdmSample.measurement}/>
-    <Observation observation={cdmSample.observation}/>
-    <ProcedureOccurrence procedureOccurrence={cdmSample.procedure_occurrence}/>
-    <Specimen specimen={cdmSample.specimen}/>
-    <BioSignal bioSignal={cdmSample.bio_signal}/> -->
     {#each Array.from(selectedTables) as tableId}
         {#if tableComponents[tableId]}
         <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />

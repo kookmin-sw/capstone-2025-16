@@ -7,21 +7,21 @@
 
   {#each procedureOccurrence as proc}
     <div class="procedure-row">
-      <span class="info"><strong>📌 Procedure ID:</strong> {proc.procedure_occurrence_id}</span>
+      <span class="info"><strong>Procedure ID:</strong> {proc.procedure_occurrence_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📅 Date:</strong> {proc.procedure_date}</span>
+      <span class="info"><strong>Date:</strong> {proc.procedure_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🔬 Concept ID:</strong> 
+      <span class="info"><strong>Concept ID:</strong> 
         <span class="highlight">{proc.procedure_concept_id}</span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>⚙ Type Concept ID:</strong> {proc.procedure_type_concept_id ? proc.procedure_type_concept_id : "N/A"}</span>
+      <span class="info"><strong>Type Concept ID:</strong> {proc.procedure_type_concept_id ? proc.procedure_type_concept_id : "N/A"}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>#️⃣ Quantity:</strong> 
+      <span class="info"><strong>Quantity:</strong> 
         <span class="highlight-blue">{proc.quantity}</span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>🏥 Visit ID:</strong> {proc.visit_occurrence_id}</span>
+      <span class="info"><strong>Visit ID:</strong> {proc.visit_occurrence_id}</span>
     </div>
   {/each}
 </div>

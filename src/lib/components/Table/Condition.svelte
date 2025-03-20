@@ -10,23 +10,23 @@
   
   {#each conditionOccurrence as cond}
     <div class="condition-row">
-      <span class="info"><strong>📌 ID:</strong> {cond.condition_occurrence_id}</span>
+      <span class="info"><strong>ID:</strong> {cond.condition_occurrence_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🗓 Diagnosis Date:</strong> {cond.condition_start_date} ~ {cond.condition_end_date}</span>
+      <span class="info"><strong>Diagnosis Date:</strong> {cond.condition_start_date} ~ {cond.condition_end_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🏥 Visit ID:</strong> {cond.visit_occurrence_id}</span>
+      <span class="info"><strong>Visit ID:</strong> {cond.visit_occurrence_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📋 Condition Status:</strong> {cond.condition_status_source_value}</span>
+      <span class="info"><strong>Condition Status:</strong> {cond.condition_status_source_value}</span>
     </div>
   {/each}
 
   {#each conditionEra as era}
     <div class="condition-row era">
-      <span class="info"><strong>📌 ID:</strong> {era.condition_era_id}</span>
+      <span class="info"><strong>ID:</strong> {era.condition_era_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📆 Era Duration:</strong> {era.condition_era_start_date} ~ {era.condition_era_end_date}</span>
+      <span class="info"><strong>Era Duration:</strong> {era.condition_era_start_date} ~ {era.condition_era_end_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🔢 Occurrence Count:</strong> {era.condition_occurrence_count}회</span>
+      <span class="info"><strong>Occurrence Count:</strong> {era.condition_occurrence_count}회</span>
     </div>
   {/each}
 </div>

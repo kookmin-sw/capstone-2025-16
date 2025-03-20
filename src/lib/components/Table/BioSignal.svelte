@@ -12,15 +12,15 @@
 
   {#each bioSignal as signal}
     <div class="bio-signal-row">
-      <span class="info"><strong>📌 Bio Signal ID:</strong> {signal["bio_signal)id"]}</span>
+      <span class="info"><strong>Bio Signal ID:</strong> {signal["bio_signal)id"]}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📅 Date:</strong> {signal.bio_signal_date}</span>
+      <span class="info"><strong>Date:</strong> {signal.bio_signal_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🔍 Concept ID:</strong> 
+      <span class="info"><strong>Concept ID:</strong> 
         <span class="highlight">{signal.bio_signal_concept_id}</span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>📝 Source Value:</strong> {signal.bio_signal_source_value}</span>
+      <span class="info"><strong>Source Value:</strong> {signal.bio_signal_source_value}</span>
     </div>
     <div class="mt-[16px]">
       {#if isImage(signal.file_path)}

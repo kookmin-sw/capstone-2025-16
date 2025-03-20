@@ -7,21 +7,21 @@
 
   {#each measurement as measure}
     <div class="measurement-row">
-      <span class="info"><strong>📊 Measurement ID:</strong> {measure.measurement_id}</span>
+      <span class="info"><strong>Measurement ID:</strong> {measure.measurement_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📅 Date:</strong> {measure.measurement_date}</span>
+      <span class="info"><strong>Date:</strong> {measure.measurement_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🔬 Measurement Concept ID:</strong> {measure.measurement_concept_id}</span>
+      <span class="info"><strong>Measurement Concept ID:</strong> {measure.measurement_concept_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📏 Value:</strong> 
+      <span class="info"><strong>Value:</strong> 
         <span class="{measure.value_as_number >= measure.range_low && measure.value_as_number <= measure.range_high ? 'normal' : 'abnormal'}">
           {measure.value_as_number}
         </span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>📈 Normal Range:</strong> {measure.range_low} - {measure.range_high}</span>
+      <span class="info"><strong>Normal Range:</strong> {measure.range_low} - {measure.range_high}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🏥 Visit ID:</strong> {measure.visit_occurrence_id}</span>
+      <span class="info"><strong>Visit ID:</strong> {measure.visit_occurrence_id}</span>
     </div>
   {/each}
 </div>

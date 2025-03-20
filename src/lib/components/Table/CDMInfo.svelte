@@ -10,18 +10,18 @@
   {#each visitOccurrence as visit}
     <div class="visit-row">
       <div class="visit-info">
-        <span class="info"><strong>🚑 Visit ID:</strong> {visit.visit_occurrence_id}</span>
-        <span class="info"><strong>📅 Visit Dates:</strong> {visit.visit_start_date} ~ {visit.visit_end_date}</span>
-        <span class="info"><strong>🔍 Visit Concept ID:</strong> {visit.visit_concept_id}</span>
+        <span class="info"><strong>Visit ID:</strong> {visit.visit_occurrence_id}</span>
+        <span class="info"><strong>Visit Dates:</strong> {visit.visit_start_date} ~ {visit.visit_end_date}</span>
+        <span class="info"><strong>Concept ID:</strong> {visit.visit_concept_id}</span>
       </div>
       <div class="care-info">
-        <span class="info"><strong>🔢 Care Site ID:</strong> {careSite[0].care_site_id}</span>
-        <span class="info"><strong>🏥 Name:</strong> <span class="highlight">{careSite[0].care_site_name}</span></span>
-        <span class="info"><strong>📍 Address:</strong> {location[0].address_1}, {location[0].address_2} / {location[0].zip}</span>
+        <span class="info"><strong>Care Site:</strong> <span class="highlight">{careSite[0].care_site_name}</span> (ID: {careSite[0].care_site_id})</span>
+        <span class="info"><strong>Address:</strong> {location[0].address_1}, {location[0].address_2} / {location[0].zip}</span>
       </div>
     </div>
   {/each}
 </div>
+
 
 <style>
   .visit-container {
