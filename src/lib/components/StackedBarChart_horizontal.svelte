@@ -1,6 +1,6 @@
 <script>
   import * as d3 from "d3";
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, tick } from "svelte";
   import { browser } from "$app/environment";
   import { fade } from 'svelte/transition';
 
@@ -8,6 +8,8 @@
   export let data = [];
   export let domainKey; // 도메인 키 (condition, drug, procedure, measurement)
   export let viewType = 'combined';
+  export let cohortTotalCounts = {};
+  export let cohortColorMap = {};
     
   // drawChart 함수 인자
   let transformedData;
@@ -17,13 +19,14 @@
 	let chartContainer;
 	let width;
 	let height;
-  const margin = { top: 30, right: 150, bottom: 10, left: 120 };
+  const margin = { top: 30, right: 80, bottom: 10, left: 140 };
 
   // 툴팁 상태 관리를 위한 변수들
   let tooltipVisible = false;
   let tooltipX = 0;
   let tooltipY = 0;
   let tooltipContent = '';
+  let tooltipElement;
 
   let orderedCohorts;
 
@@ -133,11 +136,6 @@
       .range([0, height - margin.bottom - margin.top])
       .padding(0.4);
 
-    // 색상 스케일
-    const colorScale = d3.scaleOrdinal()
-      .domain(orderedCohorts)
-      .range(d3.schemeCategory10);
-
     // SVG 생성
     const svg = d3.select(chartContainer)
       .append("svg")
@@ -163,8 +161,7 @@
       .selectAll("g")
       .data(series)
       .join("g")
-      .attr("fill", (d, i) => colorScale(cohorts[i]));
-      .attr("fill", (d, i) => colorScale(orderedCohorts[i]));
+      .attr("fill", (d, i) => cohortColorMap[orderedCohorts[i]]);
 
     groups.selectAll("rect")
     .data(d => d)
@@ -174,67 +171,74 @@
     .attr("width", d => xScale(d[1]) - xScale(d[0]))
     .attr("height", yScale.bandwidth())
     .on("mouseover", function(event, d) {
-      const cohort = d3.select(this.parentNode).datum().key;
+      const currentCohort = d3.select(this.parentNode).datum().key;
       const value = d[1] - d[0];
+      const total = cohortTotalCounts[currentCohort];
+      const percentage = ((value / total) * 100).toFixed(2);
 
-      tooltipVisible = true;
-      tooltipX = event.pageX;
-      tooltipY = event.pageY;
+      const rect = this.getBoundingClientRect();
+      const containerRect = chartContainer.getBoundingClientRect();
+      const tooltipHeight = tooltipElement?.offsetHeight || 40;
+      const spaceBelow = containerRect.bottom - event.clientY;
+
+      tooltipX = rect.right - containerRect.left;
+        if(spaceBelow < tooltipHeight){
+            tooltipY = event.clientY - containerRect.top - tooltipHeight;
+        }else{
+          tooltipY = event.clientY - containerRect.top;
+        }
+
       tooltipContent = `
-        <div class="p-2">
-          <div class="font-bold">${d.data[domainKey]}</div>
-          <div>${cohort}: ${value.toLocaleString()}</div>
-        </div>
+        <div class="p-1">
+            <div class="text-[10px] font-semibold mb-0.5">${d.data[domainKey]}</div>
+            <div class="text-[9px] text-gray-600">
+              ${currentCohort}:
+              <span class="ml-0.5 font-medium">${value.toLocaleString()}</span>
+              </br>
+              <span class="text-gray-400 ml-0.5">
+                (${value}/${total} ${percentage}%)
+              </span>
+            </div>
+          </div>
       `;
 
+      tooltipVisible = true;
       d3.select(this)
-        .attr("opacity", 1)
         .style("stroke", "#666")
         .style("stroke-width", "2px");
     })
-    .on("mousemove", function(event) {
-      tooltipX = event.pageX - 150;
-      tooltipY = event.pageY - 320;
+    .on("mousemove", async function(event) {
+      const rect = this.getBoundingClientRect();
+      const containerRect = chartContainer.getBoundingClientRect();
+
+      const tooltipHeight = tooltipElement?.offsetHeight || 40;
+      const spaceBelow = containerRect.bottom - event.clientY;
+
+      tooltipX = rect.right - containerRect.left;
+
+        if(spaceBelow < tooltipHeight){
+            tooltipY = event.clientY - containerRect.top - tooltipHeight;
+        }else{
+          tooltipY = event.clientY - containerRect.top;
+        }
     })
     .on("mouseout", function() {
       tooltipVisible = false;
       d3.select(this)
-        .attr("opacity", 1)
         .style("stroke", "none")
     });
-
-    // 범례 추가
-    const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right + 10}, ${margin.top})`)
-      .selectAll("g")
-      .data(orderedCohorts)
-      .join("g")
-      .attr("transform", (d, i) => `translate(0, ${i * 20})`);
-
-    legend.append("rect")
-      .attr("width", 15)
-      .attr("height", 15)
-      .attr("fill", d => colorScale(d));
-
-    legend.append("text")
-      .attr("x", 20)
-      .attr("y", 12)
-      .text(d => d)
-      .style("font-size", "12px");
   }
 
 </script>
 
-<div class="w-full h-full">
-  <div class="relative w-full h-full">
-    <div bind:this={chartContainer} class="w-full h-full"></div>
-  </div>
+<div class="relative w-full h-full">
+  <div bind:this={chartContainer} class="w-full h-full"></div>
 
   <!-- 툴팁 -->
   {#if tooltipVisible}
-    <div 
-      class="absolute bg-white shadow-lg rounded-md border border-gray-200 z-50 pointer-events-none transition-all duration-100"
-      style="left: {tooltipX}px; top: {tooltipY}px;"
+    <div bind:this={tooltipElement}
+    class="absolute bg-white/95 shadow-sm rounded-md border border-gray-100 z-50 pointer-events-none transition-all duration-75 backdrop-blur-sm"
+    style="left: {tooltipX}px; top: {tooltipY}px;"
     >
       {@html tooltipContent}
     </div>

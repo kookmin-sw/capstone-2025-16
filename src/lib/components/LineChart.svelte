@@ -8,6 +8,7 @@
     let width;
     let height;
     export let margin = { top: 30, right: 120, bottom: 50, left: 50 };  // 오른쪽 여백 증가
+    export let cohortColorMap;
 
     $: uniqueSeries = [...new Set(data.map(d => d.series))];
     $: visibleSeries = new Set(uniqueSeries);
@@ -83,9 +84,7 @@
             .domain([0, d3.max(data, d => d.value)])
             .nice()
             .range([height - margin.bottom, margin.top]);
-    
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
-  
+      
         // X축 & Y축
         const xAxis = d3.axisBottom(x);
         const yAxis = d3.axisLeft(y);
@@ -97,7 +96,8 @@
             .style("text-anchor", "end")
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
-            .attr("transform", "rotate(-45)");
+            .attr("transform", "rotate(-45)")
+            .attr("stroke", d => cohortColorMap[d]); 
     
         svg.append("g")
             .attr("transform", `translate(${margin.left},0)`)
@@ -119,9 +119,9 @@
             .append("path")
             .datum(values)
             .attr("fill", "none")
-            .attr("stroke", color(key))
             .attr("stroke-width", 2)
-            .attr("d", line)
+            .attr("stroke", cohortColorMap[key])
+            .attr("d", line(values))
             .attr("class", `line-${key}`)
             .attr("opacity", visibleSeries.has(key) ? 1 : 0);
   
@@ -134,7 +134,7 @@
             .attr("cx", d => x(d.label) + x.bandwidth() / 2)
             .attr("cy", d => y(d.value))
             .attr("r", 4)
-            .attr("fill", color(key))
+            .attr("fill", cohortColorMap[key])
             .attr("stroke", "white")
             .attr("opacity", visibleSeries.has(key) ? 1 : 0)
             .on("mouseover", function (event, d) {
@@ -142,7 +142,15 @@
                 .style("display", "block")
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px")
-                .html(`Cohort: ${d.series}<br>Age: ${d.label}<br>Value: ${d.value}`);
+                .html(`
+                    <div class="p-1">
+                    <div class="text-[10px] font-semibold mb-0.5">${d.series}</div>
+                    <div class="text-[9px] text-gray-600">
+                        ${d.label}:
+                        <span class="ml-0.5 font-medium text-black">${d.value.toLocaleString()}</span>
+                    </div>
+                    </div>
+                `);
             })
             .on("mouseout", function () {
                 tooltip.style("display", "none");
@@ -164,8 +172,8 @@
           .attr("x", 0)
           .attr("width", 12)
           .attr("height", 12)
-          .attr("fill", d => color(d[0]))
-          .attr("stroke", d => color(d[0]))
+          .attr("fill", d => cohortColorMap[d[0]])
+          .attr("stroke", d => cohortColorMap[d[0]])
           .attr("cursor", "pointer")
           .on("click", (event, d) => toggleSeries(d[0]));
   
@@ -193,13 +201,14 @@
         .append("div")
         .style("position", "absolute")
         .style("background", "white")
-        .style("border", "1px solid #ccc")
-        .style("padding", "5px")
-        .style("border-radius", "5px")
+        .style("border", "1px solid #eee")
+        .style("border-radius", "4px")
+        .style("padding", "0")
         .style("display", "none")
         .style("pointer-events", "none")
-        .style("font-size", "12px")
-        .style("z-index", "100");
+        .style("z-index", "100")
+        .style("box-shadow", "0 2px 4px rgba(0,0,0,0.05)")
+        .style("backdrop-filter", "blur-sm");
     }
   
   </script>

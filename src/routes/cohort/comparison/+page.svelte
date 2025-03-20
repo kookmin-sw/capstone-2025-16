@@ -43,7 +43,6 @@
   let visitTypeChartData = [];
   let ageDistributionChartData = [];
   let visitCountChartData = [];
-  let topTenDrugsData = [];
   let stackedDrugsData = [];
   let stackedConditionsData = [];
   let stackedMeasurementsData = [];
@@ -87,6 +86,16 @@
     {key: 'count', label: 'Count'}
   ]
 
+  const COHORT_COLORS = [
+    "#2977b7",
+    "#eda946",
+    "#d45836",
+    "#fac2ad",
+    "#77722e",
+  ]
+
+  let cohortColorMap = {};
+
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
@@ -97,12 +106,19 @@
       console.log('load cohortData', cohortData);
 
       if (selectedCohorts.length > 0) {
+        // 코호트별 색상 매핑 초기화
+        cohortColorMap = Object.fromEntries(
+          selectedCohorts.map((cohortId, index) => [
+            cohortStats[cohortId].basicInfo.name,
+            COHORT_COLORS[index % COHORT_COLORS.length]
+          ])
+        );
+
         genderChartData = await loadGenderData();
         mortalityChartData = await loadMortalityData();
         visitTypeChartData = await loadVisitTypeData();
         ageDistributionChartData = await loadAgeDistributionData();
         visitCountChartData = await loadVisitCountData();
-        topTenDrugsData = await loadTopTenDrugsData();
 
         // 각 차트별로 초기 코호트 선택 설정
         Object.keys(selectedCohortStates).forEach(chartType => {
@@ -263,47 +279,6 @@
   } catch (error) {
       console.error('Error loading visit count data:', error);
       return [];
-    }
-  }
-
-  async function loadTopTenDrugsData() {
-    try {
-      return selectedCohorts.map((cohortId) => ({
-        cohortName: cohortStats[cohortId].basicInfo.name,
-        drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
-          .map(([name, count], index) => ({
-            rank: index + 1,
-            name,
-            count
-          }))
-      }));
-    } catch (error) {
-      console.error('Error loading top drugs data:', error);
-      return [];
-    }
-  }
-
-  function handleCohortChange(chartType, event) {
-    selectedCohortStates[chartType] = event.target.value;
-  }
-
-  function handleCohortSelect(event) {
-    const { chartId, optionId } = event.detail;
-    
-    // chartId에 따라 적절한 상태 업데이트
-    switch (chartId) {
-      case 6:  // Top 10 Drugs
-        selectedCohortStates.drugs = optionId;
-        break;
-      case 7:  // Top 10 Conditions
-        selectedCohortStates.conditions = optionId;
-        break;
-      case 8:  // Top 10 Procedures
-        selectedCohortStates.procedures = optionId;
-        break;
-      case 9:  // Top 10 Measurements
-        selectedCohortStates.measurements = optionId;
-        break;
     }
   }
 
@@ -546,9 +521,9 @@
           {#if selectItems[0].checked}
             <ChartCard 
               title="Gender Ratio" 
-              description="Comparison of gender distribution across selected cohorts"
+              description="The ratio of genders within the cohort."
               chartId={0}
-              type="full",
+              type="full"
               on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col">
@@ -562,7 +537,7 @@
           {#if selectItems[1].checked}
             <ChartCard 
               title="Mortality" 
-              description="Comparison of mortality across selected cohorts"
+              description="The percentage of patients within the cohort who have died."
               chartId={1}
               type="full"
               on:close={handleChartClose}
@@ -580,7 +555,7 @@
           {#if selectItems[2].checked}
             <ChartCard 
               title="Visit Type Ratio"
-              description="Comparison of visit types across selected cohorts"
+              description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
               chartId={2}
               type="full"
               on:close={handleChartClose}
@@ -598,14 +573,17 @@
           {#if selectItems[3].checked}
             <ChartCard 
               title="Distribution of First Occurrence Age"
-              description="Age distribution analysis"
+              description="The age distribution of patients at the time of their first medical visit during the cohort period."
               chartId={3}
               type="full"
               on:close={handleChartClose}
               >
             <div class="w-full h-full flex flex-col">
             <div class="mt-4 flex-grow flex items-center justify-center">
-                <LineChart data={ageDistributionChartData} />
+                <LineChart 
+                  data={ageDistributionChartData}
+                  cohortColorMap={cohortColorMap}
+                />
               </div>
             </div>
           </ChartCard>
@@ -614,7 +592,7 @@
           {#if selectItems[4].checked}
           <ChartCard 
             title="Distribution of Visit Count"
-            description="Visit frequency analysis"
+            description="The distribution of the total number of medical visits made by patients during the cohort period."
             chartId={4}
             type="full"
             on:close={handleChartClose}
@@ -622,7 +600,10 @@
             <div class="w-full h-full flex flex-col">
               <div class="mt-4 flex-grow flex items-center justify-center">
                 {#if visitCountChartData && visitCountChartData.length > 0}
-                  <LineChart data={visitCountChartData} />
+                  <LineChart
+                    data={visitCountChartData}
+                    cohortColorMap={cohortColorMap}
+                  />
                 {/if}
               </div>
             </div>
@@ -632,7 +613,7 @@
           {#if selectItems[5].checked}
             <ChartCard 
               title="Top 10 Drugs"
-              description="Most frequently prescribed medications"
+              description="The list of the top 10 most frequently prescribed medications for patients in the cohort."
               chartId={5}
               type="half"
               showSelector={true}
@@ -642,12 +623,19 @@
               on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col p-4">
-                {#if topTenDrugsData.length > 0}
+                {#if stackedDrugsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <StackedBarChartHorizontal
                     data={stackedDrugsData}
                     domainKey="drug"
                     viewType={topTenDrugViewType}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                   />
                 </div>
                 {/if}
@@ -658,7 +646,7 @@
           {#if selectItems[6].checked}
               <ChartCard 
                 title="Top 10 Conditions"
-                description="Most frequent conditions"
+                description="The list of the top 10 most frequently diagnosed medical conditions among patients in the cohort."
                 chartId={6}
                 type="half"
                 showSelector={true}
@@ -674,6 +662,13 @@
                       data={stackedConditionsData}
                       domainKey="condition"
                       viewType={topTenConditionViewType}
+                      cohortColorMap={cohortColorMap}
+                      cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                     />
                   </div>
                   {/if}
@@ -684,7 +679,7 @@
           {#if selectItems[7].checked}
             <ChartCard 
               title="Top 10 Procedures"
-              description="Most frequent procedures"
+              description="The list of the top 10 most frequently performed procedures and medical tests on patients in the cohort."
               chartId={7}
               type="half"
               showSelector={true}
@@ -700,6 +695,13 @@
                     data={stackedProceduresData}
                     domainKey="procedure"
                     viewType={topTenProcedureViewType}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                   />
                 </div>
               {/if}
@@ -709,7 +711,7 @@
           {#if selectItems[8].checked}
             <ChartCard 
               title="Top 10 Measurements"
-              description="Most frequent measurements"
+              description="The list of the top 10 most frequently recorded clinical measurements within the cohort."
               chartId={8}
               type="half"
               showSelector={true}
@@ -725,6 +727,13 @@
                     data={stackedMeasurementsData}
                     domainKey="measurement"
                     viewType={topTenMeasurementViewType}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
                   />
                 </div>
                 {/if}
