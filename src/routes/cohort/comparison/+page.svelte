@@ -43,7 +43,6 @@
   let visitTypeChartData = [];
   let ageDistributionChartData = [];
   let visitCountChartData = [];
-  let topTenDrugsData = [];
   let stackedDrugsData = [];
   let stackedConditionsData = [];
   let stackedMeasurementsData = [];
@@ -120,7 +119,6 @@
         visitTypeChartData = await loadVisitTypeData();
         ageDistributionChartData = await loadAgeDistributionData();
         visitCountChartData = await loadVisitCountData();
-        topTenDrugsData = await loadTopTenDrugsData();
 
         // 각 차트별로 초기 코호트 선택 설정
         Object.keys(selectedCohortStates).forEach(chartType => {
@@ -281,47 +279,6 @@
   } catch (error) {
       console.error('Error loading visit count data:', error);
       return [];
-    }
-  }
-
-  async function loadTopTenDrugsData() {
-    try {
-      return selectedCohorts.map((cohortId) => ({
-        cohortName: cohortStats[cohortId].basicInfo.name,
-        drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
-          .map(([name, count], index) => ({
-            rank: index + 1,
-            name,
-            count
-          }))
-      }));
-    } catch (error) {
-      console.error('Error loading top drugs data:', error);
-      return [];
-    }
-  }
-
-  function handleCohortChange(chartType, event) {
-    selectedCohortStates[chartType] = event.target.value;
-  }
-
-  function handleCohortSelect(event) {
-    const { chartId, optionId } = event.detail;
-    
-    // chartId에 따라 적절한 상태 업데이트
-    switch (chartId) {
-      case 6:  // Top 10 Drugs
-        selectedCohortStates.drugs = optionId;
-        break;
-      case 7:  // Top 10 Conditions
-        selectedCohortStates.conditions = optionId;
-        break;
-      case 8:  // Top 10 Procedures
-        selectedCohortStates.procedures = optionId;
-        break;
-      case 9:  // Top 10 Measurements
-        selectedCohortStates.measurements = optionId;
-        break;
     }
   }
 

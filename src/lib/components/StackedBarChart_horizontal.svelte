@@ -204,7 +204,6 @@
 
       tooltipVisible = true;
       d3.select(this)
-        .attr("opacity", 1)
         .style("stroke", "#666")
         .style("stroke-width", "2px");
     })
@@ -222,12 +221,10 @@
         }else{
           tooltipY = event.clientY - containerRect.top;
         }
-      
     })
     .on("mouseout", function() {
       tooltipVisible = false;
       d3.select(this)
-        .attr("opacity", 1)
         .style("stroke", "none")
     });
   }
