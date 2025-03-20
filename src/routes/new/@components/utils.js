@@ -1,5 +1,4 @@
 export function convertOperator2Factor(raw_operator) {
-    console.log(raw_operator);
     if (raw_operator === undefined) {
         return {
             operator: 'eq',
@@ -27,5 +26,9 @@ export function convertOperator2Factor(raw_operator) {
             };
         }
     }
-    throw new Error("unknown operator");
+    // throw new Error("unknown operator");
+    return {
+        operator: 'eq',
+        value: null
+    };
 }

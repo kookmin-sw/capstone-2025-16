@@ -1,0 +1,181 @@
+<script>
+	import DateOperator from '../operators/DateOperator.svelte';
+	import NumberOperator from '../operators/NumberOperator.svelte';
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
+
+	// 필터 상태 변수들
+	let first = $state(false);
+	let age = $state({});
+	let gender = $state({});
+	let startDate = $state({});
+	let endDate = $state({});
+	let drugType = $state({});
+	let visitType = $state({});
+	let stopReason = $state({ value: '' });
+	let refill = $state({});
+	let quantity = $state({});
+	let daysSupply = $state({});
+	let routeType = $state({});
+	let effectiveDose = $state({});
+	let doseUnit = $state({});
+	let lotNumber = $state({ value: '' });
+	let source = $state({});
+	let providerSpecialty = $state({});
+
+	// 툴팁 표시 상태
+	let showTooltip = $state({});
+
+	// 툴팁 표시/숨김 함수
+	function toggleTooltip(key) {
+		showTooltip[key] = !showTooltip[key];
+	}
+
+	$effect(() => {
+		dispatch('add', {
+			type: 'drug_exposure',
+			filters: {
+				first,
+				age,
+				gender,
+				startDate,
+				endDate,
+				drugType,
+				visitType,
+				stopReason,
+				refill,
+				quantity,
+				daysSupply,
+				routeType,
+				effectiveDose,
+				doseUnit,
+				lotNumber,
+				source,
+				providerSpecialty
+			}
+		});
+	});
+</script>
+
+<div class="flex flex-col w-full gap-y-8">
+	<!-- First Exposure -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<span class="text-left">First drug exposure record of the patient</span>
+		{#if first}
+			<button on:click={() => (first = false)} class="rounded-full bg-blue-200 px-2 py-1 text-xs text-blue-500 w-fit"> Enabled </button>
+		{:else}
+			<button on:click={() => (first = true)} class="rounded-full bg-pink-200 px-2 py-1 text-xs text-pink-500 w-fit"> Disabled </button>
+		{/if}
+	</div>
+
+	<!-- Age at Exposure -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Age at exposure:</p>
+		<NumberOperator id="age-at-exposure" on:value={({ detail }) => (age = detail)} />
+	</div>
+
+	<!-- Gender -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Gender:</p>
+		<select class="w-full p-2 border rounded" bind:value={gender}>
+			<option value="">Select</option>
+			<option value="M">Male</option>
+			<option value="F">Female</option>
+		</select>
+	</div>
+
+	<!-- Start Date -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Exposure start date:</p>
+		<DateOperator id="start-date" on:value={({ detail }) => (startDate = detail)} />
+	</div>
+
+	<!-- End Date -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Exposure end date:</p>
+		<DateOperator id="end-date" on:value={({ detail }) => (endDate = detail)} />
+	</div>
+
+	<!-- Drug Type -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Drug Type:</p>
+		<NumberOperator id="drug-type" on:value={({ detail }) => (drugType = detail)} />
+	</div>
+
+	<!-- Visit Type -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Visit Type:</p>
+		<NumberOperator id="visit-type" on:value={({ detail }) => (visitType = detail)} />
+	</div>
+
+	<!-- Stop Reason -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Stop Reason:</p>
+		<input 
+			type="text" 
+			class="w-full p-2 border rounded"
+			bind:value={stopReason.value} 
+			placeholder="Enter Stop Reason"
+		/>
+	</div>
+
+	<!-- Refills -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Refills:</p>
+		<NumberOperator id="refills" on:value={({ detail }) => (refill = detail)} />
+	</div>
+
+	<!-- Quantity -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Quantity:</p>
+		<NumberOperator id="quantity" on:value={({ detail }) => (quantity = detail)} />
+	</div>
+
+	<!-- Days Supply -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Days Supply:</p>
+		<NumberOperator id="days-supply" on:value={({ detail }) => (daysSupply = detail)} />
+	</div>
+
+	<!-- Route Type -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Route Type:</p>
+		<NumberOperator id="route-type" on:value={({ detail }) => (routeType = detail)} />
+	</div>
+
+	<!-- Effective Dose -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Effective Dose:</p>
+		<NumberOperator id="effective-dose" on:value={({ detail }) => (effectiveDose = detail)} />
+	</div>
+
+	<!-- Dose Unit -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Dose Unit:</p>
+		<NumberOperator id="dose-unit" on:value={({ detail }) => (doseUnit = detail)} />
+	</div>
+
+	<!-- Lot Number -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Lot Number:</p>
+		<input 
+			type="text" 
+			class="w-full p-2 border rounded"
+			bind:value={lotNumber.value} 
+			placeholder="Enter Lot Number"
+		/>
+	</div>
+
+	<!-- Source -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Source:</p>
+		<NumberOperator id="source" on:value={({ detail }) => (source = detail)} />
+	</div>
+
+	<!-- Provider Specialty -->
+	<div class="flex flex-col gap-y-2 w-full">
+		<p>Provider Specialty:</p>
+		<NumberOperator id="provider-specialty" on:value={({ detail }) => (providerSpecialty = detail)} />
+	</div>
+</div> 

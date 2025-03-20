@@ -84,11 +84,18 @@
 			/>
 		{/if}
 	{:else}
-		<p>{operator}</p>
 		{#if operator === '!bt' || operator === 'bt'}
-			<p>{startDate} ~ {endDate}</p>
-		{:else}
-			<p>{startDate}</p>
+			<p>{operator === 'bt' ? 'dates between' : 'dates not between'} {startDate} and {endDate}</p>
+		{:else if operator === 'lt'}
+			<p>before {startDate}</p>
+		{:else if operator === 'lte'}
+			<p>on or before {startDate}</p>
+		{:else if operator === 'eq'}
+			<p>on {startDate}</p>
+		{:else if operator === 'gt'}
+			<p>after {startDate}</p>
+		{:else if operator === 'gte'}
+			<p>on or after {startDate}</p>
 		{/if}
 	{/if}
 </div>

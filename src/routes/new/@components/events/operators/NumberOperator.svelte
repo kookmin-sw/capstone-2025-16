@@ -80,11 +80,18 @@
 			/>
 		{/if}
 	{:else}
-		<p>{operator}</p>
         {#if operator === '!bt' || operator === 'bt'}
-            <p>{startNumber} ~ {endNumber}</p>
-        {:else}
-            <p>{startNumber}</p>
+            <p>{operator === 'bt' ? 'between' : 'not between'} {startNumber} and {endNumber}</p>
+        {:else if operator === 'lt'}
+            <p>less than {startNumber}</p>
+        {:else if operator === 'lte'}
+            <p>less than or equal to {startNumber}</p>
+        {:else if operator === 'eq'}
+            <p>equal to {startNumber}</p>
+        {:else if operator === 'gt'}
+            <p>greater than {startNumber}</p>
+        {:else if operator === 'gte'}
+            <p>greater than or equal to {startNumber}</p>
         {/if}
 	{/if}
 </div>

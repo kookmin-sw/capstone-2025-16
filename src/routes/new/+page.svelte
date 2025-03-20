@@ -8,8 +8,9 @@
 <script>
 	import '../../app.css';
 	import { page } from '$app/state';
-	import ConditionEraEvent from './@components/events/editable/ConditionEraEvent.svelte';
-	import ConditionEraEventDisplay from './@components/events/display/ConditionEraEvent.svelte';
+
+	import IntegrationEditor from './@components/events/editable/IntegrationEditor.svelte';
+	import EventDisplayRouter from './@components/events/display/EventDisplayRouter.svelte';
 	let pathname = $state(page.url.pathname);
 
 	const events = [
@@ -23,12 +24,10 @@
 		'Measurement',
 		'Observation',
 		'Observation Period',
-		'Payer Plan Period',
 		'Procedure Occurrence',
 		'Specimen',
-		'Visit',
-		'Visit detail',
-		'From Reusable'
+		'Visit Occurrence',
+		'Demographic'
 	];
 
 	const descriptions = {
@@ -110,12 +109,12 @@
 		}
 	}
 
-	$effect(() => {
-		// prevents the ghost flickering at the top
-		if (mouseYCoordinate == null || mouseYCoordinate == 0) {
-			// showGhost = false;
-		}
-	});
+	// $effect(() => {
+	// 	// prevents the ghost flickering at the top
+	// 	if (mouseYCoordinate == null || mouseYCoordinate == 0) {
+	// 		showGhost = false;
+	// 	}
+	// });
 
 	$effect(() => {
 		if (
@@ -168,27 +167,39 @@
 	class="fixed left-0 top-10 flex h-full w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
 >
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
-		<p class="mb-4 text-sm font-bold">cohort initial</p>
+		<p class="mb-4 text-sm font-bold">cohort initial events</p>
 		{#each cohort.entry.and as event}
-			<p class="mb-4 ml-2 text-xs leading-4">
-				- {event.type.replace('_', ' ')}<br />
+			<p class=" mb-4 ml-2 rounded-md bg-blue-50 px-2 py-1 text-xs leading-4 text-blue-600">
+				{event.type
+					? event.type
+							.replace('_', ' ')
+							.split(' ')
+							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+							.join(' ') + ' Event'
+					: ''}<br />
 			</p>
 		{/each}
-	</div>
-	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
-		<p class="mb-4 text-sm font-bold">포함 기준</p>
-		<p class="mb-4 ml-2 text-xs leading-4">
-			- 진단발생: OMOPUveitis<br />
-			- 관찰기록<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-			- 약물 기간<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
+		<p class=" mb-4 ml-2 rounded-md bg-blue-50 px-2 py-1 text-xs leading-4 text-blue-600">
+			Condition Era Event
+		</p>
+		<p class=" mb-4 ml-2 rounded-md bg-blue-50 px-2 py-1 text-xs leading-4 text-blue-500">
+			Occurrence Event
 		</p>
 	</div>
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
-		<p class="mb-4 text-sm font-bold">코호트 종료 기준</p>
+		<p class="mb-4 text-sm font-bold">Inclusion Criteria</p>
 		<p class="mb-4 ml-2 text-xs leading-4">
-			- 진단발생: OMOPUveitis<br />
-			- 관찰기록<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-			- 약물 기간<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
+			- Diagnosis Occurrence: OMOPUveitis<br />
+			- Observation Period<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
+			- Drug Exposure<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
+		</p>
+	</div>
+	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
+		<p class="mb-4 text-sm font-bold">Exclusion Criteria</p>
+		<p class="mb-4 ml-2 text-xs leading-4">
+			- Diagnosis Occurrence: OMOPUveitis<br />
+			- Observation Period<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
+			- Drug Exposure<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
 		</p>
 	</div>
 </div>
@@ -223,8 +234,12 @@
 <div class="fixed left-[200px] top-10 h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
 	<div class="flex h-full w-full">
 		<div class="main-container flex w-full flex-col overflow-y-scroll p-8 text-lg">
-			<p class="mb-4 text-2xl font-bold">코호트 진입</p>
-			<p class="mb-4 ml-2">- 진단발생: OMOPUveitis</p>
+			<p class="mb-4 text-2xl font-bold text-zinc-800">Cohort Initial Events</p>
+			<!-- <p class="mb-4 ml-2">Diagnosis Occurrence: <span class="inline-block px-3 py-1 rounded-full border border-blue-200 text-blue-500 px-2 text-xs bg-gradient-to-r from-blue-50 to-white">OMOPUveitis</span> 
+				<span class="inline-block px-3 py-1 rounded-full border border-blue-200 text-blue-500 px-2 text-xs
+				bg-gradient-to-r from-blue-50 to-white
+					">change</span>
+			</p> -->
 			<p class="flex">
 				with continuous observation of at least <input
 					type="number"
@@ -248,15 +263,49 @@
 						class="pointer-events-none absolute z-50 flex w-full flex-col rounded-md border border-zinc-200 bg-white p-4 shadow-lg"
 						style="top: {mouseYCoordinate}px;"
 					>
-						<p class="mb-4 text-lg font-bold">{draggingItem.event_name}</p>
-						<div
-							class="ml-2 flex flex-col text-sm text-zinc-700"
-						>
-							<ConditionEraEventDisplay eventdata={cohort.entry.and[draggingItemIndex]} />
+						<p class="mb-4 text-lg font-bold">
+							{draggingItem.type
+								? draggingItem.type
+										.replace('_', ' ')
+										.split(' ')
+										.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+										.join(' ') + ' Event'
+								: ''}
+						</p>
+						<div class="ml-2 flex flex-col text-sm text-zinc-700">
+							<EventDisplayRouter eventdata={cohort.entry.and[draggingItemIndex]} />
 						</div>
 					</div>
 				{/if}
-				{#each added_events as event, index}
+				<div
+					class="mb-4 ml-2 flex flex-col rounded-md border border-transparent p-4 transition-all duration-300 ease-in-out hover:border-zinc-200 hover:shadow-lg"
+				>
+					<p class="mb-4 text-lg font-bold">Condition Era Event</p>
+					<p>
+						Condition: <span class="mb-4 text-blue-500">all types of conditions</span>
+					</p>
+					<div class="ml-2 flex flex-col space-y-2 text-sm text-zinc-700">
+						<p>Era start: before 2025-03-24</p>
+						<p>Occurrence count: greater than 8</p>
+						<p>Era start age: between 4 and 8</p>
+					</div>
+				</div>
+				<div
+					class="mb-4 ml-2 flex flex-col rounded-md border border-transparent p-4 transition-all duration-300 ease-in-out hover:border-zinc-200 hover:shadow-lg"
+				>
+					<p class="mb-4 text-lg font-bold">Observation Event</p>
+
+					<p>
+						Observation: <span class="mb-4 text-blue-500">all types of observations</span>
+					</p>
+					<div class="ml-2 flex flex-col space-y-2 text-sm text-zinc-700">
+						<p>for the first time in the patient's hospital record</p>
+						<p>
+							Occurrence start: before 2025-03-10<br />
+						</p>
+					</div>
+				</div>
+				{#each cohort.entry.and as event, index}
 					<div
 						class="mb-4 ml-2 flex flex-col rounded-md border border-transparent p-4 transition-all duration-300 ease-in-out hover:border-zinc-200 hover:shadow-lg
 						{draggingItemId === event.id ? 'opacity-40' : ''}"
@@ -275,7 +324,7 @@
 
 									draggingItem = event;
 									draggingItemIndex = index;
-									draggingItemId = event.id;
+									draggingItemId = JSON.stringify(event);
 								}
 							}, longPressDelay);
 						}}
@@ -292,30 +341,38 @@
 							}
 						}}
 					>
-						<p class="mb-4 text-lg font-bold">{event.event_name}</p>
-						<div
-							class="ml-2 flex flex-col text-sm text-zinc-700"
-						>
-							<ConditionEraEventDisplay eventdata={cohort.entry.and[index]?? {}} />
+
+						<p class="mb-4 text-lg font-bold">
+							{event.type
+								? event.type
+										.replace('_', ' ')
+										.split(' ')
+										.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+										.join(' ') + ' Event'
+								: ''}
+						</p>
+						<div class="ml-2 flex flex-col text-sm text-zinc-700">
+							<EventDisplayRouter eventdata={event} />
 						</div>
 					</div>
 				{/each}
 			</div>
 		</div>
 		<div
-			class="flex h-full w-[700px] flex-col items-center overflow-y-scroll border-l border-zinc-200 py-3"
+			class="mr-4 mt-8 flex h-full w-[700px] flex-col items-center overflow-y-scroll rounded-3xl border-2 border-blue-100 px-4 py-8 pb-16 shadow-2xl"
 		>
 			{#if expandedEvent === null}
-				<p class="text-lg font-bold">진입 이벤트 목록</p>
-				<p class="mb-3 text-sm text-zinc-700">추가할 이벤트를 클릭하여 주세요.</p>
+				<p class="text-lg font-bold text-blue-600">Cohort Initial Events</p>
+				<p class="mb-3 text-sm text-blue-700">Click the event to add to the cohort.</p>
 				<div class="flex w-full flex-col gap-4 p-4">
 					{#each events as event}
 						<button
 							on:click={() => (expandedEvent = expandedEvent === event ? null : event)}
-							class="flex w-full flex-col justify-between rounded-md border border-zinc-200 p-2 text-left text-sm text-zinc-700 shadow-sm transition-all duration-300 ease-in-out hover:bg-zinc-100"
+							class="t ext-sm flex w-full flex-col justify-between rounded-md border border-blue-200 bg-blue-50
+							p-2 text-left text-blue-500 shadow-sm transition-all duration-300 ease-in-out hover:bg-blue-100"
 						>
 							<div class="flex w-full justify-between">
-								<p class="text-sm text-zinc-700">+ {event} Event</p>
+								<p class="text-sm font-semibold">+ {event} Event</p>
 								<p class="groups relative text-xs font-bold text-zinc-500">
 									<span
 										class="absolute bottom-full left-1/2 hidden -translate-x-full whitespace-nowrap rounded bg-zinc-400 bg-opacity-20 px-2 py-1 text-xs font-normal text-zinc-800 backdrop-blur-sm group-hover:block"
@@ -328,16 +385,7 @@
 					{/each}
 				</div>
 			{:else}
-				<div class="flex w-full items-center justify-between px-2 text-lg font-bold text-zinc-800">
-					<button
-						on:click={() => {
-							expandedEvent = null;
-							editedEvent = null;
-						}}
-						class="text-xl text-zinc-500 hover:text-zinc-700"
-					>
-						←
-					</button>
+				<div class="flex w-full items-center justify-between px-4 text-lg font-bold text-zinc-600">
 					<p class="text-2xl font-bold">
 						{expandedEvent} Event {#if editedEvent === expandedEvent}
 							수정
@@ -354,9 +402,21 @@
 				>
 					<p class="mt-4 text-lg font-bold">Addtional attributes</p>
 					<div class="w-full px-4 text-sm">
-						<ConditionEraEvent on:add={(e) => (eventdata = e.detail)} />
+						<IntegrationEditor
+							on:add={({ detail }) => (eventdata = detail)}
+							event_type={expandedEvent.toLowerCase().replace(' ', '_')}
+						/>
 					</div>
-					<div class="flex w-full justify-center">
+					<div class="mt-4 flex w-full justify-center space-x-4">
+						<button
+							on:click={() => {
+								expandedEvent = null;
+								editedEvent = null;
+							}}
+							class="rounded-xl border border-zinc-400 bg-zinc-100 px-3 py-1 text-sm font-normal text-zinc-600 hover:text-zinc-700"
+						>
+							Cancel
+						</button>
 						<button
 							on:click={() => {
 								if (editedEvent === expandedEvent) {
@@ -369,16 +429,15 @@
 										event_name: expandedEvent,
 										eventdata: eventdata
 									});
-									console.log(cohort);
 								}
 								expandedEvent = null;
 							}}
-							class="mt-4 rounded-md border border-zinc-200 px-4 py-2 text-sm text-zinc-700"
+							class=" rounded-xl border border-blue-300 bg-blue-50 px-4 py-1 text-sm text-blue-600"
 						>
 							{#if editedEvent === expandedEvent}
-								수정
+								Update Event
 							{:else}
-								추가
+								Add Event
 							{/if}
 						</button>
 					</div>
