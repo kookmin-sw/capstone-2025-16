@@ -623,7 +623,10 @@
               >
             <div class="w-full h-full flex flex-col">
             <div class="mt-4 flex-grow flex items-center justify-center">
-                <LineChart data={ageDistributionChartData} />
+                <LineChart 
+                  data={ageDistributionChartData}
+                  cohortColorMap={cohortColorMap}
+                />
               </div>
             </div>
           </ChartCard>
@@ -640,7 +643,10 @@
             <div class="w-full h-full flex flex-col">
               <div class="mt-4 flex-grow flex items-center justify-center">
                 {#if visitCountChartData && visitCountChartData.length > 0}
-                  <LineChart data={visitCountChartData} />
+                  <LineChart
+                    data={visitCountChartData}
+                    cohortColorMap={cohortColorMap}
+                  />
                 {/if}
               </div>
             </div>
