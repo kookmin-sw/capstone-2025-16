@@ -49,6 +49,7 @@
   .condition-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     padding: 8px 0;
     font-size: 1rem;
     background: #fff;

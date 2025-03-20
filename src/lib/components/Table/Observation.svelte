@@ -43,6 +43,7 @@
     padding: 8px 0;
     font-size: 1rem;
     background: #fff;
+    flex-wrap: wrap;
     border-bottom: 1px solid #ddd;
     white-space: nowrap;
   }

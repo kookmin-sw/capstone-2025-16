@@ -46,6 +46,7 @@
     align-items: center;
     padding: 8px 0;
     font-size: 1rem;
+    flex-wrap: wrap;
     background: #fff;
     border-bottom: 1px solid #ddd;
     white-space: nowrap;

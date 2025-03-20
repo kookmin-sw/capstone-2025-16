@@ -43,6 +43,7 @@
     display: flex;
     align-items: center;
     padding: 8px 0;
+    flex-wrap: wrap;
     font-size: 1rem;
     background: #fff;
     border-bottom: 1px solid #ddd;
