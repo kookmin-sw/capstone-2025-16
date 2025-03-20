@@ -87,6 +87,16 @@
     {key: 'count', label: 'Count'}
   ]
 
+  const COHORT_COLORS = [
+    "#2977b7",
+    "#eda946",
+    "#d45836",
+    "#fac2ad",
+    "#77722e",
+  ]
+
+  let cohortColorMap = {};
+
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
@@ -97,6 +107,14 @@
       console.log('load cohortData', cohortData);
 
       if (selectedCohorts.length > 0) {
+        // 코호트별 색상 매핑 초기화
+        cohortColorMap = Object.fromEntries(
+          selectedCohorts.map((cohortId, index) => [
+            cohortStats[cohortId].basicInfo.name,
+            COHORT_COLORS[index % COHORT_COLORS.length]
+          ])
+        );
+
         genderChartData = await loadGenderData();
         mortalityChartData = await loadMortalityData();
         visitTypeChartData = await loadVisitTypeData();
@@ -648,6 +666,7 @@
                     data={stackedDrugsData}
                     domainKey="drug"
                     viewType={topTenDrugViewType}
+                    cohortColorMap={cohortColorMap}
                     cohortTotalCounts = {Object.fromEntries(
                       selectedCohorts.map(cohortId => [
                         cohortStats[cohortId].basicInfo.name,
@@ -680,6 +699,7 @@
                       data={stackedConditionsData}
                       domainKey="condition"
                       viewType={topTenConditionViewType}
+                      cohortColorMap={cohortColorMap}
                       cohortTotalCounts = {Object.fromEntries(
                       selectedCohorts.map(cohortId => [
                         cohortStats[cohortId].basicInfo.name,
@@ -712,6 +732,7 @@
                     data={stackedProceduresData}
                     domainKey="procedure"
                     viewType={topTenProcedureViewType}
+                    cohortColorMap={cohortColorMap}
                     cohortTotalCounts = {Object.fromEntries(
                       selectedCohorts.map(cohortId => [
                         cohortStats[cohortId].basicInfo.name,
@@ -743,6 +764,7 @@
                     data={stackedMeasurementsData}
                     domainKey="measurement"
                     viewType={topTenMeasurementViewType}
+                    cohortColorMap={cohortColorMap}
                     cohortTotalCounts = {Object.fromEntries(
                       selectedCohorts.map(cohortId => [
                         cohortStats[cohortId].basicInfo.name,

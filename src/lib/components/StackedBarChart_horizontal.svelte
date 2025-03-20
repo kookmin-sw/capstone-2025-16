@@ -9,6 +9,7 @@
   export let domainKey; // 도메인 키 (condition, drug, procedure, measurement)
   export let viewType = 'combined';
   export let cohortTotalCounts = {};
+  export let cohortColorMap = {};
     
   // drawChart 함수 인자
   let transformedData;
@@ -135,11 +136,6 @@
       .range([0, height - margin.bottom - margin.top])
       .padding(0.4);
 
-    // 색상 스케일
-    const colorScale = d3.scaleOrdinal()
-      .domain(orderedCohorts)
-      .range(d3.schemeCategory10);
-
     // SVG 생성
     const svg = d3.select(chartContainer)
       .append("svg")
@@ -165,8 +161,7 @@
       .selectAll("g")
       .data(series)
       .join("g")
-      .attr("fill", (d, i) => colorScale(cohorts[i]));
-      .attr("fill", (d, i) => colorScale(orderedCohorts[i]));
+      .attr("fill", (d, i) => cohortColorMap[orderedCohorts[i]]);
 
     groups.selectAll("rect")
     .data(d => d)
@@ -176,7 +171,7 @@
     .attr("width", d => xScale(d[1]) - xScale(d[0]))
     .attr("height", yScale.bandwidth())
     .on("mouseover", function(event, d) {
-      const cohort = d3.select(this.parentNode).datum().key;
+      const currentCohort = d3.select(this.parentNode).datum().key;
       const value = d[1] - d[0];
       const total = cohortTotalCounts[currentCohort];
       const percentage = ((value / total) * 100).toFixed(2);
