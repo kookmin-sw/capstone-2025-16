@@ -19,7 +19,7 @@
 	let chartContainer;
 	let width;
 	let height;
-  const margin = { top: 30, right: 80, bottom: 10, left: 120 };
+  const margin = { top: 30, right: 80, bottom: 10, left: 140 };
 
   // 툴팁 상태 관리를 위한 변수들
   let tooltipVisible = false;
