@@ -1,0 +1,151 @@
+{
+    "person": [
+        {
+            "person_id": 1,
+            "gender_concept_id": 8507,
+            "year_of_birth": 1985,
+            "month_of_birth": 6,
+            "day_of_birth": 15,
+            "race_concept_id": 8527,
+            "ethnicity_concept_id": 38003563,
+            "location_id": 101,
+            "provider_id": 201,
+            "care_site_id": 301
+        }
+    ],
+    "care_site": [
+        {
+            "care_site_id": 301,
+            "care_site_name": "Seoul National University Hospital",
+            "place_of_service_concept_id": 9202,
+            "location_id": 101
+        }
+    ],
+    "condition_occurrence": [
+        {
+            "condition_occurrence_id": 1001,
+            "person_id": 1,
+            "condition_concept_id": 201826,
+            "condition_start_date": "2024-01-10",
+            "condition_end_date": "2024-06-15",
+            "condition_status_concept_id": 32902,
+            "visit_occurrence_id": 4001,
+            "condition_status_source_value": "Family History of Condition"
+        }
+    ],
+    "condition_era": [
+        {
+            "condition_era_id": 2001,
+            "person_id": 1,
+            "condition_concept_id": 201826,
+            "condition_era_start_date": "2024-01-10",
+            "condition_era_end_date": "2024-06-15",
+            "condition_occurrence_count": 3
+        }
+    ],
+    "drug_era": [
+        {
+            "drug_era_id": 3001,
+            "person_id": 1,
+            "drug_concept_id": 19019073,
+            "drug_era_start_date": "2024-01-10",
+            "drug_era_end_date": "2024-06-10",
+            "drug_exposure_count": 90,
+            "gap_days": 5
+        }
+    ],
+    "drug_exposure": [
+        {
+            "drug_exposure_id": 4001,
+            "person_id": 1,
+            "drug_concept_id": 19019073,
+            "drug_exposure_start_date": "2024-01-10",
+            "drug_exposure_end_date": "2024-01-20",
+            "quantity": 10,
+            "days_supply": 10
+        }
+    ],
+    "drug_strength": [
+        {
+            "drug_concept_id": 19019073,
+            "ingredient_concept_id": 1125315,
+            "amount_value": 50,
+            "numerator_value": 50,
+            "denominator_value": 1
+        }
+    ],
+    "measurement": [
+        {
+            "measurement_id": 5001,
+            "person_id": 1,
+            "measurement_concept_id": 3025315,
+            "measurement_date": "2024-03-10",
+            "value_as_number": 120,
+            "range_low": 90,
+            "range_high": 140,
+            "visit_occurrence_id": 4001
+        }
+    ],
+    "observation": [
+        {
+            "observation_id": 6001,
+            "person_id": 1,
+            "observation_concept_id": 4013886,
+            "observation_date": "2024-03-10",
+            "value_as_string": "흡연자",
+            "visit_occurrence_id": 4001
+        }
+    ],
+    "procedure_occurrence": [
+        {
+            "procedure_occurrence_id": 7001,
+            "person_id": 1,
+            "procedure_concept_id": 2100175,
+            "procedure_date": "2024-02-15",
+            "visit_occurrence_id": 4001
+        }
+    ],
+    "specimen": [
+        {
+            "specimen_id": 8001,
+            "person_id": 1,
+            "specimen_concept_id": 4203540,
+            "specimen_date": "2024-03-10",
+            "quantity": 10,
+            "unit_concept_id": 8582
+        }
+    ],
+    "visit_occurrence": [
+        {
+            "visit_occurrence_id": 4001,
+            "person_id": 1,
+            "visit_concept_id": 9201,
+            "visit_start_date": "2024-03-10",
+            "visit_end_date": "2024-03-12",
+            "care_site_id": 301
+        }
+    ],
+    "bio_signal": [
+        {
+            "bio_signal)id": 4001,
+            "person_id": 1,
+            "bio_signal_concept_id": 9201,
+            "bio_signal_source_value": "2024-03-10",
+            "bio_signal_date": "2024-03-12",
+            "bio_signal_datetime": 301,
+            "file_path": "Test"
+        }
+    ],
+    "location": [
+        {
+            "location_id": 101,
+            "address_1": "123 Medical Street",
+            "address_2": "Building A, Room 101",
+            "city": "Seoul",
+            "state": "Seoul",
+            "zip": "04548",
+            "county": "Jongno-gu",
+            "location_source_value": "SNH-LOC-101"
+        }
+    ]
+}
