@@ -623,7 +623,7 @@
               on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col p-4">
-                {#if topTenDrugsData.length > 0}
+                {#if stackedDrugsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <StackedBarChartHorizontal
                     data={stackedDrugsData}
