@@ -142,7 +142,15 @@
                 .style("display", "block")
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px")
-                .html(`Cohort: ${d.series}<br>Age: ${d.label}<br>Value: ${d.value}`);
+                .html(`
+                    <div class="p-1">
+                    <div class="text-[10px] font-semibold mb-0.5">${d.series}</div>
+                    <div class="text-[9px] text-gray-600">
+                        ${d.label}:
+                        <span class="ml-0.5 font-medium text-black">${d.value.toLocaleString()}</span>
+                    </div>
+                    </div>
+                `);
             })
             .on("mouseout", function () {
                 tooltip.style("display", "none");
@@ -193,13 +201,14 @@
         .append("div")
         .style("position", "absolute")
         .style("background", "white")
-        .style("border", "1px solid #ccc")
-        .style("padding", "5px")
-        .style("border-radius", "5px")
+        .style("border", "1px solid #eee")
+        .style("border-radius", "4px")
+        .style("padding", "0")
         .style("display", "none")
         .style("pointer-events", "none")
-        .style("font-size", "12px")
-        .style("z-index", "100");
+        .style("z-index", "100")
+        .style("box-shadow", "0 2px 4px rgba(0,0,0,0.05)")
+        .style("backdrop-filter", "blur-sm");
     }
   
   </script>
