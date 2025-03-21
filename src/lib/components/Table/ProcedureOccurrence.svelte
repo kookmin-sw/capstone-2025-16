@@ -3,7 +3,7 @@
 </script>
 
 <div class="procedure-container">
-  <h2 class="title">🏥 Procedure Occurrence</h2>
+  <h2 class="title">Procedure Occurrence</h2>
 
   {#each procedureOccurrence as proc}
     <div class="procedure-row">

@@ -3,7 +3,7 @@
 </script>
 
 <div class="measurement-container">
-  <h2 class="title">📏 Measurement Information</h2>
+  <h2 class="title">Measurement Information</h2>
 
   {#each measurement as measure}
     <div class="measurement-row">

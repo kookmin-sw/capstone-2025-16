@@ -3,7 +3,7 @@
 </script>
 
 <div class="observation-container">
-  <h2 class="title">🔍 Observation Information</h2>
+  <h2 class="title">Observation Information</h2>
 
   {#each observation as obs}
     <div class="observation-row">

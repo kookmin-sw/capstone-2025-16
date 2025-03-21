@@ -5,7 +5,9 @@
 </script>
 
 <div class="drug-container">
-  <h2 class="title">💊 Drug Information</h2>
+  <h2 class="title">Drug Information</h2>
+
+  <span class="info"><strong>Domain:</strong> {drugStrength[0].drug_concept_id}</span>
 
   <!-- Drug Era (약물 복용 기록) -->
   {#each drugEra as era}
@@ -36,8 +38,8 @@
   <!-- Drug Strength (약물 성분 및 용량) -->
   {#each drugStrength as strength}
     <div class="drug-row strength">
-      <span class="info"><strong>Drug Concept ID:</strong> {strength.drug_concept_id}</span>
-      <span class="divider">|</span>
+      <!-- <span class="info"><strong>Drug Concept ID:</strong> {strength.drug_concept_id}</span> -->
+      <!-- <span class="divider">|</span> -->
       <span class="info"><strong>Ingredient ID:</strong> {strength.ingredient_concept_id}</span>
       <span class="divider">|</span>
       <span class="info"><strong>Total Amount:</strong> {strength.amount_value} mg</span>

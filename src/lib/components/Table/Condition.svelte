@@ -4,9 +4,9 @@
 </script>
 
 <div class="condition-container">
-  <h2 class="title">🩺 Condition Information</h2>
+  <h2 class="title">Condition Information</h2>
 
-  <span class="info"><strong>🧬 Condition:</strong> {conditionOccurrence[0].condition_concept_id}</span>
+  <span class="info"><strong>Condition:</strong> {conditionOccurrence[0].condition_concept_id}</span>
   
   {#each conditionOccurrence as cond}
     <div class="condition-row">

@@ -3,7 +3,7 @@
 </script>
 
 <div class="specimen-container">
-  <h2 class="title">🧪 Specimen Information</h2>
+  <h2 class="title">Specimen Information</h2>
 
   {#each specimen as spec}
     <div class="specimen-row">

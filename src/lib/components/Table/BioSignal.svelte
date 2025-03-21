@@ -8,7 +8,7 @@
 </script>
 
 <div class="bio-signal-container">
-  <h2 class="title">📡 Bio Signal Information</h2>
+  <h2 class="title">Bio Signal Information</h2>
 
   {#each bioSignal as signal}
     <div class="bio-signal-row">

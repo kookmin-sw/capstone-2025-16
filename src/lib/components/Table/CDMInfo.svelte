@@ -5,7 +5,7 @@
 </script>
 
 <div class="visit-container">
-  <h2 class="title">🏥 Visit & Care Site Information</h2>
+  <h2 class="title">Visit & Care Site Information</h2>
 
   {#each visitOccurrence as visit}
     <div class="visit-row">
