@@ -303,7 +303,7 @@
             class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md 
                     hover:bg-blue-700 transition-all duration-200 ease-in-out"
             on:click={() => showModal = true}>
-        select tables
+        Select Tables
         </button>
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
