@@ -3,21 +3,21 @@
 </script>
 
 <div class="observation-container">
-  <h2 class="title">🔍 Observation Information</h2>
+  <h2 class="title">Observation Information</h2>
 
   {#each observation as obs}
     <div class="observation-row">
-      <span class="info"><strong>📊 Observation ID:</strong> {obs.observation_id}</span>
+      <span class="info"><strong>Observation ID:</strong> {obs.observation_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📅 Date:</strong> {obs.observation_date}</span>
+      <span class="info"><strong>Date:</strong> {obs.observation_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🔍 Concept ID:</strong> {obs.observation_concept_id}</span>
+      <span class="info"><strong>Concept ID:</strong> {obs.observation_concept_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📝 Value:</strong> 
+      <span class="info"><strong>Value:</strong> 
         <span class="highlight">{obs.value_as_string}</span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>🏥 Visit ID:</strong> {obs.visit_occurrence_id}</span>
+      <span class="info"><strong>Visit ID:</strong> {obs.visit_occurrence_id}</span>
     </div>
   {/each}
 </div>
@@ -43,6 +43,7 @@
     padding: 8px 0;
     font-size: 1rem;
     background: #fff;
+    flex-wrap: wrap;
     border-bottom: 1px solid #ddd;
     white-space: nowrap;
   }

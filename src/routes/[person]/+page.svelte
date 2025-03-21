@@ -1,9 +1,43 @@
 <script>
     import { onMount, onDestroy, tick } from "svelte";
+    import CDMInfo from "$lib/components/Table/CDMInfo.svelte";
+    import Condition from "$lib/components/Table/Condition.svelte";
+    import Drug from "$lib/components/Table/Drug.svelte";
+    import Measurement from "$lib/components/Table/Measurement.svelte";
+    import Observation from "$lib/components/Table/Observation.svelte";
+    import ProcedureOccurrence from "$lib/components/Table/ProcedureOccurrence.svelte";
+    import Specimen from "$lib/components/Table/Specimen.svelte";
+    import BioSignal from "$lib/components/Table/BioSignal.svelte";
+    import Modal from "$lib/components/Modal.svelte";
     import * as d3 from "d3";
+    import cdmSample from "$lib/data/cdm_sample_data.json";
 
     let timelineContainer;
-
+    let showModal = false;
+    let selectedTables = new Set();
+    export let data;
+    
+    const tableComponents = {
+        condition: Condition,
+        drug: Drug,
+        measurement: Measurement,
+        observation: Observation,
+        procedure_occurrence: ProcedureOccurrence,
+        specimen: Specimen,
+        bio_signal: BioSignal
+    };
+      // 데이터 매칭 (각 테이블에 해당하는 props 설정)
+    const tableProps = {
+        cdm_info: { careSite: cdmSample.care_site, location: cdmSample.location, visitOccurrence: cdmSample.visit_occurrence },
+        condition: { conditionEra: cdmSample.condition_era, conditionOccurrence: cdmSample.condition_occurrence },
+        drug: { drugEra: cdmSample.drug_era, drugExposure: cdmSample.drug_exposure, drugStrength: cdmSample.drug_strength },
+        measurement: { measurement: cdmSample.measurement },
+        observation: { observation: cdmSample.observation },
+        procedure_occurrence: { procedureOccurrence: cdmSample.procedure_occurrence },
+        specimen: { specimen: cdmSample.specimen },
+        bio_signal: { bioSignal: cdmSample.bio_signal }
+    };
+    const personTable = cdmSample.person;
     const bar_colors = {
         9201: "#FF0000", // 빨강
         9202: "#FF7F00", // 주황
@@ -19,8 +53,6 @@
         581477: "Home Visit",
         44818517: "Other Visit Type"
     };
-
-    export let data;
         
     function calculateYPositions(data) {
         let rows = [];
@@ -255,9 +287,49 @@
         const svg = d3.select(timelineContainer).select("svg");
         svg.on(".zoom", null); // ✅ 줌 이벤트 제거
         svg.remove();
-        // window.removeEventListener("resize", drawTimeline);
     });
 </script>
 
-<!-- 🔹 타임라인을 렌더링할 컨테이너 -->
-<div class="w-full h-[200px]" bind:this={timelineContainer}></div>
+<header class="fixed w-[89%] py-4 px-6 bg-white border-b">
+    <div class="flex justify-between py-2">
+        <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
+            <span class="info"><strong>ID : </strong> {personTable[0].person_id}</span>
+            <span class="divider">|</span>
+            <span class="info"><strong>Gender : </strong> {personTable[0].gender_concept_id}</span>
+            <span class="divider">|</span>
+            <span class="info"><strong>Date : </strong> {personTable[0].year_of_birth}.{personTable[0].month_of_birth}.{personTable[0].day_of_birth}</span>
+        </div>
+        <button 
+            class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md 
+                    hover:bg-blue-700 transition-all duration-200 ease-in-out"
+            on:click={() => showModal = true}>
+        Select Tables
+        </button>
+    </div>
+    <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
+    <div class="w-full h-[200px]" bind:this={timelineContainer}></div>
+</header>
+<div class="pt-[300px] pl-[16px] pr-[16px] pb-[16px]">
+    <CDMInfo careSite={cdmSample.care_site} location={cdmSample.location} visitOccurrence={cdmSample.visit_occurrence} />
+    {#each Array.from(selectedTables) as tableId}
+        {#if tableComponents[tableId]}
+        <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
+        {/if}
+    {/each}
+</div>
+
+<Modal bind:isOpen={showModal} bind:selectedTables/>
+
+<style>
+    .info {
+        font-weight: normal;
+        font-size: 1.1rem;
+        margin: 0 8px;
+    }
+
+    .divider {
+        color: #888;
+        font-weight: bold;
+        margin: 0 8px;
+    }
+</style>

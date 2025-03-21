@@ -1,33 +1,31 @@
 <script>
-  export let procedureOccurrence;
+  export let specimen;
 </script>
 
-<div class="procedure-container">
-  <h2 class="title">Procedure Occurrence</h2>
+<div class="specimen-container">
+  <h2 class="title">Specimen Information</h2>
 
-  {#each procedureOccurrence as proc}
-    <div class="procedure-row">
-      <span class="info"><strong>Procedure ID:</strong> {proc.procedure_occurrence_id}</span>
+  {#each specimen as spec}
+    <div class="specimen-row">
+      <span class="info"><strong>Specimen ID:</strong> {spec.specimen_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>Date:</strong> {proc.procedure_date}</span>
+      <span class="info"><strong>Date:</strong> {spec.specimen_date}</span>
       <span class="divider">|</span>
       <span class="info"><strong>Concept ID:</strong> 
-        <span class="highlight">{proc.procedure_concept_id}</span>
+        <span class="highlight">{spec.specimen_concept_id}</span>
       </span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Type Concept ID:</strong> {proc.procedure_type_concept_id ? proc.procedure_type_concept_id : "N/A"}</span>
       <span class="divider">|</span>
       <span class="info"><strong>Quantity:</strong> 
-        <span class="highlight-blue">{proc.quantity}</span>
+        <span class="highlight-blue">{spec.quantity}</span>
       </span>
       <span class="divider">|</span>
-      <span class="info"><strong>Visit ID:</strong> {proc.visit_occurrence_id}</span>
+      <span class="info"><strong>Unit Concept ID:</strong> {spec.unit_concept_id}</span>
     </div>
   {/each}
 </div>
 
 <style>
-  .procedure-container {
+  .specimen-container {
     padding: 16px;
     background: #f9f9f9;
     border-radius: 8px;
@@ -41,13 +39,13 @@
     margin-bottom: 10px;
   }
 
-  .procedure-row {
+  .specimen-row {
     display: flex;
     align-items: center;
     padding: 8px 0;
+    flex-wrap: wrap;
     font-size: 1rem;
     background: #fff;
-    flex-wrap: wrap;
     border-bottom: 1px solid #ddd;
     white-space: nowrap;
   }

@@ -18,11 +18,11 @@
 
 	.content-area {
 		position: absolute;
-		left: 0px;
+		left: 200px;
 		top: 40px;
-		height: calc(100vh - 40px);
-		width: 100vw;
-		/* width: calc(100vw - 200px); */
+		height: calc(100vh - 30px);
+		/* width: 100vw; */
+		width: calc(100vw - 200px);
 		overflow-x: auto; /* 가로 스크롤 허용 */
 		overflow-y: auto; /* 세로 스크롤 허용 */
 	}
@@ -50,7 +50,7 @@
 	</div>
 </header>
 
-<!-- <div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
+<div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
 	<div>
 		<div class="button-container">
 		<button class="button" onclick={() => goto('/chart')}>
@@ -80,7 +80,8 @@
 			{/each}
 		</div>
 	</div>
-</div> -->
+</div>
+
 <div class="content-area">
 	{@render children()}
 </div>

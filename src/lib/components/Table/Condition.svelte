@@ -4,29 +4,29 @@
 </script>
 
 <div class="condition-container">
-  <h2 class="title">🩺 Condition Information</h2>
+  <h2 class="title">Condition Information</h2>
 
-  <span class="info"><strong>🧬 Condition:</strong> {conditionOccurrence[0].condition_concept_id}</span>
+  <span class="info"><strong>Condition:</strong> {conditionOccurrence[0].condition_concept_id}</span>
   
   {#each conditionOccurrence as cond}
     <div class="condition-row">
-      <span class="info"><strong>📌 ID:</strong> {cond.condition_occurrence_id}</span>
+      <span class="info"><strong>ID:</strong> {cond.condition_occurrence_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🗓 Diagnosis Date:</strong> {cond.condition_start_date} ~ {cond.condition_end_date}</span>
+      <span class="info"><strong>Diagnosis Date:</strong> {cond.condition_start_date} ~ {cond.condition_end_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🏥 Visit ID:</strong> {cond.visit_occurrence_id}</span>
+      <span class="info"><strong>Visit ID:</strong> {cond.visit_occurrence_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📋 Condition Status:</strong> {cond.condition_status_source_value}</span>
+      <span class="info"><strong>Condition Status:</strong> {cond.condition_status_source_value}</span>
     </div>
   {/each}
 
   {#each conditionEra as era}
     <div class="condition-row era">
-      <span class="info"><strong>📌 ID:</strong> {era.condition_era_id}</span>
+      <span class="info"><strong>ID:</strong> {era.condition_era_id}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>📆 Era Duration:</strong> {era.condition_era_start_date} ~ {era.condition_era_end_date}</span>
+      <span class="info"><strong>Era Duration:</strong> {era.condition_era_start_date} ~ {era.condition_era_end_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>🔢 Occurrence Count:</strong> {era.condition_occurrence_count}회</span>
+      <span class="info"><strong>Occurrence Count:</strong> {era.condition_occurrence_count}회</span>
     </div>
   {/each}
 </div>
@@ -49,6 +49,7 @@
   .condition-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     padding: 8px 0;
     font-size: 1rem;
     background: #fff;
