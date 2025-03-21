@@ -6,8 +6,6 @@
 	let { children, data } = $props();
 	
 	let pathname = $state(page.url.pathname);
-
-	let users = [12312321, 12523432, 25235235, 23523523, 325235, 32523523523532, 523523523, 523523];
 </script>
 
 
@@ -29,6 +27,7 @@
 </style>
 
 <header class="fixed left-0 top-0 flex h-10 w-full border-b border-zinc-200 bg-zinc-100 z-10" >
+
 	<p
 		class="flex w-[200px] items-center justify-center border-r border-zinc-200 text-center text-lg font-bold text-zinc-800"
 	>
@@ -37,13 +36,13 @@
 	<div class="flex items-center gap-4 pl-4 text-sm">
 		<a
 			href="/cohort"
-			class="w-fit text-center {pathname === '/cohort'
+			class="w-fit text-center {page.url.pathname === '/cohort'
 				? 'font-semibold text-zinc-800'
 				: 'text-zinc-700'}">코호트 정의</a
 		>
 		<a
 			href="/inference"
-			class="w-fit text-center {pathname === '/inference'
+			class="w-fit text-center {page.url.pathname === '/inference'
 				? 'font-semibold text-zinc-800'
 				: 'text-zinc-700'}">모델 인퍼런스</a
 		>
@@ -84,4 +83,4 @@
 
 <div class="content-area">
 	{@render children()}
-</div>
+{/if}
