@@ -73,7 +73,7 @@
 		{/if}
 
 		{#if hasTableView}
-			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-12 top-6">
+			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
 			<button 
 				class="px-2 py-0.5 text-xs rounded-full transition-colors
 					{!isTableView ? 
