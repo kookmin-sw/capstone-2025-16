@@ -13,6 +13,7 @@
   import DataTable from '$lib/components/DataTable.svelte';
   import LineChart from "$lib/components/LineChart.svelte";
   import StackedBarChartHorizontal from "$lib/components/StackedBarChart_horizontal.svelte";
+  import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -97,6 +98,8 @@
   let cohortColorMap = {};
 
   let isTableView = {
+    firstOccurrenceAge: false,
+    visitCount: false,
     topTenDrugs: false,
     topTenConditions: false,
     topTenProcedures: false,
@@ -583,38 +586,68 @@
               description="The age distribution of patients at the time of their first medical visit during the cohort period."
               chartId={3}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.firstOccurrenceAge}
+              on:toggleView={({detail}) => isTableView.firstOccurrenceAge = detail}
               on:close={handleChartClose}
-              >
-            <div class="w-full h-full flex flex-col">
-            <div class="mt-4 flex-grow flex items-center justify-center">
-                <LineChart 
-                  data={ageDistributionChartData}
-                  cohortColorMap={cohortColorMap}
-                />
+            >
+              <div class="w-full h-full flex flex-col">
+                {#if ageDistributionChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <LineChart
+                      data={ageDistributionChartData}
+                      cohortColorMap={cohortColorMap}
+                    />
+                  </div>
+                {/if}
               </div>
-            </div>
-          </ChartCard>
+
+              <div slot="table" class="w-full h-full flex items-center pt-4">
+                {#if ageDistributionChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <DataTable
+                      data={transformLineChartToTableData(ageDistributionChartData)}
+                      colorMap={cohortColorMap}
+                    />
+                  </div>
+                {/if}
+              </div>
+            </ChartCard>
           {/if}
           
           {#if selectItems[4].checked}
-          <ChartCard 
-            title="Distribution of Visit Count"
-            description="The distribution of the total number of medical visits made by patients during the cohort period."
-            chartId={4}
-            type="full"
-            on:close={handleChartClose}
-          >
-            <div class="w-full h-full flex flex-col">
-              <div class="mt-4 flex-grow flex items-center justify-center">
-                {#if visitCountChartData && visitCountChartData.length > 0}
-                  <LineChart
-                    data={visitCountChartData}
-                    cohortColorMap={cohortColorMap}
-                  />
+            <ChartCard 
+              title="Distribution of Visit Count"
+              description="The distribution of the total number of medical visits made by patients during the cohort period."
+              chartId={4}
+              type="full"
+              hasTableView={true}
+              isTableView={isTableView.visitCount}
+              on:toggleView={({detail}) => isTableView.visitCount = detail}
+              on:close={handleChartClose}
+            >
+              <div class="w-full h-full flex flex-col">
+                {#if visitCountChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <LineChart
+                      data={visitCountChartData}
+                      cohortColorMap={cohortColorMap}
+                    />
+                  </div>
                 {/if}
               </div>
-            </div>
-          </ChartCard>
+
+              <div slot="table" class="w-full h-full flex items-center pt-4">
+                {#if visitCountChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <DataTable
+                      data={transformLineChartToTableData(visitCountChartData)}
+                      colorMap={cohortColorMap}
+                    />
+                  </div>
+                {/if}
+              </div>
+            </ChartCard>
           {/if}
 
           {#if selectItems[5].checked}
