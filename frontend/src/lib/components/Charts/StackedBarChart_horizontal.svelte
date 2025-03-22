@@ -3,7 +3,7 @@
   import { onMount, onDestroy, tick } from "svelte";
   import { browser } from "$app/environment";
   import { fade } from 'svelte/transition';
-  import DataTable from './DataTable.svelte';
+  import DataTable from '$lib/components/DataTable.svelte';
 
   // props 정의
   export let data = [];

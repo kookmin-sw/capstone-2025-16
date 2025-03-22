@@ -2,17 +2,17 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import ChartCard from "$lib/components/ChartCard.svelte";
-  import BarChartHorizontal from "$lib/components/BarChart_horizontal.svelte";
-  import BarChartVertical from "$lib/components/BarChart_vertical.svelte";
-  import DonutChart from "$lib/components/DonutChart.svelte";
+  import BarChartHorizontal from "$lib/components/Charts/BarChart_horizontal.svelte";
+  import BarChartVertical from "$lib/components/Charts/BarChart_vertical.svelte";
+  import DonutChart from "$lib/components/Charts/DonutChart.svelte";
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
-  import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
+  import DonutChartGroup from '$lib/components/Charts/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
-  import LineChart from "$lib/components/LineChart.svelte";
-  import StackedBarChartHorizontal from "$lib/components/StackedBarChart_horizontal.svelte";
+  import LineChart from "$lib/components/Charts/LineChart.svelte";
+  import StackedBarChartHorizontal from "$lib/components/Charts/StackedBarChart_horizontal.svelte";
   import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
   import { transformDonutChartToTableData } from "$lib/utils/dataTransformers/donutChartTransformer.js";
   
