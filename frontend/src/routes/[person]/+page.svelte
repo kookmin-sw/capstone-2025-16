@@ -17,6 +17,13 @@
     let selectedTables = new Set();
     export let data;
     
+    const genderCodes = {
+        8507: "Male",
+        8532: "Female",
+        8551: "Other",
+        0: "Unknown"
+    };
+    
     const tableComponents = {
         condition: Condition,
         drug: Drug,
@@ -38,75 +45,14 @@
         bio_signal: { bioSignal: cdmSample.bio_signal }
     };
     const personTable = cdmSample.person;
-    const bar_colors = {
-        9201: "#FF0000", // 빨강
-        9202: "#FF7F00", // 주황
-        9203: "#FFFF00", // 노랑
-        581477: "#00FF00", // 초록
-        44818517: "#0000FF", // 파랑
+
+    const visitMapping = {
+        9201: [0, "Inpatient", "#FF0000"],
+        9202: [1, "Outpatient", "#FF7F00"],
+        9203: [2, "Emergency Room Visit", "#FFFF00"],
+        581477: [3, "Home Visit", "#00FF00"],
+        44818517: [4, "Other Visit Type", "#0000FF"]
     };
-
-    const visitTypes = {
-        9201: "Inpatient",
-        9202: "Outpatient",
-        9203: "Emergency Room Visit",
-        581477: "Home Visit",
-        44818517: "Other Visit Type"
-    };
-        
-    function calculateYPositions(data) {
-        let rows = [];
-        const maxRows = 5; // ✅ 최대 Y축 줄 개수 제한
-        const xOffset = 3; // ✅ 가로 이동 간격
-
-        // ✅ 시작일 기준으로 정렬
-        data.sort((a, b) => new Date(a.visit_start_date) - new Date(b.visit_start_date));
-
-        data.forEach(d => {
-            let start = new Date(d.visit_start_date);
-            let end = new Date(d.visit_end_date);
-            let placed = false;
-
-            // ✅ 현재 데이터를 배치할 수 있는 가장 낮은 yIndex 찾기
-            for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                let row = rows[rowIndex];
-
-                let hasOverlap = row.some(item =>
-                    new Date(item.visit_end_date) >= start  // 종료일이 현재 시작일 이후까지 지속되면 겹침
-                );
-
-                if (!hasOverlap) {
-                    row.push(d);
-                    d.yIndex = rowIndex;
-                    d.xOffset = 0;
-                    placed = true;
-                    break;
-                }
-            }
-
-            // ✅ 기존 row에 배치되지 않은 경우 새 row 추가
-            if (!placed) {
-                if (rows.length < maxRows) {
-                    rows.push([d]);
-                    d.yIndex = rows.length - 1;
-                    d.xOffset = 0;
-                } else {
-                    // ✅ 최대 줄 개수를 넘으면 xOffset을 증가시켜 가로 이동
-                    let sameDateItems = rows[maxRows - 1].filter(item =>
-                        new Date(item.visit_start_date) < end && new Date(item.visit_end_date) > start
-                    );
-                    d.yIndex = maxRows - 1;
-                    d.xOffset = sameDateItems.length * xOffset;
-                    rows[maxRows - 1].push(d);
-                }
-            }
-        });
-
-        return data;
-    }
-
-
-
 
     async function drawTimeline(){
         await tick();
@@ -116,7 +62,7 @@
 
         const width = timelineContainer.clientWidth;
         const height = timelineContainer.clientHeight;
-        const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+        const margin = { top: 20, right: 20, bottom: 30, left: 130 };
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
 
@@ -152,30 +98,37 @@
             .style("font-size", "12px")
             .style("visibility", "hidden");
 
-        // 🔹 범례 추가
-        const legendData = Object.entries(bar_colors);
-        const legend = svg.append("g")
-            .attr("transform", `translate(10, 10)`);
+        const visitConceptEntries = Object.entries(visitMapping);
 
-        legend.selectAll("g")
-            .data(legendData)
+        // Y축 레이블 그룹
+        const labelGroup = svg.append("g")
+            .attr("transform", `translate(${margin.left - 10}, ${margin.top})`);
+
+        labelGroup.selectAll("text")
+            .data(visitConceptEntries)
             .enter()
-            .append("g")
-            .attr("transform", (d, i) => `translate(0, ${i * 12})`)
-            .each(function (d) {
-                d3.select(this)
-                    .append("rect")
-                    .attr("width", 10)
-                    .attr("height", 10)
-                    .attr("fill", d[1]);
+            .append("text")
+            .attr("x", 0) // 왼쪽 여백
+            .attr("y", ([conceptId]) => visitMapping[conceptId][0] * 25 + 10) // yIndex 기준 위치
+            .attr("text-anchor", "end")
+            .attr("font-size", "11px")
+            .attr("alignment-baseline", "middle")
+            .text(([conceptId, [, label]]) => label);
 
-                d3.select(this)
-                    .append("text")
-                    .attr("x", 15)
-                    .attr("y", 9)
-                    .attr("font-size", "10px")
-                    .text(`${visitTypes[d[0]] || "Unknown Type"}`);
-            });
+        // Y축 배경 가이드라인 추가
+        const guideLines = svg.append("g")
+        .attr("transform", `translate(0, ${margin.top})`);
+
+        guideLines.selectAll("line")
+            .data(visitConceptEntries) // 또는 Object.entries(visitMapping)
+            .enter()
+            .append("line")
+            .attr("x1", margin.left)
+            .attr("x2", width - margin.right)
+            .attr("y1", ([conceptId]) => visitMapping[conceptId][0] * 25 - 2.5)
+            .attr("y2", ([conceptId]) => visitMapping[conceptId][0] * 25 - 2.5)
+            .attr("stroke", "#e0e0e0")
+            .attr("stroke-width", 1)
 
         // 🔹 최소/최대 날짜 계산
         let minStartDate = new Date(Math.min(...data.personVisits.map(d => new Date(d.visit_start_date))));
@@ -201,20 +154,19 @@
             .attr("transform", `translate(0,${margin.top})`)
             .attr("clip-path", "url(#clip-timeline)"); // ✅ 클리핑 적용
             
-        let processedData = calculateYPositions(data.personVisits);
         barGroup.selectAll("rect")
-            .data(processedData)
+            .data(data.personVisits)
             .enter()
             .append("rect")
             .attr("x", d => xScale(new Date(d.visit_start_date)))
-            .attr("y", d => 10 + d.yIndex * 25) // 🚀 같은 줄에 배치되면 y값 유지, 겹치면 다음 줄로 이동
+            .attr("y", d => visitMapping[d.visit_concept_id]?.[0] * 25)
             .attr("width", d => {
                 let startX = xScale(new Date(d.visit_start_date));
                 let endX = xScale(new Date(d.visit_end_date));
                 return Math.max(endX - startX, 5);
             })
             .attr("height", 20)
-            .attr("fill", d => bar_colors[d.visit_concept_id] || "grey")
+            .attr("fill", d => visitMapping[d.visit_concept_id]?.[2] || "grey")
             .attr("stroke", "black")
             .attr("stroke-width", 1)
             .on("mouseover", (event, d) => {
@@ -295,7 +247,7 @@
         <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
             <span class="info"><strong>ID : </strong> {personTable[0].person_id}</span>
             <span class="divider">|</span>
-            <span class="info"><strong>Gender : </strong> {personTable[0].gender_concept_id}</span>
+            <span class="info"><strong>Gender : </strong> {genderCodes[personTable[0].gender_concept_id]}</span>
             <span class="divider">|</span>
             <span class="info"><strong>Date : </strong> {personTable[0].year_of_birth}.{personTable[0].month_of_birth}.{personTable[0].day_of_birth}</span>
         </div>
