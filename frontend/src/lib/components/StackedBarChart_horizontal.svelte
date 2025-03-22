@@ -239,27 +239,26 @@
   {:else}
     <div class="w-full h-full overflow-auto">
       <DataTable 
-        headers={[
-          { key: 'rank', label: 'No.' },
-          { key: domainKey, label: domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1) },
-          ...orderedCohorts.map(cohort => ({
-            key: cohort,
-            label: cohort
-          }))
-        ]}
-        data={transformedData.map((item, index) => {
-          const newItem = { rank: index + 1, ...item };
-          orderedCohorts.forEach(cohort => {
-            const tableValue = +item[cohort];
-            const tableTotal = +cohortTotalCounts[cohort];
-            newItem[cohort] = tableTotal ? 
-              `${tableValue.toLocaleString()} (${((tableValue / tableTotal) * 100).toFixed(2)}%)` : 
-              `${tableValue.toLocaleString()}`;
-          });
-          return newItem;
-        })}
-        cohortColorMap={cohortColorMap}
-        showColors={true}
+        data={{
+          headers: ["No.", domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1), ...orderedCohorts],
+          rows: transformedData.map((item, index) => {
+            const row = {
+              "No.": index + 1,
+              [domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1)]: item[domainKey]
+            };
+            
+            orderedCohorts.forEach(cohort => {
+              const value = +item[cohort];
+              const total = +cohortTotalCounts[cohort];
+              row[cohort] = total ? 
+                `${value.toLocaleString()} (${((value / total) * 100).toFixed(2)}%)` : 
+                value.toLocaleString();
+            });
+            
+            return row;
+          })
+        }}
+        colorMap={cohortColorMap}
       />
     </div>
   {/if}
