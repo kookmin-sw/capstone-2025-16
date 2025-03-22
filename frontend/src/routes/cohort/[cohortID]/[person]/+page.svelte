@@ -10,7 +10,6 @@
     import BioSignal from "$lib/components/Table/BioSignal.svelte";
     import Modal from "$lib/components/Modal.svelte";
     import * as d3 from "d3";
-    import cdmSample from "$lib/data/cdm_sample_data.json";
 
     let timelineContainer;
     let showModal = false;
@@ -33,18 +32,21 @@
         specimen: Specimen,
         bio_signal: BioSignal
     };
-      // 데이터 매칭 (각 테이블에 해당하는 props 설정)
-    const tableProps = {
-        cdm_info: { careSite: cdmSample.care_site, location: cdmSample.location, visitOccurrence: cdmSample.visit_occurrence },
-        condition: { conditionEra: cdmSample.condition_era, conditionOccurrence: cdmSample.condition_occurrence },
-        drug: { drugEra: cdmSample.drug_era, drugExposure: cdmSample.drug_exposure, drugStrength: cdmSample.drug_strength },
-        measurement: { measurement: cdmSample.measurement },
-        observation: { observation: cdmSample.observation },
-        procedure_occurrence: { procedureOccurrence: cdmSample.procedure_occurrence },
-        specimen: { specimen: cdmSample.specimen },
-        bio_signal: { bioSignal: cdmSample.bio_signal }
+
+    //   데이터 매칭 (각 테이블에 해당하는 props 설정)
+    let tableProps = {};
+    let personTable = {
+        "person_id": 1,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1985,
+        "month_of_birth": 6,
+        "day_of_birth": 15,
+        "race_concept_id": 8527,
+        "ethnicity_concept_id": 38003563,
+        "location_id": 101,
+        "provider_id": 201,
+        "care_site_id": 301
     };
-    const personTable = cdmSample.person;
 
     const visitMapping = {
         9201: [0, "Inpatient", "#FF0000"],
@@ -53,6 +55,26 @@
         581477: [3, "Home Visit", "#00FF00"],
         44818517: [4, "Other Visit Type", "#0000FF"]
     };
+
+    async function fetchDataById(id) {
+        try {
+            const res = await fetch("/cdm_sample_data.json");
+            const fullData = await res.json();
+            const visitOccurrenceIdData = fullData[id];
+            tableProps = {
+                cdm_info: { careSite: visitOccurrenceIdData.care_site, location: visitOccurrenceIdData.location, visitOccurrence: visitOccurrenceIdData.visit_occurrence },
+                condition: { conditionEra: visitOccurrenceIdData.condition_era, conditionOccurrence: visitOccurrenceIdData.condition_occurrence },
+                drug: { drugEra: visitOccurrenceIdData.drug_era, drugExposure: visitOccurrenceIdData.drug_exposure, drugStrength: visitOccurrenceIdData.drug_strength },
+                measurement: { measurement: visitOccurrenceIdData.measurement },
+                observation: { observation: visitOccurrenceIdData.observation },
+                procedure_occurrence: { procedureOccurrence: visitOccurrenceIdData.procedure_occurrence },
+                specimen: { specimen: visitOccurrenceIdData.specimen },
+                bio_signal: { bioSignal: visitOccurrenceIdData.bio_signal }
+            };
+        } catch (error) {
+            console.error("데이터 로드 실패:", error);
+        }
+    }
 
     async function drawTimeline(){
         await tick();
@@ -200,6 +222,9 @@
             })
             .on("mouseout", () => {
                 tooltip.style("visibility", "hidden");
+            })
+            .on("click", (event, d) => {
+                fetchDataById(d.visit_occurrence_id);
             });
 
         // 🔹 줌(Zoom) 기능 추가
@@ -235,6 +260,8 @@
         tick().then(() => drawTimeline());
     }
 
+    $: console.log(tableProps);
+
     onDestroy(() => {
         const svg = d3.select(timelineContainer).select("svg");
         svg.on(".zoom", null); // ✅ 줌 이벤트 제거
@@ -242,14 +269,14 @@
     });
 </script>
 
-<header class="fixed w-[89%] py-4 px-6 bg-white border-b">
+<header class="py-4 bg-white border-b w-full">
     <div class="flex justify-between py-2">
         <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
-            <span class="info"><strong>ID : </strong> {personTable[0].person_id}</span>
+            <span class="info"><strong>ID : </strong> {personTable.person_id}</span>
             <span class="divider">|</span>
-            <span class="info"><strong>Gender : </strong> {genderCodes[personTable[0].gender_concept_id]}</span>
+            <span class="info"><strong>Gender : </strong> {genderCodes[personTable.gender_concept_id]}</span>
             <span class="divider">|</span>
-            <span class="info"><strong>Date : </strong> {personTable[0].year_of_birth}.{personTable[0].month_of_birth}.{personTable[0].day_of_birth}</span>
+            <span class="info"><strong>Date : </strong> {personTable.year_of_birth}.{personTable.month_of_birth}.{personTable.day_of_birth}</span>
         </div>
         <button 
             class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md 
@@ -261,8 +288,8 @@
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
     <div class="w-full h-[200px]" bind:this={timelineContainer}></div>
 </header>
-<div class="pt-[300px] pl-[16px] pr-[16px] pb-[16px]">
-    <CDMInfo careSite={cdmSample.care_site} location={cdmSample.location} visitOccurrence={cdmSample.visit_occurrence} />
+<div class="pt-8 pb-[16px]">
+    <CDMInfo careSite={tableProps.care_site} location={tableProps.location} visitOccurrence={tableProps.visit_occurrence} />
     {#each Array.from(selectedTables) as tableId}
         {#if tableComponents[tableId]}
         <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />

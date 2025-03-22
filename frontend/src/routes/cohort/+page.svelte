@@ -77,61 +77,62 @@
   });
 </script>
 
-<div class="flex gap-2 mb-5">
-  <input
-    type="text"
-    bind:value={searchQuery}
-    placeholder="코호트 이름을 입력하세요."
-    class="flex-1 p-2 text-base border border-gray-300 rounded"
-  />
-  <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100" on:click={filterData}>🔍</button>
-  <button 
-    class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100"
-    on:click={handleComparison}
-  >
-    Comparison
-  </button>
-  <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100">New</button>
-</div>
-
-<table class="data-table">
-  <thead>
-    <tr>
-      <th></th>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Description</th>
-      <th>Author</th>
-      <th>Created At</th>
-      <th>Updated At</th>
-      
-    </tr>
-  </thead>
-  <tbody>
-    {#each filteredData as item (item.id)}
+<div class="flex flex-col justify-center items-center mt-8 w-full">
+  <div class="flex gap-2 mb-5 w-[70%]">
+    <input
+      type="text"
+      bind:value={searchQuery}
+      placeholder="코호트 이름을 입력하세요."
+      class="flex-1 p-2 text-base border border-gray-300 rounded"
+    />
+    <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100" on:click={filterData}>🔍</button>
+    <button 
+      class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100"
+      on:click={handleComparison}
+    >
+      Comparison
+    </button>
+    <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100">New</button>
+  </div>
+  
+  <table class="data-table w-[70%]">
+    <thead>
       <tr>
-        <td>
-          <input
-            type="checkbox"
-            checked={selectedItems[item.id] || false}
-            on:change={() => handleCheckboxChange(item.id)}
-          />
-        </td>
-        <td>{item.id}</td>
-        <td>{item.name}</td>
-        <td>{item.description}</td>
-        <td>{item.author}</td>
-        <td>{item.createdAt}</td>
-        <td>{item.updatedAt}</td>
+        <th></th>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Author</th>
+        <th>Created At</th>
+        <th>Updated At</th>
         
       </tr>
-    {/each}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {#each filteredData as item (item.id)}
+        <tr>
+          <td>
+            <input
+              type="checkbox"
+              checked={selectedItems[item.id] || false}
+              on:change={() => handleCheckboxChange(item.id)}
+            />
+          </td>
+          <td>{item.id}</td>
+          <td>{item.name}</td>
+          <td>{item.description}</td>
+          <td>{item.author}</td>
+          <td>{item.createdAt}</td>
+          <td>{item.updatedAt}</td>
+          
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+</div>
 <style>
   
   table {
-    width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
   }
