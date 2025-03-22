@@ -2,8 +2,8 @@
 	import { onMount } from "svelte";
 	import ChartCard from "$lib/components/ChartCard.svelte";
 	import BarChartHorizontal from "../../lib/components/BarChart_horizontal.svelte";
-	import BarChartVertical from "../../lib/components/BarChart_vertical.svelte";
-    import DonutChart from "$lib/components/DonutChart.svelte";
+	import BarChartVertical from "../../lib/components/Charts/BarChart_vertical.svelte";
+    import DonutChart from "$lib/components/Charts/DonutChart.svelte";
     import { tick } from "svelte";
     import { slide } from 'svelte/transition';
 

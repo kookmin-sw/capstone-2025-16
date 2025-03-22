@@ -1,5 +1,5 @@
 <script>
-  import DonutChart from './DonutChart.svelte';
+  import DonutChart from '$lib/components/Charts/DonutChart.svelte';
   
   export let chartsData = []; // [{data: {}, cohortName: ''}, ...]
   export let showCohortNames = true;

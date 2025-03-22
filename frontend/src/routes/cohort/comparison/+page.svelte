@@ -2,17 +2,19 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import ChartCard from "$lib/components/ChartCard.svelte";
-  import BarChartHorizontal from "$lib/components/BarChart_horizontal.svelte";
-  import BarChartVertical from "$lib/components/BarChart_vertical.svelte";
-  import DonutChart from "$lib/components/DonutChart.svelte";
+  import BarChartHorizontal from "$lib/components/Charts/BarChart_horizontal.svelte";
+  import BarChartVertical from "$lib/components/Charts/BarChart_vertical.svelte";
+  import DonutChart from "$lib/components/Charts/DonutChart.svelte";
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
-  import DonutChartGroup from '$lib/components/DonutChartGroup.svelte';
+  import DonutChartGroup from '$lib/components/Charts/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
-  import LineChart from "$lib/components/LineChart.svelte";
-  import StackedBarChartHorizontal from "$lib/components/StackedBarChart_horizontal.svelte";
+  import LineChart from "$lib/components/Charts/LineChart.svelte";
+  import StackedBarChartHorizontal from "$lib/components/Charts/StackedBarChart_horizontal.svelte";
+  import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
+  import { transformDonutChartToTableData } from "$lib/utils/dataTransformers/donutChartTransformer.js";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -95,6 +97,18 @@
   ]
 
   let cohortColorMap = {};
+
+  let isTableView = {
+    genderRatio: false,
+    mortality: false,
+    visitTypeRatio: false,
+    firstOccurrenceAge: false,
+    visitCount: false,
+    topTenDrugs: false,
+    topTenConditions: false,
+    topTenProcedures: false,
+    topTenMeasurements: false
+  };
 
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
@@ -199,10 +213,11 @@
 
   async function loadGenderData() {
     try {
-      return selectedCohorts.map((cohortId) => ({
-        data: cohortStats[cohortId].statistics.gender,
-        cohortName: cohortStats[cohortId].basicInfo.name
-      }));
+        return selectedCohorts.map((cohortId) => ({
+            data: cohortStats[cohortId].statistics.gender,
+            cohortName: cohortStats[cohortId].basicInfo.name,
+            totalPatients: cohortStats[cohortId].totalPatients
+        }));
     } catch (error) {
       console.error('Error loading gender data:', error);
       return [];
@@ -213,7 +228,8 @@
   try {
     const mortalityData = selectedCohorts.map((cohortId) => ({
       data: cohortStats[cohortId].statistics.mortality,
-      cohortName: cohortStats[cohortId].basicInfo.name
+      cohortName: cohortStats[cohortId].basicInfo.name,
+      totalPatients: cohortStats[cohortId].totalPatients
     }));
     return mortalityData;
   } catch (error) {
@@ -226,7 +242,8 @@
   try {
     const visitData = selectedCohorts.map((cohortId) => ({
       data: cohortStats[cohortId].statistics.visitType,
-      cohortName: cohortStats[cohortId].basicInfo.name
+      cohortName: cohortStats[cohortId].basicInfo.name,
+      totalPatients: cohortStats[cohortId].totalPatients
     }));
     return visitData;
   } catch (error) {
@@ -474,12 +491,6 @@
         >
           Customizable
         </button>
-        <button 
-          class="tab {activeTab === 'prediction' ? 'active' : ''}"
-          on:click={() => switchTab('prediction')}
-        >
-          Prediction
-        </button>
       </div>
     </div>
 
@@ -524,12 +535,25 @@
               description="The ratio of genders within the cohort."
               chartId={0}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.genderRatio}
+              on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col">
                 <div class="mt-4 flex-grow flex items-center justify-center">
                   <DonutChartGroup chartsData={genderChartData} showCohortNames={true} />
                 </div>
+              </div>
+
+              <div slot="table" class="w-full h-full flex items-center pt-4">
+                {#if genderChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <DataTable
+                      data={transformDonutChartToTableData(genderChartData)}
+                    />
+                </div>
+                {/if}
               </div>
             </ChartCard>
           {/if}          
@@ -540,6 +564,9 @@
               description="The percentage of patients within the cohort who have died."
               chartId={1}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.mortality}
+              on:toggleView={({detail}) => isTableView.mortality = detail}
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
@@ -548,6 +575,15 @@
                   <DonutChartGroup chartsData={mortalityChartData} showCohortNames={true} />
                 {/if}
               </div>
+            </div>
+            <div slot="table" class="w-full h-full flex items-center pt-4">
+              {#if visitTypeChartData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <DataTable
+                    data={transformDonutChartToTableData(visitTypeChartData)}
+                  />
+              </div>
+              {/if}
             </div>
             </ChartCard>
           {/if}
@@ -558,6 +594,9 @@
               description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
               chartId={2}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.visitTypeRatio}
+              on:toggleView={({detail}) => isTableView.visitTypeRatio = detail}
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
@@ -566,6 +605,16 @@
                   <DonutChartGroup chartsData={visitTypeChartData} showCohortNames={true} />
                 {/if}
               </div>
+            </div>
+
+            <div slot="table" class="w-full h-full flex items-center pt-4">
+              {#if visitTypeChartData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <DataTable
+                    data={transformDonutChartToTableData(visitTypeChartData)}
+                  />
+              </div>
+              {/if}
             </div>
             </ChartCard>
           {/if}
@@ -576,38 +625,66 @@
               description="The age distribution of patients at the time of their first medical visit during the cohort period."
               chartId={3}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.firstOccurrenceAge}
+              on:toggleView={({detail}) => isTableView.firstOccurrenceAge = detail}
               on:close={handleChartClose}
-              >
-            <div class="w-full h-full flex flex-col">
-            <div class="mt-4 flex-grow flex items-center justify-center">
-                <LineChart 
-                  data={ageDistributionChartData}
-                  cohortColorMap={cohortColorMap}
-                />
+            >
+              <div class="w-full h-full flex flex-col">
+                {#if ageDistributionChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <LineChart
+                      data={ageDistributionChartData}
+                      cohortColorMap={cohortColorMap}
+                    />
+                  </div>
+                {/if}
               </div>
-            </div>
-          </ChartCard>
+
+              <div slot="table" class="w-full h-full flex items-center pt-4">
+                {#if ageDistributionChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <DataTable
+                      data={transformLineChartToTableData(ageDistributionChartData)}
+                    />
+                  </div>
+                {/if}
+              </div>
+            </ChartCard>
           {/if}
           
           {#if selectItems[4].checked}
-          <ChartCard 
-            title="Distribution of Visit Count"
-            description="The distribution of the total number of medical visits made by patients during the cohort period."
-            chartId={4}
-            type="full"
-            on:close={handleChartClose}
-          >
-            <div class="w-full h-full flex flex-col">
-              <div class="mt-4 flex-grow flex items-center justify-center">
-                {#if visitCountChartData && visitCountChartData.length > 0}
-                  <LineChart
-                    data={visitCountChartData}
-                    cohortColorMap={cohortColorMap}
-                  />
+            <ChartCard 
+              title="Distribution of Visit Count"
+              description="The distribution of the total number of medical visits made by patients during the cohort period."
+              chartId={4}
+              type="full"
+              hasTableView={true}
+              isTableView={isTableView.visitCount}
+              on:toggleView={({detail}) => isTableView.visitCount = detail}
+              on:close={handleChartClose}
+            >
+              <div class="w-full h-full flex flex-col">
+                {#if visitCountChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <LineChart
+                      data={visitCountChartData}
+                      cohortColorMap={cohortColorMap}
+                    />
+                  </div>
                 {/if}
               </div>
-            </div>
-          </ChartCard>
+
+              <div slot="table" class="w-full h-full flex items-center pt-4">
+                {#if visitCountChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <DataTable
+                      data={transformLineChartToTableData(visitCountChartData)}
+                    />
+                  </div>
+                {/if}
+              </div>
+            </ChartCard>
           {/if}
 
           {#if selectItems[5].checked}
@@ -619,6 +696,9 @@
               showSelector={true}
               options={getViewOptions('drug')}
               selectedOption={topTenDrugViewType}
+              hasTableView={true}
+              isTableView={isTableView.topTenDrugs}
+              on:toggleView={({detail}) => isTableView.topTenDrugs = detail}
               on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
@@ -640,6 +720,28 @@
                 </div>
                 {/if}
               </div>
+
+               <!-- 테이블 뷰 -->
+              <div slot="table" class="w-full h-full flex flex-col p-4">
+                {#if stackedDrugsData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <StackedBarChartHorizontal
+                      data={stackedDrugsData}
+                      domainKey="drug"
+                      viewType={topTenDrugViewType}
+                      cohortTotalCounts = {Object.fromEntries(
+                        selectedCohorts.map(cohortId => [
+                          cohortStats[cohortId].basicInfo.name,
+                          cohortStats[cohortId].totalPatients
+                        ])
+                      )}
+                      isTableView={true}
+                    />
+                  </div>
+                {/if}
+              </div>
+
+              
             </ChartCard>
           {/if}
 
@@ -652,6 +754,9 @@
                 showSelector={true}
                 options={getViewOptions('condition')}
                 selectedOption={topTenConditionViewType}
+                hasTableView={true}
+                isTableView={isTableView.topTenConditions}
+                on:toggleView={({detail}) => isTableView.topTenConditions = detail}
                 on:optionSelect={handleViewTypeChange}
                 on:close={handleChartClose}
               >
@@ -664,14 +769,34 @@
                       viewType={topTenConditionViewType}
                       cohortColorMap={cohortColorMap}
                       cohortTotalCounts = {Object.fromEntries(
-                      selectedCohorts.map(cohortId => [
-                        cohortStats[cohortId].basicInfo.name,
-                        cohortStats[cohortId].totalPatients
-                      ])
-                    )}
+                        selectedCohorts.map(cohortId => [
+                          cohortStats[cohortId].basicInfo.name,
+                          cohortStats[cohortId].totalPatients
+                        ])
+                      )}
                     />
                   </div>
-                  {/if}
+                {/if}
+              </div>
+
+              <!-- 테이블 뷰 -->
+              <div slot="table" class="w-full h-full flex flex-col p-1">
+                {#if stackedConditionsData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <StackedBarChartHorizontal
+                      data={stackedConditionsData}
+                      domainKey="condition"
+                      viewType={topTenConditionViewType}
+                      cohortTotalCounts = {Object.fromEntries(
+                        selectedCohorts.map(cohortId => [
+                          cohortStats[cohortId].basicInfo.name,
+                          cohortStats[cohortId].totalPatients
+                        ])
+                      )}
+                      isTableView={true}
+                    />
+                  </div>
+                {/if}
               </div>
               </ChartCard>
           {/if}
@@ -685,6 +810,9 @@
               showSelector={true}
               options={getViewOptions('procedure')}
               selectedOption={topTenProcedureViewType}
+              hasTableView={true}
+              isTableView={isTableView.topTenProcedures}
+              on:toggleView={({detail}) => isTableView.topTenProcedures = detail}
               on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
@@ -705,6 +833,27 @@
                   />
                 </div>
               {/if}
+            </div>
+
+            <!-- 테이블 뷰 -->
+            <div slot="table" class="w-full h-full flex flex-col p-1">
+              {#if stackedProceduresData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedProceduresData}
+                    domainKey="procedure"
+                    viewType={topTenProcedureViewType}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
+                    isTableView={true}
+                  />
+                </div>
+              {/if}
+            </div>
             </ChartCard>
           {/if}
 
@@ -717,6 +866,9 @@
               showSelector={true}
               options={getViewOptions('measurement')}
               selectedOption={topTenMeasurementViewType}
+              hasTableView={true}
+              isTableView={isTableView.topTenMeasurements}
+              on:toggleView={({detail}) => isTableView.topTenMeasurements = detail}
               on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
@@ -736,7 +888,27 @@
                     )}
                   />
                 </div>
-                {/if}
+              {/if}
+            </div>
+
+            <!-- 테이블 뷰 -->
+            <div slot="table" class="w-full h-full flex flex-col p-1">
+              {#if stackedMeasurementsData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedMeasurementsData}
+                    domainKey="measurement"
+                    viewType={topTenMeasurementViewType}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
+                    isTableView={true}
+                  />
+                </div>
+              {/if}
             </div>
             </ChartCard>
           {/if}
@@ -752,14 +924,6 @@
           {:else}
             <p>Loading chart...</p>
           {/if}
-        </ChartCard>
-      </div> -->
-    {:else}
-      <!-- <div class="w-full space-y-6">
-        <ChartCard
-          title="Prediction Analysis"
-          description="AI-based prediction analysis for selected cohorts">
-          <p>Prediction features coming soon...</p>
         </ChartCard>
       </div> -->
     {/if}
