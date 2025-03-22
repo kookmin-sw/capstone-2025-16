@@ -14,7 +14,7 @@
   import LineChart from "$lib/components/LineChart.svelte";
   import StackedBarChartHorizontal from "$lib/components/StackedBarChart_horizontal.svelte";
   import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
-  import { transformStackedBarToTableData } from "$lib/utils/dataTransformers/stackedBarChartTransformer.js";
+  import { transformDonutChartToTableData } from "$lib/utils/dataTransformers/donutChartTransformer.js";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -99,6 +99,9 @@
   let cohortColorMap = {};
 
   let isTableView = {
+    genderRatio: false,
+    mortality: false,
+    visitTypeRatio: false,
     firstOccurrenceAge: false,
     visitCount: false,
     topTenDrugs: false,
@@ -210,10 +213,11 @@
 
   async function loadGenderData() {
     try {
-      return selectedCohorts.map((cohortId) => ({
-        data: cohortStats[cohortId].statistics.gender,
-        cohortName: cohortStats[cohortId].basicInfo.name
-      }));
+        return selectedCohorts.map((cohortId) => ({
+            data: cohortStats[cohortId].statistics.gender,
+            cohortName: cohortStats[cohortId].basicInfo.name,
+            totalPatients: cohortStats[cohortId].totalPatients
+        }));
     } catch (error) {
       console.error('Error loading gender data:', error);
       return [];
@@ -224,7 +228,8 @@
   try {
     const mortalityData = selectedCohorts.map((cohortId) => ({
       data: cohortStats[cohortId].statistics.mortality,
-      cohortName: cohortStats[cohortId].basicInfo.name
+      cohortName: cohortStats[cohortId].basicInfo.name,
+      totalPatients: cohortStats[cohortId].totalPatients
     }));
     return mortalityData;
   } catch (error) {
@@ -237,7 +242,8 @@
   try {
     const visitData = selectedCohorts.map((cohortId) => ({
       data: cohortStats[cohortId].statistics.visitType,
-      cohortName: cohortStats[cohortId].basicInfo.name
+      cohortName: cohortStats[cohortId].basicInfo.name,
+      totalPatients: cohortStats[cohortId].totalPatients
     }));
     return visitData;
   } catch (error) {
@@ -535,12 +541,25 @@
               description="The ratio of genders within the cohort."
               chartId={0}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.genderRatio}
+              on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
               <div class="w-full h-full flex flex-col">
                 <div class="mt-4 flex-grow flex items-center justify-center">
                   <DonutChartGroup chartsData={genderChartData} showCohortNames={true} />
                 </div>
+              </div>
+
+              <div slot="table" class="w-full h-full flex items-center pt-4">
+                {#if genderChartData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <DataTable
+                      data={transformDonutChartToTableData(genderChartData)}
+                    />
+                </div>
+                {/if}
               </div>
             </ChartCard>
           {/if}          
@@ -551,6 +570,9 @@
               description="The percentage of patients within the cohort who have died."
               chartId={1}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.mortality}
+              on:toggleView={({detail}) => isTableView.mortality = detail}
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
@@ -559,6 +581,15 @@
                   <DonutChartGroup chartsData={mortalityChartData} showCohortNames={true} />
                 {/if}
               </div>
+            </div>
+            <div slot="table" class="w-full h-full flex items-center pt-4">
+              {#if visitTypeChartData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <DataTable
+                    data={transformDonutChartToTableData(visitTypeChartData)}
+                  />
+              </div>
+              {/if}
             </div>
             </ChartCard>
           {/if}
@@ -569,6 +600,9 @@
               description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
               chartId={2}
               type="full"
+              hasTableView={true}
+              isTableView={isTableView.visitTypeRatio}
+              on:toggleView={({detail}) => isTableView.visitTypeRatio = detail}
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
@@ -577,6 +611,16 @@
                   <DonutChartGroup chartsData={visitTypeChartData} showCohortNames={true} />
                 {/if}
               </div>
+            </div>
+
+            <div slot="table" class="w-full h-full flex items-center pt-4">
+              {#if visitTypeChartData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <DataTable
+                    data={transformDonutChartToTableData(visitTypeChartData)}
+                  />
+              </div>
+              {/if}
             </div>
             </ChartCard>
           {/if}
