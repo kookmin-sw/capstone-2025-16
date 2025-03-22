@@ -96,6 +96,13 @@
 
   let cohortColorMap = {};
 
+  let isTableView = {
+    topTenDrugs: false,
+    topTenConditions: false,
+    topTenProcedures: false,
+    topTenMeasurements: false
+  };
+
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
@@ -619,6 +626,9 @@
               showSelector={true}
               options={getViewOptions('drug')}
               selectedOption={topTenDrugViewType}
+              hasTableView={true}
+              isTableView={isTableView.topTenDrugs}
+              on:toggleView={({detail}) => isTableView.topTenDrugs = detail}
               on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
@@ -640,6 +650,29 @@
                 </div>
                 {/if}
               </div>
+
+               <!-- 테이블 뷰 -->
+              <div slot="table" class="w-full h-full flex flex-col p-4">
+                {#if stackedDrugsData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <StackedBarChartHorizontal
+                      data={stackedDrugsData}
+                      domainKey="drug"
+                      viewType={topTenDrugViewType}
+                      cohortColorMap={cohortColorMap}
+                      cohortTotalCounts = {Object.fromEntries(
+                        selectedCohorts.map(cohortId => [
+                          cohortStats[cohortId].basicInfo.name,
+                          cohortStats[cohortId].totalPatients
+                        ])
+                      )}
+                      isTableView={true}
+                    />
+                  </div>
+                {/if}
+              </div>
+
+              
             </ChartCard>
           {/if}
 
@@ -652,6 +685,9 @@
                 showSelector={true}
                 options={getViewOptions('condition')}
                 selectedOption={topTenConditionViewType}
+                hasTableView={true}
+                isTableView={isTableView.topTenConditions}
+                on:toggleView={({detail}) => isTableView.topTenConditions = detail}
                 on:optionSelect={handleViewTypeChange}
                 on:close={handleChartClose}
               >
@@ -664,14 +700,35 @@
                       viewType={topTenConditionViewType}
                       cohortColorMap={cohortColorMap}
                       cohortTotalCounts = {Object.fromEntries(
-                      selectedCohorts.map(cohortId => [
-                        cohortStats[cohortId].basicInfo.name,
-                        cohortStats[cohortId].totalPatients
-                      ])
-                    )}
+                        selectedCohorts.map(cohortId => [
+                          cohortStats[cohortId].basicInfo.name,
+                          cohortStats[cohortId].totalPatients
+                        ])
+                      )}
                     />
                   </div>
-                  {/if}
+                {/if}
+              </div>
+
+              <!-- 테이블 뷰 -->
+              <div slot="table" class="w-full h-full flex flex-col p-1">
+                {#if stackedConditionsData.length > 0}
+                  <div class="flex-1 overflow-x-auto overflow-y-auto">
+                    <StackedBarChartHorizontal
+                      data={stackedConditionsData}
+                      domainKey="condition"
+                      viewType={topTenConditionViewType}
+                      cohortColorMap={cohortColorMap}
+                      cohortTotalCounts = {Object.fromEntries(
+                        selectedCohorts.map(cohortId => [
+                          cohortStats[cohortId].basicInfo.name,
+                          cohortStats[cohortId].totalPatients
+                        ])
+                      )}
+                      isTableView={true}
+                    />
+                  </div>
+                {/if}
               </div>
               </ChartCard>
           {/if}
@@ -685,6 +742,9 @@
               showSelector={true}
               options={getViewOptions('procedure')}
               selectedOption={topTenProcedureViewType}
+              hasTableView={true}
+              isTableView={isTableView.topTenProcedures}
+              on:toggleView={({detail}) => isTableView.topTenProcedures = detail}
               on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
@@ -705,6 +765,28 @@
                   />
                 </div>
               {/if}
+            </div>
+
+            <!-- 테이블 뷰 -->
+            <div slot="table" class="w-full h-full flex flex-col p-1">
+              {#if stackedProceduresData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedProceduresData}
+                    domainKey="procedure"
+                    viewType={topTenProcedureViewType}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
+                    isTableView={true}
+                  />
+                </div>
+              {/if}
+            </div>
             </ChartCard>
           {/if}
 
@@ -717,6 +799,9 @@
               showSelector={true}
               options={getViewOptions('measurement')}
               selectedOption={topTenMeasurementViewType}
+              hasTableView={true}
+              isTableView={isTableView.topTenMeasurements}
+              on:toggleView={({detail}) => isTableView.topTenMeasurements = detail}
               on:optionSelect={handleViewTypeChange}
               on:close={handleChartClose}
             >
@@ -736,7 +821,28 @@
                     )}
                   />
                 </div>
-                {/if}
+              {/if}
+            </div>
+
+            <!-- 테이블 뷰 -->
+            <div slot="table" class="w-full h-full flex flex-col p-1">
+              {#if stackedMeasurementsData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartHorizontal
+                    data={stackedMeasurementsData}
+                    domainKey="measurement"
+                    viewType={topTenMeasurementViewType}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts = {Object.fromEntries(
+                      selectedCohorts.map(cohortId => [
+                        cohortStats[cohortId].basicInfo.name,
+                        cohortStats[cohortId].totalPatients
+                      ])
+                    )}
+                    isTableView={true}
+                  />
+                </div>
+              {/if}
             </div>
             </ChartCard>
           {/if}

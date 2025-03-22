@@ -3,6 +3,7 @@
   import { onMount, onDestroy, tick } from "svelte";
   import { browser } from "$app/environment";
   import { fade } from 'svelte/transition';
+  import DataTable from './DataTable.svelte';
 
   // props 정의
   export let data = [];
@@ -10,6 +11,7 @@
   export let viewType = 'combined';
   export let cohortTotalCounts = {};
   export let cohortColorMap = {};
+  export let isTableView = false;
     
   // drawChart 함수 인자
   let transformedData;
@@ -232,7 +234,35 @@
 </script>
 
 <div class="relative w-full h-full">
-  <div bind:this={chartContainer} class="w-full h-full"></div>
+  {#if !isTableView}
+    <div bind:this={chartContainer} class="w-full h-full"></div>
+  {:else}
+    <div class="w-full h-full overflow-auto">
+      <DataTable 
+        headers={[
+          { key: 'rank', label: 'No.' },
+          { key: domainKey, label: domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1) },
+          ...orderedCohorts.map(cohort => ({
+            key: cohort,
+            label: cohort
+          }))
+        ]}
+        data={transformedData.map((item, index) => {
+          const newItem = { rank: index + 1, ...item };
+          orderedCohorts.forEach(cohort => {
+            const tableValue = +item[cohort];
+            const tableTotal = +cohortTotalCounts[cohort];
+            newItem[cohort] = tableTotal ? 
+              `${tableValue.toLocaleString()} (${((tableValue / tableTotal) * 100).toFixed(2)}%)` : 
+              `${tableValue.toLocaleString()}`;
+          });
+          return newItem;
+        })}
+        cohortColorMap={cohortColorMap}
+        showColors={true}
+      />
+    </div>
+  {/if}
 
   <!-- 툴팁 -->
   {#if tooltipVisible}
