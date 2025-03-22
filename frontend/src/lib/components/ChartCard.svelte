@@ -101,7 +101,7 @@
 	</div>
 
 	<!-- 차트 컨텐츠 영역 -->
-	<div class="h-[calc(100%-2rem)] flex flex-col">
+	<div class="h-[calc(100%-2rem)] flex flex-col overflow-x-auto">
 		{#if !isTableView}
 			<slot />
 		{:else}
