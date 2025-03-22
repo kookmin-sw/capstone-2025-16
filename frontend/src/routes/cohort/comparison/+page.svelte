@@ -14,6 +14,7 @@
   import LineChart from "$lib/components/LineChart.svelte";
   import StackedBarChartHorizontal from "$lib/components/StackedBarChart_horizontal.svelte";
   import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
+  import { transformStackedBarToTableData } from "$lib/utils/dataTransformers/stackedBarChartTransformer.js";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -607,7 +608,6 @@
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
                       data={transformLineChartToTableData(ageDistributionChartData)}
-                      colorMap={cohortColorMap}
                     />
                   </div>
                 {/if}
@@ -642,7 +642,6 @@
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
                       data={transformLineChartToTableData(visitCountChartData)}
-                      colorMap={cohortColorMap}
                     />
                   </div>
                 {/if}
@@ -692,7 +691,6 @@
                       data={stackedDrugsData}
                       domainKey="drug"
                       viewType={topTenDrugViewType}
-                      cohortColorMap={cohortColorMap}
                       cohortTotalCounts = {Object.fromEntries(
                         selectedCohorts.map(cohortId => [
                           cohortStats[cohortId].basicInfo.name,
@@ -751,7 +749,6 @@
                       data={stackedConditionsData}
                       domainKey="condition"
                       viewType={topTenConditionViewType}
-                      cohortColorMap={cohortColorMap}
                       cohortTotalCounts = {Object.fromEntries(
                         selectedCohorts.map(cohortId => [
                           cohortStats[cohortId].basicInfo.name,
@@ -808,7 +805,6 @@
                     data={stackedProceduresData}
                     domainKey="procedure"
                     viewType={topTenProcedureViewType}
-                    cohortColorMap={cohortColorMap}
                     cohortTotalCounts = {Object.fromEntries(
                       selectedCohorts.map(cohortId => [
                         cohortStats[cohortId].basicInfo.name,
@@ -865,7 +861,6 @@
                     data={stackedMeasurementsData}
                     domainKey="measurement"
                     viewType={topTenMeasurementViewType}
-                    cohortColorMap={cohortColorMap}
                     cohortTotalCounts = {Object.fromEntries(
                       selectedCohorts.map(cohortId => [
                         cohortStats[cohortId].basicInfo.name,
