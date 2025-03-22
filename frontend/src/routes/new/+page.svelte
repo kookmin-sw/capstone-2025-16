@@ -1,16 +1,10 @@
-<!-- 
-	TODO:
-		토글 형식으로 이벤트 자세한 정보 접었다 펴기
-		좌측 페이지에 바로가기 페이지 만들기
-
--->
-
 <script>
 	import '../../app.css';
 	import { page } from '$app/state';
 
 	import IntegrationEditor from './@components/events/editable/IntegrationEditor.svelte';
 	import EventDisplayRouter from './@components/events/display/EventDisplayRouter.svelte';
+	import ConceptSet from './@components/ConceptSet.svelte';
 	let pathname = $state(page.url.pathname);
 
 	const events = [
@@ -109,6 +103,8 @@
 		}
 	}
 
+	let toggleConceptSet = $state(false);
+
 	// $effect(() => {
 	// 	// prevents the ghost flickering at the top
 	// 	if (mouseYCoordinate == null || mouseYCoordinate == 0) {
@@ -163,10 +159,38 @@
 		>
 	</div>
 </header>
+
+{#if toggleConceptSet}
+	<ConceptSet on:cancel={() => (toggleConceptSet = false)} />
+{/if}
+
 <div
 	class="fixed left-0 top-10 flex h-full w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
 >
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
+		<div class="flex justify-between pr-4" >
+			<p class="mb-4 text-sm font-bold">Concepts Sets</p>
+			<button
+				class="flex h-6 w-6 items-center justify-center rounded-lg border border-blue-400 bg-blue-50 text-white shadow-xs transition-colors hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-700/30 focus:ring-offset-2"
+				on:click={() => (toggleConceptSet = !toggleConceptSet)}
+				aria-label="Edit concept set"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-4 w-4 stroke-blue-500"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path d="M12 5v14M5 12h14"></path>
+				</svg>
+			</button>
+		</div>
+		
+
 		<p class="mb-4 text-sm font-bold">cohort initial events</p>
 		{#each cohort.entry.and as event}
 			<p class=" mb-4 ml-2 rounded-md bg-blue-50 px-2 py-1 text-xs leading-4 text-blue-600">
@@ -341,7 +365,6 @@
 							}
 						}}
 					>
-
 						<p class="mb-4 text-lg font-bold">
 							{event.type
 								? event.type
