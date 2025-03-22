@@ -491,12 +491,6 @@
         >
           Customizable
         </button>
-        <button 
-          class="tab {activeTab === 'prediction' ? 'active' : ''}"
-          on:click={() => switchTab('prediction')}
-        >
-          Prediction
-        </button>
       </div>
     </div>
 
@@ -930,14 +924,6 @@
           {:else}
             <p>Loading chart...</p>
           {/if}
-        </ChartCard>
-      </div> -->
-    {:else}
-      <!-- <div class="w-full space-y-6">
-        <ChartCard
-          title="Prediction Analysis"
-          description="AI-based prediction analysis for selected cohorts">
-          <p>Prediction features coming soon...</p>
         </ChartCard>
       </div> -->
     {/if}
