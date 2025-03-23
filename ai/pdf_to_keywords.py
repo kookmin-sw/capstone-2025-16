@@ -11,6 +11,7 @@ from clickhouse_driver import Client
 load_dotenv()
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 openai_api_base = "https://api.lambdalabs.com/v1"
+model_name = os.environ.get('LLM_MODEL')
 clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
 clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
 clickhouse_user = os.environ.get('CLICKHOUSE_USER')
@@ -20,8 +21,6 @@ client = OpenAI(
     api_key=openai_api_key,
     base_url=openai_api_base,
 )
-
-model = "llama3.1-405b-instruct"
 
 clickhouse_client = Client(
     host=clickhouse_host,
@@ -33,12 +32,12 @@ clickhouse_client = Client(
 STRICT_REQUIREMENT = f"""
 Instructions
 Strict requirements:
-1. For each item in the **inclusion** section:
+1. For each item in the inclusion section:
    - You must include the following keys in the filters:
      - "type"
      - "concept_name"
      - "domain_id"
-   - The "type" must be one of the following **valid type values** (no others allowed):
+   - The "type" must be one of the following valid type values (no others allowed):
      ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence"]
 
    - The "domain_id" must be one of the following valid values (no others allowed):
@@ -82,11 +81,10 @@ Output Example:
 {cohort_json_schema.JSON_OUTPUT_EXAMPLE}
 
 5. Output format:
-    - Do NOT include any formatting headers such as "Output:", "**Composite:**", "Result:", "Instructions:", or any Markdown syntax.
+    - Do NOT include any formatting headers such as "Output:", "Composite:", "Result:", "Instructions:", or any Markdown syntax.
     - DO NOT include explanations, comments, or additional text.
     - Return only raw JSON without any labels, headers, or formatting.
     - DO NOT include any Markdown formatting or explanations
-    - DO NOT re-include examples from above
     - Any usage of Markdown fosmatting like ```json or ``` → strictly forbidden
     - Use valueAsNumber only for measurable criteria
     - Ensure that each domain has the correct key: drugType, procedureType, observationType, etc.
@@ -157,7 +155,7 @@ def extract_text_from_pdf(pdf_path):
 # 2. 키워드 검색어 + type 자동 추출
 def extract_cohort_terms(text):
     response = client.chat.completions.create(
-        model=model,
+        model=model_name,
         messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
                   {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}]
     )
@@ -182,7 +180,7 @@ def clean_term(term):
 
 # 3. ClickHouse에서 `concept_id` 조회
 def get_omop_concept_id(term, domain_id):
-    cleaned_term = clean_term(term)
+    cleaned_term = clean_term(term).replace('%', '%%')
     query = """
     SELECT concept_id FROM concept 
     WHERE concept_name ILIKE %(term)s 
@@ -196,7 +194,7 @@ def get_omop_concept_id(term, domain_id):
 # 4. 검색어 변경하여 재검색
 def refine_search_query(term):
     response = client.chat.completions.create(
-        model=model,
+        model=model_name,
         messages=[{"role": "system", "content": COHORT_JSON_SYSTEM_PROMPT},
                   {"role": "user", "content": SEARCH_QUERY_REFINEMENT_PROMPT.format(term=term)}]
     )

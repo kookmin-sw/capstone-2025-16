@@ -9,6 +9,13 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
 load_dotenv()
+openai_api_key = os.environ.get('OPENAI_API_KEY')
+openai_api_base = "https://api.lambdalabs.com/v1"
+model_name = os.environ.get('LLM_MODEL')
+clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
+clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
+clickhouse_user = os.environ.get('CLICKHOUSE_USER')
+clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
 
 # 1. PDF 텍스트 추출
 def extract_text_from_pdf(pdf_path):
@@ -21,10 +28,10 @@ def extract_text_from_pdf(pdf_path):
 # 2. ClickHouse 검색 함수
 def search_concept_ids(keywords):
     clickhouse = Client(
-    host='localhost',    # ClickHouse 서버 주소
-    database='default',
-    user='clickhouse', 
-    password='clickhouse'
+    host=clickhouse_host,    # ClickHouse 서버 주소
+    database=clickhouse_database,
+    user=clickhouse_user, 
+    password=clickhouse_password
 )
     concept_list = []
 
@@ -54,9 +61,9 @@ def search_concept_ids(keywords):
 
 # 3. LLM 설정 (lambda labs 기반 llama3.1 사용)
 llm = ChatOpenAI(
-    openai_api_key = os.environ.get('OPENAI_API_KEY'),
-    openai_api_base="https://api.lambdalabs.com/v1",
-    model_name="llama3.1-405b-instruct"
+    openai_api_key = openai_api_key,
+    openai_api_base = openai_api_base,
+    model_name=model_name
 )
 
 # 4. 프롬프트 + 체인 구성
