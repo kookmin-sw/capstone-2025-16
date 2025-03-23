@@ -36,13 +36,13 @@ def search_concept_ids(keywords):
     concept_list = []
 
     for keyword in keywords:
-        query = f"""
+        query = """
         SELECT concept_id, concept_name, domain_id
         FROM concept
-        WHERE lower(concept_name) LIKE lower('%{keyword.strip()}%')
+        WHERE lower(concept_name) LIKE lower(%({keyword})s)
         LIMIT 10
         """
-        res = clickhouse.execute(query)
+        res = clickhouse.execute(query, {'keyword': f'%{keyword.strip().replace('%', '%%')}%'})
         if res:
             concept_list.append({
                 "keyword": keyword,
