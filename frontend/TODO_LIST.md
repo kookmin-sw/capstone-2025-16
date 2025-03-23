@@ -42,37 +42,43 @@
 - ❌ 개념 계층 구조 탐색 기능 미구현 (실제 API 연동 필요)
 
 ### 2. 포함 규칙(Inclusion Rules) 구현 - 우선순위: 높음, 복잡도: 높음
-- [ ] 완전한 포함 규칙 편집기
-- [ ] CriteriaGroup 구조 지원
-- [ ] 논리 연산(ALL, ANY, AT_LEAST) 구현
-- [ ] 인구통계학 기준 목록 구현
-- [ ] 조건 그룹 중첩 지원
-- [ ] 복잡한 포함 규칙 표현 UI
+- [x] 완전한 포함 규칙 편집기
+- [x] CriteriaGroup 구조 지원
+- [x] 논리 연산(ALL, ANY, AT_LEAST) 구현
+- [x] 인구통계학 기준 목록 구현
+- [x] 조건 그룹 중첩 지원
+- [x] 복잡한 포함 규칙 표현 UI
 
 **구현 상태**:
 - ✅ 포함 규칙 데이터 모델 구현 완료
 - ✅ 기본적인 포함 규칙 추가 기능 구현
-- ❌ 포함 규칙 편집 UI 미구현
-- ❌ 복잡한 중첩 구조 UI 미구현
+- ✅ 포함 규칙 편집 UI 구현 완료
+- ✅ 포함 규칙 모달 컴포넌트 구현 완료
+- ✅ 논리 연산자 및 중첩 그룹 지원 구현
+- ✅ 인구통계학 기준 목록 기초 구현 완료 (상세 속성 편집 UI는 향후 구현 필요)
+- ✅ 시간 윈도우가 있는 조건 구현 완료
 
 ### 3. 추가 기준(Additional Criteria) 구현 - 우선순위: 중간, 복잡도: 중간
-- [ ] WindowedCriteria 구현
-- [ ] Occurrence 패턴 (정확히 X회, 최소 X회 등)
-- [ ] 조건 발생 시간 윈도우 설정
+- [x] WindowedCriteria 구현
+- [x] Occurrence 패턴 (정확히 X회, 최소 X회 등)
+- [x] 조건 발생 시간 윈도우 설정
 
 **구현 상태**:
 - ✅ WindowedCriteria 데이터 모델 구현 완료
 - ✅ Occurrence 패턴 데이터 모델 구현
-- ❌ UI 구현 미완료
+- ✅ 포함 규칙 모달 내에서 WindowedCriteria 및 발생 패턴 UI 구현 완료
+- ✅ 시간 윈도우 설정 UI 구현 완료
 
 ### 4. 종료 전략(End Strategy) 구현 - 우선순위: 중간, 복잡도: 중간
-- [ ] DateOffset 전략 구현
-- [ ] CustomEra 전략 구현
-- [ ] 종료 전략 UI 및 설정
+- [x] DateOffset 전략 구현
+- [x] CustomEra 전략 구현
+- [x] 종료 전략 UI 및 설정
 
 **구현 상태**:
 - ✅ 종료 전략 데이터 모델 구현 완료
-- ❌ UI 구현 미완료
+- ✅ EndStrategyModal 컴포넌트 구현 완료
+- ✅ DateOffset 전략 UI 구현 완료
+- ✅ CustomEra 전략 UI 구현 완료
 
 ### 5. 검열 기준(Censoring Criteria) 구현 - 우선순위: 중간, 복잡도: 중간
 - [ ] 검열 기준 편집기

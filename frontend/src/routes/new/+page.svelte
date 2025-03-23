@@ -1,5 +1,5 @@
 <!-- 
-	Atlas 프로젝트 기반 Cohort Builder 구현 - 모든 이벤트 타입 속성 구현
+	Atlas Project based Cohort Builder Implementation - All event type properties implemented
 -->
 
 <script>
@@ -19,38 +19,42 @@
 		removeInclusionRule,
 		cohortExpressionToJson,
 		cohortExpressionFromJson,
-		addConceptSet
+		addConceptSet,
+		// updateInclusionRule,
+		updateEndStrategy
 	} from './models/index.js';
 	import ConceptSetModal from './components/ConceptSetModal.svelte';
+	import InclusionRuleModal from './components/InclusionRuleModal.svelte';
+	import EndStrategyModal from './components/EndStrategyModal.svelte';
 	
 	let pathname = $state(page.url.pathname);
 
-	// Atlas 코호트 구조 정의 - 모델 사용
+	// Atlas cohort structure definition - using models
 	let cohortExpression = $state(createEmptyCohortExpression());
 	
-	// 이벤트 편집 관련 상태
-	let selectedCriteriaType = $state(null); // 선택된 이벤트 유형
-	let selectedConceptSet = $state(null); // 선택된 개념 집합
-	let editingCriteriaIndex = $state(null); // 편집 중인 기준 인덱스
+	// Event editing related states
+	let selectedCriteriaType = $state(null); // Selected event type
+	let selectedConceptSet = $state(null); // Selected concept set
+	let editingCriteriaIndex = $state(null); // Editing criteria index
 	
-	// 현재 편집 중인 이벤트 속성 값
+	// Current criteria property values
 	let currentCriteriaValues = $state({
-		// 공통 속성
-		First: false, // 첫 번째 발생만 포함
-		CodesetId: null, // 개념 집합 ID
-		OccurrenceStartDate: null, // 발생 시작일
-		OccurrenceEndDate: null, // 발생 종료일
-		Age: null, // 연령
-		Gender: [], // 성별
-		ProviderSpecialty: [], // 제공자 전문성
-		VisitType: [], // 방문 유형
+		// Common properties
+		First: false, // Include only first occurrence
+		CodesetId: null, // Concept set ID
+		OccurrenceStartDate: null, // Occurrence start date
+		OccurrenceEndDate: null, // Occurrence end date
+		Age: null, // Age
+		Gender: [], // Gender
+		ProviderSpecialty: [], // Provider specialty
+		VisitType: [], // Visit type
 		
-		// 조건 관련 속성
+		// Condition related properties
 		ConditionType: [],
 		ConditionStatus: [],
 		StopReason: null,
 		
-		// 약물 관련 속성
+		// Drug related properties
 		DrugType: [],
 		Refills: null,
 		Quantity: null,
@@ -59,7 +63,7 @@
 		EffectiveDrugDose: null,
 		DoseUnit: [],
 		
-		// 측정 관련 속성
+		// Measurement related properties
 		MeasurementType: [],
 		Operator: [],
 		ValueAsNumber: null,
@@ -69,56 +73,56 @@
 		RangeHigh: null,
 		Abnormal: false,
 		
-		// 관찰 관련 속성
+		// Observation related properties
 		ObservationType: [],
 		ValueAsString: null,
 		Qualifier: [],
 		
-		// 시술 관련 속성
+		// Procedure related properties
 		ProcedureType: [],
 		Modifier: [],
 		
-		// 검체 관련 속성
+		// Specimen related properties
 		SpecimenType: [],
 		AnatomicSite: [],
 		DiseaseStatus: [],
 		
-		// 방문 관련 속성
+		// Visit related properties
 		VisitLength: null,
 		
-		// 기간 관련 속성
+		// Period related properties
 		PeriodType: [],
 		PeriodLength: null,
 		PeriodStartDate: null,
 		PeriodEndDate: null,
 		
-		// 특수 속성
+		// Special properties
 		EraLength: null
 	});
 	
-	// 드롭다운 옵션
+	// Dropdown options
 	const limitOptions = ["All", "First", "Last"];
 	
-	// 이벤트 타입 정의 (Atlas의 정의와 일치)
+	// Event type definitions (matching Atlas definitions)
 	const criteriaTypes = [
-		{ id: "condition-era", name: "Condition Era", description: "특정 진단 기간을 가진 환자를 찾습니다." },
-		{ id: "condition-occurrence", name: "Condition Occurrence", description: "특정 진단을 가진 환자를 찾습니다." },
-		{ id: "death", name: "Death", description: "사망 정보를 기반으로 환자를 찾습니다." },
-		{ id: "device-exposure", name: "Device Exposure", description: "기기 노출에 따라 환자를 찾습니다." },
-		{ id: "dose-era", name: "Dose Era", description: "복용량 기간에 따라 환자를 찾습니다." },
-		{ id: "drug-era", name: "Drug Era", description: "약물 복용 기간에 노출된 환자를 찾습니다." },
-		{ id: "drug-exposure", name: "Drug Exposure", description: "약물 노출에 따라 환자를 찾습니다." },
-		{ id: "measurement", name: "Measurement", description: "검사 측정 결과를 기반으로 환자를 찾습니다." },
-		{ id: "observation", name: "Observation", description: "관찰 정보를 기반으로 환자를 찾습니다." },
-		{ id: "observation-period", name: "Observation Period", description: "관찰 기간을 기반으로 환자를 찾습니다." },
-		{ id: "procedure-occurrence", name: "Procedure Occurrence", description: "의료 시술을 받은 환자를 찾습니다." },
-		{ id: "specimen", name: "Specimen", description: "검체 샘플을 기반으로 환자를 찾습니다." },
-		{ id: "visit-occurrence", name: "Visit Occurrence", description: "병원 방문을 기반으로 환자를 찾습니다." },
-		{ id: "visit-detail", name: "Visit Detail", description: "병원 방문 세부정보를 기반으로 환자를 찾습니다." },
-		{ id: "demographic", name: "Demographic", description: "인구학적 특성(나이, 성별 등)을 기준으로 환자를 찾습니다." }
+		{ id: "condition-era", name: "Condition Era", description: "Find patients with specific diagnosis periods." },
+		{ id: "condition-occurrence", name: "Condition Occurrence", description: "Find patients with specific diagnoses." },
+		{ id: "death", name: "Death", description: "Find patients based on death information." },
+		{ id: "device-exposure", name: "Device Exposure", description: "Find patients based on device exposure." },
+		{ id: "dose-era", name: "Dose Era", description: "Find patients based on dose periods." },
+		{ id: "drug-era", name: "Drug Era", description: "Find patients exposed to drug during periods." },
+		{ id: "drug-exposure", name: "Drug Exposure", description: "Find patients based on drug exposure." },
+		{ id: "measurement", name: "Measurement", description: "Find patients based on test measurement results." },
+		{ id: "observation", name: "Observation", description: "Find patients based on observation information." },
+		{ id: "observation-period", name: "Observation Period", description: "Find patients based on observation periods." },
+		{ id: "procedure-occurrence", name: "Procedure Occurrence", description: "Find patients who received medical procedures." },
+		{ id: "specimen", name: "Specimen", description: "Find patients based on specimen samples." },
+		{ id: "visit-occurrence", name: "Visit Occurrence", description: "Find patients based on hospital visits." },
+		{ id: "visit-detail", name: "Visit Detail", description: "Find patients based on visit detail information." },
+		{ id: "demographic", name: "Demographic", description: "Find patients based on demographic characteristics (age, gender, etc.)." }
 	];
 	
-	// 이벤트 타입별 속성 정의
+	// Event type property definitions
 	const criteriaProperties = {
 		"condition-era": [
 			{ name: "First", label: "First Occurrence Only", type: "checkbox" },
@@ -296,21 +300,21 @@
 		]
 	};
 	
-	// 각 이벤트 타입에 맞는 빈 객체 생성 함수
+	// Function to create empty criteria object for each event type
 	function createEmptyCriteria(type) {
 		const atlasType = typeMapping[type];
 		const criteria = {};
 		
-		// 기본 객체 생성
+		// Create base object
 		criteria[atlasType] = {
 			CodesetId: currentCriteriaValues.CodesetId
 		};
 		
-		// 이벤트 유형별로 속성들을 추가
+		// Add properties based on event type
 		const properties = criteriaProperties[type] || [];
 		
 		for (const property of properties) {
-			// 값이 정의되어 있고 기본값이 아닌 경우만 추가
+			// Add only defined values that are not default values
 			if (currentCriteriaValues[property.name] !== null && 
 				!(property.type === 'checkbox' && currentCriteriaValues[property.name] === false) &&
 				!(Array.isArray(currentCriteriaValues[property.name]) && currentCriteriaValues[property.name].length === 0)) {
@@ -322,7 +326,7 @@
 		return criteria;
 	}
 	
-	// 범위 값 생성 헬퍼 함수
+	// Helper function to create range values
 	function createRange(min, max) {
 		const range = {};
 		if (min !== null && min !== undefined && min !== "") {
@@ -334,7 +338,7 @@
 		return Object.keys(range).length > 0 ? range : null;
 	}
 	
-	// 날짜 범위 생성 헬퍼 함수
+	// Helper function to create date range
 	function createDateRange(start, end) {
 		const range = {};
 		if (start) {
@@ -346,37 +350,37 @@
 		return Object.keys(range).length > 0 ? range : null;
 	}
 	
-	// 이벤트 추가 함수
+	// Add criteria function
 	function addCriteria() {
 		if (!selectedCriteriaType) return;
 		
 		const newCriteria = createEmptyCriteria(selectedCriteriaType);
 		
 		if (editingCriteriaIndex !== null) {
-			// 이벤트 업데이트
+			// Update existing criteria
 			cohortExpression.PrimaryCriteria.CriteriaList[editingCriteriaIndex] = newCriteria;
 			editingCriteriaIndex = null;
 		} else {
-			// 새 이벤트 추가
+			// Add new criteria
 			cohortExpression = addPrimaryCriteria(cohortExpression, newCriteria);
 		}
 		
-		// 선택 초기화
+		// Reset selection
 		selectedCriteriaType = null;
 		resetCriteriaValues();
 	}
 	
-	// 이벤트 편집 함수
+	// Edit criteria function
 	function editCriteria(index) {
 		editingCriteriaIndex = index;
 		const criteria = cohortExpression.PrimaryCriteria.CriteriaList[index];
 		const type = Object.keys(criteria)[0];
 		
-		// 타입 매핑 역변환 - 모델의 typeMapping 사용
+		// Reverse mapping from Atlas type to UI type
 		selectedCriteriaType = typeMapping[type];
-		resetCriteriaValues(); // 기존 값 초기화
+		resetCriteriaValues(); // Reset existing values
 		
-		// 기존 값 로드
+		// Load existing values
 		const criteriaData = criteria[type];
 		for (const key in criteriaData) {
 			if (criteriaData.hasOwnProperty(key)) {
@@ -385,12 +389,12 @@
 		}
 	}
 	
-	// 이벤트 제거 함수
+	// Remove criteria function
 	function removeCriteria(index) {
 		cohortExpression = removePrimaryCriteria(cohortExpression, index);
 	}
 	
-	// 현재 기준 값 초기화
+	// Reset current criteria values
 	function resetCriteriaValues() {
 		currentCriteriaValues = {
 			First: false,
@@ -436,17 +440,17 @@
 		};
 	}
 	
-	// Atlas 형식의 이벤트 타입 표시 이름 가져오기
+	// Get display name for Atlas format event type
 	function getCriteriaTypeName(criteria) {
 		return Object.keys(criteria)[0].replace(/([A-Z])/g, ' $1').trim();
 	}
 	
-	// 개념 집합 선택 함수
+	// Concept set selection function
 	function selectConceptSet(id) {
 		currentCriteriaValues.CodesetId = id;
 	}
 	
-	// 포함 규칙 추가 함수
+	// Add inclusion rule function
 	function addInclusionRule() {
 		const newRule = createInclusionRule({
 			name: `Inclusion Criteria ${cohortExpression.InclusionRules.length + 1}`,
@@ -460,17 +464,17 @@
 		cohortExpression = addInclusionRuleToExpression(cohortExpression, newRule);
 	}
 	
-	// 코호트 표현식 JSON 문자열 반환
+	// Return cohort expression as JSON string
 	function getCohortExpressionJSON() {
 		return cohortExpressionToJson(cohortExpression);
 	}
 	
-	// 드래그 앤 드롭 관련 변수
+	// Drag and drop related variables
 	let draggedItem = $state(null);
 	let draggedItemIndex = $state(null);
 	let hoveredItemIndex = $state(null);
 	
-	// 드래그 앤 드롭 순서 변경
+	// Drag and drop order change
 	$effect(() => {
 		if (draggedItemIndex !== null && hoveredItemIndex !== null && draggedItemIndex !== hoveredItemIndex) {
 			const criteriaList = [...cohortExpression.PrimaryCriteria.CriteriaList];
@@ -484,37 +488,95 @@
 		}
 	});
 	
-	// 이벤트 속성 업데이트 함수
+	// Update criteria property value
 	function updateCriteriaValue(property, value) {
 		currentCriteriaValues[property] = value;
 	}
 	
-	// 숫자 범위 입력 필드
+	// Number range input field
 	function updateNumberRange(property, min, max) {
 		currentCriteriaValues[property] = createRange(min, max);
 	}
 	
-	// 날짜 범위 입력 필드
+	// Date range input field
 	function updateDateRange(property, start, end) {
 		currentCriteriaValues[property] = createDateRange(start, end);
 	}
 	
-	// 기초 값 및 숫자 입력용
+	// Temporary values for number input
 	let tempValues = $state({});
 	
-	// 개념 집합 모달 관련 상태
+	// Modal related state variables
 	let showConceptSetModal = $state(false);
+	let showInclusionRuleModal = $state(false);
+	let showEndStrategyModal = $state(false);
+	let editingRuleIndex = $state(-1);
 	
-	// 개념 집합 업데이트 처리
+	// Handle concept set update
 	function handleConceptSetUpdate(event) {
-		// 모달에서 업데이트된 개념 집합 목록 가져오기
+		// Get updated concept set list from modal
 		const { conceptSets } = event.detail;
 		
-		// 코호트 표현식 업데이트
+		// Update cohort expression
 		cohortExpression = {
 			...cohortExpression,
 			ConceptSets: conceptSets
 		};
+	}
+	
+	// Handle inclusion rule update
+	function handleInclusionRuleUpdate(event) {
+		// Get updated inclusion rule from modal
+		const { inclusionRule, index } = event.detail;
+		
+		// Update cohort expression
+		const updatedRules = [...cohortExpression.InclusionRules];
+		updatedRules[index] = inclusionRule;
+		
+		cohortExpression = {
+			...cohortExpression,
+			InclusionRules: updatedRules
+		};
+	}
+	
+	// Handle end strategy update
+	function handleEndStrategyUpdate(event) {
+		// Get updated end strategy from modal
+		const { endStrategy } = event.detail;
+		
+		// Update cohort expression
+		cohortExpression = updateEndStrategy(cohortExpression, endStrategy);
+	}
+	
+	// Edit inclusion rule function
+	function editInclusionRule(index) {
+		editingRuleIndex = index;
+		showInclusionRuleModal = true;
+	}
+	
+	// Delete inclusion rule function
+	function deleteInclusionRule(index) {
+		cohortExpression = removeInclusionRule(cohortExpression, index);
+	}
+	
+	// Helper function to get end strategy description
+	function getEndStrategyDescription() {
+		if (!cohortExpression.EndStrategy) return "End of continuous observation";
+		
+		if (cohortExpression.EndStrategy.DateOffset) {
+			const offset = cohortExpression.EndStrategy.DateOffset.Offset;
+			const dateField = cohortExpression.EndStrategy.DateOffset.DateField === "StartDate" ? "start" : "end";
+			return `Fixed duration: ${offset} days after event ${dateField} date`;
+		} else if (cohortExpression.EndStrategy.CustomEra) {
+			let conceptName = "selected drug concept set";
+			if (cohortExpression.EndStrategy.CustomEra.DrugCodesetId !== null) {
+				const conceptIndex = cohortExpression.EndStrategy.CustomEra.DrugCodesetId;
+				conceptName = cohortExpression.ConceptSets[conceptIndex]?.name || `Concept Set ${conceptIndex}`;
+			}
+			return `Continuous drug exposure: ${conceptName}`;
+		}
+		
+		return "End of continuous observation";
 	}
 </script>
 
@@ -527,18 +589,18 @@
 			href="/cohort"
 			class="w-fit text-center {pathname === '/cohort' ? 'font-semibold text-blue-600' : 'text-gray-700 hover:text-blue-500'}"
 		>
-			코호트 정의
+			Cohort Definition
 		</a>
 		<a
 			href="/inference"
 			class="w-fit text-center {pathname === '/inference' ? 'font-semibold text-blue-600' : 'text-gray-700 hover:text-blue-500'}"
 		>
-			모델 인퍼런스
+			Model Inference
 		</a>
 	</div>
 </header>
 
-<!-- 좌측 사이드바 -->
+<!-- Left Sidebar -->
 <div class="fixed left-0 top-10 flex h-[calc(100vh-40px)] w-[200px] flex-col overflow-y-auto border-r border-gray-300 bg-gray-50">
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<h3 class="mb-3 text-sm font-bold text-gray-700">Primary Criteria</h3>
@@ -588,17 +650,17 @@
 	</div>
 </div>
 
-<!-- 메인 컨텐츠 영역 -->
+<!-- Main Content Area -->
 <div class="fixed left-[200px] top-10 h-[calc(100vh-40px)] w-[calc(100vw-200px)] overflow-y-auto">
 	<div class="flex h-full">
-		<!-- 메인 패널 -->
+		<!-- Main Panel -->
 		<div class="flex flex-1 flex-col p-5">
 			<div class="mb-8">
 				<h1 class="mb-2 text-2xl font-bold text-gray-800">Cohort Definition</h1>
 				<p class="text-sm text-gray-600">Define the characteristics of patients to include in your cohort.</p>
 			</div>
 			
-			<!-- 초기 이벤트 설정 -->
+			<!-- Initial Event Settings -->
 			<div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
 				<h2 class="mb-3 text-xl font-bold text-gray-800">Cohort Entry Events</h2>
 				<p class="mb-4 text-sm text-gray-600">Define initial events that qualify a person for cohort entry.</p>
@@ -648,7 +710,7 @@
 				</div>
 			</div>
 			
-			<!-- 이벤트 목록 -->
+			<!-- Events List -->
 			<div class="mb-6">
 				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-semibold text-gray-800">Events having any of the following criteria:</h3>
@@ -696,7 +758,7 @@
 								</div>
 								
 								<div class="text-sm text-gray-700">
-									<!-- 이벤트 상세 정보 표시 -->
+									<!-- Event detail display -->
 									{#if Object.keys(criteria)[0] === 'ConditionEra'}
 										<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 											{#if criteria.ConditionEra.CodesetId !== null}
@@ -783,7 +845,7 @@
 				{/if}
 			</div>
 			
-			<!-- 포함 규칙 섹션 -->
+			<!-- Inclusion Rules Section -->
 			<div class="mb-6">
 				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-semibold text-gray-800">Inclusion Rules</h3>
@@ -806,10 +868,16 @@
 								<div class="flex items-center justify-between mb-3">
 									<h4 class="text-lg font-medium text-green-600">{rule.name}</h4>
 									<div class="flex space-x-2">
-										<button class="text-sm text-blue-500 hover:text-blue-700">
+										<button 
+											class="text-sm text-blue-500 hover:text-blue-700"
+											on:click={() => editInclusionRule(index)}
+										>
 											Edit
 										</button>
-										<button class="text-sm text-red-500 hover:text-red-700">
+										<button 
+											class="text-sm text-red-500 hover:text-red-700"
+											on:click={() => deleteInclusionRule(index)}
+										>
 											Remove
 										</button>
 									</div>
@@ -824,14 +892,56 @@
 				{/if}
 			</div>
 			
-			<!-- 코호트 JSON 표시 (디버깅용) -->
+			<!-- End Strategy Section -->
+			<div class="mb-6">
+				<div class="mb-4 flex items-center justify-between">
+					<h3 class="text-lg font-semibold text-gray-800">Cohort Exit Strategy</h3>
+					<button 
+						class="rounded bg-orange-600 px-3 py-1 text-sm text-white hover:bg-orange-700"
+						on:click={() => showEndStrategyModal = true}
+					>
+						Configure Exit Strategy
+					</button>
+				</div>
+				
+				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+					<div class="mb-3 flex items-center justify-between">
+						<h4 class="text-lg font-medium text-orange-600">Event Persistence</h4>
+					</div>
+					
+					<div class="text-sm text-gray-700">
+						<p><span class="font-medium">Current strategy:</span> {getEndStrategyDescription()}</p>
+						{#if cohortExpression.EndStrategy?.DateOffset}
+							<div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+								<p><span class="font-medium">Offset from:</span> {cohortExpression.EndStrategy.DateOffset.DateField}</p>
+								<p><span class="font-medium">Days offset:</span> {cohortExpression.EndStrategy.DateOffset.Offset}</p>
+							</div>
+						{:else if cohortExpression.EndStrategy?.CustomEra}
+							<div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+								<p><span class="font-medium">Drug concept set:</span> 
+									{#if cohortExpression.EndStrategy.CustomEra.DrugCodesetId !== null}
+										{cohortExpression.ConceptSets[cohortExpression.EndStrategy.CustomEra.DrugCodesetId]?.name || 
+										`Concept Set ${cohortExpression.EndStrategy.CustomEra.DrugCodesetId}`}
+									{:else}
+										Not specified
+									{/if}
+								</p>
+								<p><span class="font-medium">Gap days:</span> {cohortExpression.EndStrategy.CustomEra.GapDays}</p>
+								<p><span class="font-medium">Offset days:</span> {cohortExpression.EndStrategy.CustomEra.Offset}</p>
+							</div>
+						{/if}
+					</div>
+				</div>
+			</div>
+			
+			<!-- Cohort JSON display (for debugging) -->
 			<div class="mb-6 rounded-lg border border-gray-200 p-4">
 				<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON</h3>
 				<pre class="h-40 overflow-auto rounded-md bg-gray-100 p-2 text-xs">{getCohortExpressionJSON()}</pre>
 			</div>
 		</div>
 		
-		<!-- 우측 패널 - 이벤트 추가/편집 -->
+		<!-- Right Panel - Event Add/Edit -->
 		<div class="w-[400px] border-l border-gray-300 bg-gray-50 p-5 overflow-y-auto">
 			{#if selectedCriteriaType === null}
 				<div class="mb-4">
@@ -854,7 +964,7 @@
 					{/each}
 				</div>
 			{:else}
-				<!-- 특정 이벤트 타입 편집 -->
+				<!-- Specific Event Type Editing -->
 				<div class="mb-4">
 					<div class="flex items-center justify-between">
 						<h3 class="text-xl font-bold text-gray-800">
@@ -876,7 +986,7 @@
 				<div class="mb-6 space-y-4">
 					{#if criteriaProperties[selectedCriteriaType]}
 						{#each criteriaProperties[selectedCriteriaType] as property}
-							<!-- 속성 타입에 따라 다른 입력 필드 표시 -->
+							<!-- Property input fields by type -->
 							<div class="mb-3">
 								<label class="mb-1 block text-sm font-medium text-gray-700">
 									{property.label}
@@ -1010,10 +1120,32 @@
 	</div>
 </div>
 
-<!-- 개념 집합 관리 모달 -->
+<!-- Concept Set Management Modal -->
 <ConceptSetModal 
 	bind:show={showConceptSetModal}
 	conceptSets={cohortExpression.ConceptSets}
 	on:update={handleConceptSetUpdate}
 	on:close={() => showConceptSetModal = false}
+/>
+
+<!-- Inclusion Rule Management Modal -->
+<InclusionRuleModal
+	bind:show={showInclusionRuleModal}
+	inclusionRule={editingRuleIndex >= 0 ? cohortExpression.InclusionRules[editingRuleIndex] : null}
+	ruleIndex={editingRuleIndex}
+	conceptSets={cohortExpression.ConceptSets}
+	on:update={handleInclusionRuleUpdate}
+	on:close={() => {
+		showInclusionRuleModal = false;
+		editingRuleIndex = -1;
+	}}
+/>
+
+<!-- End Strategy Management Modal -->
+<EndStrategyModal 
+	bind:show={showEndStrategyModal}
+	endStrategy={cohortExpression.EndStrategy}
+	conceptSets={cohortExpression.ConceptSets}
+	on:update={handleEndStrategyUpdate}
+	on:close={() => showEndStrategyModal = false}
 />
