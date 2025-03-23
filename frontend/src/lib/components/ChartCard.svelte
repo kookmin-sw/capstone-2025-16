@@ -38,12 +38,12 @@
 	<!-- 헤더 영역 -->
 	<div class="flex items-center gap-3">
 		<span class="text-lg font-semibold">{title}</span>
-			<div class="group relative">
-				<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
-				<div class="absolute bottom-full mb-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-					{description}
-				</div>
+		<div class="group relative">
+			<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
+			<div class="absolute bottom-full mb-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+				{description}
 			</div>
+		</div>
 
 		{#if showSelector && options.length > 0}
 			<div class="relative inline-block">
@@ -74,24 +74,24 @@
 
 		{#if hasTableView}
 			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
-			<button 
-				class="px-2 py-0.5 text-xs rounded-full transition-colors
-					{!isTableView ? 
-						'bg-white text-blue-600 shadow-sm' : 
-						'text-gray-600 hover:text-gray-900'}"
-				on:click={() => dispatch('toggleView', false)}>
-				Chart
-			</button>
-			<button 
-				class="px-2 py-0.5 text-xs rounded-full transition-colors
-					{isTableView ? 
-						'bg-white text-blue-600 shadow-sm' : 
-						'text-gray-600 hover:text-gray-900'}"
-				on:click={() => dispatch('toggleView', true)}>
-				Table
-			</button>
+				<button 
+					class="px-2 py-0.5 text-xs rounded-full transition-colors
+						{!isTableView ? 
+							'bg-white text-blue-600 shadow-sm' : 
+							'text-gray-600 hover:text-gray-900'}"
+					on:click={() => dispatch('toggleView', false)}>
+					Chart
+				</button>
+				<button 
+					class="px-2 py-0.5 text-xs rounded-full transition-colors
+						{isTableView ? 
+							'bg-white text-blue-600 shadow-sm' : 
+							'text-gray-600 hover:text-gray-900'}"
+					on:click={() => dispatch('toggleView', true)}>
+					Table
+				</button>
 			</div>
-      	{/if}
+		{/if}
 
 		<button 
 			class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer absolute right-6 top-6"
@@ -99,16 +99,15 @@
 			✕
 		</button>
 	</div>
-
-	<!-- 차트 컨텐츠 영역 -->
-	<div class="h-[calc(100%-2rem)] flex flex-col overflow-x-auto">
-		{#if !isTableView}
-			<slot />
-		{:else}
-			<slot name="table" />
-		{/if}
+		<!-- 차트 컨텐츠 영역 -->
+		<div class="h-[calc(100%-2rem)] flex flex-col overflow-x-auto">
+			{#if !isTableView}
+				<slot />
+			{:else}
+				<slot name="table" />
+			{/if}
+		</div>
 	</div>
-</div>
 {/if}
 
 <svelte:window on:click={() => isDropdownOpen = false} />
