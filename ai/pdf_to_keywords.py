@@ -33,24 +33,24 @@ STRICT_REQUIREMENT = f"""
 Instructions
 Strict requirements:
 1. For each item in the inclusion section:
-   - You must include the following keys in the filters:
-     - "type"
-     - "concept_name"
-     - "domain_id"
-   - The "type" must be one of the following valid type values (no others allowed):
-     ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence"]
+   - You must include the following keys:
+     - "CriteriaType" (determines the type of criteria)
+     - "Domain" (must be one of: ["Drug", "Device", "Measurement", "Observation", "Note", "Procedure", "Meas Value", "Condition", "Provider", "Unit", "Type Concept", "Metadata", "Spec Anatomic Site", "Specimen", "Race", "Language", "Relationship", "Route", "Plan", "Sponsor", "Payer", "Plan Stop Reason", "Gender", "Visit", "Cost", "Episode", "Revenue Code", "Condition Status", "Condition/Meas", "Condition/Device", "Geography", "Obs/Procedure", "Drug/Procedure", "Condition/Obs", "Condition/Procedure", "Regimen", "Ethnicity", "Meas/Procedure", "Currency", "Device/Procedure", "Device/Drug", "Place of Service", "Meas Value Operator"])
+     - "CodesetId" (will be filled later)
+     - "CriteriaName" (human readable name)
+   
+   - The "CriteriaType" must be one of the following valid values:
+     ["ConditionEra", "ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence"]
 
-   - The "domain_id" must be one of the following valid values (no others allowed):
-     ["Drug", "Device", "Measurement", "Observation", "Note", "Procedure", "Meas Value", "Condition", "Provider", "Unit", "Type Concept", "Metadata", "Spec Anatomic Site", "Specimen", "Race", "Language", "Relationship", "Route", "Plan", "Sponsor", "Payer", "Plan Stop Reason", "Gender", "Visit", "Cost", "Episode", "Revenue Code", "Condition Status", "Condition/Meas", "Condition/Device", "Geography", "Obs/Procedure", "Drug/Procedure", "Condition/Obs", "Condition/Procedure", "Regimen", "Ethnicity", "Meas/Procedure", "Currency", "Device/Procedure", "Device/Drug", "Place of Service", "Meas Value Operator"]
-
-2. For measurement-type conditions:
-   - You must include:
-     - "valueAsNumber" with the appropriate operator ("gt", "lt", "eq", etc.)
-     - For any field such as "measurementType", "drugType", "conditionType", etc., 
-        do NOT invent or fabricate placeholder concept_id values like 123456. 
-        If a concept_id is not available, explicitly set the value to null (or None).
+2. For Measurement criteria:
+   - Include "ValueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
+   - For any field such as "MeasurementType", "DrugType", "ConditionType", etc., 
+     do NOT invent or fabricate placeholder concept_id values
+   - If a concept_id is not available, explicitly set the value to null
 
 3. You must use the exact concept_id and domain_id values provided in the concept list.
+   - Follow the exact structure shown in the schema
+   - Use PascalCase for all keys (e.g., "ValueAsNumber" not "valueAsNumber")
    - Avoid creating entirely new diseases or medications unrelated to the input.
    - Avoid adding extra qualifiers, descriptions, or text that didn't exist in the original term.
    - **Do NOT fabricate or hallucinate any concept_id, domain_id, or type values.**
@@ -143,6 +143,27 @@ SEARCH_QUERY_REFINEMENT_PROMPT = """
 Original Term: "{term}"
 """
 
+def map_domain_to_cdm_domain(domain_type):
+    """
+    입력된 도메인 타입을 OMOP CDM의 표준 도메인으로 매핑합니다.
+    """
+    domain_mapping = {
+        "condition_era": "Condition",
+        "condition_occurrence": "Condition",
+        "death": "Death",
+        "device_exposure": "Device",
+        "dose_era": "Drug",
+        "drug_era": "Drug",
+        "drug_exposure": "Drug",
+        "measurement": "Measurement",
+        "observation": "Observation",
+        "observation_period": "Observation",
+        "procedure_occurrence": "Procedure",
+        "specimen": "Specimen",
+        "visit_occurrence": "Visit"
+    }
+    
+    return domain_mapping.get(domain_type, None)
 
 # 1. PDF에서 텍스트 추출
 def extract_text_from_pdf(pdf_path):
@@ -164,6 +185,23 @@ def extract_cohort_terms(text):
 
     try:
         cohort_json = json.loads(response.choices[0].message.content)
+        
+        # PrimaryCriteria의 CriteriaList 처리
+        if "PrimaryCriteria" in cohort_json and "CriteriaList" in cohort_json["PrimaryCriteria"]:
+            for criteria in cohort_json["PrimaryCriteria"]["CriteriaList"]:
+                if "CriteriaType" in criteria:
+                    criteria["Domain"] = map_domain_to_cdm_domain(criteria["CriteriaType"].lower())
+
+        # AdditionalCriteria의 Groups 처리
+        if "AdditionalCriteria" in cohort_json and "Groups" in cohort_json["AdditionalCriteria"]:
+            for group in cohort_json["AdditionalCriteria"]["Groups"]:
+                if "CriteriaList" in group:
+                    for criteria in group["CriteriaList"]:
+                        if "Criteria" in criteria and "CriteriaType" in criteria["Criteria"]:
+                            criteria["Criteria"]["Domain"] = map_domain_to_cdm_domain(
+                                criteria["Criteria"]["CriteriaType"].lower()
+                            )
+
         return cohort_json
 
     except json.JSONDecodeError:
