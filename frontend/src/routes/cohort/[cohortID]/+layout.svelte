@@ -1,5 +1,6 @@
 <script>
     import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 
     const cohortID = $page.params.cohortID;
 
@@ -9,9 +10,9 @@
 <div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
 	<div>
 		<div class="button-container">
-		<button class="button" onclick={() => goto('/chart')}>
-			Analysis Report
-		</button>
+			<button class="button" onclick={() => goto(`/cohort/${cohortID}/analysis`)}>
+				Analysis Report
+			</button>
 		</div>
 	</div>
 	<div class="flex w-full px-2 py-2">
