@@ -260,8 +260,6 @@
         tick().then(() => drawTimeline());
     }
 
-    $: console.log(tableProps);
-
     onDestroy(() => {
         const svg = d3.select(timelineContainer).select("svg");
         svg.on(".zoom", null); // ✅ 줌 이벤트 제거
@@ -289,7 +287,9 @@
     <div class="w-full h-[200px]" bind:this={timelineContainer}></div>
 </header>
 <div class="pt-8 pb-[16px]">
-    <CDMInfo careSite={tableProps.care_site} location={tableProps.location} visitOccurrence={tableProps.visit_occurrence} />
+    {#if tableProps?.cdm_info}
+        <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
+    {/if}
     {#each Array.from(selectedTables) as tableId}
         {#if tableComponents[tableId]}
         <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
