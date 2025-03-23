@@ -258,6 +258,7 @@
     // ✅ 데이터 변경 시마다 실행
     $: if (data) {
         tick().then(() => drawTimeline());
+        tableProps = {};
     }
 
     onDestroy(() => {
