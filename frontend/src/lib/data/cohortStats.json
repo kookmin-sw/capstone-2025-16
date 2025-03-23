@@ -25,9 +25,9 @@
       },
       "visitType": {
         "Inpatient": 250,
-        "Outpatient": 1200,
-        "Emergency Room Visit": 180,
-        "Home Visit": 50,
+        "Outpatient": 600,
+        "Emergency Room Visit": 100,
+        "Home Visit": 30,
         "Other Visit Type": 20
       },
       "age": {
@@ -134,16 +134,16 @@
         "Insulin Administration": 300
       },
       "topTenMeasurements": {
-        "Blood Glucose": 920,
-        "Blood Pressure": 880,
-        "Body Weight": 820,
-        "HbA1c": 780,
-        "BMI": 720,
-        "Cholesterol": 680,
-        "Heart Rate": 620,
-        "Temperature": 580,
-        "Respiratory Rate": 520,
-        "Blood Oxygen": 480
+        "Blood Glucose": 800,
+        "Blood Pressure": 750,
+        "Body Weight": 700,
+        "HbA1c": 650,
+        "BMI": 600,
+        "Cholesterol": 550,
+        "Heart Rate": 500,
+        "Temperature": 450,
+        "Respiratory Rate": 400,
+        "Blood Oxygen": 350
       }
     }
   },
@@ -172,7 +172,7 @@
       },
       "visitType": {
         "Inpatient": 180,
-        "Outpatient": 950,
+        "Outpatient": 450,
         "Emergency Room Visit": 120,
         "Home Visit": 30,
         "Other Visit Type": 15
@@ -279,28 +279,28 @@
         "Sleep Apnea": 180
       },
       "topTenProcedures": {
-        "Blood Pressure Check": 800,
-        "ECG": 750,
-        "Echocardiogram": 680,
-        "Lipid Panel": 620,
-        "Kidney Function Test": 580,
-        "Chest X-ray": 520,
-        "Stress Test": 460,
+        "Blood Pressure Check": 750,
+        "ECG": 700,
+        "Echocardiogram": 650,
+        "Lipid Panel": 600,
+        "Kidney Function Test": 550,
+        "Chest X-ray": 500,
+        "Stress Test": 450,
         "Holter Monitor": 400,
         "Cardiac Catheterization": 350,
         "Carotid Ultrasound": 300
       },
       "topTenMeasurements": {
-        "Blood Pressure": 920,
-        "Heart Rate": 880,
-        "Body Weight": 820,
-        "BMI": 760,
-        "Cholesterol": 700,
-        "Blood Glucose": 640,
-        "Temperature": 580,
-        "Respiratory Rate": 520,
-        "Blood Oxygen": 460,
-        "Ejection Fraction": 400
+        "Blood Pressure": 750,
+        "Heart Rate": 700,
+        "Body Weight": 650,
+        "BMI": 600,
+        "Cholesterol": 550,
+        "Blood Glucose": 500,
+        "Temperature": 450,
+        "Respiratory Rate": 400,
+        "Blood Oxygen": 350,
+        "Ejection Fraction": 300
       }
     }
   },
@@ -329,9 +329,9 @@
         "Deceased": 5
       },
       "visitType": {
-        "Inpatient": 300,
-        "Outpatient": 800,
-        "Emergency Room Visit": 220,
+        "Inpatient": 200,
+        "Outpatient": 350,
+        "Emergency Room Visit": 120,
         "Home Visit": 40,
         "Other Visit Type": 25
       },
@@ -428,28 +428,28 @@
         "Depression": 120
       },
       "topTenProcedures": {
-        "Blood Pressure Check": 700,
-        "Blood Test": 650,
-        "ECG": 600,
-        "Chest X-ray": 550,
-        "Urine Analysis": 500,
-        "Lipid Panel": 450,
-        "Physical Examination": 400,
-        "Vaccination": 350,
-        "Eye Examination": 300,
-        "Dental Check": 250
+        "Blood Pressure Check": 450,
+        "Blood Test": 400,
+        "ECG": 350,
+        "Chest X-ray": 300,
+        "Urine Analysis": 250,
+        "Lipid Panel": 200,
+        "Physical Examination": 180,
+        "Vaccination": 160,
+        "Eye Examination": 140,
+        "Dental Check": 120
       },
       "topTenMeasurements": {
-        "Blood Pressure": 800,
-        "Body Weight": 750,
-        "Temperature": 700,
-        "Heart Rate": 650,
-        "BMI": 600,
-        "Blood Glucose": 550,
-        "Cholesterol": 500,
-        "Height": 450,
-        "Respiratory Rate": 400,
-        "Blood Oxygen": 350
+        "Blood Pressure": 450,
+        "Body Weight": 400,
+        "Temperature": 350,
+        "Heart Rate": 300,
+        "BMI": 250,
+        "Blood Glucose": 200,
+        "Cholesterol": 180,
+        "Height": 160,
+        "Respiratory Rate": 140,
+        "Blood Oxygen": 120
       }
     }
   }

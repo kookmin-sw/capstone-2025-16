@@ -211,6 +211,6 @@
         .style("backdrop-filter", "blur-sm");
     }
   
-  </script>
+</script>
   
-  <div bind:this={chartContainer} class="w-full h-full"></div>
+<div bind:this={chartContainer} class="w-full h-full"></div>
