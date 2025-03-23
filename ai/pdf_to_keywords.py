@@ -11,6 +11,10 @@ from clickhouse_driver import Client
 load_dotenv()
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 openai_api_base = "https://api.lambdalabs.com/v1"
+clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
+clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
+clickhouse_user = os.environ.get('CLICKHOUSE_USER')
+clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
 
 client = OpenAI(
     api_key=openai_api_key,
@@ -20,10 +24,10 @@ client = OpenAI(
 model = "llama3.1-405b-instruct"
 
 clickhouse_client = Client(
-    host='localhost',
-    database='default',
-    user='clickhouse', 
-    password='clickhouse'
+    host=clickhouse_host,
+    database=clickhouse_database,
+    user=clickhouse_user, 
+    password=clickhouse_password
 )
 
 STRICT_REQUIREMENT = f"""
