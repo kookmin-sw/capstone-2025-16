@@ -848,3 +848,92 @@ export class CohortExpression {
 
 export default CohortExpression;
 """
+
+def map_criteria_info(criteria_type):
+    """
+    CriteriaType을 CriteriaName(규격), Domain(규격), Domain_id(clickhouse 도메인)로 매핑
+    """
+    criteria_info = {
+        "ConditionEra": {
+            "CriteriaName": "Condition Era",
+            "Domain": "condition",
+            "Domain_id": "Condition"
+        },
+        "ConditionOccurrence": {
+            "CriteriaName": "Condition Occurrence",
+            "Domain": "condition",
+            "Domain_id": "Condition"
+        },
+        "Death": {
+            "CriteriaName": "Death",
+            "Domain": "death",
+            "Domain_id": "Death"
+        },
+        "DeviceExposure": {
+            "CriteriaName": "Device Exposure",
+            "Domain": "device",
+            "Domain_id": "Device"
+        },
+        "DoseEra": {
+            "CriteriaName": "Dose Era",
+            "Domain": "drug",
+            "Domain_id": "Drug"
+        },
+        "DrugEra": {
+            "CriteriaName": "Drug Era",
+            "Domain": "drug",
+            "Domain_id": "Drug"
+        },
+        "DrugExposure": {
+            "CriteriaName": "Drug Exposure",
+            "Domain": "drug",
+            "Domain_id": "Drug"
+        },
+        "Measurement": {
+            "CriteriaName": "Measurement",
+            "Domain": "measurement",
+            "Domain_id": "Measurement"
+        },
+        "Observation": {
+            "CriteriaName": "Observation",
+            "Domain": "observation",
+            "Domain_id": "Observation"
+        },
+        "ObservationPeriod": {
+            "CriteriaName": "Observation Period",
+            "Domain": "observation_period",
+            "Domain_id": "Observation"
+        },
+        "ProcedureOccurrence": {
+            "CriteriaName": "Procedure Occurrence",
+            "Domain": "procedure",
+            "Domain_id": "Procedure"
+        },
+        "Specimen": {
+            "CriteriaName": "Specimen",
+            "Domain": "specimen",
+            "Domain_id": "Specimen"
+        },
+        "VisitOccurrence": {
+            "CriteriaName": "Visit Occurrence",
+            "Domain": "visit",
+            "Domain_id": "Visit"
+        },
+        "VisitDetail": {
+            "CriteriaName": "Visit Detail",
+            "Domain": "visit_detail",
+            "Domain_id": "Visit"
+        },
+        "LocationRegion": {
+            "CriteriaName": "Location Region",
+            "Domain": "location",
+            "Domain_id": "Geography"
+        },
+        "DemographicCriteria": {
+            "CriteriaName": "Demographics",
+            "Domain": None,
+            "Domain_id": None
+        }
+    }
+    
+    return criteria_info.get(criteria_type, None)

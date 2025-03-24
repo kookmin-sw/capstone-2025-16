@@ -34,8 +34,9 @@ Instructions
 Strict requirements:
 1. For each item in the inclusion section:
    - You must include the following keys:
-     - "CriteriaType" (determines the type of criteria)
-     - "Domain" (must be one of: ["Drug", "Device", "Measurement", "Observation", "Note", "Procedure", "Meas Value", "Condition", "Provider", "Unit", "Type Concept", "Metadata", "Spec Anatomic Site", "Specimen", "Race", "Language", "Relationship", "Route", "Plan", "Sponsor", "Payer", "Plan Stop Reason", "Gender", "Visit", "Cost", "Episode", "Revenue Code", "Condition Status", "Condition/Meas", "Condition/Device", "Geography", "Obs/Procedure", "Drug/Procedure", "Condition/Obs", "Condition/Procedure", "Regimen", "Ethnicity", "Meas/Procedure", "Currency", "Device/Procedure", "Device/Drug", "Place of Service", "Meas Value Operator"])
+     - "CriteriaType" (must be one of: ["ConditionEra", "ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence", "VisitDetail", "LocationRegion", "DemographicCriteria"])
+     - "Domain" (will be automatically mapped based on CriteriaType)
+     - "Domain_id" (will be automatically mapped based on CriteriaType)
      - "CodesetId" (will be filled later)
      - "CriteriaName" (human readable name)
    
@@ -55,7 +56,9 @@ Strict requirements:
    - Avoid adding extra qualifiers, descriptions, or text that didn't exist in the original term.
    - **Do NOT fabricate or hallucinate any concept_id, domain_id, or type values.**
    - If any required value is missing or uncertain, omit that item from the output.
-
+   - Include empty objects ({{}}) for type-specific properties
+   - Include ConceptName for reference (this will be used for concept mapping)
+   
 4. The final JSON **must strictly conform** to the OMOP CDM cohort JSON schema below:
 OMOP CDM cohort JSON schema:
 {cohort_json_schema.JSON_SCHEMA}
@@ -81,7 +84,9 @@ Output Example:
 {cohort_json_schema.JSON_OUTPUT_EXAMPLE}
 
 5. Output format:
-    - Do NOT include any formatting headers such as "Output:", "Composite:", "Result:", "Instructions:", or any Markdown syntax.
+    - Return only the JSON structure
+    - Do not include any explanations or markdown
+    - Ensure all required fields are present
     - DO NOT include explanations, comments, or additional text.
     - Return only raw JSON without any labels, headers, or formatting.
     - DO NOT include any Markdown formatting or explanations
@@ -190,7 +195,11 @@ def extract_cohort_terms(text):
         if "PrimaryCriteria" in cohort_json and "CriteriaList" in cohort_json["PrimaryCriteria"]:
             for criteria in cohort_json["PrimaryCriteria"]["CriteriaList"]:
                 if "CriteriaType" in criteria:
-                    criteria["Domain"] = map_domain_to_cdm_domain(criteria["CriteriaType"].lower())
+                    criteria_info = cohort_json_schema.map_criteria_info(criteria["CriteriaType"])
+                    if criteria_info:
+                        criteria["CriteriaName"] = criteria_info["CriteriaName"]
+                        criteria["Domain"] = criteria_info["Domain"]
+                        criteria["Domain_id"] = criteria_info["Domain_id"]
 
         # AdditionalCriteria의 Groups 처리
         if "AdditionalCriteria" in cohort_json and "Groups" in cohort_json["AdditionalCriteria"]:
@@ -198,15 +207,17 @@ def extract_cohort_terms(text):
                 if "CriteriaList" in group:
                     for criteria in group["CriteriaList"]:
                         if "Criteria" in criteria and "CriteriaType" in criteria["Criteria"]:
-                            criteria["Criteria"]["Domain"] = map_domain_to_cdm_domain(
-                                criteria["Criteria"]["CriteriaType"].lower()
-                            )
+                            criteria_info = cohort_json_schema.map_criteria_info(criteria["Criteria"]["CriteriaType"])
+                            if criteria_info:
+                                criteria["Criteria"]["CriteriaName"] = criteria_info["CriteriaName"]
+                                criteria["Criteria"]["Domain"] = criteria_info["Domain"]
+                                criteria["Criteria"]["Domain_id"] = criteria_info["Domain_id"]
 
         return cohort_json
 
     except json.JSONDecodeError:
         print("JSONDecodeError: 응답이 유효한 JSON 형식이 아님")
-        return None  # 에러 발생 시 None 반환
+        return None
 
     except Exception as e:
         print(f"Unexpected Error: {e}")
