@@ -4,10 +4,9 @@
 
     export let data = {};
     export let hoveredLabel = null;
-
-    let width = 200;
-    let height = 200;
-    let margin = 0;
+    export let width = 200;
+    export let height = 200;
+    export let margin = 0;
 
     // The radius of the pie plot
     let radius = Math.min(width, height) / 2 - margin;
@@ -89,10 +88,10 @@
                             <tspan x="0" dy="1.2em" class="value">{slice.data[1]}</tspan>
                             <tspan x="0" dy="1.2em" class="percent">({calculatePercent(slice.data[1])})</tspan>
                         </text>
-                        {/if}
-                        {/each}
-                    </g>
-                </svg>
+                    {/if}
+                {/each}
+            </g>
+        </svg>
     {:else}
         <p>Loading chart...</p>
     {/if}
