@@ -5,10 +5,10 @@
   import BarChartHorizontal from "$lib/components/Charts/BarChart_horizontal.svelte";
   import BarChartVertical from "$lib/components/Charts/BarChart_vertical.svelte";
   import DonutChart from "$lib/components/Charts/DonutChart.svelte";
+	import GroupDonutChartWrapper from "$lib/components/Charts/DonutChart/GroupDonutChartWrapper.svelte";
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
-  import DonutChartGroup from '$lib/components/Charts/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
   import LineChart from "$lib/components/Charts/LineChart.svelte";
@@ -213,11 +213,13 @@
 
   async function loadGenderData() {
     try {
-        return selectedCohorts.map((cohortId) => ({
+      const data = selectedCohorts.map((cohortId) => ({
             data: cohortStats[cohortId].statistics.gender,
             cohortName: cohortStats[cohortId].basicInfo.name,
             totalPatients: cohortStats[cohortId].totalPatients
         }));
+        console.log('loadGenderData result:', data);  // 디버깅용 로그 추가
+        return data;
     } catch (error) {
       console.error('Error loading gender data:', error);
       return [];
@@ -540,12 +542,7 @@
               on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
-              <div class="w-full h-full flex flex-col">
-                <div class="mt-4 flex-grow flex items-center justify-center">
-                  <DonutChartGroup chartsData={genderChartData} showCohortNames={true} />
-                </div>
-              </div>
-
+                  <GroupDonutChartWrapper chartsData={genderChartData} isGroup={true}/>
               <div slot="table" class="w-full h-full flex items-center pt-4">
                 {#if genderChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
@@ -570,9 +567,9 @@
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
-              <div class="mt-4 flex-grow flex items-center justify-center">
+              <div class="flex-grow flex items-center justify-center">
                 {#if mortalityChartData && mortalityChartData.length > 0}
-                  <DonutChartGroup chartsData={mortalityChartData} showCohortNames={true} />
+                  <GroupDonutChartWrapper chartsData={mortalityChartData} isGroup={true}/>
                 {/if}
               </div>
             </div>
@@ -600,9 +597,9 @@
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
-              <div class="mt-4 flex-grow flex items-center justify-center">
+              <div class="flex-grow flex items-center justify-center">
                 {#if visitTypeChartData && visitTypeChartData.length > 0}
-                  <DonutChartGroup chartsData={visitTypeChartData} showCohortNames={true} />
+                  <GroupDonutChartWrapper chartsData={visitTypeChartData} isGroup={true}/>
                 {/if}
               </div>
             </div>
