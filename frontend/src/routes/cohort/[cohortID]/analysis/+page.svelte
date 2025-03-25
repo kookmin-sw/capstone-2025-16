@@ -1,13 +1,17 @@
 <script>
     import { slide } from 'svelte/transition';
     import analysisData from '$lib/data/singleCohortAnalysisTest.json';
-    
+    import ChartCard from '$lib/components/ChartCard.svelte';
+    import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
+    import SingleDonutChartWrapper from '$lib/components/Charts/DonutChart/SingleDonutChartWrapper.svelte';
+
     let isExpanded = false;
     let activeTab = 'default'; // 탭 활성화 상태 관리
 
     function switchTab(tab) { // 탭을 바꿀 때 활성 탭 상태 변경 함수
         activeTab = tab;
     }
+
 </script>
 
 <div class="p-4">
@@ -57,7 +61,21 @@
     {#if activeTab === 'default'}
         <div class="w-full">
             <div class="grid grid-cols-2 gap-4">
-                default tab 화면
+                <ChartCard title="Gender Ratio"
+                    description="The ratio of genders within the cohort."
+                    type='half'>
+                    <SingleDonutChartWrapper data={analysisData.statistics.gender} />
+                </ChartCard>
+                <ChartCard title="Mortality"
+                    description="The percentage of patients within the cohort who have died."
+                    type='half'>
+                    <SingleDonutChartWrapper data={analysisData.statistics.mortality} />
+                </ChartCard>
+                <ChartCard title="Visit Type Ratio"
+                    description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
+                    type='half'>
+                    <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
+                </ChartCard>
             </div>
         </div>
     {/if}
