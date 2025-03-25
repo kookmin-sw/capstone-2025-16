@@ -31,7 +31,7 @@
 
 {#if visible}
 <div 
-	class="bg-white border border-gray-300 rounded-lg shadow-md p-6 h-[350px] relative mb-7 w-full"
+	class="bg-white border border-gray-300 rounded-lg shadow-md p-6 h-[350px] relative mb-1 w-full"
 	class:col-span-2={type === 'full'}
 	class:col-span-1={type === 'half'}>
 
