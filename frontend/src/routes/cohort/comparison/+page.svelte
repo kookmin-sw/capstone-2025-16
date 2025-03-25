@@ -4,7 +4,6 @@
   import ChartCard from "$lib/components/ChartCard.svelte";
   import BarChartHorizontal from "$lib/components/Charts/BarChart_horizontal.svelte";
   import BarChartVertical from "$lib/components/Charts/BarChart_vertical.svelte";
-  import DonutChart from "$lib/components/Charts/DonutChart.svelte";
 	import GroupDonutChartWrapper from "$lib/components/Charts/DonutChart/GroupDonutChartWrapper.svelte";
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
@@ -542,14 +541,14 @@
               on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
-                  <GroupDonutChartWrapper chartsData={genderChartData} isGroup={true}/>
-              <div slot="table" class="w-full h-full flex items-center pt-4">
+              <GroupDonutChartWrapper chartsData={genderChartData} isGroup={true}/>
+              <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if genderChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
                       data={transformDonutChartToTableData(genderChartData)}
                     />
-                </div>
+                  </div>
                 {/if}
               </div>
             </ChartCard>
@@ -573,7 +572,7 @@
                 {/if}
               </div>
             </div>
-            <div slot="table" class="w-full h-full flex items-center pt-4">
+            <div slot="table" class="w-full h-full flex flex-col p-4">
               {#if visitTypeChartData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <DataTable
@@ -603,15 +602,14 @@
                 {/if}
               </div>
             </div>
-
-            <div slot="table" class="w-full h-full flex items-center pt-4">
+            <div slot="table" class="w-full h-full flex flex-col p-4">
               {#if visitTypeChartData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <DataTable
                     data={transformDonutChartToTableData(visitTypeChartData)}
                   />
-              </div>
-              {/if}
+                  </div>
+                {/if}
             </div>
             </ChartCard>
           {/if}
@@ -638,7 +636,7 @@
                 {/if}
               </div>
 
-              <div slot="table" class="w-full h-full flex items-center pt-4">
+              <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if ageDistributionChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
@@ -672,7 +670,7 @@
                 {/if}
               </div>
 
-              <div slot="table" class="w-full h-full flex items-center pt-4">
+              <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if visitCountChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
@@ -717,8 +715,6 @@
                 </div>
                 {/if}
               </div>
-
-               <!-- 테이블 뷰 -->
               <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if stackedDrugsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
