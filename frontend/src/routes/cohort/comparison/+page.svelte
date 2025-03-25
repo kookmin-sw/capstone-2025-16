@@ -4,11 +4,10 @@
   import ChartCard from "$lib/components/ChartCard.svelte";
   import BarChartHorizontal from "$lib/components/Charts/BarChart_horizontal.svelte";
   import BarChartVertical from "$lib/components/Charts/BarChart_vertical.svelte";
-  import DonutChart from "$lib/components/Charts/DonutChart.svelte";
+	import GroupDonutChartWrapper from "$lib/components/Charts/DonutChart/GroupDonutChartWrapper.svelte";
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
-  import DonutChartGroup from '$lib/components/Charts/DonutChartGroup.svelte';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
   import LineChart from "$lib/components/Charts/LineChart.svelte";
@@ -117,7 +116,6 @@
 
     try {
       cohortData = loadCohortListData(cohortStats, cohortIds);
-      console.log('load cohortData', cohortData);
 
       if (selectedCohorts.length > 0) {
         // 코호트별 색상 매핑 초기화
@@ -213,11 +211,12 @@
 
   async function loadGenderData() {
     try {
-        return selectedCohorts.map((cohortId) => ({
+      const data = selectedCohorts.map((cohortId) => ({
             data: cohortStats[cohortId].statistics.gender,
             cohortName: cohortStats[cohortId].basicInfo.name,
             totalPatients: cohortStats[cohortId].totalPatients
         }));
+        return data;
     } catch (error) {
       console.error('Error loading gender data:', error);
       return [];
@@ -540,19 +539,14 @@
               on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
-              <div class="w-full h-full flex flex-col">
-                <div class="mt-4 flex-grow flex items-center justify-center">
-                  <DonutChartGroup chartsData={genderChartData} showCohortNames={true} />
-                </div>
-              </div>
-
-              <div slot="table" class="w-full h-full flex items-center pt-4">
+              <GroupDonutChartWrapper chartsData={genderChartData} isGroup={true}/>
+              <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if genderChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
                       data={transformDonutChartToTableData(genderChartData)}
                     />
-                </div>
+                  </div>
                 {/if}
               </div>
             </ChartCard>
@@ -570,13 +564,13 @@
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
-              <div class="mt-4 flex-grow flex items-center justify-center">
+              <div class="flex-grow flex items-center justify-center">
                 {#if mortalityChartData && mortalityChartData.length > 0}
-                  <DonutChartGroup chartsData={mortalityChartData} showCohortNames={true} />
+                  <GroupDonutChartWrapper chartsData={mortalityChartData} isGroup={true}/>
                 {/if}
               </div>
             </div>
-            <div slot="table" class="w-full h-full flex items-center pt-4">
+            <div slot="table" class="w-full h-full flex flex-col p-4">
               {#if visitTypeChartData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <DataTable
@@ -600,21 +594,20 @@
               on:close={handleChartClose}
             >
             <div class="w-full h-full flex flex-col">
-              <div class="mt-4 flex-grow flex items-center justify-center">
+              <div class="flex-grow flex items-center justify-center">
                 {#if visitTypeChartData && visitTypeChartData.length > 0}
-                  <DonutChartGroup chartsData={visitTypeChartData} showCohortNames={true} />
+                  <GroupDonutChartWrapper chartsData={visitTypeChartData} isGroup={true}/>
                 {/if}
               </div>
             </div>
-
-            <div slot="table" class="w-full h-full flex items-center pt-4">
+            <div slot="table" class="w-full h-full flex flex-col p-4">
               {#if visitTypeChartData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <DataTable
                     data={transformDonutChartToTableData(visitTypeChartData)}
                   />
-              </div>
-              {/if}
+                  </div>
+                {/if}
             </div>
             </ChartCard>
           {/if}
@@ -641,7 +634,7 @@
                 {/if}
               </div>
 
-              <div slot="table" class="w-full h-full flex items-center pt-4">
+              <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if ageDistributionChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
@@ -675,7 +668,7 @@
                 {/if}
               </div>
 
-              <div slot="table" class="w-full h-full flex items-center pt-4">
+              <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if visitCountChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
                     <DataTable
@@ -720,8 +713,6 @@
                 </div>
                 {/if}
               </div>
-
-               <!-- 테이블 뷰 -->
               <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if stackedDrugsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">

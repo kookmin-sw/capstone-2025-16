@@ -119,7 +119,14 @@
             />
           </td>
           <td>{item.id}</td>
-          <td>{item.name}</td>
+          <td>
+            <a 
+                href={`/cohort/${item.id}`} 
+                class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+            >
+                {item.name}
+            </a>
+          </td>
           <td>{item.description}</td>
           <td>{item.author}</td>
           <td>{item.createdAt}</td>

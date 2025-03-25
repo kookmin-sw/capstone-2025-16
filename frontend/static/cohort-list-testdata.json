@@ -1,22 +1,30 @@
 [
   {
     "id": "100001",
-    "name": "Hypertension Cohort",
-    "description": "Patients diagnosed with essential hypertension.",
+    "name": "Diabetes Group",
+    "description": "Type 2 Diabetes patients from Seoul National University Hospital",
     "author": "Dr. Smith",
-    "createdAt": "2024/12/15 09:20",
-    "updatedAt": "2025/01/03 14:45"
+    "createdAt": "2024/01/15 09:00",
+    "updatedAt": "2024/03/20 15:30"
   },
   {
     "id": "100002",
-    "name": "Diabetes Mellitus Cohort",
-    "description": "Patients with type 2 diabetes mellitus receiving insulin therapy.",
+    "name": "Hypertension Group",
+    "description": "Hypertension patients from Seoul National University Hospital",
     "author": "Dr. Johnson",
-    "createdAt": "2024/11/10 11:05",
-    "updatedAt": "2024/12/20 16:30"
+    "createdAt": "2024/02/01 10:00",
+    "updatedAt": "2024/03/20 15:30"
   },
   {
     "id": "100003",
+    "name": "Respiratory Disease Group",
+    "description": "Respiratory disease patients from Seoul National University Hospital",
+    "author": "Dr. Lee",
+    "createdAt": "2024/02/15 11:00",
+    "updatedAt": "2024/03/20 15:30"
+  },
+  {
+    "id": "100004",
     "name": "Asthma Control Cohort",
     "description": "Patients aged 18-40 with controlled asthma.",
     "author": "Dr. Lee",
@@ -24,7 +32,7 @@
     "updatedAt": "2025/01/15 10:25"
   },
   {
-    "id": "100004",
+    "id": "100005",
     "name": "COVID-19 Recovered Cohort",
     "description": "Patients who have recovered from COVID-19 infection.",
     "author": "Dr. Williams",
@@ -32,7 +40,7 @@
     "updatedAt": "2025/01/30 09:15"
   },
   {
-    "id": "100005",
+    "id": "100006",
     "name": "Cardiac Surgery Follow-up",
     "description": "Patients undergoing follow-up after cardiac surgery.",
     "author": "Dr. Kim",
