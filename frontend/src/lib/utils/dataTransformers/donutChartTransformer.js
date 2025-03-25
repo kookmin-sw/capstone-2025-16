@@ -4,9 +4,7 @@
  * @returns {Object} DataTable 컴포넌트에서 사용할 수 있는 형식의 데이터
  */
 
-export function transformDonutChartToTableData(donutChartData) {
-    console.log('Input data:', donutChartData);
-    
+export function transformDonutChartToTableData(donutChartData) {    
     // 1. 모든 가능한 성별 카테고리 수집
     const categories = [...new Set(
         donutChartData.flatMap(cohort => Object.keys(cohort.data))

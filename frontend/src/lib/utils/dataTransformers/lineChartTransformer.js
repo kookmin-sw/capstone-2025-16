@@ -19,8 +19,6 @@ export function transformLineChartToTableData(lineChartData) {
         
         return row;
     });
-    console.log('headers',headers);
-    console.log('rows',rows);
     return {
         headers,
         rows

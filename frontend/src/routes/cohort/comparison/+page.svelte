@@ -116,7 +116,6 @@
 
     try {
       cohortData = loadCohortListData(cohortStats, cohortIds);
-      console.log('load cohortData', cohortData);
 
       if (selectedCohorts.length > 0) {
         // 코호트별 색상 매핑 초기화
@@ -217,7 +216,6 @@
             cohortName: cohortStats[cohortId].basicInfo.name,
             totalPatients: cohortStats[cohortId].totalPatients
         }));
-        console.log('loadGenderData result:', data);  // 디버깅용 로그 추가
         return data;
     } catch (error) {
       console.error('Error loading gender data:', error);
