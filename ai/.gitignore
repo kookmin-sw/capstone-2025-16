@@ -8,7 +8,6 @@ csv
 chaewon.py
 graph.py
 test.py
-pdf_to_cohort.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
