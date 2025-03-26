@@ -2,13 +2,28 @@
     import { slide } from 'svelte/transition';
     import analysisData from '$lib/data/singleCohortAnalysisTest.json';
     import ChartCard from '$lib/components/ChartCard.svelte';
+    import DataTable from '$lib/components/DataTable.svelte';
+    import { AGE_GROUPS } from '$lib/constants.js';
     import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
     import SingleDonutChartWrapper from '$lib/components/Charts/DonutChart/SingleDonutChartWrapper.svelte';
+    import { transformDonutChartToTableData } from '$lib/utils/dataTransformers/donutChartTransformer.js';
     import LineChart from '$lib/components/Charts/LineChart.svelte';
-    import { AGE_GROUPS } from '$lib/constants.js';
+    import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
 
     let isExpanded = false;
     let activeTab = 'default'; // 탭 활성화 상태 관리
+
+    let isTableView = {
+        genderRatio: false,
+        mortality: false,
+        visitTypeRatio: false,
+        firstOccurrenceAge: false,
+        visitCount: false,
+        topTenDrugs: false,
+        topTenConditions: false,
+        topTenProcedures: false,
+        topTenMeasurements: false
+    };
 
     function switchTab(tab) { // 탭을 바꿀 때 활성 탭 상태 변경 함수
         activeTab = tab;
@@ -62,24 +77,76 @@
     {#if activeTab === 'default'}
         <div class="w-full">
             <div class="grid grid-cols-2 gap-4">
-                <ChartCard title="Gender Ratio"
+                <ChartCard
+                    title="Gender Ratio"
                     description="The ratio of genders within the cohort."
-                    type='half'>
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.gender}
+                    on:toggleView={({ detail }) => isTableView.gender = detail}
+                >
                     <SingleDonutChartWrapper data={analysisData.statistics.gender} />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4">
+                        <DataTable data={transformDonutChartToTableData({
+                            cohortName: analysisData.basicInfo.name,
+                            data: analysisData.statistics.gender,
+                            totalPatients: analysisData.totalPatients
+                        })} 
+                        />
+                    </div>
                 </ChartCard>
-                <ChartCard title="Mortality"
+
+                <ChartCard
+                    title="Mortality"
                     description="The percentage of patients within the cohort who have died."
-                    type='half'>
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.mortality}
+                    on:toggleView={({ detail }) => isTableView.mortality = detail}
+                >
                     <SingleDonutChartWrapper data={analysisData.statistics.mortality} />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4">
+                        <DataTable
+                        data={transformDonutChartToTableData({
+                            cohortName: analysisData.basicInfo.name,
+                            data: analysisData.statistics.mortality,
+                            totalPatients: analysisData.totalPatients
+                        })}
+                        />
+                    </div>
                 </ChartCard>
-                <ChartCard title="Visit Type Ratio"
+
+                <ChartCard
+                    title="Visit Type Ratio"
                     description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
-                    type='half'>
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.visitType}
+                    on:toggleView={({ detail }) => isTableView.visitType = detail}
+                >
                     <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4">
+                        <DataTable
+                        data={transformDonutChartToTableData({
+                            cohortName: analysisData.basicInfo.name,
+                            data: analysisData.statistics.visitType,
+                            totalPatients: analysisData.totalPatients
+                        })}
+                        />
+                    </div>
                 </ChartCard>
-                <ChartCard title="Distribution of First Occurrence Age"
+
+                <ChartCard
+                    title="Distribution of First Occurrence Age"
                     description="The age distribution of patients at the time of their first medical visit during the cohort period."
-                    type='full'>
+                    type="full"
+                    hasTableView={true}
+                    isTableView={isTableView.age}
+                    on:toggleView={({ detail }) => isTableView.age = detail}
+                >
                     <LineChart
                         data={AGE_GROUPS.map(label => ({
                             label,
@@ -88,18 +155,48 @@
                         }))}
                         cohortColorMap={{ [analysisData.basicInfo.name]: "#3498db" }}
                     />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4">
+                        <DataTable
+                          data={transformLineChartToTableData(
+                            AGE_GROUPS.map(label => ({
+                              label,
+                              value: analysisData.statistics.age[label] ?? 0,
+                              series: analysisData.basicInfo.name
+                            }))
+                          )}
+                        />
+                    </div>
                 </ChartCard>
-                <ChartCard title="Distribution of Visit Count"
+
+                <ChartCard
+                    title="Distribution of Visit Count"
                     description="The distribution of the total number of medical visits made by patients during the cohort period."
-                    type='full'>
+                    type="full"
+                    hasTableView={true}
+                    isTableView={isTableView.visitCount}
+                    on:toggleView={({ detail }) => isTableView.visitCount = detail}
+                >
                     <LineChart
                         data={Object.entries(analysisData.statistics.visitCount).map(([count, value]) => ({
-                            label: count,
-                            value: value,
-                            series: analysisData.basicInfo.name
+                        label: count,
+                        value: value,
+                        series: analysisData.basicInfo.name
                         }))}
                         cohortColorMap={{ [analysisData.basicInfo.name]: '#3498db' }}
                     />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4">
+                        <DataTable
+                            data={transformLineChartToTableData(
+                                Object.entries(analysisData.statistics.visitCount).map(([count, value]) => ({
+                                label: count,
+                                value: value,
+                                series: analysisData.basicInfo.name
+                                }))
+                            )}
+                        />
+                    </div>
                 </ChartCard>
             </div>
         </div>
