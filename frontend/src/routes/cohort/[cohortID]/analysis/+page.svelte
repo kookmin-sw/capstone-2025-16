@@ -1,5 +1,4 @@
 <script>
-    import { slide } from 'svelte/transition';
     import analysisData from '$lib/data/singleCohortAnalysisTest.json';
     import ChartCard from '$lib/components/ChartCard.svelte';
     import DataTable from '$lib/components/DataTable.svelte';
