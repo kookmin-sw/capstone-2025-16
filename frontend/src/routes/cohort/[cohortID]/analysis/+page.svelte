@@ -4,6 +4,8 @@
     import ChartCard from '$lib/components/ChartCard.svelte';
     import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
     import SingleDonutChartWrapper from '$lib/components/Charts/DonutChart/SingleDonutChartWrapper.svelte';
+    import LineChart from '$lib/components/Charts/LineChart.svelte';
+    import { AGE_GROUPS } from '$lib/constants.js';
 
     let isExpanded = false;
     let activeTab = 'default'; // 탭 활성화 상태 관리
@@ -75,6 +77,30 @@
                     description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
                     type='half'>
                     <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
+                </ChartCard>
+                <ChartCard title="Distribution of First Occurrence Age"
+                    description="The age distribution of patients at the time of their first medical visit during the cohort period."
+                    type='full'>
+                    <LineChart
+                        data={AGE_GROUPS.map(label => ({
+                            label,
+                            value: analysisData.statistics.age[label] ?? 0,
+                            series: analysisData.basicInfo.name
+                        }))}
+                        cohortColorMap={{ [analysisData.basicInfo.name]: "#3498db" }}
+                    />
+                </ChartCard>
+                <ChartCard title="Distribution of Visit Count"
+                    description="The distribution of the total number of medical visits made by patients during the cohort period."
+                    type='full'>
+                    <LineChart
+                        data={Object.entries(analysisData.statistics.visitCount).map(([count, value]) => ({
+                            label: count,
+                            value: value,
+                            series: analysisData.basicInfo.name
+                        }))}
+                        cohortColorMap={{ [analysisData.basicInfo.name]: '#3498db' }}
+                    />
                 </ChartCard>
             </div>
         </div>
