@@ -4,21 +4,20 @@
  * @returns {Object} DataTable 컴포넌트에서 사용할 수 있는 형식의 데이터
  */
 
-export function transformDonutChartToTableData(donutChartData) {    
-    // 1. 모든 가능한 성별 카테고리 수집
+export function transformDonutChartToTableData(donutChartData) {
+    // 단일 객체일 경우 배열로 변환
+    const dataArray = Array.isArray(donutChartData) ? donutChartData : [donutChartData];
+
     const categories = [...new Set(
-        donutChartData.flatMap(cohort => Object.keys(cohort.data))
+        dataArray.flatMap(cohort => Object.keys(cohort.data))
     )];
-    
-    // 2. 헤더 생성 ["Category", "코호트1", "코호트2", ...]
-    const headers = ["Category", ...donutChartData.map(d => d.cohortName)];
-    
-    // 3. 각 성별 카테고리별로 행 데이터 생성
+
+    const headers = ["Category", ...dataArray.map(d => d.cohortName)];
+
     const rows = categories.map(category => {
         const row = { "Category": category };
-        
-        // 각 코호트의 데이터 추가
-        donutChartData.forEach(cohort => {
+
+        dataArray.forEach(cohort => {
             const value = cohort.data[category] || 0;
             const percent = ((value / cohort.totalPatients) * 100).toFixed(2);
             row[cohort.cohortName] = `${value.toLocaleString()} (${percent}%)`;
