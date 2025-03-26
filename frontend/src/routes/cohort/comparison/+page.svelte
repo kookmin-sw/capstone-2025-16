@@ -580,10 +580,10 @@
               </div>
             </div>
             <div slot="table" class="w-full h-full flex flex-col p-4">
-              {#if visitTypeChartData.length > 0}
+              {#if mortalityChartData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <DataTable
-                    data={transformDonutChartToTableData(visitTypeChartData)}
+                    data={transformDonutChartToTableData(mortalityChartData)}
                   />
               </div>
               {/if}
