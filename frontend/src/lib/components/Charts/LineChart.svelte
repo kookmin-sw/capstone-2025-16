@@ -12,6 +12,12 @@
 
     $: uniqueSeries = [...new Set(data.map(d => d.series))];
     $: visibleSeries = new Set(uniqueSeries);
+    $: showLegend = uniqueSeries.length > 1;
+    $: effectiveMargin = { ...margin };
+    $: if (!showLegend) {
+        effectiveMargin.right = 30;
+    }
+
 
     function handleResize(){
         if(chartContainer){
@@ -76,7 +82,7 @@
         const x = d3
             .scaleBand()
             .domain(data.map(d => d.label))
-            .range([margin.left, width - margin.right])
+            .range([effectiveMargin.left, width - effectiveMargin.right])
             .padding(0.1);
     
         const y = d3
@@ -90,7 +96,7 @@
         const yAxis = d3.axisLeft(y);
     
         svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .attr("transform", `translate(0,${height - effectiveMargin.bottom})`)
             .call(xAxis)
             .selectAll("text")
             .style("text-anchor", "end")
@@ -100,7 +106,7 @@
             .attr("stroke", d => cohortColorMap[d]); 
     
         svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
+            .attr("transform", `translate(${effectiveMargin.left},0)`)
             .call(yAxis);
   
         // 선 생성
@@ -158,6 +164,7 @@
       });
   
       // 범례 그리기
+      if(showLegend){
       const legend = svg.append("g")
           .attr("font-family", "sans-serif")
           .attr("font-size", 10)
@@ -194,7 +201,8 @@
           .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0.5)
           .style("cursor", "pointer")
           .on("click", (event, d) => toggleSeries(d[0])); // 텍스트 클릭으로도 토글 가능하게
-  
+      }
+      
       // 툴팁 설정
       const tooltip = d3
         .select("body")
