@@ -548,7 +548,7 @@
               on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
-              <GroupDonutChartWrapper chartsData={genderChartData} isGroup={true}/>
+              <GroupDonutChartWrapper chartsData={genderChartData}/>
               <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if genderChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
@@ -575,7 +575,7 @@
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if mortalityChartData && mortalityChartData.length > 0}
-                  <GroupDonutChartWrapper chartsData={mortalityChartData} isGroup={true}/>
+                  <GroupDonutChartWrapper chartsData={mortalityChartData}/>
                 {/if}
               </div>
             </div>
@@ -605,7 +605,7 @@
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if visitTypeChartData && visitTypeChartData.length > 0}
-                  <GroupDonutChartWrapper chartsData={visitTypeChartData} isGroup={true}/>
+                  <GroupDonutChartWrapper chartsData={visitTypeChartData}/>
                 {/if}
               </div>
             </div>
