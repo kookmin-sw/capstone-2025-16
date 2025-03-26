@@ -105,11 +105,11 @@
     }
 
     onMount(async () => {
-    if (browser) {
-        handleResize();
-        await tick();
-        drawChart();
-        window.addEventListener('resize', handleResize);
+        if (browser) {
+            handleResize();
+            await tick();
+            drawChart();
+            window.addEventListener('resize', handleResize);
         }
     });
 
