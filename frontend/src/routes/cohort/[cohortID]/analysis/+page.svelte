@@ -10,7 +10,6 @@
     import LineChart from '$lib/components/Charts/LineChart.svelte';
     import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
 
-    let isExpanded = false;
     let activeTab = 'default'; // 탭 활성화 상태 관리
 
     let isTableView = {
