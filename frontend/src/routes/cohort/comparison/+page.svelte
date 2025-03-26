@@ -11,9 +11,10 @@
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
   import LineChart from "$lib/components/Charts/LineChart.svelte";
-  import StackedBarChartHorizontal from "$lib/components/Charts/StackedBarChart_horizontal.svelte";
   import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
   import { transformDonutChartToTableData } from "$lib/utils/dataTransformers/donutChartTransformer.js";
+  import { transformTopTenData } from "$lib/components/Charts/StackedBarChart/utils/topTenChartTransformer.js";
+  import StackedBarChartWrapper from "$lib/components/Charts/StackedBarChart/StackedBarChartWrapper.svelte";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -53,6 +54,8 @@
   let topTenConditionViewType = 'combined';
   let topTenProcedureViewType = 'combined';
   let topTenMeasurementViewType = 'combined';
+
+  let cohortTotalCounts = {};
   
   let selectedCohortStates = {
     drugs: '',
@@ -74,6 +77,13 @@
     stackedMeasurementsData = prepareStackedDomainData('measurement');
     stackedProceduresData = prepareStackedDomainData('procedure');
   }
+
+  $: cohortTotalCounts = Object.fromEntries(
+    selectedCohorts.map(cohortId => [
+      cohortStats[cohortId].basicInfo.name,
+      cohortStats[cohortId].totalPatients
+    ])
+  );
 
   // DonutChart와 동일한 색상 매핑 사용
   const color = d3
@@ -149,7 +159,6 @@
               count
             }))
         }));
-
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -698,17 +707,14 @@
               <div class="w-full h-full flex flex-col p-4">
                 {#if stackedDrugsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartHorizontal
-                    data={stackedDrugsData}
-                    domainKey="drug"
-                    viewType={topTenDrugViewType}
-                    cohortColorMap={cohortColorMap}
-                    cohortTotalCounts = {Object.fromEntries(
-                      selectedCohorts.map(cohortId => [
-                        cohortStats[cohortId].basicInfo.name,
-                        cohortStats[cohortId].totalPatients
-                      ])
+                  <StackedBarChartWrapper
+                    data={transformTopTenData(
+                      stackedDrugsData,
+                      'drug',
+                      topTenDrugViewType
                     )}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts={cohortTotalCounts}
                   />
                 </div>
                 {/if}
@@ -716,17 +722,11 @@
               <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if stackedDrugsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <StackedBarChartHorizontal
-                      data={stackedDrugsData}
-                      domainKey="drug"
-                      viewType={topTenDrugViewType}
-                      cohortTotalCounts = {Object.fromEntries(
-                        selectedCohorts.map(cohortId => [
-                          cohortStats[cohortId].basicInfo.name,
-                          cohortStats[cohortId].totalPatients
-                        ])
-                      )}
-                      isTableView={true}
+                    <StackedBarChartWrapper
+                      data={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType)}
+                      cohortColorMap={cohortColorMap}
+                      cohortTotalCounts={cohortTotalCounts}
+                      isTableView={isTableView.topTenDrugs}
                     />
                   </div>
                 {/if}
@@ -754,18 +754,15 @@
               <div class = "w-full h-full flex flex-col p-2">
                 {#if stackedConditionsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <StackedBarChartHorizontal
-                      data={stackedConditionsData}
-                      domainKey="condition"
-                      viewType={topTenConditionViewType}
-                      cohortColorMap={cohortColorMap}
-                      cohortTotalCounts = {Object.fromEntries(
-                        selectedCohorts.map(cohortId => [
-                          cohortStats[cohortId].basicInfo.name,
-                          cohortStats[cohortId].totalPatients
-                        ])
-                      )}
-                    />
+                    <StackedBarChartWrapper
+                    data={transformTopTenData(
+                      stackedConditionsData,
+                      'condition',
+                      topTenConditionViewType
+                    )}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts={cohortTotalCounts}
+                  />
                   </div>
                 {/if}
               </div>
@@ -774,17 +771,11 @@
               <div slot="table" class="w-full h-full flex flex-col p-1">
                 {#if stackedConditionsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <StackedBarChartHorizontal
-                      data={stackedConditionsData}
-                      domainKey="condition"
-                      viewType={topTenConditionViewType}
-                      cohortTotalCounts = {Object.fromEntries(
-                        selectedCohorts.map(cohortId => [
-                          cohortStats[cohortId].basicInfo.name,
-                          cohortStats[cohortId].totalPatients
-                        ])
-                      )}
-                      isTableView={true}
+                    <StackedBarChartWrapper
+                      data={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType)}
+                      cohortColorMap={cohortColorMap}
+                      cohortTotalCounts={cohortTotalCounts}
+                      isTableView={isTableView.topTenConditions}
                     />
                   </div>
                 {/if}
@@ -810,17 +801,14 @@
             <div class = "w-full h-full flex flex-col p-2">
               {#if stackedProceduresData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartHorizontal
-                    data={stackedProceduresData}
-                    domainKey="procedure"
-                    viewType={topTenProcedureViewType}
-                    cohortColorMap={cohortColorMap}
-                    cohortTotalCounts = {Object.fromEntries(
-                      selectedCohorts.map(cohortId => [
-                        cohortStats[cohortId].basicInfo.name,
-                        cohortStats[cohortId].totalPatients
-                      ])
+                  <StackedBarChartWrapper
+                    data={transformTopTenData(
+                      stackedProceduresData,
+                      'procedure',
+                      topTenProcedureViewType
                     )}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts={cohortTotalCounts}
                   />
                 </div>
               {/if}
@@ -830,18 +818,12 @@
             <div slot="table" class="w-full h-full flex flex-col p-1">
               {#if stackedProceduresData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartHorizontal
-                    data={stackedProceduresData}
-                    domainKey="procedure"
-                    viewType={topTenProcedureViewType}
-                    cohortTotalCounts = {Object.fromEntries(
-                      selectedCohorts.map(cohortId => [
-                        cohortStats[cohortId].basicInfo.name,
-                        cohortStats[cohortId].totalPatients
-                      ])
-                    )}
-                    isTableView={true}
-                  />
+                  <StackedBarChartWrapper
+                      data={transformTopTenData(stackedProceduresData, 'procedure', topTenProcedureViewType)}
+                      cohortColorMap={cohortColorMap}
+                      cohortTotalCounts={cohortTotalCounts}
+                      isTableView={isTableView.topTenProcedures}
+                    />
                 </div>
               {/if}
             </div>
@@ -866,17 +848,14 @@
             <div class = "w-full h-full flex flex-col p-2">
               {#if stackedMeasurementsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartHorizontal
-                    data={stackedMeasurementsData}
-                    domainKey="measurement"
-                    viewType={topTenMeasurementViewType}
-                    cohortColorMap={cohortColorMap}
-                    cohortTotalCounts = {Object.fromEntries(
-                      selectedCohorts.map(cohortId => [
-                        cohortStats[cohortId].basicInfo.name,
-                        cohortStats[cohortId].totalPatients
-                      ])
+                  <StackedBarChartWrapper
+                    data={transformTopTenData(
+                      stackedMeasurementsData,
+                      'measurement',
+                      topTenMeasurementViewType
                     )}
+                    cohortColorMap={cohortColorMap}
+                    cohortTotalCounts={cohortTotalCounts}
                   />
                 </div>
               {/if}
@@ -886,18 +865,12 @@
             <div slot="table" class="w-full h-full flex flex-col p-1">
               {#if stackedMeasurementsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartHorizontal
-                    data={stackedMeasurementsData}
-                    domainKey="measurement"
-                    viewType={topTenMeasurementViewType}
-                    cohortTotalCounts = {Object.fromEntries(
-                      selectedCohorts.map(cohortId => [
-                        cohortStats[cohortId].basicInfo.name,
-                        cohortStats[cohortId].totalPatients
-                      ])
-                    )}
-                    isTableView={true}
-                  />
+                  <StackedBarChartWrapper
+                      data={transformTopTenData(stackedMeasurementsData, 'measurement', topTenMeasurementViewType)}
+                      cohortColorMap={cohortColorMap}
+                      cohortTotalCounts={cohortTotalCounts}
+                      isTableView={isTableView.topTenMeasurements}
+                    />
                 </div>
               {/if}
             </div>
