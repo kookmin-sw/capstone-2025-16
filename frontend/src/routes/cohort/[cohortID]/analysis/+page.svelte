@@ -51,7 +51,6 @@
         </div>
     </div>
 
-    <h1 class="text-2xl font-bold mb-4">Charts</h1>
     <div class="w-full mb-5 border-b border-gray-300">
         <div class="flex">
             <button class="tab {activeTab === 'default' ? 'active' : ''}" on:click={() => switchTab('default')}>Default</button>
