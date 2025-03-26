@@ -376,35 +376,8 @@ def clean_term(term):
     return re.sub(r"\s*\(.*?\)", "", term).strip() 
 
 # 3. ClickHouse에서 `concept_id` 조회
-def get_omop_concept_id(term: str, domain_id: str, criteria_type: str = None, value_as_number: dict = None) -> list:
-    """
-    ClickHouse에서 concept_id 조회
-    
-    Args:
-        term (str): 검색할 키워드
-        domain_id (str): 도메인 ID
-        criteria_type (str): 기준 타입 (예: "Measurement")
-        value_as_number (dict): 수치 조건 (예: {"Value": 20, "Op": "gt"})
-    """
+def get_omop_concept_id(term: str, domain_id: str) -> list:
     cleaned_term = clean_term(term).replace('%', '%%')
-    
-    # Measurement 타입이고 나이 관련 검색인 경우
-    if criteria_type == "Measurement" and term.lower() == "age":
-        query = """
-        SELECT concept_id, concept_name 
-        FROM concept 
-        WHERE concept_name ILIKE '%age%'
-        AND domain_id = 'Measurement'
-        AND concept_name NOT ILIKE '%stage%'  -- 'stage'가 포함된 결과 제외
-        AND concept_name NOT ILIKE '%package%'
-        AND invalid_reason IS NULL
-        LIMIT 1
-        """
-        results = clickhouse_client.execute(query)
-        
-        if results:
-            # 수치 조건 정보를 결과에 포함
-            return [(results[0][0], results[0][1], value_as_number)]
     
     # 일반적인 검색
     query = """
@@ -415,9 +388,9 @@ def get_omop_concept_id(term: str, domain_id: str, criteria_type: str = None, va
     AND invalid_reason IS NULL
     LIMIT 3
     """
-    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term} %', 'domain_id': domain_id})
+    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id})
     
-    return [(r[0], r[1], value_as_number) if value_as_number else (r[0], r[1]) for r in results]
+    return [(r[0], r[1]) for r in results]
 
 # 4. 검색어 변경하여 재검색
 def refine_search_query(term) -> str:
@@ -532,12 +505,12 @@ def create_omop_json(cohort_json: dict) -> dict:
                 for concept_id, db_name in criteria["_db_results"]:
                     result["ConceptSets"].append({
                         "id": concept_id,
-                        "name": db_name,
+                        "name": db_name,  # DB에서 가져온 정확한 이름
                         "expression": {
                             "items": [{
                                 "concept": {
                                     "CONCEPT_ID": concept_id,
-                                    "CONCEPT_NAME": db_name,
+                                    "CONCEPT_NAME": db_name,  # DB 이름 사용
                                     "DOMAIN_ID": criteria["Domain_id"]
                                 }
                             }]
@@ -612,7 +585,7 @@ def remove_duplicates_from_json(cohort_json: dict) -> dict:
     return cohort_json
 
 def main():
-    pdf_path = "pdf/A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf"
+    pdf_path = "pdf/Establishment of ICU Mortality Risk Prediction Models with Machine Learning Algorithm MIMIC .pdf"
     
     # 1. PDF에서 텍스트 추출
     extracted_text = extract_text_from_pdf(pdf_path)
