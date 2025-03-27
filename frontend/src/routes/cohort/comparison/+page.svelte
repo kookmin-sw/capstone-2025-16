@@ -10,7 +10,7 @@
   import * as d3 from 'd3';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
-  import LineChart from "$lib/components/Charts/LineChart/LineChart.svelte";
+  import LineChart from "$lib/components/Charts/LineChart.svelte";
   import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
   import { transformDonutChartToTableData } from "$lib/utils/dataTransformers/donutChartTransformer.js";
   import { transformTopTenData } from "$lib/components/Charts/StackedBarChart/utils/topTenChartTransformer.js";
