@@ -105,7 +105,6 @@
         <th>Author</th>
         <th>Created At</th>
         <th>Updated At</th>
-        
       </tr>
     </thead>
     <tbody>
@@ -131,7 +130,6 @@
           <td>{item.author}</td>
           <td>{item.createdAt}</td>
           <td>{item.updatedAt}</td>
-          
         </tr>
       {/each}
     </tbody>
@@ -147,7 +145,6 @@
   th,
   td {
     padding: 10px;
-    text-align: left;
     border: 1px solid #ccc;
   }
   td input[type="checkbox"] {
@@ -159,8 +156,7 @@
     background-color: #f4f4f4;
   }
 
-  td:last-child {
+  td {
     text-align: center;
   }
 </style>
-
