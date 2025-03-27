@@ -3,3 +3,5 @@ export const AGE_GROUPS = [
     "50-59", "60-69", "70-79", "80-89", "90-99",
     "100-109", "110-119", "120+"
   ];
+
+export const SINGLE_DATA_COLOR = '#3498db'

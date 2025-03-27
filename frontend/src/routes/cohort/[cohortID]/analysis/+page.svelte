@@ -2,11 +2,11 @@
     import analysisData from '$lib/data/singleCohortAnalysisTest.json';
     import ChartCard from '$lib/components/ChartCard.svelte';
     import DataTable from '$lib/components/DataTable.svelte';
-    import { AGE_GROUPS } from '$lib/constants.js';
+    import { AGE_GROUPS, SINGLE_DATA_COLOR } from '$lib/constants.js';
     import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
     import SingleDonutChartWrapper from '$lib/components/Charts/DonutChart/SingleDonutChartWrapper.svelte';
     import { transformDonutChartToTableData } from '$lib/utils/dataTransformers/donutChartTransformer.js';
-    import LineChart from '$lib/components/Charts/LineChart.svelte';
+    import LineChart from '$lib/components/Charts/LineChart/LineChart.svelte';
     import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
 
     let activeTab = 'default'; // 탭 활성화 상태 관리
@@ -151,7 +151,7 @@
                             value: analysisData.statistics.age[label] ?? 0,
                             series: analysisData.basicInfo.name
                         }))}
-                        cohortColorMap={{ [analysisData.basicInfo.name]: "#3498db" }}
+                        cohortColorMap={{ [analysisData.basicInfo.name]: SINGLE_DATA_COLOR }}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
@@ -181,7 +181,7 @@
                         value: value,
                         series: analysisData.basicInfo.name
                         }))}
-                        cohortColorMap={{ [analysisData.basicInfo.name]: '#3498db' }}
+                        cohortColorMap={{ [analysisData.basicInfo.name]: SINGLE_DATA_COLOR }}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
