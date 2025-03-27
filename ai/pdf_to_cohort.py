@@ -440,10 +440,8 @@ def get_concept_ids(cohort_json: dict) -> dict:
     
     return cohort_json
 
+# concept_id가 포함된 cohort_json을 최종 OMOP CDM JSON 형식으로 변환
 def create_omop_json(cohort_json: dict) -> dict:
-    """
-    concept_id가 포함된 cohort_json을 최종 OMOP CDM JSON 형식으로 변환
-    """
     result = {
         "PrimaryCriteria": {
             "CriteriaList": [],
@@ -494,55 +492,55 @@ def create_omop_json(cohort_json: dict) -> dict:
         
         return result_criteria
     
+    # ConceptSet 추가 함수
+    def add_concept_set(concept_id: int, db_name: str, domain_id: str):
+        result["ConceptSets"].append({
+            "id": concept_id,
+            "name": db_name,
+            "expression": {
+                "items": [{
+                    "concept": {
+                        "CONCEPT_ID": concept_id,
+                        "CONCEPT_NAME": db_name,
+                        "DOMAIN_ID": domain_id
+                    }
+                }]
+            }
+        })
+    
     # PrimaryCriteria 처리
     if "PrimaryCriteria" in cohort_json and "CriteriaList" in cohort_json["PrimaryCriteria"]:
         for criteria in cohort_json["PrimaryCriteria"]["CriteriaList"]:
-            # CodesetId 유무와 관계없이 모든 criteria 포함
+            # 모든 criteria 포함
             result["PrimaryCriteria"]["CriteriaList"].append(process_criteria(criteria))
             
-            # concept_id를 찾은 경우에만 ConceptSets에 추가
+            # ConceptSets 추가
             if "_db_results" in criteria:
                 for concept_id, db_name in criteria["_db_results"]:
-                    result["ConceptSets"].append({
-                        "id": concept_id,
-                        "name": db_name,  # DB에서 가져온 정확한 이름
-                        "expression": {
-                            "items": [{
-                                "concept": {
-                                    "CONCEPT_ID": concept_id,
-                                    "CONCEPT_NAME": db_name,  # DB 이름 사용
-                                    "DOMAIN_ID": criteria["Domain_id"]
-                                }
-                            }]
-                        }
-                    })
+                    add_concept_set(concept_id, db_name, criteria["Domain_id"])
     
     # AdditionalCriteria 처리
     if "AdditionalCriteria" in cohort_json and "Groups" in cohort_json["AdditionalCriteria"]:
         for group in cohort_json["AdditionalCriteria"]["Groups"]:
-            if "CriteriaList" in group:
-                for criteria in group["CriteriaList"]:
-                    if "Criteria" in criteria:
-                        # NONE 그룹은 제외 기준, 나머지는 포함 기준
-                        target_group = result["AdditionalCriteria"]["Groups"][1] if group["Type"] == "NONE" else result["AdditionalCriteria"]["Groups"][0]
-                        target_group["CriteriaList"].append(process_criteria(criteria["Criteria"]))
-                        
-                        # concept_id를 찾은 경우에만 ConceptSets에 추가
-                        if "_db_results" in criteria["Criteria"]:
-                            for concept_id, db_name in criteria["Criteria"]["_db_results"]:
-                                result["ConceptSets"].append({
-                                    "id": concept_id,
-                                    "name": db_name,
-                                    "expression": {
-                                        "items": [{
-                                            "concept": {
-                                                "CONCEPT_ID": concept_id,
-                                                "CONCEPT_NAME": db_name,
-                                                "DOMAIN_ID": criteria["Criteria"]["Domain_id"]
-                                            }
-                                        }]
-                                    }
-                                })
+            if "CriteriaList" not in group:
+                continue
+                
+            # 포함/제외 그룹 결정
+            is_exclusion = group["Type"] == "NONE"
+            target_group = result["AdditionalCriteria"]["Groups"][1] if is_exclusion else result["AdditionalCriteria"]["Groups"][0]
+            
+            # Criteria 처리
+            for criteria in group["CriteriaList"]:
+                if "Criteria" not in criteria:
+                    continue
+                    
+                # Criteria 추가
+                target_group["CriteriaList"].append(process_criteria(criteria["Criteria"]))
+                
+                # ConceptSets 추가
+                if "_db_results" in criteria["Criteria"]:
+                    for concept_id, db_name in criteria["Criteria"]["_db_results"]:
+                        add_concept_set(concept_id, db_name, criteria["Criteria"]["Domain_id"])
     
     return result
 
