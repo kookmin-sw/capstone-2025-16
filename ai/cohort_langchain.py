@@ -1,5 +1,4 @@
 import cohort_json_schema as cohort_json_schema
-
 import fitz  # pymupdf
 import os
 from clickhouse_driver import Client
@@ -17,7 +16,7 @@ clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
 clickhouse_user = os.environ.get('CLICKHOUSE_USER')
 clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
 
-# 1. PDF 텍스트 추출
+# 1. PDF 텍스트 추출 함수
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
     text = ""
@@ -28,11 +27,11 @@ def extract_text_from_pdf(pdf_path):
 # 2. ClickHouse 검색 함수
 def search_concept_ids(keywords):
     clickhouse = Client(
-    host=clickhouse_host,    # ClickHouse 서버 주소
-    database=clickhouse_database,
-    user=clickhouse_user, 
-    password=clickhouse_password
-)
+        host=clickhouse_host,
+        database=clickhouse_database,
+        user=clickhouse_user, 
+        password=clickhouse_password
+    )
     concept_list = []
 
     for keyword in keywords:
@@ -42,7 +41,7 @@ def search_concept_ids(keywords):
         WHERE lower(concept_name) LIKE lower(%({keyword})s)
         LIMIT 10
         """
-        res = clickhouse.execute(query, {'keyword': f'%{keyword.strip().replace('%', '%%')}%'})
+        res = clickhouse.execute(query, {'keyword': f'%{keyword.strip().replace("%", "%%")}%'})
         if res:
             concept_list.append({
                 "keyword": keyword,
@@ -61,10 +60,32 @@ def search_concept_ids(keywords):
 
 # 3. LLM 설정 (lambda labs 기반 llama3.1 사용)
 llm = ChatOpenAI(
-    openai_api_key = openai_api_key,
-    openai_api_base = openai_api_base,
+    openai_api_key=openai_api_key,
+    openai_api_base=openai_api_base,
     model_name=model_name
 )
+
+# 0. [추가] Atlas 기반 코호트 관련성 필터 체인
+# PDF 전체 텍스트에서 측정 가능하고 관찰 가능한 eligibility criteria(아틀라스 기반 코호트 구성에 필요한 내용)만 선별
+prompt_atlas_filter = PromptTemplate(
+    input_variables=["pdf_text"],
+    template="""
+Role: Medical Cohort Extraction Expert
+
+Instructions:
+Review the clinical trial research paper excerpt provided below.
+Extract and return only the sections that contain measurable and observable eligibility criteria suitable for Atlas-based cohort composition (in OMOP CDM format).  
+Omit any sections that do not provide such criteria.  
+If no relevant criteria are found, return an empty string.
+
+Text:
+{pdf_text}
+
+Output:
+Return only the relevant sections that include observable, measurable eligibility criteria.
+"""
+)
+atlas_filter_chain = LLMChain(llm=llm, prompt=prompt_atlas_filter)
 
 # 4. 프롬프트 + 체인 구성
 
@@ -165,22 +186,33 @@ json_chain = LLMChain(llm=llm, prompt=prompt_json)
 
 # 5. 실행 함수 (한 번에 실행)
 def run_pipeline(pdf_path):
+    # PDF에서 전체 텍스트 추출
     pdf_text = extract_text_from_pdf(pdf_path)
 
-    criteria_text = criteria_chain.invoke({"pdf_text": pdf_text})
+    # [추가] 아틀라스 기반 코호트 구성이 가능한 논문 내용만 선별
+    filtered_text = atlas_filter_chain.invoke({"pdf_text": pdf_text})
+    if not filtered_text.strip():
+        print("해당 논문은 아틀라스 기반 코호트 구성이 불가능합니다.")
+        return None
+
+    # 필터링된 텍스트를 기준으로 조건 추출
+    criteria_text = criteria_chain.invoke({"pdf_text": filtered_text})
     print("\n[조건 추출 결과]")
     print(criteria_text)
 
+    # 조건 텍스트를 기준으로 OMOP 키워드 추출
     keyword_text = keyword_chain.invoke({"criteria_text": criteria_text})
     print("\n[키워드 추출 결과]")
     print(keyword_text)
     keywords = [k.strip() for k in keyword_text.split(",")]
 
+    # ClickHouse에서 해당 키워드에 해당하는 concept_id 검색
     concept_list = search_concept_ids(keywords)
     print("\n[ClickHouse 검색 결과]")
     for c in concept_list:
         print(c)
 
+    # 최종 OMOP CDM JSON 생성
     json_result = json_chain.invoke({
         "criteria": criteria_text,
         "concept_list": concept_list,
@@ -190,7 +222,6 @@ def run_pipeline(pdf_path):
     print("\n[최종 JSON 결과]")
     print(json_result)
     return json_result
-
 
 if __name__ == "__main__":
     run_pipeline("pdf/1-s2.0-S0140673618310808-main.pdf")
