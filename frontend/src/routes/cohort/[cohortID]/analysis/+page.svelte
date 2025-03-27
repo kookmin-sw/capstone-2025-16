@@ -8,6 +8,9 @@
     import { transformDonutChartToTableData } from '$lib/utils/dataTransformers/donutChartTransformer.js';
     import LineChart from '$lib/components/Charts/LineChart/LineChart.svelte';
     import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
+    import BarChart from "$lib/components/Charts/BarChart/BarChart.svelte"
+    import BarChartWrapper from "$lib/components/Charts/BarChart/BarChartWrapper.svelte"
+    import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
 
     let activeTab = 'default'; // 탭 활성화 상태 관리
 
@@ -196,6 +199,106 @@
                         />
                     </div>
                 </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Drugs"
+                    description= "The list of the top 10 most frequently prescribed medications for patients in the cohort."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenDrugs}
+                    on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
+                >
+                    <BarChartWrapper
+                    data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                    domainKey="drug"
+                    cohortName={analysisData.basicInfo.name}
+                    cohortTotalCount={analysisData.totalPatients}
+                    />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <BarChartTableView
+                          data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                          domainKey="drug"
+                          cohortName={analysisData.basicInfo.name}
+                          cohortTotalCount={analysisData.totalPatients}
+                        />
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Conditions"
+                    description="The list of the top 10 most frequently diagnosed medical conditions among patients in the cohort."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenConditions}
+                    on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
+                >
+                    <BarChartWrapper
+                    data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                    domainKey="condition"
+                    cohortName={analysisData.basicInfo.name}
+                    cohortTotalCount={analysisData.totalPatients}
+                    />
+                
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <BarChartTableView
+                        data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                        domainKey="condition"
+                        cohortName={analysisData.basicInfo.name}
+                        cohortTotalCount={analysisData.totalPatients}
+                        />
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Procedures"
+                    description="The list of the top 10 most frequently performed procedures and medical tests on patients in the cohort."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenProcedures}
+                    on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
+                >
+                    <BarChartWrapper
+                        data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                        domainKey="procedure"
+                        cohortName={analysisData.basicInfo.name}
+                        cohortTotalCount={analysisData.totalPatients}
+                    />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <BarChartTableView
+                        data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                        domainKey="procedure"
+                        cohortName={analysisData.basicInfo.name}
+                        cohortTotalCount={analysisData.totalPatients}
+                        />
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Measurements"
+                    description="The list of the top 10 most frequently recorded clinical measurements within the cohort."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenMeasurements}
+                    on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
+                >
+                    <BarChartWrapper
+                        data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                        domainKey="measurement"
+                        cohortName={analysisData.basicInfo.name}
+                        cohortTotalCount={analysisData.totalPatients}
+                    />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <BarChartTableView
+                        data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                        domainKey="measurement"
+                        cohortName={analysisData.basicInfo.name}
+                        cohortTotalCount={analysisData.totalPatients}
+                        />
+                    </div>
+                </ChartCard>
             </div>
         </div>
     {/if}
@@ -223,5 +326,4 @@
       border-bottom: 2px solid #000;
       font-weight: 500;
     }
-  </style>
-  
+</style>
