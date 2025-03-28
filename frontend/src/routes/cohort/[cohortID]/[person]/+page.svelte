@@ -13,6 +13,7 @@
 
     let timelineContainer;
     let showModal = false;
+    let isStatisticsView = true;
     let selectedTables = new Set();
     export let data;
     
@@ -277,25 +278,56 @@
             <span class="divider">|</span>
             <span class="info"><strong>Date : </strong> {personTable.year_of_birth}.{personTable.month_of_birth}.{personTable.day_of_birth}</span>
         </div>
-        <button 
-            class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md 
-                    hover:bg-blue-700 transition-all duration-200 ease-in-out"
-            on:click={() => showModal = true}>
-        Select Tables
-        </button>
+        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
+            <button 
+                class="px-2 py-0.5 text-xs rounded-full transition-colors
+                    {!isStatisticsView ? 
+                        'bg-white text-blue-600 shadow-sm' : 
+                        'text-gray-600 hover:text-gray-900'}"
+                on:click={() => isStatisticsView = false}>
+                Statistics
+            </button>
+            <button 
+                class="px-2 py-0.5 text-xs rounded-full transition-colors
+                    {isStatisticsView ? 
+                        'bg-white text-blue-600 shadow-sm' : 
+                        'text-gray-600 hover:text-gray-900'}"
+                on:click={() => isStatisticsView = true}>
+                Viewer
+            </button>
+        </div>
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
     <div class="w-full h-[200px]" bind:this={timelineContainer}></div>
 </header>
-<div class="pt-8 pb-[16px]">
-    {#if tableProps?.cdm_info}
-        <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
-    {/if}
-    {#each Array.from(selectedTables) as tableId}
-        {#if tableComponents[tableId]}
-        <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
+<div class="pt-8 pb-[16px] flex flex-col">
+    {#if !isStatisticsView}
+        <button 
+            class="ml-auto mb-8 w-fit px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out"
+                on:click={() => {
+                    if(Object.keys(tableProps).length === 0){
+                        notify();
+                    }
+                    else{
+                        showModal = true
+                    }
+            }}>
+            Select Tables
+        </button>
+        
+
+
+
+        {#if tableProps?.cdm_info}
+            <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
+            <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
         {/if}
-    {/each}
+        {#each Array.from(selectedTables) as tableId}
+            {#if tableComponents[tableId]}
+                <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
+            {/if}
+        {/each}
+    {/if}
 </div>
 
 <Modal bind:isOpen={showModal} bind:selectedTables/>
