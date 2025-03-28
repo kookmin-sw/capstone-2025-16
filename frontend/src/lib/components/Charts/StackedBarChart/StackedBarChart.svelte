@@ -8,7 +8,6 @@
     export let cohortColorMap = {};
     export let orderedCohorts = [];
     export let domainKey = '';
-
     export let onMouseOver = () => {};
     export let onMouseOut = () => {};
 

@@ -2,7 +2,6 @@
     import BarChart from './BarChart.svelte';
   
     export let data = [];
-    export let domainKey = 'drug';
     export let cohortName = '';
     export let cohortTotalCount = 0;
   
@@ -51,7 +50,6 @@
     <div class="relative w-full h-full" bind:this={chartContainer}>
         <BarChart
             data={data}
-            domainKey={domainKey}
             onMouseOver={handleMouseOver}
             onMouseOut={handleMouseOut}
         />

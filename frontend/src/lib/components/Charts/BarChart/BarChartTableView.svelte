@@ -1,14 +1,15 @@
 <script>
   import DataTable from "$lib/components/DataTable.svelte";
+  import { SINGLE_DATA_COLOR } from '$lib/constants.js';
   
   export let data = [];
-  export let domainKey = 'drug';
+  export let domainKey;
   export let cohortName = '';
   export let cohortTotalCount = 0;
 
   const headers = [
     "No.",
-    domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1),
+    domainKey.charAt(0).toUpperCase() + domainKey.slice(1),
     cohortName
   ];
 
@@ -26,6 +27,4 @@
 
 <DataTable
   data={{ headers, rows }}
-  colorMap={{ [cohortName]: "#3B82F6" }}
-  class="w-full h-full overflow-auto"
 />

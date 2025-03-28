@@ -547,7 +547,7 @@
               on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
-              <GroupDonutChartWrapper chartsData={genderChartData}/>
+              <GroupDonutChartWrapper data={genderChartData}/>
               <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if genderChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
@@ -574,7 +574,7 @@
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if mortalityChartData && mortalityChartData.length > 0}
-                  <GroupDonutChartWrapper chartsData={mortalityChartData}/>
+                  <GroupDonutChartWrapper data={mortalityChartData}/>
                 {/if}
               </div>
             </div>
@@ -604,7 +604,7 @@
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if visitTypeChartData && visitTypeChartData.length > 0}
-                  <GroupDonutChartWrapper chartsData={visitTypeChartData}/>
+                  <GroupDonutChartWrapper data={visitTypeChartData}/>
                 {/if}
               </div>
             </div>
@@ -726,7 +726,6 @@
                       domainKey="drug"
                       orderedCohorts={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType).orderedCohorts}
                       cohortTotalCounts={cohortTotalCounts}
-                      cohortColorMap={cohortColorMap}
                     />
                   {/if}
                 </div>
@@ -774,7 +773,6 @@
                       domainKey="condition"
                       orderedCohorts={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType).orderedCohorts}
                       cohortTotalCounts={cohortTotalCounts}
-                      cohortColorMap={cohortColorMap}
                     />
                   </div>
                 {/if}
@@ -822,7 +820,6 @@
                     domainKey="procedure"
                     orderedCohorts={transformTopTenData(stackedProceduresData, 'procedure', topTenProcedureViewType).orderedCohorts}
                     cohortTotalCounts={cohortTotalCounts}
-                    cohortColorMap={cohortColorMap}
                   />
                 </div>
               {/if}
@@ -870,7 +867,6 @@
                     domainKey="measurement"
                     orderedCohorts={transformTopTenData(stackedMeasurementsData, 'measurement', topTenMeasurementViewType).orderedCohorts}
                     cohortTotalCounts={cohortTotalCounts}
-                    cohortColorMap={cohortColorMap}
                   />
                 </div>
               {/if}

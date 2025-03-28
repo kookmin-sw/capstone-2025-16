@@ -2,17 +2,17 @@
     import DataTable from "$lib/components/DataTable.svelte";
 
     export let data = [];
-    export let domainKey = 'drug';
+    export let domainKey;
     export let orderedCohorts = [];
     export let cohortTotalCounts = {};
-    export let cohortColorMap = {};
-
+    
     const headers = [
         "No.",
-        domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1),
+        domainKey.charAt(0).toUpperCase() + domainKey.slice(1),
         ...orderedCohorts
     ];
-
+    
+    console.log(headers);
     const rows = data.map((item, index) => {
         const row = {
         "No.": index + 1,
@@ -33,6 +33,4 @@
 
 <DataTable
     data={{ headers, rows }}
-    colorMap={cohortColorMap}
-    class="w-full h-full overflow-auto"
 />

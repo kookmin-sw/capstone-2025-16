@@ -3,7 +3,7 @@
     import DonutChart from './DonutChart.svelte';
     import Legend from './Legend.svelte';
     
-    export let chartsData = [];
+    export let data = [];
 
     let hoveredLabel = null;
 
@@ -19,7 +19,7 @@
           "#FF6B6B", "#4ECDC4", "#FFB236", "#95A5A6", "#BDC3C7"
         ]);
     
-    $: processedData = chartsData?.map(cohort => ({
+    $: processedData = data?.map(cohort => ({
         name: cohort.cohortName,
         data: cohort.data
     })) || [];

@@ -210,17 +210,16 @@
                 >
                     <BarChartWrapper
                     data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
-                    domainKey="drug"
                     cohortName={analysisData.basicInfo.name}
                     cohortTotalCount={analysisData.totalPatients}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                          data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
-                          domainKey="drug"
-                          cohortName={analysisData.basicInfo.name}
-                          cohortTotalCount={analysisData.totalPatients}
+                            data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                            domainKey="drug"
+                            cohortName={analysisData.basicInfo.name}
+                            cohortTotalCount={analysisData.totalPatients}
                         />
                     </div>
                 </ChartCard>
@@ -235,17 +234,16 @@
                 >
                     <BarChartWrapper
                     data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
-                    domainKey="condition"
                     cohortName={analysisData.basicInfo.name}
                     cohortTotalCount={analysisData.totalPatients}
                     />
                 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                        data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
-                        domainKey="condition"
-                        cohortName={analysisData.basicInfo.name}
-                        cohortTotalCount={analysisData.totalPatients}
+                            data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                            domainKey="condition"
+                            cohortName={analysisData.basicInfo.name}
+                            cohortTotalCount={analysisData.totalPatients}
                         />
                     </div>
                 </ChartCard>
@@ -260,17 +258,16 @@
                 >
                     <BarChartWrapper
                         data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
-                        domainKey="procedure"
                         cohortName={analysisData.basicInfo.name}
                         cohortTotalCount={analysisData.totalPatients}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                        data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
-                        domainKey="procedure"
-                        cohortName={analysisData.basicInfo.name}
-                        cohortTotalCount={analysisData.totalPatients}
+                            data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                            domainKey="procedure"
+                            cohortName={analysisData.basicInfo.name}
+                            cohortTotalCount={analysisData.totalPatients}
                         />
                     </div>
                 </ChartCard>
@@ -285,17 +282,16 @@
                 >
                     <BarChartWrapper
                         data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
-                        domainKey="measurement"
                         cohortName={analysisData.basicInfo.name}
                         cohortTotalCount={analysisData.totalPatients}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                        data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
-                        domainKey="measurement"
-                        cohortName={analysisData.basicInfo.name}
-                        cohortTotalCount={analysisData.totalPatients}
+                            data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                            domainKey="measurement"
+                            cohortName={analysisData.basicInfo.name}
+                            cohortTotalCount={analysisData.totalPatients}
                         />
                     </div>
                 </ChartCard>

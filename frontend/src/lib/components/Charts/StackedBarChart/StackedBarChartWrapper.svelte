@@ -1,6 +1,5 @@
 <script>
   import StackedBarChart from './StackedBarChart.svelte';
-  import DataTable from '$lib/components/DataTable.svelte';
   export let data = [];
   export let cohortColorMap = {};
   export let cohortTotalCounts = {};
