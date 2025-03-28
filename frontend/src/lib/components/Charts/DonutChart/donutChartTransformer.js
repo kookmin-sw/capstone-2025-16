@@ -12,15 +12,24 @@ export function transformDonutChartToTableData(donutChartData) {
         dataArray.flatMap(cohort => Object.keys(cohort.data))
     )];
 
-    const headers = ["Category", ...dataArray.map(d => d.cohortName)];
+    const headers = ["Category", ...dataArray.map(d => d.cohortName || "Value")];
 
     const rows = categories.map(category => {
         const row = { "Category": category };
 
         dataArray.forEach(cohort => {
-            const value = cohort.data[category] || 0;
-            const percent = ((value / cohort.totalPatients) * 100).toFixed(2);
-            row[cohort.cohortName] = `${value.toLocaleString()} (${percent}%)`;
+            if (cohort.cohortName) {
+                // 코호트가 있는 경우 기존 로직대로 처리
+                const value = cohort.data[category] || 0;
+                const percent = ((value / cohort.totalPatients) * 100).toFixed(2);
+                row[cohort.cohortName] = `${value.toLocaleString()} (${percent}%)`;
+            } else {
+                // 단일 환자의 경우 모든 데이터 합산
+                const totalValue = Object.values(cohort.data).reduce((sum, val) => sum + val, 0);
+                const value = cohort.data[category] || 0;
+                const percent = ((value / totalValue) * 100).toFixed(2);
+                row["Value"] = `${value.toLocaleString()} (${percent}%)`;
+            }
         });
         
         return row;

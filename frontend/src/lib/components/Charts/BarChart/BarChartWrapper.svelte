@@ -14,7 +14,8 @@
   
     function handleMouseOver(event, d) {
       const value = d.count;
-      const percentage = ((value / cohortTotalCount) * 100).toFixed(2);
+      const totalCount = cohortTotalCount || data.reduce((sum, item) => sum + +item.count, 0);
+      const percentage = ((value / totalCount) * 100).toFixed(2);
       const rect = event.target.getBoundingClientRect();
       const containerRect = chartContainer.getBoundingClientRect();
       const tooltipHeight = tooltipElement?.offsetHeight || 40;
@@ -32,7 +33,7 @@
             ${cohortName}:
             <span class="ml-0.5 font-medium">${value.toLocaleString()}</span><br/>
             <span class="text-gray-400 ml-0.5">
-              (${value}/${cohortTotalCount} ${percentage}%)
+              (${value}/${totalCount} ${percentage}%)
             </span>
           </div>
         </div>
