@@ -5,9 +5,9 @@
     import { AGE_GROUPS, SINGLE_DATA_COLOR } from '$lib/constants.js';
     import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
     import SingleDonutChartWrapper from '$lib/components/Charts/DonutChart/SingleDonutChartWrapper.svelte';
-    import { transformDonutChartToTableData } from '$lib/utils/dataTransformers/donutChartTransformer.js';
+    import { transformDonutChartToTableData } from '$lib/components/Charts/DonutChart/donutChartTransformer.js';
     import LineChart from '$lib/components/Charts/LineChart/LineChart.svelte';
-    import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
+    import { transformLineChartToTableData } from "$lib/components/Charts/LineChart/lineChartTransformer.js";
     import BarChart from "$lib/components/Charts/BarChart/BarChart.svelte"
     import BarChartWrapper from "$lib/components/Charts/BarChart/BarChartWrapper.svelte"
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';

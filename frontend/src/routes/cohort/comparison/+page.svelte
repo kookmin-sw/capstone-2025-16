@@ -9,9 +9,9 @@
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
   import LineChart from "$lib/components/Charts/LineChart/LineChart.svelte";
-  import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
-  import { transformDonutChartToTableData } from "$lib/utils/dataTransformers/donutChartTransformer.js";
-  import { transformTopTenData } from "$lib/components/Charts/StackedBarChart/utils/topTenChartTransformer.js";
+  import { transformLineChartToTableData } from "$lib/components/Charts/LineChart/lineChartTransformer.js";
+  import { transformDonutChartToTableData } from "$lib/components/Charts/DonutChart/donutChartTransformer.js";
+  import { transformTopTenData } from "$lib/components/Charts/StackedBarChart/topTenChartTransformer.js";
   import StackedBarChartWrapper from "$lib/components/Charts/StackedBarChart/StackedBarChartWrapper.svelte";
   import StackedBarChartTableView from "$lib/components/Charts/StackedBarChart/StackedBarChartTableView.svelte";
   
