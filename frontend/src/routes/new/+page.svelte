@@ -164,7 +164,7 @@
 	</div>
 </header>
 <div
-	class="fixed left-0 top-10 flex h-full w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
+	class="fixed left-0 top-[70px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
 >
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
 		<p class="mb-4 text-sm font-bold">cohort initial events</p>
@@ -231,7 +231,7 @@
 		}
 	}}
 />
-<div class="fixed left-[200px] top-10 h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
+<div class="fixed left-[200px] top-[50px] h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
 	<div class="flex h-full w-full">
 		<div class="main-container flex w-full flex-col overflow-y-scroll p-8 text-lg">
 			<p class="mb-4 text-2xl font-bold text-zinc-800">Cohort Initial Events</p>

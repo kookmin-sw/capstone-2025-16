@@ -2,7 +2,7 @@
     import analysisData from '$lib/data/singleCohortAnalysisTest.json';
 </script>
 
-<div class="p-4">
+<div class="pl-4 pr-4">
     <div class="border rounded-lg overflow-hidden mb-8 mt-3">
         <!-- 상단 정보 -->
         <div class="w-full flex items-center justify-between p-3 bg-gray-50">
