@@ -1,10 +1,8 @@
 <script>
   import StackedBarChart from './StackedBarChart.svelte';
-  import DataTable from '$lib/components/DataTable.svelte';
   export let data = [];
   export let cohortColorMap = {};
   export let cohortTotalCounts = {};
-  export let isTableView = false;
    
   $: domainKey = data.domainKey;
   $: viewType = data.viewType;
@@ -58,7 +56,6 @@
 </script>
 
 <div class="relative w-full h-full">
-  {#if !isTableView}
     <div class="relative w-full h-full chart-container" bind:this={chartContainer}>
       <StackedBarChart
         stackData={transformedData}
@@ -70,32 +67,6 @@
         onMouseOut={handleMouseOut}
       />
     </div>
-  {:else}
-    <div class="w-full h-full overflow-auto">
-      <DataTable 
-        data={{
-          headers: ["No.", domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1), ...orderedCohorts],
-          rows: transformedData.map((item, index) => {
-            const row = {
-              "No.": index + 1,
-              [domainKey === 'drug' ? 'Drug Name' : domainKey.charAt(0).toUpperCase() + domainKey.slice(1)]: item[domainKey]
-            };
-            
-            orderedCohorts.forEach(cohort => {
-              const value = +item[cohort];
-              const total = +cohortTotalCounts[cohort];
-              row[cohort] = total ? 
-                `${value.toLocaleString()} (${((value / total) * 100).toFixed(2)}%)` : 
-                value.toLocaleString();
-            });
-            
-            return row;
-          })
-        }}
-        colorMap={cohortColorMap}
-      />
-    </div>
-  {/if}
 
   <!-- 툴팁 -->
   {#if tooltipVisible}

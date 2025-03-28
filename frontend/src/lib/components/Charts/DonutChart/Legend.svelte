@@ -3,7 +3,6 @@
 
     export let data = {};  // { Male: 600, Female: 350, Unknown: 50 } 형식
     export let hoveredLabel = null;
-    export let isGroup = false;
 
     // color scale 정의
     const colorScale = d3
@@ -42,11 +41,6 @@
             <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {colorScale(label)}"></div>
             <span class="text-sm whitespace-nowrap">
                 {label}
-                {#if isGroup}
-                    <span class="text-gray-600">
-                        ({value.toLocaleString()} | {calculatePercent(value)})
-                    </span>
-                {/if}
             </span>
         </div>
     {/each}

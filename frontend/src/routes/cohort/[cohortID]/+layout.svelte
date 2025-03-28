@@ -9,9 +9,12 @@
 
 <div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
 	<div>
-		<div class="button-container">
-			<button class="button" onclick={() => goto(`/cohort/${cohortID}/analysis`)}>
-				Analysis Report
+		<div class="flex justify-center mt-2 ml-2 mr-2">
+			<button
+			  class="h-8 w-full text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100"
+			  onclick={() => goto(`/cohort/${cohortID}/analysis`)}
+			>
+			  Analysis Report
 			</button>
 		</div>
 	</div>

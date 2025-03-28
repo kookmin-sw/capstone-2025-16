@@ -2,19 +2,18 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import ChartCard from "$lib/components/ChartCard.svelte";
-  import BarChartHorizontal from "$lib/components/Charts/BarChart_horizontal.svelte";
-  import BarChartVertical from "$lib/components/Charts/BarChart_vertical.svelte";
 	import GroupDonutChartWrapper from "$lib/components/Charts/DonutChart/GroupDonutChartWrapper.svelte";
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
   import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
-  import LineChart from "$lib/components/Charts/LineChart.svelte";
-  import { transformLineChartToTableData } from "$lib/utils/dataTransformers/lineChartTransformer.js";
-  import { transformDonutChartToTableData } from "$lib/utils/dataTransformers/donutChartTransformer.js";
-  import { transformTopTenData } from "$lib/components/Charts/StackedBarChart/utils/topTenChartTransformer.js";
+  import LineChart from "$lib/components/Charts/LineChart/LineChart.svelte";
+  import { transformLineChartToTableData } from "$lib/components/Charts/LineChart/lineChartTransformer.js";
+  import { transformDonutChartToTableData } from "$lib/components/Charts/DonutChart/donutChartTransformer.js";
+  import { transformTopTenData } from "$lib/components/Charts/StackedBarChart/topTenChartTransformer.js";
   import StackedBarChartWrapper from "$lib/components/Charts/StackedBarChart/StackedBarChartWrapper.svelte";
+  import StackedBarChartTableView from "$lib/components/Charts/StackedBarChart/StackedBarChartTableView.svelte";
   
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -548,7 +547,7 @@
               on:toggleView={({detail}) => isTableView.genderRatio = detail}
               on:close={handleChartClose}
             >
-              <GroupDonutChartWrapper chartsData={genderChartData} isGroup={true}/>
+              <GroupDonutChartWrapper data={genderChartData}/>
               <div slot="table" class="w-full h-full flex flex-col p-4">
                 {#if genderChartData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
@@ -575,15 +574,15 @@
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if mortalityChartData && mortalityChartData.length > 0}
-                  <GroupDonutChartWrapper chartsData={mortalityChartData} isGroup={true}/>
+                  <GroupDonutChartWrapper data={mortalityChartData}/>
                 {/if}
               </div>
             </div>
             <div slot="table" class="w-full h-full flex flex-col p-4">
-              {#if visitTypeChartData.length > 0}
+              {#if mortalityChartData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <DataTable
-                    data={transformDonutChartToTableData(visitTypeChartData)}
+                    data={transformDonutChartToTableData(mortalityChartData)}
                   />
               </div>
               {/if}
@@ -605,7 +604,7 @@
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if visitTypeChartData && visitTypeChartData.length > 0}
-                  <GroupDonutChartWrapper chartsData={visitTypeChartData} isGroup={true}/>
+                  <GroupDonutChartWrapper data={visitTypeChartData}/>
                 {/if}
               </div>
             </div>
@@ -719,20 +718,18 @@
                 </div>
                 {/if}
               </div>
-              <div slot="table" class="w-full h-full flex flex-col p-4">
-                {#if stackedDrugsData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <StackedBarChartWrapper
-                      data={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType)}
-                      cohortColorMap={cohortColorMap}
+              <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  {#if stackedDrugsData.length > 0}
+                    <StackedBarChartTableView
+                      data={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType).transformedData}
+                      domainKey="drug"
+                      orderedCohorts={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType).orderedCohorts}
                       cohortTotalCounts={cohortTotalCounts}
-                      isTableView={isTableView.topTenDrugs}
                     />
-                  </div>
-                {/if}
+                  {/if}
+                </div>
               </div>
-
-              
             </ChartCard>
           {/if}
 
@@ -768,14 +765,14 @@
               </div>
 
               <!-- 테이블 뷰 -->
-              <div slot="table" class="w-full h-full flex flex-col p-1">
+              <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                 {#if stackedConditionsData.length > 0}
                   <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <StackedBarChartWrapper
-                      data={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType)}
-                      cohortColorMap={cohortColorMap}
+                    <StackedBarChartTableView
+                      data={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType).transformedData}
+                      domainKey="condition"
+                      orderedCohorts={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType).orderedCohorts}
                       cohortTotalCounts={cohortTotalCounts}
-                      isTableView={isTableView.topTenConditions}
                     />
                   </div>
                 {/if}
@@ -815,15 +812,15 @@
             </div>
 
             <!-- 테이블 뷰 -->
-            <div slot="table" class="w-full h-full flex flex-col p-1">
+            <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
               {#if stackedProceduresData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartWrapper
-                      data={transformTopTenData(stackedProceduresData, 'procedure', topTenProcedureViewType)}
-                      cohortColorMap={cohortColorMap}
-                      cohortTotalCounts={cohortTotalCounts}
-                      isTableView={isTableView.topTenProcedures}
-                    />
+                  <StackedBarChartTableView
+                    data={transformTopTenData(stackedProceduresData, 'procedure', topTenProcedureViewType).transformedData}
+                    domainKey="procedure"
+                    orderedCohorts={transformTopTenData(stackedProceduresData, 'procedure', topTenProcedureViewType).orderedCohorts}
+                    cohortTotalCounts={cohortTotalCounts}
+                  />
                 </div>
               {/if}
             </div>
@@ -862,15 +859,15 @@
             </div>
 
             <!-- 테이블 뷰 -->
-            <div slot="table" class="w-full h-full flex flex-col p-1">
+            <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
               {#if stackedMeasurementsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  <StackedBarChartWrapper
-                      data={transformTopTenData(stackedMeasurementsData, 'measurement', topTenMeasurementViewType)}
-                      cohortColorMap={cohortColorMap}
-                      cohortTotalCounts={cohortTotalCounts}
-                      isTableView={isTableView.topTenMeasurements}
-                    />
+                  <StackedBarChartTableView
+                    data={transformTopTenData(stackedMeasurementsData, 'measurement', topTenMeasurementViewType).transformedData}
+                    domainKey="measurement"
+                    orderedCohorts={transformTopTenData(stackedMeasurementsData, 'measurement', topTenMeasurementViewType).orderedCohorts}
+                    cohortTotalCounts={cohortTotalCounts}
+                  />
                 </div>
               {/if}
             </div>
@@ -879,17 +876,6 @@
         </div>
       </div>
     {:else if activeTab === 'customizable'}
-      <!-- <div class="w-full space-y-6">
-        <ChartCard
-          title="Top 10 Prescribed Medications Comparison"
-          description="Comparison of top prescribed medications across selected cohorts">
-          {#if topTenDrugData.length > 0}
-            <BarChartHorizontal data={topTenDrugData} />
-          {:else}
-            <p>Loading chart...</p>
-          {/if}
-        </ChartCard>
-      </div> -->
     {/if}
   </div> 
 </div> 

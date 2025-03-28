@@ -4,14 +4,20 @@
     import * as d3 from "d3";
   
     export let data = [];
+    export let cohortColorMap;
+    let margin = { top: 30, right: 120, bottom: 50, left: 50 };  // 오른쪽 여백 증가
     let chartContainer;
     let width;
     let height;
-    export let margin = { top: 30, right: 120, bottom: 50, left: 50 };  // 오른쪽 여백 증가
-    export let cohortColorMap;
 
     $: uniqueSeries = [...new Set(data.map(d => d.series))];
     $: visibleSeries = new Set(uniqueSeries);
+    $: showLegend = uniqueSeries.length > 1;
+    $: effectiveMargin = { ...margin };
+    $: if (!showLegend) {
+        effectiveMargin.right = 30;
+    }
+
 
     function handleResize(){
         if(chartContainer){
@@ -58,7 +64,7 @@
 
     onDestroy(() => {
         if(browser){
-        window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', handleResize);
         }
     });
 
@@ -76,7 +82,7 @@
         const x = d3
             .scaleBand()
             .domain(data.map(d => d.label))
-            .range([margin.left, width - margin.right])
+            .range([effectiveMargin.left, width - effectiveMargin.right])
             .padding(0.1);
     
         const y = d3
@@ -90,7 +96,7 @@
         const yAxis = d3.axisLeft(y);
     
         svg.append("g")
-            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .attr("transform", `translate(0,${height - effectiveMargin.bottom})`)
             .call(xAxis)
             .selectAll("text")
             .style("text-anchor", "end")
@@ -100,7 +106,7 @@
             .attr("stroke", d => cohortColorMap[d]); 
     
         svg.append("g")
-            .attr("transform", `translate(${margin.left},0)`)
+            .attr("transform", `translate(${effectiveMargin.left},0)`)
             .call(yAxis);
   
         // 선 생성
@@ -158,45 +164,47 @@
       });
   
       // 범례 그리기
-      const legend = svg.append("g")
-          .attr("font-family", "sans-serif")
-          .attr("font-size", 10)
-          .attr("text-anchor", "start")
-          .selectAll("g")
-          .data(seriesData)
-          .join("g")
-          .attr("transform", (d, i) => `translate(${width - margin.right + 10},${margin.top + i * 20})`);
+    if(showLegend){
+        const legend = svg.append("g")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 10)
+            .attr("text-anchor", "start")
+            .selectAll("g")
+            .data(seriesData)
+            .join("g")
+            .attr("transform", (d, i) => `translate(${width - margin.right + 10},${margin.top + i * 20})`);
   
-      // 범례 색상 표시 및 체크박스
-      legend.append("rect")
-          .attr("x", 0)
-          .attr("width", 12)
-          .attr("height", 12)
-          .attr("fill", d => cohortColorMap[d[0]])
-          .attr("stroke", d => cohortColorMap[d[0]])
-          .attr("cursor", "pointer")
-          .on("click", (event, d) => toggleSeries(d[0]));
-  
-      // 체크마크
-      legend.append("path")
-          .attr("d", "M2 6l3 3 5-5")
-          .attr("stroke", "white")
-          .attr("stroke-width", 1.5)
-          .attr("fill", "none")
-          .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0);
-  
-      // 범례 텍스트
-      legend.append("text")
-          .attr("x", 20)
-          .attr("y", 9.5)
-          .attr("dy", "0.02em")
-          .text(d => d[0])
-          .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0.5)
-          .style("cursor", "pointer")
-          .on("click", (event, d) => toggleSeries(d[0])); // 텍스트 클릭으로도 토글 가능하게
-  
-      // 툴팁 설정
-      const tooltip = d3
+        // 범례 색상 표시 및 체크박스
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("width", 12)
+            .attr("height", 12)
+            .attr("fill", d => cohortColorMap[d[0]])
+            .attr("stroke", d => cohortColorMap[d[0]])
+            .attr("cursor", "pointer")
+            .on("click", (event, d) => toggleSeries(d[0]));
+    
+        // 체크마크
+        legend.append("path")
+            .attr("d", "M2 6l3 3 5-5")
+            .attr("stroke", "white")
+            .attr("stroke-width", 1.5)
+            .attr("fill", "none")
+            .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0);
+    
+        // 범례 텍스트
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", 9.5)
+            .attr("dy", "0.02em")
+            .text(d => d[0])
+            .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0.5)
+            .style("cursor", "pointer")
+            .on("click", (event, d) => toggleSeries(d[0])); // 텍스트 클릭으로도 토글 가능하게
+      }
+      
+    // 툴팁 설정
+    const tooltip = d3
         .select("body")
         .append("div")
         .style("position", "absolute")
@@ -212,5 +220,5 @@
     }
   
 </script>
-  
+
 <div bind:this={chartContainer} class="w-full h-full"></div>
