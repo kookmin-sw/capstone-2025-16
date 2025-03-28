@@ -2,8 +2,6 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import ChartCard from "$lib/components/ChartCard.svelte";
-  import BarChartHorizontal from "$lib/components/Charts/BarChart_horizontal.svelte";
-  import BarChartVertical from "$lib/components/Charts/BarChart_vertical.svelte";
 	import GroupDonutChartWrapper from "$lib/components/Charts/DonutChart/GroupDonutChartWrapper.svelte";
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
@@ -882,17 +880,6 @@
         </div>
       </div>
     {:else if activeTab === 'customizable'}
-      <!-- <div class="w-full space-y-6">
-        <ChartCard
-          title="Top 10 Prescribed Medications Comparison"
-          description="Comparison of top prescribed medications across selected cohorts">
-          {#if topTenDrugData.length > 0}
-            <BarChartHorizontal data={topTenDrugData} />
-          {:else}
-            <p>Loading chart...</p>
-          {/if}
-        </ChartCard>
-      </div> -->
     {/if}
   </div> 
 </div> 
