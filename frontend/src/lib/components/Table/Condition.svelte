@@ -14,8 +14,6 @@
       <span class="divider">|</span>
       <span class="info"><strong>Diagnosis Date:</strong> {cond.condition_start_date} ~ {cond.condition_end_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>Visit ID:</strong> {cond.visit_occurrence_id}</span>
-      <span class="divider">|</span>
       <span class="info"><strong>Condition Status:</strong> {cond.condition_status_source_value}</span>
     </div>
   {/each}
@@ -26,7 +24,7 @@
       <span class="divider">|</span>
       <span class="info"><strong>Era Duration:</strong> {era.condition_era_start_date} ~ {era.condition_era_end_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>Occurrence Count:</strong> {era.condition_occurrence_count}회</span>
+      <span class="info"><strong>Occurrence Count:</strong> {era.condition_occurrence_count} times</span>
     </div>
   {/each}
 </div>
@@ -41,7 +39,7 @@
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
   }
@@ -63,7 +61,7 @@
 
   .info {
     font-weight: normal;
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     margin-right: 10px;
   }
 

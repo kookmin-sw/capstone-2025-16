@@ -7,8 +7,6 @@
 
   {#each procedureOccurrence as proc}
     <div class="procedure-row">
-      <span class="info"><strong>Procedure ID:</strong> {proc.procedure_occurrence_id}</span>
-      <span class="divider">|</span>
       <span class="info"><strong>Date:</strong> {proc.procedure_date}</span>
       <span class="divider">|</span>
       <span class="info"><strong>Concept ID:</strong> 
@@ -36,7 +34,7 @@
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
   }
@@ -54,7 +52,7 @@
 
   .info {
     font-weight: normal;
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     margin-right: 10px;
   }
 
