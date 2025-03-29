@@ -69,11 +69,11 @@
     };
 
     const visitMapping = {
-        9201: [0, "Inpatient", "#FF0000"],
-        9202: [1, "Outpatient", "#FF7F00"],
-        9203: [2, "Emergency Room Visit", "#FFFF00"],
-        581477: [3, "Home Visit", "#00FF00"],
-        44818517: [4, "Other Visit Type", "#0000FF"]
+        9201: [0, "Inpatient", "#FF6B6B"],
+        9202: [1, "Outpatient", "#4ECDC4"],
+        9203: [2, "Emergency Room Visit", "#FFB236"],
+        581477: [3, "Home Visit", "#95A5A6"],
+        44818517: [4, "Other Visit Type", "#BDC3C7"]
     };
 
     async function fetchDataById(id) {
