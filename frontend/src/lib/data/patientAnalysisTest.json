@@ -1,0 +1,71 @@
+{
+    "statistics": {
+      "visitType": {
+        "Inpatient": 5,
+        "Outpatient": 12,
+        "Emergency Room Visit": 2,
+        "Home Visit": 1,
+        "Other Visit Type": 1
+      },
+      "departmentVisits": {
+        "Internal Medicine": 8,
+        "Endocrinology": 6,
+        "Cardiology": 4,
+        "Ophthalmology": 3,
+        "Nephrology": 2,
+        "Neurology": 2,
+        "Orthopedics": 2,
+        "Psychiatry": 1,
+        "Dermatology": 1,
+        "Emergency Medicine": 2
+      },
+      "topTenDrugs": {
+        "Metformin": 45,
+        "Glimepiride": 38,
+        "Sitagliptin": 32,
+        "Insulin Glargine": 28,
+        "Linagliptin": 25,
+        "Empagliflozin": 22,
+        "Dapagliflozin": 20,
+        "Vildagliptin": 18,
+        "Gliclazide": 15,
+        "Pioglitazone": 12
+      },
+      "topTenConditions": {
+        "Type 2 Diabetes": 52,
+        "Hypertension": 48,
+        "Obesity": 42,
+        "Dyslipidemia": 38,
+        "Diabetic Neuropathy": 35,
+        "Diabetic Retinopathy": 32,
+        "Chronic Kidney Disease": 29,
+        "Cardiovascular Disease": 26,
+        "Diabetic Foot": 23,
+        "Depression": 20
+      },
+      "topTenProcedures": {
+        "Blood Glucose Test": 85,
+        "HbA1c Measurement": 78,
+        "Blood Pressure Check": 72,
+        "ECG": 65,
+        "Lipid Panel": 58,
+        "Kidney Function Test": 52,
+        "Foot Examination": 45,
+        "Eye Examination": 40,
+        "Urine Analysis": 35,
+        "Insulin Administration": 30
+      },
+      "topTenMeasurements": {
+        "Blood Glucose": 80,
+        "Blood Pressure": 75,
+        "Body Weight": 70,
+        "HbA1c": 65,
+        "BMI": 60,
+        "Cholesterol": 55,
+        "Heart Rate": 50,
+        "Temperature": 45,
+        "Respiratory Rate": 40,
+        "Blood Oxygen": 35
+      }
+    }
+  } 

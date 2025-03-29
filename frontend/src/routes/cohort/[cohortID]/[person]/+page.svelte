@@ -11,10 +11,30 @@
     import Modal from "$lib/components/Modal.svelte";
     import * as d3 from "d3";
 
+    import analysisData from '$lib/data/patientAnalysisTest.json';
+    import ChartCard from '$lib/components/ChartCard.svelte';
+    import DataTable from '$lib/components/DataTable.svelte';
+    import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
+    import SingleDonutChartWrapper from '$lib/components/Charts/DonutChart/SingleDonutChartWrapper.svelte';
+    import { transformDonutChartToTableData } from '$lib/components/Charts/DonutChart/donutChartTransformer.js';
+    import BarChart from "$lib/components/Charts/BarChart/BarChart.svelte"
+    import BarChartWrapper from "$lib/components/Charts/BarChart/BarChartWrapper.svelte"
+    import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
+
     let timelineContainer;
     let showModal = false;
+    let isStatisticsView = true;
     let selectedTables = new Set();
     export let data;
+
+    let isTableView = {
+        visitTypeRatio: false,
+        departmentVisits: false,
+        topTenDrugs: false,
+        topTenConditions: false,
+        topTenProcedures: false,
+        topTenMeasurements: false
+    };
     
     const genderCodes = {
         8507: "Male",
@@ -277,25 +297,188 @@
             <span class="divider">|</span>
             <span class="info"><strong>Date : </strong> {personTable.year_of_birth}.{personTable.month_of_birth}.{personTable.day_of_birth}</span>
         </div>
-        <button 
-            class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md 
-                    hover:bg-blue-700 transition-all duration-200 ease-in-out"
-            on:click={() => showModal = true}>
-        Select Tables
-        </button>
+        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
+            <button 
+                class="px-2 py-0.5 text-xs rounded-full transition-colors
+                    {!isStatisticsView ? 
+                        'bg-white text-blue-600 shadow-sm' : 
+                        'text-gray-600 hover:text-gray-900'}"
+                on:click={() => isStatisticsView = false}>
+                Statistics
+            </button>
+            <button 
+                class="px-2 py-0.5 text-xs rounded-full transition-colors
+                    {isStatisticsView ? 
+                        'bg-white text-blue-600 shadow-sm' : 
+                        'text-gray-600 hover:text-gray-900'}"
+                on:click={() => isStatisticsView = true}>
+                Viewer
+            </button>
+        </div>
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
     <div class="w-full h-[200px]" bind:this={timelineContainer}></div>
 </header>
-<div class="pt-8 pb-[16px]">
-    {#if tableProps?.cdm_info}
-        <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
-    {/if}
-    {#each Array.from(selectedTables) as tableId}
-        {#if tableComponents[tableId]}
-        <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
+<div class="pt-8 pb-[60px] flex flex-col">
+    {#if !isStatisticsView}
+        <!-- <button 
+            class="ml-auto mb-8 w-fit px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out"
+                on:click={() => {
+                    if(Object.keys(tableProps).length === 0){
+                        notify();
+                    }
+                    else{
+                        showModal = true
+                    }
+            }}>
+            Select Tables
+        </button> -->
+        <div class="w-full">
+            <div class="grid grid-cols-2 gap-4">
+                <ChartCard
+                    title="Visit Type Ratio"
+                    description="The ratio of visits by visit type."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.visitTypeRatio}
+                    on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
+                >
+                    <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto">
+                            <DataTable
+                                data={transformDonutChartToTableData({
+                                    data: analysisData.statistics.visitType,
+                                })}
+                            />
+                        </div>
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Departmet Visit Ratio"
+                    description="The ratio of visits by department."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.departmentVisits}
+                    on:toggleView={({ detail }) => isTableView.departmentVisits = detail}
+                >
+                    <SingleDonutChartWrapper data={analysisData.statistics.departmentVisits} />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto">
+                            <DataTable
+                                data={transformDonutChartToTableData({
+                                    data: analysisData.statistics.departmentVisits,
+                                })}
+                            />
+                        </div>
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Drugs"
+                    description= "The list of the top 10 most frequently prescribed medications."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenDrugs}
+                    on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
+                >
+                    <BarChartWrapper
+                        data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                    />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto">
+                            <BarChartTableView
+                                data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                                domainKey="drug"
+                            />
+                        </div>
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Conditions"
+                    description="The list of the top 10 most frequently diagnosed medical conditions."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenConditions}
+                    on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
+                >
+                    <BarChartWrapper
+                        data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                    />
+                
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto">
+                            <BarChartTableView
+                                data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                                domainKey="condition"
+                            />
+                        </div>
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Procedures"
+                    description="The list of the top 10 most frequently performed procedures and medical tests."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenProcedures}
+                    on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
+                >
+                    <BarChartWrapper
+                        data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                    />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto">
+                            <BarChartTableView
+                                data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                                domainKey="procedure"
+                            />
+                        </div>
+                    </div>
+                </ChartCard>
+
+                <ChartCard
+                    title="Top 10 Measurements"
+                    description="The list of the top 10 most frequently recorded clinical measurements."
+                    type="half"
+                    hasTableView={true}
+                    isTableView={isTableView.topTenMeasurements}
+                    on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
+                >
+                    <BarChartWrapper
+                        data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                    />
+
+                    <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+                        <div class="flex-1 overflow-x-auto overflow-y-auto">
+                            <BarChartTableView
+                                data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                                domainKey="measurement"
+                            />
+                        </div>
+                    </div>
+                </ChartCard>
+            </div>
+        </div>
+
+
+
+        {#if tableProps?.cdm_info}
+            <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
+            <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
         {/if}
-    {/each}
+        {#each Array.from(selectedTables) as tableId}
+            {#if tableComponents[tableId]}
+                <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
+            {/if}
+        {/each}
+    {/if}
 </div>
 
 <Modal bind:isOpen={showModal} bind:selectedTables/>

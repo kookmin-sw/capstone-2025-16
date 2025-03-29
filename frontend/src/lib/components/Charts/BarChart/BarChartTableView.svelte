@@ -4,13 +4,16 @@
   
   export let data = [];
   export let domainKey;
-  export let cohortName = '';
+  export let cohortName = 'Value';
   export let cohortTotalCount = 0;
+
+  // total 값 계산
+  const totalCount = cohortTotalCount || data.reduce((sum, item) => sum + +item.count, 0);
 
   const headers = [
     "No.",
     domainKey.charAt(0).toUpperCase() + domainKey.slice(1),
-    cohortName
+    `${cohortName}`
   ];
 
   const rows = data.map((item, index) => {
@@ -18,9 +21,7 @@
     return {
       "No.": index + 1,
       [headers[1]]: item.name,
-      [headers[2]]: cohortTotalCount
-        ? `${value.toLocaleString()} (${((value / cohortTotalCount) * 100).toFixed(2)}%)`
-        : value.toLocaleString()
+      [headers[2]]: `${value.toLocaleString()} (${((value / totalCount) * 100).toFixed(2)}%)`
     };
   });
 </script>
