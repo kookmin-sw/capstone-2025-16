@@ -8,7 +8,16 @@
     const cohortID = $page.params.cohortID;
 	let searchQuery = $state("");
 	let filteredData = $state([]);
-	
+	let itemsPerPage = $state(10);
+	let currentPage = $state(1);
+	let paginatedData = $state([]);
+
+	const rowHeight = 42;
+
+	function calculateItemsPerPage() {
+		const availableHeight = window.innerHeight - 50;
+		itemsPerPage = Math.floor(availableHeight / rowHeight);
+	}
 	// 검색어에 따라 데이터를 필터링
 	function filterData() {
 		if(searchQuery.length === 0){
@@ -23,7 +32,23 @@
 
 	onMount(() => {
 		filteredData = data.userData;
+		calculateItemsPerPage();
+		window.addEventListener('resize', calculateItemsPerPage);
 	});
+
+	$effect(() => {
+		paginatedData = filteredData.slice(
+			(currentPage - 1) * itemsPerPage,
+			currentPage * itemsPerPage
+		);
+	})
+
+	function nextPage() {
+		if (currentPage * itemsPerPage < filteredData.length) currentPage++;
+	}
+	function prevPage() {
+		if (currentPage > 1) currentPage--;
+	}
 </script>
 
 <div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
@@ -55,13 +80,20 @@
 	</div>
 	<div class="h-full w-full px-2">
 		<div class="flex flex-col rounded-sm border-r border-t border-l border-zinc-200 bg-zinc-50 max-h-full overflow-y-auto">
-			{#each filteredData as user}
+			{#each paginatedData as user}
 				<a href="/cohort/{cohortID}/{user.personid}">
 					<button class="w-full border-b border-zinc-200 px-2 py-2 text-left text-xs overflow-wrap">
-						{user.gender} (만 {user.age}) | {user.personid}
+						{user.gender} ({user.age}) | {user.personid}
 					</button>
 				</a>
 			{/each}
+		</div>
+
+		<!-- Pagination -->
+		<div class="flex justify-between px-2 py-2 text-xs">
+			<button onclick={prevPage} disabled={currentPage === 1} class="text-blue-600 disabled:text-gray-300">Previous</button>
+			<span>Page {currentPage} / {Math.ceil(filteredData.length / itemsPerPage)}</span>
+			<button onclick={nextPage} disabled={currentPage * itemsPerPage >= filteredData.length} class="text-blue-600 disabled:text-gray-300">Next</button>
 		</div>
 	</div>
 </div>
