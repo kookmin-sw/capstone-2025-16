@@ -65,7 +65,16 @@
         "ethnicity_concept_id": 38003563,
         "location_id": 101,
         "provider_id": 201,
-        "care_site_id": 301
+        "care_site_id": 301,
+        "death": {
+            "person_id": 1,
+            "death_date": "2030-07-15",
+            "death_datetime": "2030-07-15T08:42:00",
+            "death_type_concept_id": 38003569,
+            "cause_concept_id": 321042,
+            "cause_source_value": "I21.9",
+            "cause_source_concept_id": 44814645
+        },
     };
 
     const visitMapping = {
@@ -196,10 +205,56 @@
             .attr("transform", `translate(0,${margin.top})`)
             .attr("clip-path", "url(#clip-timeline)"); // ✅ 클리핑 적용
             
-        barGroup.selectAll("rect")
+
+        // Death가 null이 아니면 추가
+        if (personTable.death) {
+            barGroup.append("rect")
+                .attr("class", "death-bar")
+                .attr("x", xScale(new Date(personTable.death.death_date))) // 시작일 기준
+                .attr("y", 0) // 전체 barGroup 내에서 상단부터
+                .attr("width", 5)
+                .attr("height", innerHeight - 20) // 전체 영역 덮도록
+                .attr("fill", "black")
+                .attr("opacity", 1) // 배경처럼 보이게
+                .on("mouseover", (event, d) => {
+                tooltip.style("visibility", "visible")
+                    .style("white-space", "pre")
+                    .text(`death_concept : ${personTable.death.cause_concept_id}\ndeath_date : ${personTable.death.death_date}`);
+                })
+                .on("mousemove", (event) => {
+                    const tooltipWidth = tooltip.node().offsetWidth;
+                    const tooltipHeight = tooltip.node().offsetHeight;
+
+                    const svgRect = timelineContainer.getBoundingClientRect();
+                    const pageX = event.clientX - svgRect.left; // 컨테이너 내부 상대 좌표
+                    const pageY = event.clientY - svgRect.top;  // 컨테이너 내부 상대 좌표
+                    
+                    let tooltipX = pageX + 10; // 기본적으로 오른쪽에 표시
+                    let tooltipY = pageY - 10; // 기본적으로 마우스보다 약간 위로 표시
+
+                    // ✅ 툴팁이 오른쪽 화면을 넘어가는 경우 -> 왼쪽에 표시
+                    if (tooltipX + tooltipWidth > svgRect.width) {
+                        tooltipX = pageX - tooltipWidth - 10;
+                    }
+
+                    // ✅ 툴팁이 아래 화면을 넘어가는 경우 -> 위로 표시
+                    if (tooltipY + tooltipHeight > svgRect.height) {
+                        tooltipY = pageY - tooltipHeight - 10;
+                    }
+
+                    tooltip.style("top", `${tooltipY}px`)
+                            .style("left", `${tooltipX}px`);
+                })
+                .on("mouseout", () => {
+                    tooltip.style("visibility", "hidden");
+                });
+        }
+
+        barGroup.selectAll("rect.visit-bar")
             .data(data.personVisits)
             .enter()
             .append("rect")
+            .attr("class", "visit-bar")
             .attr("x", d => xScale(new Date(d.visit_start_date)))
             .attr("y", d => visitMapping[d.visit_concept_id]?.[0] * 25)
             .attr("width", d => {
@@ -210,7 +265,7 @@
             .attr("height", 20)
             .attr("fill", d => visitMapping[d.visit_concept_id]?.[2] || "grey")
             .attr("stroke", "black")
-            .attr("stroke-width", 1)
+            .attr("stroke-width", 0.1)
             .on("mouseover", (event, d) => {
                 tooltip.style("visibility", "visible")
                     .style("white-space", "pre")
@@ -228,12 +283,12 @@
                 let tooltipY = pageY - 10; // 기본적으로 마우스보다 약간 위로 표시
 
                 // ✅ 툴팁이 오른쪽 화면을 넘어가는 경우 -> 왼쪽에 표시
-                if (tooltipX + tooltipWidth > window.innerWidth) {
+                if (tooltipX + tooltipWidth > svgRect.width) {
                     tooltipX = pageX - tooltipWidth - 10;
                 }
 
                 // ✅ 툴팁이 아래 화면을 넘어가는 경우 -> 위로 표시
-                if (tooltipY + tooltipHeight > window.innerHeight) {
+                if (tooltipY + tooltipHeight > svgRect.height) {
                     tooltipY = pageY - tooltipHeight - 10;
                 }
 
@@ -257,13 +312,17 @@
 
                 xAxisGroup.call(d3.axisBottom(newXScale)); // ✅ X축 업데이트
 
-                barGroup.selectAll("rect")
+                barGroup.selectAll("rect.visit-bar")
                     .attr("x", d => newXScale(new Date(d.visit_start_date)))
                     .attr("width", d => {
                         let startX = newXScale(new Date(d.visit_start_date));
                         let endX = newXScale(new Date(d.visit_end_date));
                         return Math.max(endX - startX, 5); // ✅ zoom 시 width 유지
                     });
+                
+                barGroup.selectAll("rect.death-bar")
+                    .attr("x", d => newXScale(new Date(personTable.death.death_date)))
+                    .attr("width", 5);
             });
 
         svg.call(zoom); // ✅ SVG에 zoom 기능 적용
