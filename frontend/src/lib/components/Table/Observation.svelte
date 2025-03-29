@@ -7,8 +7,6 @@
 
   {#each observation as obs}
     <div class="observation-row">
-      <span class="info"><strong>Observation ID:</strong> {obs.observation_id}</span>
-      <span class="divider">|</span>
       <span class="info"><strong>Date:</strong> {obs.observation_date}</span>
       <span class="divider">|</span>
       <span class="info"><strong>Concept ID:</strong> {obs.observation_concept_id}</span>
@@ -32,7 +30,7 @@
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
   }
@@ -50,7 +48,7 @@
 
   .info {
     font-weight: normal;
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     margin-right: 10px;
   }
 

@@ -88,7 +88,7 @@
           {#each tables as table}
             <label>
               <input type="checkbox" value={table.id} checked={selectedTables.has(table.id)} on:change={() => toggleTable(table.id)} />
-              {table.name}
+                {table.name}
             </label>
           {/each}
         </div>

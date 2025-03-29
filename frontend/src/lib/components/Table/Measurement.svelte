@@ -36,7 +36,7 @@
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
   }
@@ -54,7 +54,7 @@
 
   .info {
     font-weight: normal;
-    font-size: 1.1rem;
+    font-size: 1.0rem;
     margin-right: 10px;
   }
 
