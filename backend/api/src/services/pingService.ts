@@ -1,6 +1,6 @@
 export const getPingMessage = () => {
-    return {
-        message: 'pong',
-        timestamp: new Date().toISOString()
-    };
-} 
+  return {
+    message: "pong",
+    timestamp: new Date().toISOString(),
+  };
+};
