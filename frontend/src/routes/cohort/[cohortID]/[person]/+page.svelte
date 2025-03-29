@@ -24,7 +24,7 @@
     let timelineContainer;
     let showModal = false;
     let isStatisticsView = true;
-    let selectedTables = new Set();
+    let show = false;
     export let data;
 
     let isTableView = {
@@ -52,6 +52,8 @@
         specimen: Specimen,
         bio_signal: BioSignal
     };
+
+    let selectedTables = new Set(Object.keys(tableComponents)); // Object.keys(tableComponents)
 
     //   데이터 매칭 (각 테이블에 해당하는 props 설정)
     let tableProps = {};
@@ -93,7 +95,7 @@
             tableProps = {
                 cdm_info: { careSite: visitOccurrenceIdData.care_site, location: visitOccurrenceIdData.location, visitOccurrence: visitOccurrenceIdData.visit_occurrence },
                 condition: { conditionEra: visitOccurrenceIdData.condition_era, conditionOccurrence: visitOccurrenceIdData.condition_occurrence },
-                drug: { drugEra: visitOccurrenceIdData.drug_era, drugExposure: visitOccurrenceIdData.drug_exposure, drugStrength: visitOccurrenceIdData.drug_strength },
+                drug: { drugExposure: visitOccurrenceIdData.drug_exposure },
                 measurement: { measurement: visitOccurrenceIdData.measurement },
                 observation: { observation: visitOccurrenceIdData.observation },
                 procedure_occurrence: { procedureOccurrence: visitOccurrenceIdData.procedure_occurrence },
@@ -158,14 +160,14 @@
     }
 
     function setupClipPath(svg) {
-    svg.append("defs")
-            .append("clipPath")
-            .attr("id", "clip-timeline")
-            .append("rect")
-            .attr("x", MARGIN.left)
-            .attr("y", 0)
-            .attr("width", innerWidth)
-            .attr("height", innerHeight);
+        svg.append("defs")
+                .append("clipPath")
+                .attr("id", "clip-timeline")
+                .append("rect")
+                .attr("x", MARGIN.left)
+                .attr("y", 0)
+                .attr("width", innerWidth)
+                .attr("height", innerHeight);
     }
 
     function setupTooltip() {
@@ -301,6 +303,10 @@
             });
 
         svg.call(zoom);
+    }
+
+    function notify() {
+        alert("테이블을 선택해주세요.");
     }
 
     onMount(() => {
@@ -511,12 +517,12 @@
         </button>
         {#if tableProps?.cdm_info}
             <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
+            {#each Array.from(selectedTables) as tableId}
+                {#if tableComponents[tableId]}
+                    <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
+                {/if}
+            {/each}
         {/if}
-        {#each Array.from(selectedTables) as tableId}
-            {#if tableComponents[tableId]}
-                <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
-            {/if}
-        {/each}
     {/if}
 </div>
 
