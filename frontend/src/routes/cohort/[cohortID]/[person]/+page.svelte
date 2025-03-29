@@ -328,10 +328,18 @@
         svg.call(zoom); // ✅ SVG에 zoom 기능 적용
     }
 
-    // ✅ 화면 크기 변경 감지 → 타임라인 다시 그리기
     onMount(() => {
         drawTimeline();
-        window.addEventListener("resize", drawTimeline);
+
+        const handleResize = () => {
+            // 기존 svg 강제 삭제 후 다시 그리기
+            const svg = d3.select(timelineContainer).select("svg");
+            svg.remove();
+            drawTimeline();
+        };
+
+        window.addEventListener("resize", handleResize);
+        onDestroy(() => window.removeEventListener("resize", handleResize));
     });
 
     // ✅ 데이터 변경 시마다 실행
@@ -376,22 +384,10 @@
         </div>
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
-    <div class="w-full h-[200px]" bind:this={timelineContainer}></div>
+    <div class="w-full h-[200px] min-w-[850px]" bind:this={timelineContainer}></div>
 </header>
 <div class="pt-8 pb-[60px] flex flex-col">
     {#if !isStatisticsView}
-        <!-- <button 
-            class="ml-auto mb-8 w-fit px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out"
-                on:click={() => {
-                    if(Object.keys(tableProps).length === 0){
-                        notify();
-                    }
-                    else{
-                        showModal = true
-                    }
-            }}>
-            Select Tables
-        </button> -->
         <div class="w-full">
             <div class="grid grid-cols-2 gap-4">
                 <ChartCard
@@ -525,9 +521,19 @@
                 </ChartCard>
             </div>
         </div>
-
-
-
+    {:else}
+        <button 
+            class="ml-auto mb-8 w-fit px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out"
+                on:click={() => {
+                    if(Object.keys(tableProps).length === 0){
+                        notify();
+                    }
+                    else{
+                        showModal = true
+                    }
+            }}>
+            Select Tables
+        </button>
         {#if tableProps?.cdm_info}
             <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
             <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
