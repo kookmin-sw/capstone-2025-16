@@ -142,27 +142,6 @@
 	});
 </script>
 
-<header class="fixed left-0 top-0 z-10 flex h-10 w-full border-b border-zinc-200 bg-zinc-100">
-	<p
-		class="flex w-[200px] items-center justify-center border-r border-zinc-200 text-center text-lg font-bold text-zinc-800"
-	>
-		Bento
-	</p>
-	<div class="flex items-center gap-4 pl-4 text-sm">
-		<a
-			href="/cohort"
-			class="w-fit text-center {pathname === '/cohort'
-				? 'font-semibold text-zinc-800'
-				: 'text-zinc-700'}">코호트 정의</a
-		>
-		<a
-			href="/inference"
-			class="w-fit text-center {pathname === '/inference'
-				? 'font-semibold text-zinc-800'
-				: 'text-zinc-700'}">모델 인퍼런스</a
-		>
-	</div>
-</header>
 <div
 	class="fixed left-0 top-[70px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
 >
