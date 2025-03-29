@@ -7,7 +7,7 @@
     let { children, data } = $props();
 </script>
 
-<div class="fixed left-0 top-10 flex h-full w-[200px] flex-col border-r border-zinc-200">
+<div class="fixed left-0 top-[65px] flex h-[calc(100vh-60px)] w-[200px] flex-col border-r border-zinc-200">
 	<div>
 		<div class="flex justify-center mt-2 ml-2 mr-2">
 			<button

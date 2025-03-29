@@ -142,29 +142,8 @@
 	});
 </script>
 
-<header class="fixed left-0 top-0 z-10 flex h-10 w-full border-b border-zinc-200 bg-zinc-100">
-	<p
-		class="flex w-[200px] items-center justify-center border-r border-zinc-200 text-center text-lg font-bold text-zinc-800"
-	>
-		Bento
-	</p>
-	<div class="flex items-center gap-4 pl-4 text-sm">
-		<a
-			href="/cohort"
-			class="w-fit text-center {pathname === '/cohort'
-				? 'font-semibold text-zinc-800'
-				: 'text-zinc-700'}">코호트 정의</a
-		>
-		<a
-			href="/inference"
-			class="w-fit text-center {pathname === '/inference'
-				? 'font-semibold text-zinc-800'
-				: 'text-zinc-700'}">모델 인퍼런스</a
-		>
-	</div>
-</header>
 <div
-	class="fixed left-0 top-10 flex h-full w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
+	class="fixed left-0 top-[70px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
 >
 	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
 		<p class="mb-4 text-sm font-bold">cohort initial events</p>
@@ -231,7 +210,7 @@
 		}
 	}}
 />
-<div class="fixed left-[200px] top-10 h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
+<div class="fixed left-[200px] top-[50px] h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
 	<div class="flex h-full w-full">
 		<div class="main-container flex w-full flex-col overflow-y-scroll p-8 text-lg">
 			<p class="mb-4 text-2xl font-bold text-zinc-800">Cohort Initial Events</p>
