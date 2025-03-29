@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@founderpath/kysely-clickhouse": "^1.6.1",
     "@types/express": "^5.0.1",
     "express": "^4.21.2",
     "kysely": "^0.27.6"
