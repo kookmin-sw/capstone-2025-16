@@ -367,7 +367,7 @@
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
     <div class="w-full h-[200px] min-w-[850px]" bind:this={timelineContainer}></div>
 </header>
-<div class="pt-8 pb-[60px] flex flex-col">
+<div class="pt-8 pb-[60px] flex flex-col gap-5">
     {#if !isStatisticsView}
         <div class="w-full">
             <div class="grid grid-cols-2 gap-4">
