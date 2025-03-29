@@ -3,15 +3,9 @@ JSON_OUTPUT_EXAMPLE = """
   "PrimaryCriteria": {
     "CriteriaList": [
       {
-        "ConditionEra": {},
-        "CodesetId": 901234,
-        "CriteriaType": "ConditionEra",
-        "CriteriaName": "Condition Era",
-        "Domain": "condition",
-        "OccurrenceCount": {
-          "Value": 1,
-          "Op": "gte"
-        }
+        "CriteriaType": "ProcedureOccurrence",
+        "ConceptName": "hemodialysis",
+        "ProcedureOccurrence": {}
       }
     ],
     "PrimaryCriteriaLimit": {
@@ -29,29 +23,26 @@ JSON_OUTPUT_EXAMPLE = """
         "CriteriaList": [
           {
             "Criteria": {
-              "ProcedureOccurrence": {},
-              "CodesetId": 789012,
-              "CriteriaType": "ProcedureOccurrence",
-              "CriteriaName": "Procedure Occurrence",
-              "Domain": "procedure"
+              "CriteriaType": "ObservationPeriod",
+              "AgeAtStart": {
+                "Value": 18,
+                "Op": "gte"
+              },
+              "ObservationPeriod": {}
             }
           },
           {
             "Criteria": {
-              "DrugExposure": {},
-              "CodesetId": 345678,
               "CriteriaType": "DrugExposure",
-              "CriteriaName": "Drug Exposure",
-              "Domain": "drug"
+              "ConceptName": "erythropoiesis stimulating agent",
+              "DrugExposure": {}
             }
           },
           {
             "Criteria": {
-              "ConditionEra": {},
-              "CodesetId": 901234,
-              "CriteriaType": "ConditionEra",
-              "CriteriaName": "Condition Era",
-              "Domain": "condition"
+              "CriteriaType": "ConditionOccurrence",
+              "ConceptName": "iron deficiency anemia",
+              "ConditionOccurrence": {}
             }
           }
         ],
@@ -63,20 +54,16 @@ JSON_OUTPUT_EXAMPLE = """
         "CriteriaList": [
           {
             "Criteria": {
-              "Observation": {},
-              "CodesetId": 567890,
-              "CriteriaType": "Observation",
-              "CriteriaName": "Observation",
-              "Domain": "observation"
+              "CriteriaType": "VisitOccurrence",
+              "ConceptName": "intensive care unit",
+              "VisitOccurrence": {}
             }
           },
           {
             "Criteria": {
-              "Measurement": {},
-              "CodesetId": 234567,
               "CriteriaType": "Measurement",
-              "CriteriaName": "Measurement",
-              "Domain": "measurement",
+              "ConceptName": "hemoglobin",
+              "Measurement": {},
               "ValueAsNumber": {
                 "Value": 13,
                 "Op": "gt"
@@ -85,20 +72,16 @@ JSON_OUTPUT_EXAMPLE = """
           },
           {
             "Criteria": {
-              "ProcedureOccurrence": {},
-              "CodesetId": 890123,
               "CriteriaType": "ProcedureOccurrence",
-              "CriteriaName": "Procedure Occurrence",
-              "Domain": "procedure"
+              "ConceptName": "kidney transplant",
+              "ProcedureOccurrence": {}
             }
           },
           {
             "Criteria": {
-              "ConditionEra": {},
-              "CodesetId": 678901,
-              "CriteriaType": "ConditionEra",
-              "CriteriaName": "Condition Era",
-              "Domain": "condition"
+              "CriteriaType": "ConditionOccurrence",
+              "ConceptName": "sepsis",
+              "ConditionOccurrence": {}
             }
           }
         ],
@@ -107,113 +90,7 @@ JSON_OUTPUT_EXAMPLE = """
       }
     ]
   },
-  "ConceptSets": [
-    {
-      "id": 789012,
-      "name": "Hemodialysis",
-      "expression": {
-        "items": [
-          {
-            "concept": {
-              "CONCEPT_ID": 789012,
-              "CONCEPT_NAME": "Hemodialysis",
-              "DOMAIN_ID": "Procedure"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 345678,
-      "name": "Erythropoiesis Stimulating Agent",
-      "expression": {
-        "items": [
-          {
-            "concept": {
-              "CONCEPT_ID": 345678,
-              "CONCEPT_NAME": "Erythropoiesis Stimulating Agent",
-              "DOMAIN_ID": "Drug"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 901234,
-      "name": "Iron deficiency anemia",
-      "expression": {
-        "items": [
-          {
-            "concept": {
-              "CONCEPT_ID": 901234,
-              "CONCEPT_NAME": "Iron deficiency anemia",
-              "DOMAIN_ID": "Condition"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 567890,
-      "name": "Intensive care unit",
-      "expression": {
-        "items": [
-          {
-            "concept": {
-              "CONCEPT_ID": 567890,
-              "CONCEPT_NAME": "Intensive care unit",
-              "DOMAIN_ID": "Observation"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 234567,
-      "name": "Hemoglobin",
-      "expression": {
-        "items": [
-          {
-            "concept": {
-              "CONCEPT_ID": 234567,
-              "CONCEPT_NAME": "Hemoglobin",
-              "DOMAIN_ID": "Measurement"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 890123,
-      "name": "Kidney transplant",
-      "expression": {
-        "items": [
-          {
-            "concept": {
-              "CONCEPT_ID": 890123,
-              "CONCEPT_NAME": "Kidney transplant",
-              "DOMAIN_ID": "Procedure"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 678901,
-      "name": "Sepsis",
-      "expression": {
-        "items": [
-          {
-            "concept": {
-              "CONCEPT_ID": 678901,
-              "CONCEPT_NAME": "Sepsis",
-              "DOMAIN_ID": "Condition"
-            }
-          }
-        ]
-      }
-    }
-  ],
+  "ConceptSets": [],
   "EndStrategy": {
     "DateField": "EndDate",
     "Offset": 0

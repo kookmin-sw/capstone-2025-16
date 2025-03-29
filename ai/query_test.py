@@ -11,10 +11,10 @@ clickhouse_client = Client(
 query = """
 SELECT concept_id, concept_name, domain_id
 FROM concept 
-WHERE concept_name ILIKE '%SOFA score%'
-AND domain_id = 'Observation'
+WHERE concept_name ILIKE '%Sepsis-3%'
+AND domain_id = 'Condition'
 AND invalid_reason IS NULL
-LIMIT 50;
+LIMIT 20;
 """
 
 try:
