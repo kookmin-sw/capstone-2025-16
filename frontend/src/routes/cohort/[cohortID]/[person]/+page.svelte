@@ -105,149 +105,142 @@
         }
     }
 
-    async function drawTimeline(){
-        await tick();
+    const MARGIN = { top: 20, right: 20, bottom: 30, left: 130 };
+    const BAR_HEIGHT = 20;
+    const ROW_GAP = 25;
+    const DEATH_BAR_WIDTH = 5;
 
-        if (!timelineContainer) return;
-        if (!data || !data.personVisits) return; // 데이터가 없으면 실행 X
+    let xScale, xAxisGroup, innerWidth, innerHeight;
+
+    async function drawTimeline() {
+        await tick();
+        if (!timelineContainer || !data?.personVisits) return;
 
         const width = timelineContainer.clientWidth;
         const height = timelineContainer.clientHeight;
-        const margin = { top: 20, right: 20, bottom: 30, left: 130 };
-        const innerWidth = width - margin.left - margin.right;
-        const innerHeight = height - margin.top - margin.bottom;
+        innerWidth = width - MARGIN.left - MARGIN.right;
+        innerHeight = height - MARGIN.top - MARGIN.bottom;
 
+        const svg = initializeSvg(width, height);
+        xScale = setupScales(width);
+        setupClipPath(svg);
+        const tooltip = setupTooltip();
+        drawYAxis(svg);
+        drawXAxis(svg);
+        drawBars(svg, tooltip);
+        setupZoom(svg, width, height);
+    }
 
+    function initializeSvg(width, height) {
         let svg = d3.select(timelineContainer).select("svg");
         if (!svg.node()) {
             svg = d3.select(timelineContainer)
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .style("border", "1px solid black");
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .style("border", "1px solid black");
         }
-        svg.selectAll("*").remove(); // 내부만 제거
+        svg.selectAll("*").remove();
+        return svg;
+    }
 
-        // ✅ 클리핑 영역(clipPath) 추가
-        svg.append("defs")
+    function setupScales(width) {
+        let minStart = new Date(Math.min(...data.personVisits.map(d => new Date(d.visit_start_date))));
+        let maxEnd = new Date(Math.max(...data.personVisits.map(d => new Date(d.visit_end_date))));
+        minStart.setDate(minStart.getDate() - 360);
+        minStart.setHours(0, 0, 0, 0);
+        maxEnd.setHours(23, 59, 59, 999);
+        maxEnd.setDate(maxEnd.getDate() + 360);
+
+        return d3.scaleTime()
+            .domain([minStart, maxEnd])
+            .range([MARGIN.left, width - MARGIN.right]);
+    }
+
+    function setupClipPath(svg) {
+    svg.append("defs")
             .append("clipPath")
-            .attr("id", "clip-timeline") // 클립 ID 설정
+            .attr("id", "clip-timeline")
             .append("rect")
-            .attr("x", margin.left)
+            .attr("x", MARGIN.left)
             .attr("y", 0)
             .attr("width", innerWidth)
             .attr("height", innerHeight);
+    }
 
-        // 🔹 툴팁 생성
-        const tooltip = d3.select(timelineContainer)
+    function setupTooltip() {
+        let tooltip = d3.select(timelineContainer).select(".tooltip");
+        if (tooltip.empty()) {
+            tooltip = d3.select(timelineContainer)
             .append("div")
+            .attr("class", "tooltip")
             .style("position", "absolute")
-            .style("background", "rgba(0, 0, 0, 0.7)")
+            .style("background", "rgba(0,0,0,0.7)")
             .style("color", "white")
             .style("padding", "5px")
             .style("border-radius", "5px")
             .style("font-size", "12px")
             .style("visibility", "hidden");
+        }
+        return tooltip;
+    }
 
-        const visitConceptEntries = Object.entries(visitMapping);
-
-        // Y축 레이블 그룹
+    function drawYAxis(svg) {
+        const entries = Object.entries(visitMapping);
         const labelGroup = svg.append("g")
-            .attr("transform", `translate(${margin.left - 10}, ${margin.top})`);
+            .attr("transform", `translate(${MARGIN.left - 10}, ${MARGIN.top})`);
 
         labelGroup.selectAll("text")
-            .data(visitConceptEntries)
+            .data(entries)
             .enter()
             .append("text")
-            .attr("x", 0) // 왼쪽 여백
-            .attr("y", ([conceptId]) => visitMapping[conceptId][0] * 25 + 10) // yIndex 기준 위치
+            .attr("x", 0)
+            .attr("y", ([id]) => visitMapping[id][0] * ROW_GAP + 10)
             .attr("text-anchor", "end")
             .attr("font-size", "11px")
             .attr("alignment-baseline", "middle")
-            .text(([conceptId, [, label]]) => label);
+            .text(([_, [, label]]) => label);
 
-        // Y축 배경 가이드라인 추가
         const guideLines = svg.append("g")
-        .attr("transform", `translate(0, ${margin.top})`);
+            .attr("transform", `translate(0, ${MARGIN.top})`);
 
         guideLines.selectAll("line")
-            .data(visitConceptEntries) // 또는 Object.entries(visitMapping)
+            .data(entries)
             .enter()
             .append("line")
-            .attr("x1", margin.left)
-            .attr("x2", width - margin.right)
-            .attr("y1", ([conceptId]) => visitMapping[conceptId][0] * 25 - 2.5)
-            .attr("y2", ([conceptId]) => visitMapping[conceptId][0] * 25 - 2.5)
+            .attr("x1", MARGIN.left)
+            .attr("x2", innerWidth + MARGIN.left)
+            .attr("y1", ([id]) => visitMapping[id][0] * ROW_GAP - 2.5)
+            .attr("y2", ([id]) => visitMapping[id][0] * ROW_GAP - 2.5)
             .attr("stroke", "#e0e0e0")
-            .attr("stroke-width", 1)
+            .attr("stroke-width", 1);
+    }
 
-        // 🔹 최소/최대 날짜 계산
-        let minStartDate = new Date(Math.min(...data.personVisits.map(d => new Date(d.visit_start_date))));
-        let maxEndDate = new Date(Math.max(...data.personVisits.map(d => new Date(d.visit_end_date))));
-        minStartDate.setDate(minStartDate.getDate() - 360);
-        minStartDate.setHours(0, 0, 0, 0);
-        maxEndDate.setHours(23, 59, 59, 999);
-        maxEndDate.setDate(maxEndDate.getDate() + 360);
-
-        // 🔹 X축 스케일 설정
-        const xScale = d3.scaleTime()
-            .domain([minStartDate, maxEndDate])
-            .range([margin.left, width - margin.right]);
-
-        // 🔹 X축 생성
-        const xAxis = d3.axisBottom(xScale).ticks(10);
-        const xAxisGroup = svg.append("g")
+    function drawXAxis(svg) {
+        const axis = d3.axisBottom(xScale).ticks(10);
+        xAxisGroup = svg.append("g")
             .attr("transform", `translate(0,${innerHeight})`)
-            .call(xAxis);
+            .call(axis);
+    }
 
-        // 🔹 바(bar) 추가 (클리핑 적용)
+    function drawBars(svg, tooltip) {
         const barGroup = svg.append("g")
-            .attr("transform", `translate(0,${margin.top})`)
-            .attr("clip-path", "url(#clip-timeline)"); // ✅ 클리핑 적용
-            
+            .attr("transform", `translate(0,${MARGIN.top})`)
+            .attr("clip-path", "url(#clip-timeline)");
 
-        // Death가 null이 아니면 추가
+        // Death bar
         if (personTable.death) {
             barGroup.append("rect")
-                .attr("class", "death-bar")
-                .attr("x", xScale(new Date(personTable.death.death_date))) // 시작일 기준
-                .attr("y", 0) // 전체 barGroup 내에서 상단부터
-                .attr("width", 5)
-                .attr("height", innerHeight - 20) // 전체 영역 덮도록
-                .attr("fill", "black")
-                .attr("opacity", 1) // 배경처럼 보이게
-                .on("mouseover", (event, d) => {
-                tooltip.style("visibility", "visible")
-                    .style("white-space", "pre")
-                    .text(`death_concept : ${personTable.death.cause_concept_id}\ndeath_date : ${personTable.death.death_date}`);
-                })
-                .on("mousemove", (event) => {
-                    const tooltipWidth = tooltip.node().offsetWidth;
-                    const tooltipHeight = tooltip.node().offsetHeight;
-
-                    const svgRect = timelineContainer.getBoundingClientRect();
-                    const pageX = event.clientX - svgRect.left; // 컨테이너 내부 상대 좌표
-                    const pageY = event.clientY - svgRect.top;  // 컨테이너 내부 상대 좌표
-                    
-                    let tooltipX = pageX + 10; // 기본적으로 오른쪽에 표시
-                    let tooltipY = pageY - 10; // 기본적으로 마우스보다 약간 위로 표시
-
-                    // ✅ 툴팁이 오른쪽 화면을 넘어가는 경우 -> 왼쪽에 표시
-                    if (tooltipX + tooltipWidth > svgRect.width) {
-                        tooltipX = pageX - tooltipWidth - 10;
-                    }
-
-                    // ✅ 툴팁이 아래 화면을 넘어가는 경우 -> 위로 표시
-                    if (tooltipY + tooltipHeight > svgRect.height) {
-                        tooltipY = pageY - tooltipHeight - 10;
-                    }
-
-                    tooltip.style("top", `${tooltipY}px`)
-                            .style("left", `${tooltipX}px`);
-                })
-                .on("mouseout", () => {
-                    tooltip.style("visibility", "hidden");
-                });
+            .attr("class", "death-bar")
+            .attr("x", xScale(new Date(personTable.death.death_date)))
+            .attr("y", 0)
+            .attr("width", DEATH_BAR_WIDTH)
+            .attr("height", innerHeight - 20)
+            .attr("fill", "black")
+            .attr("opacity", 1)
+            .on("mouseover", (event) => showTooltip(event, tooltip, `death_concept : ${personTable.death.cause_concept_id}\ndeath_date : ${personTable.death.death_date}`))
+            .on("mousemove", (event) => moveTooltip(event, tooltip))
+            .on("mouseout", () => tooltip.style("visibility", "hidden"));
         }
 
         barGroup.selectAll("rect.visit-bar")
@@ -256,76 +249,58 @@
             .append("rect")
             .attr("class", "visit-bar")
             .attr("x", d => xScale(new Date(d.visit_start_date)))
-            .attr("y", d => visitMapping[d.visit_concept_id]?.[0] * 25)
-            .attr("width", d => {
-                let startX = xScale(new Date(d.visit_start_date));
-                let endX = xScale(new Date(d.visit_end_date));
-                return Math.max(endX - startX, 5);
-            })
-            .attr("height", 20)
+            .attr("y", d => visitMapping[d.visit_concept_id]?.[0] * ROW_GAP)
+            .attr("width", d => Math.max(xScale(new Date(d.visit_end_date)) - xScale(new Date(d.visit_start_date)), 5))
+            .attr("height", BAR_HEIGHT)
             .attr("fill", d => visitMapping[d.visit_concept_id]?.[2] || "grey")
             .attr("stroke", "black")
             .attr("stroke-width", 0.1)
-            .on("mouseover", (event, d) => {
-                tooltip.style("visibility", "visible")
-                    .style("white-space", "pre")
-                    .text(`Visit ID: ${d.visit_concept_id}\nStart: ${d.visit_start_date}\nEnd: ${d.visit_end_date}`);
-            })
-            .on("mousemove", (event) => {
-                const tooltipWidth = tooltip.node().offsetWidth;
-                const tooltipHeight = tooltip.node().offsetHeight;
+            .on("mouseover", (event, d) => showTooltip(event, tooltip, `Visit ID: ${d.visit_concept_id}\nStart: ${d.visit_start_date}\nEnd: ${d.visit_end_date}`))
+            .on("mousemove", (event) => moveTooltip(event, tooltip))
+            .on("mouseout", () => tooltip.style("visibility", "hidden"))
+            .on("click", (event, d) => fetchDataById(d.visit_occurrence_id));
+    }
 
-                const svgRect = timelineContainer.getBoundingClientRect();
-                const pageX = event.clientX - svgRect.left; // 컨테이너 내부 상대 좌표
-                const pageY = event.clientY - svgRect.top;  // 컨테이너 내부 상대 좌표
-                
-                let tooltipX = pageX + 10; // 기본적으로 오른쪽에 표시
-                let tooltipY = pageY - 10; // 기본적으로 마우스보다 약간 위로 표시
+    function showTooltip(event, tooltip, text) {
+        tooltip.style("visibility", "visible")
+            .style("white-space", "pre")
+            .text(text);
+    }
 
-                // ✅ 툴팁이 오른쪽 화면을 넘어가는 경우 -> 왼쪽에 표시
-                if (tooltipX + tooltipWidth > svgRect.width) {
-                    tooltipX = pageX - tooltipWidth - 10;
-                }
+    function moveTooltip(event, tooltip) {
+        const tooltipWidth = tooltip.node().offsetWidth;
+        const tooltipHeight = tooltip.node().offsetHeight;
+        const svgRect = timelineContainer.getBoundingClientRect();
+        const pageX = event.clientX - svgRect.left;
+        const pageY = event.clientY - svgRect.top;
 
-                // ✅ 툴팁이 아래 화면을 넘어가는 경우 -> 위로 표시
-                if (tooltipY + tooltipHeight > svgRect.height) {
-                    tooltipY = pageY - tooltipHeight - 10;
-                }
+        let tooltipX = pageX + 10;
+        let tooltipY = pageY - 10;
 
-                tooltip.style("top", `${tooltipY}px`)
-                        .style("left", `${tooltipX}px`);
-            })
-            .on("mouseout", () => {
-                tooltip.style("visibility", "hidden");
-            })
-            .on("click", (event, d) => {
-                fetchDataById(d.visit_occurrence_id);
-            });
+        if (tooltipX + tooltipWidth > svgRect.width) tooltipX = pageX - tooltipWidth - 10;
+        if (tooltipY + tooltipHeight > svgRect.height) tooltipY = pageY - tooltipHeight - 10;
 
-        // 🔹 줌(Zoom) 기능 추가
+        tooltip.style("top", `${tooltipY}px`).style("left", `${tooltipX}px`);
+    }
+
+    function setupZoom(svg, width, height) {
         const zoom = d3.zoom()
-            .scaleExtent([0.5, 20]) // 최소 0.5배, 최대 5배 확대 가능
-            .translateExtent([[xScale(minStartDate), 0], [xScale(maxEndDate), height]]) // 🚀 최소/최대 날짜 기준으로 이동 제한
+            .scaleExtent([0.5, 20])
+            .translateExtent([[xScale.range()[0], 0], [xScale.range()[1], height]])
             .on("zoom", (event) => {
-                const transform = event.transform;
-                const newXScale = transform.rescaleX(xScale); // ✅ 기존 xScale을 변환하여 새로운 xScale 생성
+            const newXScale = event.transform.rescaleX(xScale);
+            xAxisGroup.call(d3.axisBottom(newXScale));
 
-                xAxisGroup.call(d3.axisBottom(newXScale)); // ✅ X축 업데이트
+            d3.selectAll(".visit-bar")
+                .attr("x", d => newXScale(new Date(d.visit_start_date)))
+                .attr("width", d => Math.max(newXScale(new Date(d.visit_end_date)) - newXScale(new Date(d.visit_start_date)), 5));
 
-                barGroup.selectAll("rect.visit-bar")
-                    .attr("x", d => newXScale(new Date(d.visit_start_date)))
-                    .attr("width", d => {
-                        let startX = newXScale(new Date(d.visit_start_date));
-                        let endX = newXScale(new Date(d.visit_end_date));
-                        return Math.max(endX - startX, 5); // ✅ zoom 시 width 유지
-                    });
-                
-                barGroup.selectAll("rect.death-bar")
-                    .attr("x", d => newXScale(new Date(personTable.death.death_date)))
-                    .attr("width", 5);
+            d3.selectAll(".death-bar")
+                .attr("x", newXScale(new Date(personTable.death.death_date)))
+                .attr("width", DEATH_BAR_WIDTH);
             });
 
-        svg.call(zoom); // ✅ SVG에 zoom 기능 적용
+        svg.call(zoom);
     }
 
     onMount(() => {
@@ -536,7 +511,6 @@
         </button>
         {#if tableProps?.cdm_info}
             <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
-            <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
         {/if}
         {#each Array.from(selectedTables) as tableId}
             {#if tableComponents[tableId]}
