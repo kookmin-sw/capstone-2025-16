@@ -118,6 +118,13 @@
     topTenMeasurements: false
   };
 
+  // 사이드바 상태 관리
+  let isSidebarCollapsed = false;
+  
+  function toggleSidebar() {
+    isSidebarCollapsed = !isSidebarCollapsed;
+  }
+
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
@@ -372,205 +379,196 @@
 </script>
 
 <style>
-  .tab {
-    padding: 0.75rem 1.5rem;
-    margin-right: 1rem;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
+
+  .sidebar-transition {
+    transition: width 0.3s ease-in-out;
   }
-  
-  .tab.active {
-    border-bottom: 2px solid #000;
-    font-weight: 500;
+
+  .toggle-icon {
+    transition: transform 0.3s ease;
+  }
+
+  .toggle-icon.collapsed {
+    transform: rotate(180deg);
   }
 </style>
 
-<div class="flex flex-col items-center w-full max-w-10xl mx-auto py-10 px-4">
-  <!-- 제목 섹션 -->
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold text-center">Cohort Comparison Analysis</h1>
-    <p class="text-gray-600 text-center mt-2">
-      Selected cohorts are analyzed and compared based on various metrics.
-    </p>
+<div class="flex h-[calc(100vh-60px)] bg-gray-50">
+  <!-- 좌측 사이드바 -->
+  <div class="bg-white border-r border-gray-200 flex flex-col h-full sidebar-transition {isSidebarCollapsed ? 'w-[40px]' : 'w-[320px]'}">
+    <div class="pl-4 pr-4 pt-4 flex items-center justify-between flex-shrink-0">
+      {#if !isSidebarCollapsed}
+        <div class="flex items-center justify-between w-full">
+          <h3 class="text-lg font-bold">Selected Cohorts</h3>
+          <button aria-label="Toggle Sidebar"
+            class="p-1 hover:bg-gray-100 rounded-md transition-colors"
+            on:click={toggleSidebar}
+          >
+            <svg 
+              class="w-5 h-5 text-gray-600 toggle-icon" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      {:else}
+        <div class="flex items-center justify-center w-full">
+          <button aria-label="Toggle Sidebar"
+            class="p-1 hover:bg-gray-100 rounded-md transition-colors"
+            on:click={toggleSidebar}
+          >
+            <svg 
+              class="w-5 h-5 text-gray-600 toggle-icon collapsed" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      {/if}
+    </div>
+    
+    {#if !isSidebarCollapsed}
+      <div class="h-[calc(100%-4rem)] overflow-y-auto px-4 sidebar-scroll">
+        <div class="space-y-2 py-4">
+          {#each cohortData as cohort, index}
+            <div class="border rounded-lg overflow-hidden bg-white">
+              <button 
+                class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
+                on:click={() => toggleExpand(index)}
+              >
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                  <svg 
+                    class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1">
+                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.id}</span>
+                      <div class="text-xs font-medium text-blue-600 truncate">{cohort.name}</div>
+                      <span class="bg-blue-100 text-blue-800 px-1.5 py-px rounded-full text-[10px]">{cohort.totalPatients}</span>
+                    </div>
+                    <div class="flex items-center gap-1 mt-0.5">
+                    </div>
+                  </div>
+                </div>
+              </button>
+              
+              {#if expandedStates[index]}
+                <div class="p-2 border-t text-xs" transition:slide>
+                  <div class="space-y-1">
+                    <div>
+                      <span class="text-gray-500">Author:</span>
+                      <span class="font-regular">{cohort.author}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-500">Description:</span>
+                      <span class="font-regular">{cohort.description}</span>
+                    </div>
+                  </div>
+                </div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   </div>
 
-  <!-- Selected Cohorts 섹션 -->
-  <div class="w-full mb-8">
-    <div class="flex items-center justify-between gap-2">
-        <h3 class="text-2xl font-bold mb-4">Selected Cohorts</h3>
-    
-        <div class="flex items-right justify-end gap-2">
-            <button class="px-4 py-2 text-sm font-medium text-white bg-green-500 bg-opacity-80 hover:bg-green-600 bg-opacity-100 rounded-md transition-colors mb-4"
-            on:click={() => { } }>Add</button>
-            <button class="px-4 py-2 text-sm font-medium text-white bg-red-500 bg-opacity-80 hover:bg-red-600 bg-opacity-100 rounded-md transition-colors mb-4"
-            on:click={handleDelete}>Delete</button>
+  <!-- 메인 컨텐츠 영역 -->
+  <div class="flex-1 h-full overflow-hidden flex flex-col">
+    <!-- 헤더 -->
+    <div class="bg-white border-b border-gray-200 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold">Cohort Comparison Analysis</h1>
+          <p class="text-gray-600 text-sm mt-1">
+            Selected cohorts are analyzed and compared based on various metrics.
+          </p>
         </div>
-    </div>
-
-    <div class="space-y-3">
-      {#each cohortData as cohort, index}
-        <div class="border rounded-lg overflow-hidden">
+        
+        <!-- Select Chart 드롭다운 -->
+        <div class="relative" bind:this={selectChartRef}>
           <button 
-            class="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-            on:click={() => toggleExpand(index)}
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            on:click|stopPropagation={toggleSelectChart}
           >
-            <div class="flex items-center gap-6">
-              <svg 
-                class="w-5 h-5 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-              <div class="flex items-center gap-4">
-                <div class="font-medium">
-                  <span class="text-sm text-gray-400">ID  </span>
-                  <span class="text-sm text-black-500">{cohort.id}</span>
-                </div>
-                
-                <div class="text-blue-600 font-medium">{cohort.name}</div>
-                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">{cohort.totalPatients}</span>
-                <span class="text-sm text-gray-500">Updated: {cohort.updatedAt}</span>
-              </div>
-            </div>
-            
-            <input
-              type="checkbox"
-              class="w-4 h-4 cursor-pointer"
-              bind:checked={selectedForDeletion[cohort.id]}
-              on:click|stopPropagation
-            />
+            <span>{isSelectChartOpen ? '▲' : '▼'} Select Chart</span>
           </button>
           
-          {#if expandedStates[index]}
-            <div class="p-4 border-t" transition:slide>
-              <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p class="text-gray-500">ID</p>
-                  <p class="font-medium">{cohort.id}</p>
-                </div>
-                <div>
-                  <p class="text-gray-500">Author</p>
-                  <p class="font-medium">{cohort.author}</p>
-                </div>
-                <div>
-                  <p class="text-gray-500">Created at</p>
-                  <p class="font-medium">{cohort.createdAt}</p>
-                </div>
-                <div>
-                  <p class="text-gray-500">Updated at</p>
-                  <p class="font-medium">{cohort.updatedAt}</p>
-                </div>
-                <div class="col-span-2">
-                  <p class="text-gray-500">Description</p>
-                  <p class="font-medium">{cohort.description}</p>
-                </div>
+          {#if isSelectChartOpen}
+            <div class="absolute right-0 top-full mt-1 z-50 min-w-[250px] bg-white border border-gray-200 rounded-lg shadow-lg p-4" transition:slide>
+              <div class="flex flex-col gap-3">
+                {#each selectItems as item}
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={item.checked}
+                      on:change={() => handleCheckboxChange(item)}
+                      class="w-4 h-4 text-blue-600 rounded border-gray-300"
+                    />
+                    <span class="text-sm text-gray-700">{item.name}</span>
+                  </label>
+                {/each}
               </div>
             </div>
           {/if}
         </div>
-      {/each}
-    </div>
-  </div>
-  
-  
-  <div class="w-full mt-8">
-    <div class="flex items-center justify-between gap-2">
-        <h3 class="text-2xl font-bold mb-4">Charts</h3>
-    </div>
-  </div>
-
-  <!-- Charts 섹션 -->
-  <div class="w-full">
-    <!-- 탭 메뉴 -->
-    <div class="w-full mb-5 border-b border-gray-300">
-      <div class="flex">
-        <button 
-          class="tab {activeTab === 'default' ? 'active' : ''}"
-          on:click={() => switchTab('default')}
-        >
-          Default
-        </button>
-        <button 
-          class="tab {activeTab === 'customizable' ? 'active' : ''}"
-          on:click={() => switchTab('customizable')}
-        >
-          Customizable
-        </button>
       </div>
     </div>
 
-    <!-- 차트 컨텐츠 -->
-    {#if activeTab === 'default'}
-      <div class="w-full">
-        <!-- Select Chart 토글 버튼과 드롭다운 -->
-        <div class="relative flex justify-end mb-4">
-          <div bind:this={selectChartRef}>
-            <button 
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              on:click|stopPropagation={toggleSelectChart}
-            >
-              <span>{isSelectChartOpen ? '▲' : '▼'} Select Chart</span>
-            </button>
-            
-            {#if isSelectChartOpen}
-              <div class="absolute right-0 top-full z-50 min-w-[250px] bg-white border border-gray-300 rounded-lg shadow-md p-4" transition:slide>
-                <div class="flex flex-col gap-3">
-                  {#each selectItems as item}
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={item.checked}
-                        on:change={() => handleCheckboxChange(item)}
-                        class="w-4 h-4 text-blue-600 rounded border-gray-300"
-                      />
-                      <span class="text-sm text-gray-700">{item.name}</span>
-                    </label>
-                  {/each}
-                </div>
-              </div>
-            {/if}
-          </div>
-        </div>
-
-        <!-- 차트 컨텐츠 -->
-        <div class="grid grid-cols-2 gap-4">
-          {#if selectItems[0].checked}
-            <ChartCard 
-              title="Gender Ratio" 
-              description="The ratio of genders within the cohort."
-              chartId={0}
-              type="full"
-              hasTableView={true}
-              isTableView={isTableView.genderRatio}
-              on:toggleView={({detail}) => isTableView.genderRatio = detail}
-              on:close={handleChartClose}
-            >
-              <GroupDonutChartWrapper data={genderChartData}/>
-              <div slot="table" class="w-full h-full flex flex-col p-4">
+    <!-- 차트 그리드 -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {#if selectItems[0].checked}
+          <ChartCard 
+            title="Gender Ratio" 
+            description="The ratio of genders within the cohort."
+            chartId={0}
+            type="full"
+            hasTableView={true}
+            isTableView={isTableView.genderRatio}
+            on:toggleView={({detail}) => isTableView.genderRatio = detail}
+            on:close={handleChartClose}
+          >
+            <div class="w-full h-full flex flex-col">
+              <div class="flex-grow flex items-center justify-center">
                 {#if genderChartData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <DataTable
-                      data={transformDonutChartToTableData(genderChartData)}
-                    />
-                  </div>
+                  <GroupDonutChartWrapper data={genderChartData}/>
                 {/if}
               </div>
-            </ChartCard>
-          {/if}          
-
-          {#if selectItems[1].checked}
-            <ChartCard 
-              title="Mortality" 
-              description="The percentage of patients within the cohort who have died."
-              chartId={1}
-              type="full"
-              hasTableView={true}
-              isTableView={isTableView.mortality}
-              on:toggleView={({detail}) => isTableView.mortality = detail}
-              on:close={handleChartClose}
-            >
+            </div>
+            <div slot="table" class="w-full h-full flex flex-col p-4">
+              {#if genderChartData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <DataTable
+                    data={transformDonutChartToTableData(genderChartData)}
+                  />
+                </div>
+              {/if}
+            </div>
+          </ChartCard>
+        {/if}
+        {#if selectItems[1].checked}
+          <ChartCard 
+            title="Mortality" 
+            description="The percentage of patients within the cohort who have died."
+            chartId={1}
+            type="full"
+            hasTableView={true}
+            isTableView={isTableView.mortality}
+            on:toggleView={({detail}) => isTableView.mortality = detail}
+            on:close={handleChartClose}
+          >
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if mortalityChartData && mortalityChartData.length > 0}
@@ -584,23 +582,22 @@
                   <DataTable
                     data={transformDonutChartToTableData(mortalityChartData)}
                   />
-              </div>
+                </div>
               {/if}
             </div>
-            </ChartCard>
-          {/if}
-
-          {#if selectItems[2].checked}
-            <ChartCard 
-              title="Visit Type Ratio"
-              description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
-              chartId={2}
-              type="full"
-              hasTableView={true}
-              isTableView={isTableView.visitTypeRatio}
-              on:toggleView={({detail}) => isTableView.visitTypeRatio = detail}
-              on:close={handleChartClose}
-            >
+          </ChartCard>
+        {/if}
+        {#if selectItems[2].checked}
+          <ChartCard 
+            title="Visit Type Ratio"
+            description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
+            chartId={2}
+            type="full"
+            hasTableView={true}
+            isTableView={isTableView.visitTypeRatio}
+            on:toggleView={({detail}) => isTableView.visitTypeRatio = detail}
+            on:close={handleChartClose}
+          >
             <div class="w-full h-full flex flex-col">
               <div class="flex-grow flex items-center justify-center">
                 {#if visitTypeChartData && visitTypeChartData.length > 0}
@@ -614,97 +611,88 @@
                   <DataTable
                     data={transformDonutChartToTableData(visitTypeChartData)}
                   />
-                  </div>
-                {/if}
+                </div>
+              {/if}
             </div>
-            </ChartCard>
-          {/if}
-
-          {#if selectItems[3].checked}
-            <ChartCard 
-              title="Distribution of First Occurrence Age"
-              description="The age distribution of patients at the time of their first medical visit during the cohort period."
-              chartId={3}
-              type="full"
-              hasTableView={true}
-              isTableView={isTableView.firstOccurrenceAge}
-              on:toggleView={({detail}) => isTableView.firstOccurrenceAge = detail}
-              on:close={handleChartClose}
-            >
-              <div class="w-full h-full flex flex-col">
-                {#if ageDistributionChartData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <LineChart
-                      data={ageDistributionChartData}
-                      cohortColorMap={cohortColorMap}
-                    />
-                  </div>
-                {/if}
+          </ChartCard>
+        {/if}
+        {#if selectItems[3].checked}
+          <ChartCard 
+            title="Distribution of First Occurrence Age"
+            description="The age distribution of patients at the time of their first medical visit during the cohort period."
+            chartId={3}
+            type="full"
+            hasTableView={true}
+            isTableView={isTableView.firstOccurrenceAge}
+            on:toggleView={({detail}) => isTableView.firstOccurrenceAge = detail}
+            on:close={handleChartClose}
+          >
+            <div class="w-full h-full flex flex-col">
+              <div class="flex-1 overflow-x-auto overflow-y-auto">
+                <LineChart
+                  data={ageDistributionChartData}
+                  cohortColorMap={cohortColorMap}
+                />
               </div>
-
-              <div slot="table" class="w-full h-full flex flex-col p-4">
-                {#if ageDistributionChartData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <DataTable
-                      data={transformLineChartToTableData(ageDistributionChartData)}
-                    />
-                  </div>
-                {/if}
+            </div>
+            <div slot="table" class="w-full h-full flex flex-col p-4">
+              {#if ageDistributionChartData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <DataTable
+                    data={transformLineChartToTableData(ageDistributionChartData)}
+                  />
+                </div>
+              {/if}
+            </div>
+          </ChartCard>
+        {/if}
+        {#if selectItems[4].checked}
+          <ChartCard 
+            title="Distribution of Visit Count"
+            description="The distribution of the total number of medical visits made by patients during the cohort period."
+            chartId={4}
+            type="full"
+            hasTableView={true}
+            isTableView={isTableView.visitCount}
+            on:toggleView={({detail}) => isTableView.visitCount = detail}
+            on:close={handleChartClose}
+          >
+            <div class="w-full h-full flex flex-col">
+              <div class="flex-1 overflow-x-auto overflow-y-auto">
+                <LineChart
+                  data={visitCountChartData}
+                  cohortColorMap={cohortColorMap}
+                />
               </div>
-            </ChartCard>
-          {/if}
-          
-          {#if selectItems[4].checked}
-            <ChartCard 
-              title="Distribution of Visit Count"
-              description="The distribution of the total number of medical visits made by patients during the cohort period."
-              chartId={4}
-              type="full"
-              hasTableView={true}
-              isTableView={isTableView.visitCount}
-              on:toggleView={({detail}) => isTableView.visitCount = detail}
-              on:close={handleChartClose}
-            >
-              <div class="w-full h-full flex flex-col">
-                {#if visitCountChartData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <LineChart
-                      data={visitCountChartData}
-                      cohortColorMap={cohortColorMap}
-                    />
-                  </div>
-                {/if}
-              </div>
-
-              <div slot="table" class="w-full h-full flex flex-col p-4">
-                {#if visitCountChartData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <DataTable
-                      data={transformLineChartToTableData(visitCountChartData)}
-                    />
-                  </div>
-                {/if}
-              </div>
-            </ChartCard>
-          {/if}
-
-          {#if selectItems[5].checked}
-            <ChartCard 
-              title="Top 10 Drugs"
-              description="The list of the top 10 most frequently prescribed medications for patients in the cohort."
-              chartId={5}
-              type="half"
-              showSelector={true}
-              options={getViewOptions('drug')}
-              selectedOption={topTenDrugViewType}
-              hasTableView={true}
-              isTableView={isTableView.topTenDrugs}
-              on:toggleView={({detail}) => isTableView.topTenDrugs = detail}
-              on:optionSelect={handleViewTypeChange}
-              on:close={handleChartClose}
-            >
-              <div class="w-full h-full flex flex-col p-4">
-                {#if stackedDrugsData.length > 0}
+            </div>
+            <div slot="table" class="w-full h-full flex flex-col p-4">
+              {#if visitCountChartData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <DataTable
+                    data={transformLineChartToTableData(visitCountChartData)}
+                  />
+                </div>
+              {/if}
+            </div>
+          </ChartCard>
+        {/if}
+        {#if selectItems[5].checked}
+          <ChartCard 
+            title="Top 10 Drugs"
+            description="The list of the top 10 most frequently prescribed medications for patients in the cohort."
+            chartId={5}
+            type="half"
+            showSelector={true}
+            options={getViewOptions('drug')}
+            selectedOption={topTenDrugViewType}
+            hasTableView={true}
+            isTableView={isTableView.topTenDrugs}
+            on:toggleView={({detail}) => isTableView.topTenDrugs = detail}
+            on:optionSelect={handleViewTypeChange}
+            on:close={handleChartClose}
+          >
+            <div class="w-full h-full flex flex-col p-4">
+              {#if stackedDrugsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <StackedBarChartWrapper
                     data={transformTopTenData(
@@ -716,42 +704,41 @@
                     cohortTotalCounts={cohortTotalCounts}
                   />
                 </div>
+              {/if}
+            </div>
+            <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+              <div class="flex-1 overflow-x-auto overflow-y-auto">
+                {#if stackedDrugsData.length > 0}
+                  <StackedBarChartTableView
+                    data={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType).transformedData}
+                    domainKey="drug"
+                    orderedCohorts={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType).orderedCohorts}
+                    cohortTotalCounts={cohortTotalCounts}
+                  />
                 {/if}
               </div>
-              <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+            </div>
+          </ChartCard>
+        {/if}
+        {#if selectItems[6].checked}
+          <ChartCard 
+            title="Top 10 Conditions"
+            description="The list of the top 10 most frequently diagnosed medical conditions among patients in the cohort."
+            chartId={6}
+            type="half"
+            showSelector={true}
+            options={getViewOptions('condition')}
+            selectedOption={topTenConditionViewType}
+            hasTableView={true}
+            isTableView={isTableView.topTenConditions}
+            on:toggleView={({detail}) => isTableView.topTenConditions = detail}
+            on:optionSelect={handleViewTypeChange}
+            on:close={handleChartClose}
+          >
+            <div class="w-full h-full flex flex-col p-2">
+              {#if stackedConditionsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
-                  {#if stackedDrugsData.length > 0}
-                    <StackedBarChartTableView
-                      data={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType).transformedData}
-                      domainKey="drug"
-                      orderedCohorts={transformTopTenData(stackedDrugsData, 'drug', topTenDrugViewType).orderedCohorts}
-                      cohortTotalCounts={cohortTotalCounts}
-                    />
-                  {/if}
-                </div>
-              </div>
-            </ChartCard>
-          {/if}
-
-          {#if selectItems[6].checked}
-              <ChartCard 
-                title="Top 10 Conditions"
-                description="The list of the top 10 most frequently diagnosed medical conditions among patients in the cohort."
-                chartId={6}
-                type="half"
-                showSelector={true}
-                options={getViewOptions('condition')}
-                selectedOption={topTenConditionViewType}
-                hasTableView={true}
-                isTableView={isTableView.topTenConditions}
-                on:toggleView={({detail}) => isTableView.topTenConditions = detail}
-                on:optionSelect={handleViewTypeChange}
-                on:close={handleChartClose}
-              >
-              <div class = "w-full h-full flex flex-col p-2">
-                {#if stackedConditionsData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <StackedBarChartWrapper
+                  <StackedBarChartWrapper
                     data={transformTopTenData(
                       stackedConditionsData,
                       'condition',
@@ -760,42 +747,39 @@
                     cohortColorMap={cohortColorMap}
                     cohortTotalCounts={cohortTotalCounts}
                   />
-                  </div>
-                {/if}
-              </div>
-
-              <!-- 테이블 뷰 -->
-              <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
-                {#if stackedConditionsData.length > 0}
-                  <div class="flex-1 overflow-x-auto overflow-y-auto">
-                    <StackedBarChartTableView
-                      data={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType).transformedData}
-                      domainKey="condition"
-                      orderedCohorts={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType).orderedCohorts}
-                      cohortTotalCounts={cohortTotalCounts}
-                    />
-                  </div>
-                {/if}
-              </div>
-              </ChartCard>
-          {/if}
-
-          {#if selectItems[7].checked}
-            <ChartCard 
-              title="Top 10 Procedures"
-              description="The list of the top 10 most frequently performed procedures and medical tests on patients in the cohort."
-              chartId={7}
-              type="half"
-              showSelector={true}
-              options={getViewOptions('procedure')}
-              selectedOption={topTenProcedureViewType}
-              hasTableView={true}
-              isTableView={isTableView.topTenProcedures}
-              on:toggleView={({detail}) => isTableView.topTenProcedures = detail}
-              on:optionSelect={handleViewTypeChange}
-              on:close={handleChartClose}
-            >
-            <div class = "w-full h-full flex flex-col p-2">
+                </div>
+              {/if}
+            </div>
+            <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
+              {#if stackedConditionsData.length > 0}
+                <div class="flex-1 overflow-x-auto overflow-y-auto">
+                  <StackedBarChartTableView
+                    data={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType).transformedData}
+                    domainKey="condition"
+                    orderedCohorts={transformTopTenData(stackedConditionsData, 'condition', topTenConditionViewType).orderedCohorts}
+                    cohortTotalCounts={cohortTotalCounts}
+                  />
+                </div>
+              {/if}
+            </div>
+          </ChartCard>
+        {/if}
+        {#if selectItems[7].checked}
+          <ChartCard 
+            title="Top 10 Procedures"
+            description="The list of the top 10 most frequently performed procedures and medical tests on patients in the cohort."
+            chartId={7}
+            type="half"
+            showSelector={true}
+            options={getViewOptions('procedure')}
+            selectedOption={topTenProcedureViewType}
+            hasTableView={true}
+            isTableView={isTableView.topTenProcedures}
+            on:toggleView={({detail}) => isTableView.topTenProcedures = detail}
+            on:optionSelect={handleViewTypeChange}
+            on:close={handleChartClose}
+          >
+            <div class="w-full h-full flex flex-col p-2">
               {#if stackedProceduresData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <StackedBarChartWrapper
@@ -810,8 +794,6 @@
                 </div>
               {/if}
             </div>
-
-            <!-- 테이블 뷰 -->
             <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
               {#if stackedProceduresData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
@@ -824,25 +806,24 @@
                 </div>
               {/if}
             </div>
-            </ChartCard>
-          {/if}
-
-          {#if selectItems[8].checked}
-            <ChartCard 
-              title="Top 10 Measurements"
-              description="The list of the top 10 most frequently recorded clinical measurements within the cohort."
-              chartId={8}
-              type="half"
-              showSelector={true}
-              options={getViewOptions('measurement')}
-              selectedOption={topTenMeasurementViewType}
-              hasTableView={true}
-              isTableView={isTableView.topTenMeasurements}
-              on:toggleView={({detail}) => isTableView.topTenMeasurements = detail}
-              on:optionSelect={handleViewTypeChange}
-              on:close={handleChartClose}
-            >
-            <div class = "w-full h-full flex flex-col p-2">
+          </ChartCard>
+        {/if}
+        {#if selectItems[8].checked}
+          <ChartCard 
+            title="Top 10 Measurements"
+            description="The list of the top 10 most frequently recorded clinical measurements within the cohort."
+            chartId={8}
+            type="half"
+            showSelector={true}
+            options={getViewOptions('measurement')}
+            selectedOption={topTenMeasurementViewType}
+            hasTableView={true}
+            isTableView={isTableView.topTenMeasurements}
+            on:toggleView={({detail}) => isTableView.topTenMeasurements = detail}
+            on:optionSelect={handleViewTypeChange}
+            on:close={handleChartClose}
+          >
+            <div class="w-full h-full flex flex-col p-2">
               {#if stackedMeasurementsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
                   <StackedBarChartWrapper
@@ -857,8 +838,6 @@
                 </div>
               {/if}
             </div>
-
-            <!-- 테이블 뷰 -->
             <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
               {#if stackedMeasurementsData.length > 0}
                 <div class="flex-1 overflow-x-auto overflow-y-auto">
@@ -871,13 +850,11 @@
                 </div>
               {/if}
             </div>
-            </ChartCard>
-          {/if}
-        </div>
+          </ChartCard>
+        {/if}
       </div>
-    {:else if activeTab === 'customizable'}
-    {/if}
-  </div> 
-</div> 
+    </div>
+  </div>
+</div>
 
 <svelte:window on:click={handleClickOutside} /> 
