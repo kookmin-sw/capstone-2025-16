@@ -1,5 +1,6 @@
 <script>
     import { onMount, onDestroy, tick } from "svelte";
+    import { slide } from 'svelte/transition';
     import CDMInfo from "$lib/components/Table/CDMInfo.svelte";
     import Condition from "$lib/components/Table/Condition.svelte";
     import Drug from "$lib/components/Table/Drug.svelte";
@@ -8,7 +9,6 @@
     import ProcedureOccurrence from "$lib/components/Table/ProcedureOccurrence.svelte";
     import Specimen from "$lib/components/Table/Specimen.svelte";
     import BioSignal from "$lib/components/Table/BioSignal.svelte";
-    import Modal from "$lib/components/Modal.svelte";
     import * as d3 from "d3";
 
     import analysisData from '$lib/data/patientAnalysisTest.json';
@@ -22,8 +22,8 @@
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
 
     let timelineContainer;
-    let showModal = false;
-    let isStatisticsView = true;
+    let isSelectTableOpen = false;
+    let isStatisticsView = false;
     let show = false;
     export let data;
 
@@ -53,7 +53,15 @@
         bio_signal: BioSignal
     };
 
-    let selectedTables = new Set(Object.keys(tableComponents)); // Object.keys(tableComponents)
+    let selectItems = [ // default 차트에서 차트 선택 박스
+        {id: 'condition', name: 'Condition', checked: true},
+        {id: 'drug', name: 'Drug', checked: true},
+        {id: 'measurement', name: 'Measurement', checked: true},
+        {id: 'observation', name: 'Observation', checked: true},
+        {id: 'procedure_occurrence', name: 'Procedure Occurrence', checked: true},
+        {id: 'specimen', name: 'Specimen', checked: true},
+        {id: 'bio_signal', name: 'Bio Signal', checked: true},
+    ];
 
     //   데이터 매칭 (각 테이블에 해당하는 props 설정)
     let tableProps = {};
@@ -88,6 +96,7 @@
     };
 
     async function fetchDataById(id) {
+        isStatisticsView = true;
         try {
             const res = await fetch("/cdm_sample_data.json");
             const fullData = await res.json();
@@ -305,8 +314,13 @@
         svg.call(zoom);
     }
 
-    function notify() {
-        alert("테이블을 선택해주세요.");
+    function toggleSelectTable() {
+        isSelectTableOpen = !isSelectTableOpen;
+    }
+
+    function handleCheckboxChange(item) { // Select Chart 드롭다운 메뉴에서 체크박스 상태 변경 함수
+        item.checked = !item.checked;
+        selectItems = selectItems; // Svelte 반응성을 위한 재할당
     }
 
     onMount(() => {
@@ -353,14 +367,6 @@
                         'text-gray-600 hover:text-gray-900'}"
                 on:click={() => isStatisticsView = false}>
                 Statistics
-            </button>
-            <button 
-                class="px-2 py-0.5 text-xs rounded-full transition-colors
-                    {isStatisticsView ? 
-                        'bg-white text-blue-600 shadow-sm' : 
-                        'text-gray-600 hover:text-gray-900'}"
-                on:click={() => isStatisticsView = true}>
-                Viewer
             </button>
         </div>
     </div>
@@ -503,30 +509,41 @@
             </div>
         </div>
     {:else}
-        <button 
-            class="ml-auto mb-8 w-fit px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out"
-                on:click={() => {
-                    if(Object.keys(tableProps).length === 0){
-                        notify();
-                    }
-                    else{
-                        showModal = true
-                    }
-            }}>
-            Select Tables
-        </button>
+        <div class="relative flex justify-end mb-2">
+            <button 
+                class="px-4 py-2 ml-auto w-fit text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                on:click|stopPropagation={toggleSelectTable}
+            >
+                <span>{isSelectTableOpen ? '▲' : '▼'} Select Tables</span>
+            </button>
+            {#if isSelectTableOpen}
+                <div class="absolute right-0 top-full z-50 min-w-[250px] bg-white border border-gray-300 rounded-lg shadow-md p-4" transition:slide>
+                    <div class="flex flex-col gap-3">
+                        {#each selectItems as item}
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={item.checked}
+                                    on:change={() => handleCheckboxChange(item)}
+                                    class="w-4 h-4 text-blue-600 rounded border-gray-300"
+                                />
+                                    <span class="text-sm text-gray-700">{item.name}</span>
+                            </label>
+                        {/each}
+                    </div>
+                </div>
+            {/if}
+        </div>
         {#if tableProps?.cdm_info}
             <CDMInfo careSite={tableProps["cdm_info"].careSite} location={tableProps["cdm_info"].location} visitOccurrence={tableProps["cdm_info"].visitOccurrence} />
-            {#each Array.from(selectedTables) as tableId}
-                {#if tableComponents[tableId]}
-                    <svelte:component this={tableComponents[tableId]} {...tableProps[tableId]} />
+            {#each Array.from(selectItems) as tableId}
+                {#if tableId.checked}
+                    <svelte:component this={tableComponents[tableId.id]} {...tableProps[tableId.id]} />
                 {/if}
             {/each}
         {/if}
     {/if}
 </div>
-
-<Modal bind:isOpen={showModal} bind:selectedTables/>
 
 <style>
     .info {
