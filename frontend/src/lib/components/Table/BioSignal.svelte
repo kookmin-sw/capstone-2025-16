@@ -12,8 +12,6 @@
 
   {#each bioSignal as signal}
     <div class="bio-signal-row">
-      <span class="info"><strong>Bio Signal ID:</strong> {signal["bio_signal)id"]}</span>
-      <span class="divider">|</span>
       <span class="info"><strong>Date:</strong> {signal.bio_signal_date}</span>
       <span class="divider">|</span>
       <span class="info"><strong>Concept ID:</strong> 
@@ -42,7 +40,7 @@
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
   }
