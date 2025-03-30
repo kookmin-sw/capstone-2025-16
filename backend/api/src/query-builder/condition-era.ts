@@ -10,16 +10,24 @@ import {
 export const getQuery = (a: ConditionEraFilter) => {
   let query = db
     .selectFrom("condition_era")
-    .select([
+    .select(({ fn }) => [
       "condition_era.person_id as person_id",
       "condition_era.condition_era_start_date as start_date",
       "condition_era.condition_era_end_date as end_date",
+      ...(a.first
+        ? [
+            fn
+              .agg("row_number")
+              .over((ob) =>
+                ob
+                  .partitionBy("condition_era.person_id")
+                  .orderBy("condition_era.condition_era_start_date")
+              )
+              .as("row_number"),
+          ]
+        : []),
     ])
     .leftJoin("person", "condition_era.person_id", "person.person_id");
-
-  if (a.first) {
-    // TODO
-  }
 
   if (a.startAge) {
     query = handleAgeWithNumberOperator(
@@ -61,6 +69,13 @@ export const getQuery = (a: ConditionEraFilter) => {
       "condition_era.condition_era_end_date",
       a.endDate
     );
+  }
+
+  if (a.first) {
+    return db
+      .selectFrom(query.as("filtered_condition_era"))
+      .where("row_number", "=", 1)
+      .select(["person_id", "start_date", "end_date"]);
   }
 
   return query;
