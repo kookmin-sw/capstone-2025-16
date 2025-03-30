@@ -316,7 +316,7 @@ export interface SpecimenFilter {
   quantity?: NumberWithOperator;
   unitType?: BigIntWithOperator;
   anatomicSiteType?: BigIntWithOperator;
-  diseaseStatus?: NumberWithOperator;
+  diseaseStatus?: BigIntWithOperator;
   //source?: StringWithOperator;
 }
 
