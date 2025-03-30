@@ -363,7 +363,7 @@
             <button 
                 class="px-2 py-0.5 text-xs rounded-full transition-colors
                     {!isStatisticsView ? 
-                        'bg-white text-blue-600 shadow-sm' : 
+                        'text-blue-600' : 
                         'text-gray-600 hover:text-gray-900'}"
                 on:click={() => isStatisticsView = false}>
                 Statistics
