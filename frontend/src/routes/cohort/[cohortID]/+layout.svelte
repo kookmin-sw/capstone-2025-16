@@ -2,7 +2,7 @@
     import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { filter } from 'd3';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	let { children, data } = $props();
     const cohortID = $page.params.cohortID;
@@ -11,11 +11,13 @@
 	let itemsPerPage = $state(10);
 	let currentPage = $state(0);
 	let paginatedData = $state([]);
+	let cohortDiv;
+	let resizeObserver;
 
-	const rowHeight = 42;
+	const rowHeight = 35;
 
 	function calculateItemsPerPage() {
-		const availableHeight = window.innerHeight - 50;
+		const availableHeight = cohortDiv.clientHeight - 32;
 		itemsPerPage = Math.floor(availableHeight / rowHeight);
 	}
 	// 검색어에 따라 데이터를 필터링
@@ -30,13 +32,29 @@
 		);
 	}
 
-	onMount(() => {
-		if(data.userData.length !== 0){
+	onMount(async () => {
+		if (data.userData.length !== 0) {
 			currentPage = 1;
 			filteredData = data.userData;
-			calculateItemsPerPage();
 		}
+
+		await tick();
+
+		if (cohortDiv) {
+			calculateItemsPerPage();
+
+			resizeObserver = new ResizeObserver(() => {
+				calculateItemsPerPage();
+			});
+			resizeObserver.observe(cohortDiv);
+		}
+
 		window.addEventListener('resize', calculateItemsPerPage);
+
+		return () => {
+			window.removeEventListener('resize', calculateItemsPerPage);
+			if (resizeObserver) resizeObserver.disconnect();
+		};
 	});
 
 	$effect(() => {
@@ -81,7 +99,7 @@
 			</svg>
 		</button>
 	</div>
-	<div class="h-full w-full px-2">
+	<div class="h-[100vh] w-full px-2" bind:this={cohortDiv}>
 		<div class="flex flex-col rounded-sm border-r border-t border-l border-zinc-200 bg-zinc-50 max-h-full overflow-y-auto">
 			{#each paginatedData as user}
 				<a href="/cohort/{cohortID}/{user.personid}">
