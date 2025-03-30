@@ -4,6 +4,7 @@ import {
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
+  handleIdentifierWithOperator,
 } from "./base";
 
 export const getQuery = (a: ConditionEraFilter) => {
@@ -39,7 +40,7 @@ export const getQuery = (a: ConditionEraFilter) => {
   }
 
   if (a.gender) {
-    query = handleNumberWithOperator(
+    query = handleIdentifierWithOperator(
       query,
       "person.gender_concept_id",
       a.gender

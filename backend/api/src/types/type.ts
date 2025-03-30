@@ -36,15 +36,20 @@ export interface StringOperator {
   contains?: string | string[];
 }
 
+export interface IdentifierOperator {
+  neq?: string | string[];
+  eq?: string | string[];
+}
+
 /**
  * 숫자(정수/실수) 관련 연산자를 나타냅니다.
  */
 export type NumberWithOperator = number | Operator<number>;
 
 /**
- * 빅인트 관련 연산자를 나타냅니다.
+ * 식별자(string) 관련 연산자를 나타냅니다.
  */
-export type BigIntWithOperator = bigint | Operator<bigint>;
+export type IdentifierWithOperator = string | IdentifierOperator;
 
 /**
  * 날짜(문자열) 관련 연산자를 나타냅니다.
@@ -115,11 +120,11 @@ export type Filter = {
  * condition_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ConditionEraFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
   conditionCount?: NumberWithOperator;
@@ -130,29 +135,29 @@ export interface ConditionEraFilter {
  * condition_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ConditionOccurrenceFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   conditionStatus?: NumberWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
-  conditionType?: BigIntWithOperator;
-  visitType?: BigIntWithOperator;
+  conditionType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
   //stopReason?: StringWithOperator;
-  source?: BigIntWithOperator;
-  providerSpecialty?: BigIntWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
 /**
  * death 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DeathFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   date?: DateWithOperator;
-  deathType?: BigIntWithOperator;
+  deathType?: IdentifierWithOperator;
   cause?: NumberWithOperator;
 }
 
@@ -160,32 +165,32 @@ export interface DeathFilter {
  * device_exposure 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DeviceExposureFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
-  deviceType?: BigIntWithOperator;
-  visitType?: BigIntWithOperator;
+  deviceType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
   uniqueDeviceId?: StringWithOperator;
   quantity?: NumberWithOperator;
-  source?: BigIntWithOperator;
-  providerSpecialty?: BigIntWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
 /**
  * dose_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DoseEraFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
-  doseUnit?: BigIntWithOperator;
+  doseUnit?: IdentifierWithOperator;
   length?: NumberWithOperator;
   doseValue?: NumberWithOperator;
 }
@@ -194,11 +199,11 @@ export interface DoseEraFilter {
  * drug_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DrugEraFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
   length?: NumberWithOperator;
@@ -209,68 +214,68 @@ export interface DrugEraFilter {
  * drug_exposure 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DrugExposureFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
-  drugType?: BigIntWithOperator;
-  visitType?: BigIntWithOperator;
+  drugType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
   stopReason?: StringWithOperator;
   refill?: NumberWithOperator;
   quantity?: NumberWithOperator;
   daysSupply?: NumberWithOperator;
-  routeType?: BigIntWithOperator;
+  routeType?: IdentifierWithOperator;
   effectiveDose?: NumberWithOperator;
   doseUnit?: NumberWithOperator;
   lotNumber?: StringWithOperator;
-  source?: BigIntWithOperator;
-  providerSpecialty?: BigIntWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
 /**
  * measurement 도메인에 대한 필터 인터페이스입니다.
  */
 export interface MeasurementFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   date?: DateWithOperator;
-  measurementType?: BigIntWithOperator;
-  visitType?: BigIntWithOperator;
-  operatorType?: BigIntWithOperator;
+  measurementType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  operatorType?: IdentifierWithOperator;
   valueAsNumber?: NumberWithOperator;
-  valueAsConcept?: BigIntWithOperator;
-  unitType?: BigIntWithOperator;
+  valueAsConcept?: IdentifierWithOperator;
+  unitType?: IdentifierWithOperator;
   abnormal?: boolean;
   rangeLow?: NumberWithOperator;
   rangeHigh?: NumberWithOperator;
   //rangeLowRatio?: NumberWithOperator;
   //rangeHighRatio?: NumberWithOperator;
-  providerSpecialty?: BigIntWithOperator;
-  source?: BigIntWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
+  source?: IdentifierWithOperator;
 }
 
 /**
  * observation 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ObservationFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   date?: DateWithOperator;
-  observationType?: BigIntWithOperator;
-  visitType?: BigIntWithOperator;
+  observationType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
   valueAsNumber?: NumberWithOperator;
   valueAsString?: StringWithOperator;
-  valueAsConcept?: BigIntWithOperator;
-  qualifierType?: BigIntWithOperator;
-  unitType?: BigIntWithOperator;
-  source?: BigIntWithOperator;
-  providerSpecialty?: BigIntWithOperator;
+  valueAsConcept?: IdentifierWithOperator;
+  qualifierType?: IdentifierWithOperator;
+  unitType?: IdentifierWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
 /**
@@ -290,33 +295,33 @@ export interface ObservationPeriodFilter {
  * procedure_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ProcedureOccurrenceFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
-  procedureType?: BigIntWithOperator;
-  visitType?: BigIntWithOperator;
-  modifierType?: BigIntWithOperator;
+  procedureType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  modifierType?: IdentifierWithOperator;
   quantity?: NumberWithOperator;
-  source?: BigIntWithOperator;
-  providerSpecialty?: BigIntWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
 /**
  * specimen 도메인에 대한 필터 인터페이스입니다.
  */
 export interface SpecimenFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   date?: DateWithOperator;
-  specimenType?: BigIntWithOperator;
+  specimenType?: IdentifierWithOperator;
   quantity?: NumberWithOperator;
-  unitType?: BigIntWithOperator;
-  anatomicSiteType?: BigIntWithOperator;
-  diseaseStatus?: BigIntWithOperator;
+  unitType?: IdentifierWithOperator;
+  anatomicSiteType?: IdentifierWithOperator;
+  diseaseStatus?: IdentifierWithOperator;
   //source?: StringWithOperator;
 }
 
@@ -324,16 +329,16 @@ export interface SpecimenFilter {
  * visit_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface VisitOccurrenceFilter {
-  conceptset?: BigIntWithOperator;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
-  visitType?: BigIntWithOperator;
+  visitType?: IdentifierWithOperator;
   length?: NumberWithOperator;
-  source?: BigIntWithOperator;
-  providerSpecialty?: BigIntWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
   placeOfService?: NumberWithOperator;
   //location?: NumberWithOperator;
 }
@@ -343,11 +348,11 @@ export interface VisitOccurrenceFilter {
  */
 export interface DemographicFilter {
   age?: NumberWithOperator;
-  gender?: BigIntWithOperator;
+  gender?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
-  raceType?: BigIntWithOperator;
-  ethnicityType?: BigIntWithOperator;
+  raceType?: IdentifierWithOperator;
+  ethnicityType?: IdentifierWithOperator;
 }
 
 /**

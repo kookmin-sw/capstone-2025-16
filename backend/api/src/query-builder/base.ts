@@ -6,7 +6,7 @@ import {
   expressionBuilder,
 } from "kysely";
 import {
-  BigIntWithOperator,
+  IdentifierWithOperator,
   DateWithOperator,
   NumberWithOperator,
   StringWithOperator,
@@ -94,9 +94,7 @@ export const handleStringWithOperator = <DB, TB extends keyof DB, O>(
       const arr = operator.startsWith;
       query = query.where(({ or }) => {
         return or(
-          arr.map((s: string) =>
-            eb(column, "ilike", s.replace("%", "%%") + "%")
-          )
+          arr.map((e) => eb(column, "ilike", e.replace("%", "%%") + "%"))
         );
       });
     } else {
@@ -109,9 +107,7 @@ export const handleStringWithOperator = <DB, TB extends keyof DB, O>(
       const arr = operator.endsWith;
       query = query.where(({ or }) => {
         return or(
-          arr.map((s: string) =>
-            eb(column, "ilike", "%" + s.replace("%", "%%"))
-          )
+          arr.map((e) => eb(column, "ilike", "%" + e.replace("%", "%%")))
         );
       });
     } else {
@@ -124,9 +120,7 @@ export const handleStringWithOperator = <DB, TB extends keyof DB, O>(
       const arr = operator.contains;
       query = query.where(({ or }) => {
         return or(
-          arr.map((s: string) =>
-            eb(column, "ilike", "%" + s.replace("%", "%%") + "%")
-          )
+          arr.map((e) => eb(column, "ilike", "%" + e.replace("%", "%%") + "%"))
         );
       });
     } else {
@@ -153,7 +147,7 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
       query = query.where(
         column,
         "not in",
-        operator.neq.map((d) => eb.fn("_to_date", [eb.val(d)]))
+        operator.neq.map((e) => eb.fn("_to_date", [eb.val(e)]))
       );
     } else {
       query = query.where(
@@ -169,7 +163,7 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
       query = query.where(
         column,
         "in",
-        operator.eq.map((d) => eb.fn("_to_date", [eb.val(d)]))
+        operator.eq.map((e) => eb.fn("_to_date", [eb.val(e)]))
       );
     } else {
       query = query.where(
@@ -217,10 +211,10 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
 
 export const handleNumberWithOperator = <DB, TB extends keyof DB, O>(
   query: SelectQueryBuilder<DB, TB, O>,
-  column: Expression<bigint> | Expression<number> | ReferenceExpression<DB, TB>,
-  operator: NumberWithOperator | BigIntWithOperator
+  column: Expression<number> | ReferenceExpression<DB, TB>,
+  operator: NumberWithOperator
 ) => {
-  if (typeof operator === "number" || typeof operator === "bigint") {
+  if (typeof operator === "number") {
     return query.where(column, "=", operator);
   }
 
@@ -269,6 +263,52 @@ export const handleNumberWithOperator = <DB, TB extends keyof DB, O>(
       query = query.where(column, "<=", min(operator.lte));
     } else {
       query = query.where(column, "<=", operator.lte);
+    }
+  }
+
+  return query;
+};
+
+export const handleIdentifierWithOperator = <DB, TB extends keyof DB, O>(
+  query: SelectQueryBuilder<DB, TB, O>,
+  column: Expression<string> | ReferenceExpression<DB, TB>,
+  operator: IdentifierWithOperator
+) => {
+  const eb = expressionBuilder<DB, TB>();
+
+  if (typeof operator === "string") {
+    return query.where(column, "=", eb.fn("_to_int64", [eb.val(operator)]));
+  }
+
+  if (operator.neq) {
+    if (Array.isArray(operator.neq) && !operator.neq.length) {
+      query = query.where(
+        column,
+        "not in",
+        operator.neq.map((e) => eb.fn("_to_int64", [eb.val(e)]))
+      );
+    } else {
+      query = query.where(
+        column,
+        "!=",
+        eb.fn("_to_int64", [eb.val(operator.neq)])
+      );
+    }
+  }
+
+  if (operator.eq) {
+    if (Array.isArray(operator.eq) && !operator.eq.length) {
+      query = query.where(
+        column,
+        "in",
+        operator.eq.map((e) => eb.fn("_to_int64", [eb.val(e)]))
+      );
+    } else {
+      query = query.where(
+        column,
+        "=",
+        eb.fn("_to_int64", [eb.val(operator.eq)])
+      );
     }
   }
 
