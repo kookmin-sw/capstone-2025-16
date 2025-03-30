@@ -91,9 +91,9 @@
 
 		<!-- Pagination -->
 		<div class="flex justify-between px-2 py-2 text-xs">
-			<button onclick={prevPage} disabled={currentPage === 1} class="text-blue-600 disabled:text-gray-300">Previous</button>
+			<button onclick={prevPage} disabled={currentPage === 1} class="text-blue-600 disabled:text-gray-300">{"<"}</button>
 			<span>Page {currentPage} / {Math.ceil(filteredData.length / itemsPerPage)}</span>
-			<button onclick={nextPage} disabled={currentPage * itemsPerPage >= filteredData.length} class="text-blue-600 disabled:text-gray-300">Next</button>
+			<button onclick={nextPage} disabled={currentPage * itemsPerPage >= filteredData.length} class="text-blue-600 disabled:text-gray-300">{">"}</button>
 		</div>
 	</div>
 </div>
