@@ -9,7 +9,7 @@
 	let searchQuery = $state("");
 	let filteredData = $state([]);
 	let itemsPerPage = $state(10);
-	let currentPage = $state(1);
+	let currentPage = $state(0);
 	let paginatedData = $state([]);
 
 	const rowHeight = 42;
@@ -31,8 +31,11 @@
 	}
 
 	onMount(() => {
-		filteredData = data.userData;
-		calculateItemsPerPage();
+		if(data.userData.length !== 0){
+			currentPage = 1;
+			filteredData = data.userData;
+			calculateItemsPerPage();
+		}
 		window.addEventListener('resize', calculateItemsPerPage);
 	});
 
@@ -92,7 +95,7 @@
 		<!-- Pagination -->
 		<div class="flex justify-between px-2 py-2 text-xs">
 			<button onclick={prevPage} disabled={currentPage === 1} class="text-blue-600 disabled:text-gray-300">{"<"}</button>
-			<span>Page {currentPage} / {Math.ceil(filteredData.length / itemsPerPage)}</span>
+			<span>Page {currentPage} / {Math.ceil((filteredData.length ? filteredData.length : 1) / itemsPerPage)}</span>
 			<button onclick={nextPage} disabled={currentPage * itemsPerPage >= filteredData.length} class="text-blue-600 disabled:text-gray-300">{">"}</button>
 		</div>
 	</div>
