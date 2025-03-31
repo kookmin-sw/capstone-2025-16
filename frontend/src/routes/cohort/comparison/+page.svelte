@@ -395,11 +395,11 @@
 
 <div class="flex h-[calc(100vh-60px)] bg-gray-50">
   <!-- 좌측 사이드바 -->
-  <div class="bg-white border-r border-gray-200 flex flex-col h-full sidebar-transition {isSidebarCollapsed ? 'w-[40px]' : 'w-[320px]'}">
+  <div class="bg-white border-r border-gray-200 flex flex-col h-full sidebar-transition {isSidebarCollapsed ? 'w-[40px]' : 'w-[250px]'}">
     <div class="pl-4 pr-4 pt-4 flex items-center justify-between flex-shrink-0">
       {#if !isSidebarCollapsed}
         <div class="flex items-center justify-between w-full">
-          <h3 class="text-lg font-bold">Selected Cohorts</h3>
+          <h3 class="text-lg font-semibold">Selected Cohorts</h3>
           <button aria-label="Toggle Sidebar"
             class="p-1 hover:bg-gray-100 rounded-md transition-colors"
             on:click={toggleSidebar}
@@ -442,7 +442,7 @@
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
                 on:click={() => toggleExpand(index)}
               >
-                <div class="flex items-center gap-2 flex-1 min-w-0">
+                <div class="flex items-start gap-2 flex-1 min-w-0">
                   <svg 
                     class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
                     fill="none" 
@@ -454,8 +454,9 @@
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1">
                       <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.id}</span>
-                      <div class="text-xs font-medium text-blue-600 truncate">{cohort.name}</div>
-                      <span class="bg-blue-100 text-blue-800 px-1.5 py-px rounded-full text-[10px]">{cohort.totalPatients}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                    <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohort.name}</div>
                     </div>
                     <div class="flex items-center gap-1 mt-0.5">
                     </div>
@@ -469,6 +470,10 @@
                     <div>
                       <span class="text-gray-500">Author:</span>
                       <span class="font-regular">{cohort.author}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-500">Total Patients:</span>
+                      <span class="font-regular">{cohort.totalPatients}</span>
                     </div>
                     <div>
                       <span class="text-gray-500">Description:</span>
