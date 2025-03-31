@@ -6,6 +6,7 @@ import {
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
+  handleYearMinusWithNumberOperator,
 } from "./base";
 
 export const getQuery = (a: ObservationPeriodFilter) => {
@@ -59,9 +60,10 @@ export const getQuery = (a: ObservationPeriodFilter) => {
   }
 
   if (a.length) {
-    query = handleNumberWithOperator(
+    query = handleYearMinusWithNumberOperator(
       query,
       "observation_period.observation_period_end_date",
+      "observation_period.observation_period_start_date",
       a.length
     );
   }

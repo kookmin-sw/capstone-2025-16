@@ -133,7 +133,7 @@ export const getQuery = (a: MeasurementFilter) => {
 
   if (a.first) {
     return db
-      .selectFrom(query.as("filtered_condition_era"))
+      .selectFrom(query.as("filtered_measurement"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);
   }

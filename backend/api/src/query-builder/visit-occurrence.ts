@@ -6,6 +6,7 @@ import {
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
+  handleYearMinusWithNumberOperator,
 } from "./base";
 
 export const getQuery = (a: VisitOccurrenceFilter) => {
@@ -71,9 +72,10 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
   }
 
   if (a.length) {
-    query = handleNumberWithOperator(
+    query = handleYearMinusWithNumberOperator(
       query,
       "visit_occurrence.visit_end_date",
+      "visit_occurrence.visit_start_date",
       a.length
     );
   }
