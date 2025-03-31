@@ -141,7 +141,7 @@ export interface ConditionOccurrenceFilter {
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
-  conditionStatus?: NumberWithOperator;
+  conditionStatus?: IdentifierWithOperator;
   startDate?: DateWithOperator;
   endDate?: DateWithOperator;
   conditionType?: IdentifierWithOperator;
