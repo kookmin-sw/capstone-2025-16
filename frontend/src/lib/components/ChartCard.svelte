@@ -31,9 +31,9 @@
 
 {#if visible}
 <div 
-	class="bg-white border border-gray-300 rounded-lg shadow-md p-6 h-[350px] relative mb-1 w-full"
-	class:col-span-2={type === 'full'}
-	class:col-span-1={type === 'half'}>
+	class="bg-white border border-gray-300 rounded-lg shadow-md p-6 h-[300px] relative mb-1 w-full"
+	class:col-span-4={type === 'full'}
+	class:col-span-2={type === 'half'}>
 
 	<!-- 헤더 영역 -->
 	<div class="flex items-center gap-2">
