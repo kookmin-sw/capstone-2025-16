@@ -106,7 +106,7 @@ export type Concept = {
 };
 
 export interface ConceptSet {
-  id: Identifier;
+  conceptset_id: Identifier;
   name: string;
   items: Concept[];
 }
