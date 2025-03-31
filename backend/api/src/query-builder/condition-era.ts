@@ -5,6 +5,7 @@ import {
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
+  handleRowNumber,
 } from "./base";
 
 export const getQuery = (a: ConditionEraFilter) => {
@@ -14,18 +15,12 @@ export const getQuery = (a: ConditionEraFilter) => {
       "condition_era.person_id as person_id",
       "condition_era.condition_era_start_date as start_date",
       "condition_era.condition_era_end_date as end_date",
-      ...(a.first
-        ? [
-            fn
-              .agg("row_number")
-              .over((ob) =>
-                ob
-                  .partitionBy("condition_era.person_id")
-                  .orderBy("condition_era.condition_era_start_date")
-              )
-              .as("row_number"),
-          ]
-        : []),
+      ...handleRowNumber(
+        a.first,
+        fn,
+        "condition_era.person_id",
+        "condition_era.condition_era_start_date"
+      ),
     ])
     .leftJoin("person", "condition_era.person_id", "person.person_id");
 
@@ -74,7 +69,7 @@ export const getQuery = (a: ConditionEraFilter) => {
   if (a.first) {
     return db
       .selectFrom(query.as("filtered_condition_era"))
-      .where("row_number", "=", 1)
+      .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);
   }
 

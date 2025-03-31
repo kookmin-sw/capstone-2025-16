@@ -1,5 +1,7 @@
 import {
   Expression,
+  FunctionModule,
+  OrderByDirectionExpression,
   ReferenceExpression,
   SelectQueryBuilder,
   StringReference,
@@ -11,17 +13,62 @@ import {
   NumberWithOperator,
   StringWithOperator,
 } from "../types/type";
+import { PartitionByExpression } from "kysely/dist/cjs/parser/partition-by-parser";
+
+type OrderBy<DB, TB extends keyof DB> =
+  | {
+      column: StringReference<DB, TB>;
+      direction: OrderByDirectionExpression;
+    }
+  | StringReference<DB, TB>;
+
+export const handleRowNumber = <
+  DB,
+  TB extends keyof DB,
+  PE extends PartitionByExpression<DB, TB>
+>(
+  shouldHandle: boolean | undefined | null,
+  fn: FunctionModule<DB, TB>,
+  partitionBy: PE | PE[],
+  orderBy: OrderBy<DB, TB> | OrderBy<DB, TB>[]
+) => {
+  if (!shouldHandle) return [];
+
+  return [
+    fn
+      .agg("row_number")
+      .over((ob) => {
+        let tmp = ob;
+
+        // typescript 오류를 피하기 위한 의미없는 if문
+        if (Array.isArray(partitionBy)) {
+          tmp = ob.partitionBy(partitionBy);
+        } else {
+          tmp = ob.partitionBy(partitionBy);
+        }
+
+        if (!Array.isArray(orderBy)) {
+          orderBy = [orderBy];
+        }
+        orderBy.forEach((o) => {
+          if (typeof o === "object") {
+            tmp = tmp.orderBy(o.column, o.direction);
+          } else {
+            tmp = tmp.orderBy(o);
+          }
+        });
+        return tmp;
+      })
+      .as("ordinal"),
+  ];
+};
 
 const isNumberArray = (arr: any[]): arr is number[] => {
-  return arr.every((item) => typeof item === "number");
+  return typeof arr[0] === "number";
 };
 
-const isBigIntArray = (arr: any[]): arr is bigint[] => {
-  return arr.every((item) => typeof item === "bigint");
-};
-
-const max = (arr: number[] | bigint[] | string[]): number | bigint | string => {
-  if (isNumberArray(arr) || isBigIntArray(arr)) {
+const max = (arr: number[] | string[]): number | bigint | string => {
+  if (isNumberArray(arr)) {
     return arr.reduce((max, curr) => {
       return curr > max ? curr : max;
     }, arr[0]);
@@ -34,8 +81,8 @@ const max = (arr: number[] | bigint[] | string[]): number | bigint | string => {
   return arr[maxIndex];
 };
 
-const min = (arr: number[] | bigint[] | string[]): number | bigint | string => {
-  if (isNumberArray(arr) || isBigIntArray(arr)) {
+const min = (arr: number[] | string[]): number | bigint | string => {
+  if (isNumberArray(arr)) {
     return arr.reduce((min, curr) => {
       return curr < min ? curr : min;
     }, arr[0]);
