@@ -36,9 +36,11 @@ export interface StringOperator {
   contains?: string | string[];
 }
 
+export type Identifier = string;
+
 export interface IdentifierOperator {
-  neq?: string | string[];
-  eq?: string | string[];
+  neq?: Identifier | Identifier[];
+  eq?: Identifier | Identifier[];
 }
 
 /**
@@ -49,7 +51,7 @@ export type NumberWithOperator = number | Operator<number>;
 /**
  * 식별자(string) 관련 연산자를 나타냅니다.
  */
-export type IdentifierWithOperator = string | IdentifierOperator;
+export type IdentifierWithOperator = Identifier | IdentifierOperator;
 
 /**
  * 날짜(문자열) 관련 연산자를 나타냅니다.
@@ -85,6 +87,34 @@ export interface SubsequentGroup extends BaseGroup {
 }
 
 export type Cohort = [FirstGroup, ...SubsequentGroup[]];
+
+export type Concept = {
+  concept_id: Identifier;
+  concept_name: string;
+  domain_id: string;
+  vocabulary_id: string;
+  concept_class_id: string;
+  standard_concept: string;
+  concept_code: string;
+  valid_start_date: string;
+  valid_end_date: string;
+  invalid_reason: string;
+
+  isExcluded?: boolean;
+  includeDescendants?: boolean;
+  includeMapped?: boolean;
+};
+
+export interface ConceptSet {
+  id: Identifier;
+  name: string;
+  items: Concept[];
+}
+
+export interface CohortDefinition {
+  conceptsets?: ConceptSet[];
+  cohort: Cohort;
+}
 
 /**
  * 도메인 타입에 따른 필터 맵핑입니다.
@@ -122,7 +152,7 @@ export type Filter = {
  * condition_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ConditionEraFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
@@ -137,7 +167,7 @@ export interface ConditionEraFilter {
  * condition_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ConditionOccurrenceFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -155,7 +185,7 @@ export interface ConditionOccurrenceFilter {
  * death 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DeathFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
   date?: DateWithOperator;
@@ -167,7 +197,7 @@ export interface DeathFilter {
  * device_exposure 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DeviceExposureFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -185,7 +215,7 @@ export interface DeviceExposureFilter {
  * dose_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DoseEraFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
@@ -201,7 +231,7 @@ export interface DoseEraFilter {
  * drug_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DrugEraFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
@@ -216,7 +246,7 @@ export interface DrugEraFilter {
  * drug_exposure 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DrugExposureFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -240,7 +270,7 @@ export interface DrugExposureFilter {
  * measurement 도메인에 대한 필터 인터페이스입니다.
  */
 export interface MeasurementFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -264,7 +294,7 @@ export interface MeasurementFilter {
  * observation 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ObservationFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -297,7 +327,7 @@ export interface ObservationPeriodFilter {
  * procedure_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ProcedureOccurrenceFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -314,7 +344,7 @@ export interface ProcedureOccurrenceFilter {
  * specimen 도메인에 대한 필터 인터페이스입니다.
  */
 export interface SpecimenFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -331,7 +361,7 @@ export interface SpecimenFilter {
  * visit_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface VisitOccurrenceFilter {
-  conceptset?: IdentifierWithOperator;
+  conceptset?: Identifier;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -365,51 +395,54 @@ export interface DemographicFilter {
  * 각 컨테이너는 필터 배열로 구성됩니다. 필터는 모두 AND 연산으로 결합됩니다.
  *
  */
-const cohort1: Cohort = [
-  {
-    // Group 1
-    containers: [
-      {
-        name: "컨테이너 1",
-        filters: [
-          {
-            type: "condition_era",
-            first: true,
-            startAge: {
-              gte: 18,
+const cohort1: CohortDefinition = {
+  conceptsets: [],
+  cohort: [
+    {
+      // Group 1
+      containers: [
+        {
+          name: "컨테이너 1",
+          filters: [
+            {
+              type: "condition_era",
+              first: true,
+              startAge: {
+                gte: 18,
+              },
             },
-          },
-          {
-            type: "observation",
-            first: true,
-          },
-        ],
-      },
-      {
-        operator: "OR",
-        name: "컨테이너 2",
-        filters: [
-          {
-            type: "condition_era",
-            first: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    // Group 2
-    not: true,
-    containers: [
-      {
-        name: "컨테이너 3",
-        filters: [
-          {
-            type: "measurement",
-            first: true,
-          },
-        ],
-      },
-    ],
-  },
-];
+            {
+              type: "observation",
+              first: true,
+            },
+          ],
+        },
+        {
+          operator: "OR",
+          name: "컨테이너 2",
+          filters: [
+            {
+              type: "condition_era",
+              first: true,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      // Group 2
+      not: true,
+      containers: [
+        {
+          name: "컨테이너 3",
+          filters: [
+            {
+              type: "measurement",
+              first: true,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
