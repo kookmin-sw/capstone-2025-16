@@ -163,7 +163,7 @@
 		{/if}
 	</header>
 
-	<main class="absolute top-[60px] w-full h-[calc(100vh-60px)] overflow-x-auto overflow-y-auto pt-8">
+	<main class="absolute top-[30px] w-full min-h-[calc(100vh-60px)] overflow-x-auto overflow-y-auto pt-8">
 		{@render children()}
 	</main>
 </div>
