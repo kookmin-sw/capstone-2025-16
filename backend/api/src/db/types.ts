@@ -27,6 +27,7 @@ export interface Database {
   concept_class: ConceptClass;
   drug_strength: DrugStrength;
   domain: Domain;
+  specimen: Specimen;
 }
 
 export const db = new Kysely<Database>({
@@ -376,4 +377,22 @@ export interface Domain {
   domain_id: string;
   domain_name: string;
   domain_concept_id: string;
+}
+
+export interface Specimen {
+  specimen_id: string;
+  person_id: string;
+  specimen_concept_id: string;
+  specimen_type_concept_id: string;
+  specimen_date: string;
+  specimen_datetime?: string;
+  quantity?: number;
+  unit_concept_id?: string;
+  anatomic_site_concept_id?: string;
+  disease_status_concept_id?: string;
+  specimen_source_id?: string;
+  specimen_source_value?: string;
+  unit_source_value?: string;
+  anatomic_site_source_value?: string;
+  disease_status_source_value?: string;
 }
