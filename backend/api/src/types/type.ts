@@ -76,7 +76,9 @@ export interface BaseGroup {
   containers: [FirstContainer, ...SubsequentContainer[]];
 }
 
-export interface FirstGroup extends BaseGroup {}
+export interface FirstGroup extends BaseGroup {
+  mergeByPersonId?: boolean;
+}
 
 export interface SubsequentGroup extends BaseGroup {
   not: boolean | undefined | null;
