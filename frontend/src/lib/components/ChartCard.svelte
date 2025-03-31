@@ -36,8 +36,8 @@
 	class:col-span-1={type === 'half'}>
 
 	<!-- 헤더 영역 -->
-	<div class="flex items-center gap-3">
-		<span class="text-lg font-semibold">{title}</span>
+	<div class="flex items-center gap-2">
+		<span class="text-base font-semibold">{title}</span>
 		<div class="group relative">
 			<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
 			<div class="absolute bottom-full mb-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -48,7 +48,7 @@
 		{#if showSelector && options.length > 0}
 			<div class="relative inline-block">
 				<button 
-					class="text-sm font-medium text-gray-700 hover:text-blue-600 flex items-center gap-2 min-w-[150px]"
+					class="text-xs font-medium text-gray-700 hover:text-blue-600 flex items-center gap-2 min-w-[150px]"
 					on:click|stopPropagation={() => isDropdownOpen = !isDropdownOpen}>
 					<span class="truncate">{options.find(opt => opt.id === selectedOption)?.name || 'Select'}</span>
 					<svg class="w-4 h-4 text-current flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
@@ -61,7 +61,7 @@
 						class="absolute z-10 left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[200px]">
 						{#each options as option}
 							<button
-								class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 
+								class="w-full px-4 py-2 text-xs text-left hover:bg-gray-100 
 										{selectedOption === option.id ? 'text-blue-600 font-medium' : 'text-gray-700'}"
 								on:click|stopPropagation={() => handleSelect(option.id)}>
 								{option.name}
