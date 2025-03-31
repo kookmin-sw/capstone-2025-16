@@ -95,6 +95,24 @@ const min = (arr: number[] | string[]): number | bigint | string => {
   return arr[minIndex];
 };
 
+export const handleYearMinusWithNumberOperator = <DB, TB extends keyof DB, O>(
+  query: SelectQueryBuilder<DB, TB, O>,
+  date1: StringReference<DB, TB>,
+  date2: StringReference<DB, TB>,
+  operator: NumberWithOperator
+) => {
+  const eb = expressionBuilder<DB, TB>();
+  return handleNumberWithOperator(
+    query,
+    eb(
+      eb.fn("_get_year", [eb.ref(date1)]),
+      "-",
+      eb.fn("_get_year", [eb.ref(date2)])
+    ),
+    operator
+  );
+};
+
 export const handleAgeWithNumberOperator = <DB, TB extends keyof DB, O>(
   query: SelectQueryBuilder<DB, TB, O>,
   dateColumn: StringReference<DB, TB>,
