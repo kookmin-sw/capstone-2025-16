@@ -342,7 +342,7 @@
   function getViewOptions(domainKey) {
     // 기본 Combined View 옵션
     const options = [
-      { id: 'combined', name: 'Combined Cohorts View' }
+      { id: 'combined', name: 'Combined View' }
     ];
     
     // 각 코호트별 Anchor View 옵션 추가
