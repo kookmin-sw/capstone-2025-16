@@ -3,6 +3,8 @@
   import { goto } from "$app/navigation";
 
   let searchQuery = "";
+  let searchInput = "";
+  let errorMessage = "";
 
   let data = [
     {
@@ -16,16 +18,25 @@
   ];
 
   let filteredData = [...data];
-
-  // 체크박스 상태를 관리하기 위한 객체 추가
   let selectedItems = {};
 
-  // 체크박스 상태 변경 핸들러
   function handleCheckboxChange(id) {
+    const currentSelectedCount = Object.values(selectedItems).filter(Boolean).length;
+    
+    if (!selectedItems[id]) {
+      if (currentSelectedCount >= 5) {
+        errorMessage = "You can select up to 5 cohorts for comparison.";
+        setTimeout(() => {
+          errorMessage = "";
+        }, 5000);
+        return;
+      }
+    }
+    
     selectedItems[id] = !selectedItems[id];
+    errorMessage = "";
   }
 
-  // JSON 파일에서 데이터를 로드 함수
   async function loadData() {
     try {
       const response = await fetch('/cohort-list-testdata.json'); // JSON 파일 경로
@@ -39,7 +50,6 @@
     }
   }
 
-  // 검색어에 따라 데이터를 필터링
   function filterData() {
     if (!data.length) return; // 데이터가 로드되기 전 방어 코드
 
@@ -54,11 +64,10 @@
     const selectedCount = Object.values(selectedItems).filter(Boolean).length;
     
     if (selectedCount < 2) {
-      alert("최소 2개의 코호트를 선택해주세요.");
-      return;
-    }
-    if (selectedCount > 5) {
-      alert("최대 5개까지만 선택 가능합니다.");
+      errorMessage = "Please select at least 2 cohorts to compare.";
+      setTimeout(() => {
+        errorMessage = "";
+      }, 5000);
       return;
     }
 
@@ -71,92 +80,132 @@
     goto(`/cohort/comparison?cohorts=${selectedCohorts.join(',')}`);
   }
 
-  // 컴포넌트가 마운트될 때 데이터 로드
+  function handleSearch() {
+    searchQuery = searchInput;
+    filterData();
+  }
+
   onMount(() => {
     loadData();
   });
 </script>
 
-<div class="flex flex-col justify-center items-center mt-8 w-full">
-  <div class="flex gap-2 mb-5 w-[70%]">
-    <input
-      type="text"
-      bind:value={searchQuery}
-      placeholder="코호트 이름을 입력하세요."
-      class="flex-1 p-2 text-base border border-gray-300 rounded"
-    />
-    <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100" on:click={filterData}>🔍</button>
-    <button 
-      class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100"
-      on:click={handleComparison}
-    >
-      Comparison
-    </button>
-    <button class="px-4 py-2 text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100">New</button>
-  </div>
-  
-  <table class="data-table w-[70%]">
-    <thead>
-      <tr>
-        <th></th>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Author</th>
-        <th>Created At</th>
-        <th>Updated At</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each filteredData as item (item.id)}
-        <tr>
-          <td>
+<div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Cohort List</h1>
+      <p class="text-gray-600">Manage and compare your cohorts</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {#if errorMessage}
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+          {errorMessage}
+        </div>
+      {/if}
+
+      <div class="flex gap-3 mb-6 items-center">
+        <div class="flex-1 flex gap-2 items-center">
+          <div class="flex-1 relative">
             <input
-              type="checkbox"
-              checked={selectedItems[item.id] || false}
-              on:change={() => handleCheckboxChange(item.id)}
+              type="text"
+              bind:value={searchInput}
+              placeholder="Search cohorts by name or description"
+              class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </td>
-          <td>{item.id}</td>
-          <td>
-            <a 
-                href={`/cohort/${item.id}`} 
-                class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-            >
-                {item.name}
-            </a>
-          </td>
-          <td>{item.description}</td>
-          <td>{item.author}</td>
-          <td>{item.createdAt}</td>
-          <td>{item.updatedAt}</td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
+            <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+          </div>
+          <button
+            class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            on:click={handleSearch}
+          >
+            Search
+          </button>
+        </div>
+        
+        <button 
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors border"
+          class:bg-blue-50={Object.values(selectedItems).filter(Boolean).length >= 2}
+          class:bg-white={Object.values(selectedItems).filter(Boolean).length < 2}
+          class:border-gray-300={Object.values(selectedItems).filter(Boolean).length < 2}
+          class:border-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2}
+          class:text-gray-500={Object.values(selectedItems).filter(Boolean).length < 2}
+          class:text-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2}
+          class:hover:bg-gray-50={Object.values(selectedItems).filter(Boolean).length < 2}
+          class:hover:bg-blue-100={Object.values(selectedItems).filter(Boolean).length >= 2}
+          on:click={handleComparison}
+        >
+          <span>Compare</span>
+          <span class="flex items-center justify-center rounded-full w-5 h-5 text-xs"
+            class:bg-blue-100={Object.values(selectedItems).filter(Boolean).length < 2}
+            class:bg-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2}
+            class:text-blue-400={Object.values(selectedItems).filter(Boolean).length < 2}
+            class:text-white={Object.values(selectedItems).filter(Boolean).length >= 2}
+          >
+            {Object.values(selectedItems).filter(Boolean).length}
+          </span>
+        </button>
+        
+        <a 
+          href="/new"
+          class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+        >
+          New Cohort
+        </a>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr class="bg-gray-50 text-left">
+              <th class="w-10 py-3 px-4">
+                <span class="sr-only">Select</span>
+              </th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {#each filteredData as item (item.id)}
+              <tr 
+                class="hover:bg-gray-50 transition-colors cursor-pointer group"
+                class:bg-blue-50={selectedItems[item.id]}
+                on:click={() => handleCheckboxChange(item.id)}
+              >
+                <td class="py-3 px-4">
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 border-2 flex items-center justify-center transition-colors"
+                      class:border-blue-600={selectedItems[item.id]}
+                      class:border-gray-300={!selectedItems[item.id]}
+                    >
+                      {#if selectedItems[item.id]}
+                        <div class="w-2 h-2 bg-blue-600"></div>
+                      {/if}
+                    </div>
+                  </div>
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.id}</td>
+                <td class="py-3 px-4">
+                  <a 
+                    href={`/cohort/${item.id}`} 
+                    class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {item.name}
+                  </a>
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.createdAt}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.updatedAt}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
-<style>
-  
-  table {
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-
-  th,
-  td {
-    padding: 10px;
-    border: 1px solid #ccc;
-  }
-  td input[type="checkbox"] {
-    display: block;
-    margin: 0 auto;
-  }  
-
-  th {
-    background-color: #f4f4f4;
-  }
-
-  td {
-    text-align: center;
-  }
-</style>
