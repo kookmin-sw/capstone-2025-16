@@ -85,6 +85,13 @@
     filterData();
   }
 
+  $: {
+    if (!searchInput) {
+      searchQuery = "";
+      filteredData = [...data];
+    }
+  }
+
   onMount(() => {
     loadData();
   });
