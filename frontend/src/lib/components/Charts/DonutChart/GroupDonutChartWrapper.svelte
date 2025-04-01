@@ -27,7 +27,7 @@
 
 <div class="flex flex-col items-center justify-center w-full">
     <div class="w-full overflow-x-auto">
-        <div class="flex flex-row justify-center items-start gap-2 px-4" style="min-width: 600px">
+        <div class="flex flex-row justify-center items-start gap-2 px-4" style="min-width: 400px">
             {#each processedData as chart}
                 <div class="flex flex-col items-center w-[200px]">
                     <DonutChart 
