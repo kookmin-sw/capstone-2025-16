@@ -130,22 +130,22 @@
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div class="flex gap-3 mb-6 items-center">
-        <div class="flex-1 flex gap-2 items-center">
-          <div class="flex-1 relative">
+        <div class="flex-1">
+          <div class="relative">
             <input
               type="text"
               bind:value={searchInput}
               placeholder="Search cohorts by name or description"
-              class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full pl-10 pr-24 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <span class="absolute left-3 top-2 text-gray-400">🔍</span>
+            <button
+              class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors border-l border-gray-300"
+              on:click={handleSearch}
+            >
+              Search
+            </button>
           </div>
-          <button
-            class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            on:click={handleSearch}
-          >
-            Search
-          </button>
         </div>
         
         <button 
