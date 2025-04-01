@@ -79,7 +79,8 @@
     filteredData = data.filter(
       (item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.author.toLowerCase().includes(searchQuery.toLowerCase())
     );
     currentPage = 1; // 검색 시 첫 페이지로 이동
   }
@@ -135,7 +136,7 @@
             <input
               type="text"
               bind:value={searchInput}
-              placeholder="Search cohorts by name or description"
+              placeholder="Search cohorts by name, description, or author"
               class="w-full pl-10 pr-24 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <span class="absolute left-3 top-2 text-gray-400">🔍</span>
