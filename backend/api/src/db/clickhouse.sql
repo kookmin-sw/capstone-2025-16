@@ -5,3 +5,5 @@ CREATE OR REPLACE FUNCTION _get_year AS (a) -> toYear(a);
 CREATE OR REPLACE FUNCTION _nullif AS (a, b) -> nullIf(a, b);
 
 CREATE OR REPLACE FUNCTION _ifnull AS (a, b) -> ifNull(a, b);
+
+CREATE OR REPLACE FUNCTION _to_int64 AS (a) -> toInt64(a);

@@ -1,33 +1,34 @@
 import { db } from "../db/types";
-import { ConditionEraFilter } from "../types/type";
+import { DrugEraFilter } from "../types/type";
 import {
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
+  handleYearMinusWithNumberOperator,
 } from "./base";
 
-export const getQuery = (a: ConditionEraFilter) => {
+export const getQuery = (a: DrugEraFilter) => {
   let query = db
-    .selectFrom("condition_era")
+    .selectFrom("drug_era")
     .select(({ fn }) => [
-      "condition_era.person_id as person_id",
-      "condition_era.condition_era_start_date as start_date",
-      "condition_era.condition_era_end_date as end_date",
+      "drug_era.person_id as person_id",
+      "drug_era.drug_era_start_date as start_date",
+      "drug_era.drug_era_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
-        "condition_era.person_id",
-        "condition_era.condition_era_start_date"
+        "drug_era.person_id",
+        "drug_era.drug_era_start_date"
       ),
     ])
-    .leftJoin("person", "condition_era.person_id", "person.person_id");
+    .leftJoin("person", "drug_era.person_id", "person.person_id");
 
   if (a.startAge) {
     query = handleAgeWithNumberOperator(
       query,
-      "condition_era.condition_era_start_date",
+      "drug_era.drug_era_start_date",
       "person.year_of_birth",
       a.startAge
     );
@@ -36,7 +37,7 @@ export const getQuery = (a: ConditionEraFilter) => {
   if (a.endAge) {
     query = handleAgeWithNumberOperator(
       query,
-      "condition_era.condition_era_end_date",
+      "drug_era.drug_era_end_date",
       "person.year_of_birth",
       a.endAge
     );
@@ -53,7 +54,7 @@ export const getQuery = (a: ConditionEraFilter) => {
   if (a.startDate) {
     query = handleDateWithOperator(
       query,
-      "condition_era.condition_era_start_date",
+      "drug_era.drug_era_start_date",
       a.startDate
     );
   }
@@ -61,14 +62,31 @@ export const getQuery = (a: ConditionEraFilter) => {
   if (a.endDate) {
     query = handleDateWithOperator(
       query,
-      "condition_era.condition_era_end_date",
+      "drug_era.drug_era_end_date",
       a.endDate
+    );
+  }
+
+  if (a.length) {
+    query = handleYearMinusWithNumberOperator(
+      query,
+      "drug_era.drug_era_end_date",
+      "drug_era.drug_era_start_date",
+      a.length
+    );
+  }
+
+  if (a.eraExposureCount) {
+    query = handleNumberWithOperator(
+      query,
+      "drug_era.drug_exposure_count",
+      a.eraExposureCount
     );
   }
 
   if (a.first) {
     return db
-      .selectFrom(query.as("filtered_condition_era"))
+      .selectFrom(query.as("filtered_drug_era"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);
   }
