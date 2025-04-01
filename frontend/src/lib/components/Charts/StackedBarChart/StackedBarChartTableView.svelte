@@ -5,26 +5,25 @@
     export let domainKey;
     export let orderedCohorts = [];
     export let cohortTotalCounts = {};
-    
-    const headers = [
+
+    $: headers = [
         "No.",
         domainKey.charAt(0).toUpperCase() + domainKey.slice(1),
         ...orderedCohorts
     ];
     
-    console.log(headers);
-    const rows = data.map((item, index) => {
+    $: rows = data.map((item, index) => {
         const row = {
-        "No.": index + 1,
-        [headers[1]]: item[domainKey]
+            "No.": index + 1,
+            [headers[1]]: item[domainKey]
         };
 
         orderedCohorts.forEach(cohort => {
-        const value = +item[cohort];
-        const total = +cohortTotalCounts[cohort];
-        row[cohort] = total ?
-            `${value.toLocaleString()} (${((value / total) * 100).toFixed(2)}%)` :
-            value.toLocaleString();
+            const value = +item[cohort];
+            const total = +cohortTotalCounts[cohort];
+            row[cohort] = total ?
+                `${value.toLocaleString()} (${((value / total) * 100).toFixed(2)}%)` :
+                value.toLocaleString();
         });
 
         return row;
