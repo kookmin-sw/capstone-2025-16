@@ -25,20 +25,22 @@
     })) || [];
 </script>
 
-<div class="flex flex-col items-center justify-center">
-    <div class="flex flex-row justify-center items-start gap-8">
-        {#each processedData as chart}
-            <div class="flex flex-col items-center">
-                <DonutChart 
-                    data={chart.data}
-                    {hoveredLabel}
-                    {colorScale}
-                    width={200}
-                    height={200}
-                />
-                <span class="text-sm font-medium text-gray-600">{chart.name}</span>
-            </div>
-        {/each}
+<div class="flex flex-col items-center justify-center w-full">
+    <div class="w-full overflow-x-auto">
+        <div class="flex flex-row justify-center items-start gap-2 px-4" style="min-width: 600px">
+            {#each processedData as chart}
+                <div class="flex flex-col items-center w-[200px]">
+                    <DonutChart 
+                        data={chart.data}
+                        {hoveredLabel}
+                        {colorScale}
+                        width={150}
+                        height={150}
+                    />
+                    <span class="text-sm font-medium text-gray-600">{chart.name}</span>
+                </div>
+            {/each}
+        </div>
     </div>
     {#if processedData.length > 0}
         <div class="mt-4">

@@ -15,6 +15,7 @@
     let width;
     let height;
     const margin = { top: 30, right: 80, bottom: 10, left: 140 };
+    let resizeObserver;
 
     // 데이터나 크기가 변경될 때마다 차트 다시 그리기
     $: if (chartContainer && stackData.length > 0 && width && height) {
@@ -109,6 +110,10 @@
             await tick();
             drawChart();
             window.addEventListener('resize', handleResize);
+            resizeObserver = new ResizeObserver(() => {
+                handleResize();
+            });
+            resizeObserver.observe(chartContainer);
         }
     });
 
@@ -116,6 +121,10 @@
         if (browser) {
             window.removeEventListener('resize', handleResize);
         }
+        if (resizeObserver && chartContainer) {
+            resizeObserver.unobserve(chartContainer);
+        }
+
     });
     
 </script>
