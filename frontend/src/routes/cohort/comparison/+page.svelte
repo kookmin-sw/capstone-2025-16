@@ -504,7 +504,7 @@
         <!-- Select Chart 드롭다운 -->
         <div class="relative" bind:this={selectChartRef}>
           <button 
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             on:click|stopPropagation={toggleSelectChart}
           >
             <span>{isSelectChartOpen ? '▲' : '▼'} Select Chart</span>
@@ -521,7 +521,7 @@
                       on:change={() => handleCheckboxChange(item)}
                       class="w-4 h-4 text-blue-600 rounded border-gray-300"
                     />
-                    <span class="text-sm text-gray-700">{item.name}</span>
+                    <span class="text-xs text-gray-700">{item.name}</span>
                   </label>
                 {/each}
               </div>
