@@ -111,7 +111,7 @@
             drawChart();
             window.addEventListener('resize', handleResize);
             resizeObserver = new ResizeObserver(() => {
-            handleResize();
+                handleResize();
             });
             resizeObserver.observe(chartContainer);
         }
