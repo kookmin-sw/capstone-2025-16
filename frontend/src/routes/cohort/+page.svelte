@@ -6,6 +6,11 @@
   let searchInput = "";
   let errorMessage = "";
 
+  // 페이지네이션 관련 변수
+  let currentPage = 1;
+  const itemsPerPage = 10;
+  let totalPages = 0;
+
   let data = [
     {
       id: "",
@@ -19,6 +24,24 @@
 
   let filteredData = [...data];
   let selectedItems = {};
+
+  // 현재 페이지의 데이터만 반환하는 함수
+  $: paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // 전체 페이지 수 계산
+  $: totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  // 페이지 번호 배열 생성
+  $: pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  function changePage(page) {
+    if (page >= 1 && page <= totalPages) {
+      currentPage = page;
+    }
+  }
 
   function handleCheckboxChange(id) {
     const currentSelectedCount = Object.values(selectedItems).filter(Boolean).length;
@@ -51,13 +74,14 @@
   }
 
   function filterData() {
-    if (!data.length) return; // 데이터가 로드되기 전 방어 코드
+    if (!data.length) return;
 
     filteredData = data.filter(
       (item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) || // 이름 검색
-        item.description.toLowerCase().includes(searchQuery.toLowerCase()) // 설명 검색
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    currentPage = 1; // 검색 시 첫 페이지로 이동
   }
 
   function handleComparison() {
@@ -105,12 +129,6 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {#if errorMessage}
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
-          {errorMessage}
-        </div>
-      {/if}
-
       <div class="flex gap-3 mb-6 items-center">
         <div class="flex-1 flex gap-2 items-center">
           <div class="flex-1 relative">
@@ -120,7 +138,7 @@
               placeholder="Search cohorts by name or description"
               class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-            <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            <span class="absolute left-3 top-2 text-gray-400">🔍</span>
           </div>
           <button
             class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -177,7 +195,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            {#each filteredData as item (item.id)}
+            {#each paginatedData as item (item.id)}
               <tr 
                 class="hover:bg-gray-50 transition-colors cursor-pointer group"
                 class:bg-blue-50={selectedItems[item.id]}
@@ -213,6 +231,63 @@
           </tbody>
         </table>
       </div>
+
+      <!-- 페이지네이션 UI -->
+      {#if totalPages > 1}
+        <div class="flex items-center justify-center space-x-2 mt-6">
+          <button
+            class="p-2 text-sm font-medium rounded-md transition-colors"
+            class:text-gray-400={currentPage === 1}
+            class:text-blue-600={currentPage !== 1}
+            class:hover:text-blue-800={currentPage !== 1}
+            disabled={currentPage === 1}
+            on:click={() => changePage(currentPage - 1)}
+            aria-label="Previous page"
+          >
+            ‹
+          </button>
+
+          {#each pageNumbers as page}
+            <button
+              class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
+              class:bg-blue-600={currentPage === page}
+              class:text-white={currentPage === page}
+              class:text-gray-600={currentPage !== page}
+              class:hover:bg-blue-100={currentPage !== page}
+              on:click={() => changePage(page)}
+            >
+              {page}
+            </button>
+          {/each}
+
+          <button
+            class="p-2 text-sm font-medium rounded-md transition-colors"
+            class:text-gray-400={currentPage === totalPages}
+            class:text-blue-600={currentPage !== totalPages}
+            class:hover:text-blue-800={currentPage !== totalPages}
+            disabled={currentPage === totalPages}
+            on:click={() => changePage(currentPage + 1)}
+            aria-label="Next page"
+          >
+            ›
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
+
+  <!-- 에러 메시지 - 화면 하단 중앙에 고정 -->
+  {#if errorMessage}
+    <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+      <div class="bg-red-50 border border-red-200 rounded-md shadow-lg px-6 py-3 text-sm text-red-600 flex items-center">
+        <span>{errorMessage}</span>
+        <button 
+          class="ml-4 text-red-400 hover:text-red-600"
+          on:click={() => errorMessage = ""}
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  {/if}
 </div>
