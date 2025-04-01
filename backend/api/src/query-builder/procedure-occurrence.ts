@@ -1,15 +1,16 @@
-import { db } from "../db/types";
 import { ProcedureOccurrenceFilter } from "../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
+  handleConceptSet,
 } from "./base";
 
 export const getQuery = (a: ProcedureOccurrenceFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("procedure_occurrence")
     .select(({ fn }) => [
       "procedure_occurrence.person_id as person_id",
@@ -33,6 +34,14 @@ export const getQuery = (a: ProcedureOccurrenceFilter) => {
       "procedure_occurrence.provider_id",
       "provider.provider_id"
     );
+
+  if (a.conceptset) {
+    query = handleConceptSet(
+      query,
+      "procedure_occurrence.procedure_concept_id",
+      a.conceptset
+    );
+  }
 
   if (a.age) {
     query = handleAgeWithNumberOperator(
@@ -62,7 +71,7 @@ export const getQuery = (a: ProcedureOccurrenceFilter) => {
   if (a.procedureType) {
     query = handleIdentifierWithOperator(
       query,
-      "procedure_occurrence.procedure_concept_id",
+      "procedure_occurrence.procedure_type_concept_id",
       a.procedureType
     );
   }
@@ -91,7 +100,13 @@ export const getQuery = (a: ProcedureOccurrenceFilter) => {
     );
   }
 
-  // TODO: source
+  if (a.source) {
+    query = handleConceptSet(
+      query,
+      "procedure_occurrence.procedure_source_concept_id",
+      a.source
+    );
+  }
 
   if (a.providerSpecialty) {
     query = handleIdentifierWithOperator(
@@ -102,7 +117,7 @@ export const getQuery = (a: ProcedureOccurrenceFilter) => {
   }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_procedure_occurrence"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);

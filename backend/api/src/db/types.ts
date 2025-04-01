@@ -2,6 +2,8 @@ import { Kysely, PostgresDialect } from "kysely";
 import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
 
 export interface Database {
+  codesets: Codesets; // temp table
+
   condition_era: ConditionEra;
   drug_era: DrugEra;
   dose_era: DoseEra;
@@ -32,10 +34,15 @@ export interface Database {
 
 export const db = new Kysely<Database>({
   dialect: new ClickhouseDialect(),
-  // dialect: new PostgresDialect(undefined as any)
+  // dialect: new PostgresDialect(undefined as any),
 });
 
 // id should be string (bigint)
+
+export interface Codesets {
+  codeset_id: string;
+  concept_id: string;
+}
 
 export interface ConditionEra {
   condition_era_id: string;

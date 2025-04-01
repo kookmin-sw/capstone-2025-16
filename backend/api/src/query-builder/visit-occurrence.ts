@@ -1,16 +1,17 @@
-import { db } from "../db/types";
 import { VisitOccurrenceFilter } from "../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleYearMinusWithNumberOperator,
+  handleConceptSet,
 } from "./base";
 
 export const getQuery = (a: VisitOccurrenceFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("visit_occurrence")
     .select(({ fn }) => [
       "visit_occurrence.person_id as person_id",
@@ -28,7 +29,20 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
       "provider",
       "visit_occurrence.provider_id",
       "provider.provider_id"
+    )
+    .leftJoin(
+      "care_site",
+      "visit_occurrence.care_site_id",
+      "care_site.care_site_id"
     );
+
+  if (a.conceptset) {
+    query = handleConceptSet(
+      query,
+      "visit_occurrence.visit_concept_id",
+      a.conceptset
+    );
+  }
 
   if (a.age) {
     query = handleAgeWithNumberOperator(
@@ -80,7 +94,13 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
     );
   }
 
-  // TODO: source
+  if (a.source) {
+    query = handleConceptSet(
+      query,
+      "visit_occurrence.visit_source_concept_id",
+      a.source
+    );
+  }
 
   if (a.providerSpecialty) {
     query = handleIdentifierWithOperator(
@@ -90,10 +110,16 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
     );
   }
 
-  // TODO: placeOfService
+  if (a.placeOfService) {
+    query = handleIdentifierWithOperator(
+      query,
+      "care_site.place_of_service_concept_id",
+      a.placeOfService
+    );
+  }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_visit_occurrence"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);

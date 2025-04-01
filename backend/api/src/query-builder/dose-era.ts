@@ -1,17 +1,17 @@
-import { expressionBuilder } from "kysely";
-import { db } from "../db/types";
 import { DoseEraFilter } from "../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleYearMinusWithNumberOperator,
+  handleConceptSet,
 } from "./base";
 
 export const getQuery = (a: DoseEraFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("dose_era")
     .select(({ fn }) => [
       "dose_era.person_id as person_id",
@@ -25,6 +25,10 @@ export const getQuery = (a: DoseEraFilter) => {
       ),
     ])
     .leftJoin("person", "dose_era.person_id", "person.person_id");
+
+  if (a.conceptset) {
+    query = handleConceptSet(query, "dose_era.drug_concept_id", a.conceptset);
+  }
 
   if (a.startAge) {
     query = handleAgeWithNumberOperator(
@@ -90,7 +94,7 @@ export const getQuery = (a: DoseEraFilter) => {
   }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_dose_era"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);

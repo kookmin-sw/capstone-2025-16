@@ -1,15 +1,16 @@
-import { db } from "../db/types";
 import { DeviceExposureFilter } from "../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
+  handleConceptSet,
 } from "./base";
 
 export const getQuery = (a: DeviceExposureFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("device_exposure")
     .select(({ fn }) => [
       "device_exposure.person_id as person_id",
@@ -33,6 +34,14 @@ export const getQuery = (a: DeviceExposureFilter) => {
       "device_exposure.provider_id",
       "provider.provider_id"
     );
+
+  if (a.conceptset) {
+    query = handleConceptSet(
+      query,
+      "device_exposure.device_type_concept_id",
+      a.conceptset
+    );
+  }
 
   if (a.age) {
     query = handleAgeWithNumberOperator(
@@ -99,7 +108,13 @@ export const getQuery = (a: DeviceExposureFilter) => {
     );
   }
 
-  // TODO: source
+  if (a.source) {
+    query = handleConceptSet(
+      query,
+      "device_exposure.device_source_concept_id",
+      a.source
+    );
+  }
 
   if (a.providerSpecialty) {
     query = handleIdentifierWithOperator(
@@ -110,7 +125,7 @@ export const getQuery = (a: DeviceExposureFilter) => {
   }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_device_exposure"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);
