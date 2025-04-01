@@ -177,7 +177,7 @@ export interface ConditionOccurrenceFilter {
   conditionType?: IdentifierWithOperator;
   visitType?: IdentifierWithOperator;
   //stopReason?: StringWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -190,7 +190,7 @@ export interface DeathFilter {
   gender?: IdentifierWithOperator;
   date?: DateWithOperator;
   deathType?: IdentifierWithOperator;
-  cause?: NumberWithOperator;
+  cause?: Identifier;
 }
 
 /**
@@ -207,7 +207,7 @@ export interface DeviceExposureFilter {
   visitType?: IdentifierWithOperator;
   uniqueDeviceId?: StringWithOperator;
   quantity?: NumberWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -262,7 +262,7 @@ export interface DrugExposureFilter {
   effectiveDose?: NumberWithOperator;
   doseUnit?: NumberWithOperator;
   lotNumber?: StringWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -287,7 +287,7 @@ export interface MeasurementFilter {
   //rangeLowRatio?: NumberWithOperator;
   //rangeHighRatio?: NumberWithOperator;
   providerSpecialty?: IdentifierWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
 }
 
 /**
@@ -306,7 +306,7 @@ export interface ObservationFilter {
   valueAsConcept?: IdentifierWithOperator;
   qualifierType?: IdentifierWithOperator;
   unitType?: IdentifierWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -336,7 +336,7 @@ export interface ProcedureOccurrenceFilter {
   visitType?: IdentifierWithOperator;
   modifierType?: IdentifierWithOperator;
   quantity?: NumberWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -354,7 +354,7 @@ export interface SpecimenFilter {
   unitType?: IdentifierWithOperator;
   anatomicSiteType?: IdentifierWithOperator;
   diseaseStatus?: IdentifierWithOperator;
-  //source?: StringWithOperator;
+  //source?: Identifier;
 }
 
 /**
@@ -369,9 +369,9 @@ export interface VisitOccurrenceFilter {
   endDate?: DateWithOperator;
   visitType?: IdentifierWithOperator;
   length?: NumberWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
-  placeOfService?: NumberWithOperator;
+  placeOfService?: IdentifierWithOperator;
   //location?: NumberWithOperator;
 }
 
