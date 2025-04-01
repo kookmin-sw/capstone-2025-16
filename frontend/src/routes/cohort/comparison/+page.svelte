@@ -539,7 +539,7 @@
             title="Gender Ratio" 
             description="The ratio of genders within the cohort."
             chartId={0}
-            type="full"
+            type={selectedCohorts.length <= 3 ? 'half' : 'full'}
             hasTableView={true}
             isTableView={isTableView.genderRatio}
             on:toggleView={({detail}) => isTableView.genderRatio = detail}
@@ -568,7 +568,7 @@
             title="Mortality" 
             description="The percentage of patients within the cohort who have died."
             chartId={1}
-            type="full"
+            type={selectedCohorts.length <= 3 ? 'half' : 'full'}
             hasTableView={true}
             isTableView={isTableView.mortality}
             on:toggleView={({detail}) => isTableView.mortality = detail}
@@ -597,7 +597,7 @@
             title="Visit Type Ratio"
             description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
             chartId={2}
-            type="full"
+            type={selectedCohorts.length <= 3 ? 'half' : 'full'}
             hasTableView={true}
             isTableView={isTableView.visitTypeRatio}
             on:toggleView={({detail}) => isTableView.visitTypeRatio = detail}
