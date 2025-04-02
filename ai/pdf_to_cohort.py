@@ -101,7 +101,7 @@ These keywords will be used to search for concept codes in a structured OMOP CDM
    - name: The medical term or concept name
    - exclusion: Boolean (true for exclusion criteria)
    - valueAsNumber: For measurement criteria (MANDATORY for Measurement type)
-   - age: For age criteria (optional)
+   - age: For age criteria (MANDATORY for DemographicCriteria type)
 
 2. Important:
    - [CRITICAL] Only extract criteria from sections clearly labeled as inclusion/exclusion criteria
@@ -114,15 +114,22 @@ These keywords will be used to search for concept codes in a structured OMOP CDM
    - [CRITICAL] For Measurement type:
      * MUST include valueAsNumber with operator and value
      * Example: "Hemoglobin > 13" → {{ "valueAsNumber": {{ "gt": 13 }} }}
-   - For age criteria:
-     * Use "ObservationPeriod" as type
-     * Include age value and operator
+   - [CRITICAL] For age criteria:
+     * MUST use "DemographicCriteria" as type
+     * MUST include age value and operator
+     * Example: "Age > 18" → {{ "type": "DemographicCriteria", "name": "Age", "age": {{ "gt": 18 }} }}
    - For conditions:
      * Use "ConditionOccurrence" as type (NOT ConditionEra)
 
 3. Return ONLY this exact JSON format (no other text):
 {{
   "criteria": [
+    {{
+      "type": "DemographicCriteria",
+      "name": "Age",
+      "age": {{ "gt": 18, "lt": 65 }},
+      "exclusion": false
+    }},
     {{
       "type": "ConditionOccurrence",
       "name": "Diabetes",
