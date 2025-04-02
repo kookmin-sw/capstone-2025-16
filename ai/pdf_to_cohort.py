@@ -353,26 +353,31 @@ def create_cohort_json(extracted_criteria: list) -> dict:
     exclusion_containers = []
     
     for criteria in extracted_criteria:
-        # ConceptSet 생성
-        concept_set = {
-            "conceptset_id": str(concept_set_id),
-            "name": criteria["name"],
-            "items": []  # DB에서 조회 후 업데이트
-        }
-        result["conceptsets"].append(concept_set)
-        
-        # Filter 생성
-        filter_obj = {
-            "type": criteria["type"],
-            "first": True,
-            "conceptset": str(concept_set_id)
-        }
-        
-        # 추가 필터 조건
-        if criteria.get("valueAsNumber"):
-            filter_obj["valueAsNumber"] = criteria["valueAsNumber"]
         if criteria.get("age"):
-            filter_obj["age"] = criteria["age"]
+            filter_obj = {
+                "type": "DemographicCriteria",
+                "first": True,
+                "age": criteria["age"]
+            }
+        else:
+            # ConceptSet 생성
+            concept_set = {
+                "conceptset_id": str(concept_set_id),
+                "name": criteria["name"],
+                "items": []  # DB에서 조회 후 업데이트
+            }
+            result["conceptsets"].append(concept_set)
+            
+            # Filter 생성
+            filter_obj = {
+                "type": criteria["type"],
+                "first": True,
+                "conceptset": str(concept_set_id)
+            }
+            
+            # 추가 필터 조건
+            if criteria.get("valueAsNumber"):
+                filter_obj["valueAsNumber"] = criteria["valueAsNumber"]
         
         # Container 생성
         container = {
@@ -390,8 +395,9 @@ def create_cohort_json(extracted_criteria: list) -> dict:
                 container["operator"] = "AND"
             inclusion_containers.append(container)
         
-        concept_set_id += 1
-    
+        if not criteria.get("age"):  # age가 아닌 경우에만 concept_set_id 증가
+            concept_set_id += 1
+
     # cohort에 groups 추가
     if inclusion_containers:
         result["cohort"].append({
