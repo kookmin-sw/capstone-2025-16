@@ -11,7 +11,7 @@ clickhouse_client = Client(
 query = """
 SELECT concept_id, concept_name, domain_id
 FROM concept 
-WHERE concept_name ILIKE '%Sepsis-3%'
+WHERE concept_name ILIKE '%Acute Respiratory Distress Syndrome%'
 AND domain_id = 'Condition'
 AND invalid_reason IS NULL
 LIMIT 20;
