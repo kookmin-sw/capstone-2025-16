@@ -3,6 +3,9 @@ import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
 
 export interface Database {
   codesets: Codesets; // temp table
+  temp_cohort: Cohort; // temp table
+
+  cohort: Cohort;
 
   condition_era: ConditionEra;
   drug_era: DrugEra;
@@ -42,6 +45,13 @@ export const db = new Kysely<Database>({
 export interface Codesets {
   codeset_id: string;
   concept_id: string;
+}
+
+export interface Cohort {
+  cohort_id: string;
+  person_id: string;
+  start_date: string;
+  end_date: string;
 }
 
 export interface ConditionEra {
