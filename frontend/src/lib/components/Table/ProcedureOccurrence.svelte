@@ -45,39 +45,4 @@
     font-weight: bold;
     margin-bottom: 10px;
   }
-
-  .procedure-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    font-size: 1rem;
-    background: #fff;
-    flex-wrap: wrap;
-    border-bottom: 1px solid #ddd;
-    white-space: nowrap;
-  }
-
-  .info {
-    font-weight: normal;
-    font-size: 1.0rem;
-    margin-right: 10px;
-  }
-
-  .divider {
-    color: #888;
-    font-weight: bold;
-    margin: 0 10px;
-  }
-
-  /* 강조 표시 (Concept ID) */
-  .highlight {
-    color: #16a34a; /* Tailwind text-green-600 */
-    font-weight: bold;
-  }
-
-  /* 강조 표시 (Quantity) */
-  .highlight-blue {
-    color: #2563eb; /* Tailwind text-blue-600 */
-    font-weight: bold;
-  }
 </style>
