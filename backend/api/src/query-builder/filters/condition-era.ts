@@ -1,5 +1,5 @@
 import { format } from "sql-formatter";
-import { ConditionEraFilter } from "../types/type";
+import { ConditionEraFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -8,7 +8,7 @@ import {
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: ConditionEraFilter) => {
   let query = getBaseDB()

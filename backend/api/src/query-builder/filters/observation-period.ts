@@ -1,4 +1,4 @@
-import { ObservationPeriodFilter } from "../types/type";
+import { ObservationPeriodFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -7,7 +7,7 @@ import {
   handleIdentifierWithOperator,
   handleRowNumber,
   handleYearMinusWithNumberOperator,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: ObservationPeriodFilter) => {
   let query = getBaseDB()

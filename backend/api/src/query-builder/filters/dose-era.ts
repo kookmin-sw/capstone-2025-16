@@ -1,4 +1,4 @@
-import { DoseEraFilter } from "../types/type";
+import { DoseEraFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -8,7 +8,7 @@ import {
   handleRowNumber,
   handleYearMinusWithNumberOperator,
   handleConceptSet,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: DoseEraFilter) => {
   let query = getBaseDB()

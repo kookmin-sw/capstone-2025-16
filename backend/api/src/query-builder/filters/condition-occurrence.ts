@@ -1,4 +1,4 @@
-import { ConditionOccurrenceFilter } from "../types/type";
+import { ConditionOccurrenceFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -7,7 +7,7 @@ import {
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: ConditionOccurrenceFilter) => {
   let query = getBaseDB()

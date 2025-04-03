@@ -1,5 +1,5 @@
 import { expressionBuilder } from "kysely";
-import { MeasurementFilter } from "../types/type";
+import { MeasurementFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -9,7 +9,7 @@ import {
   handleRowNumber,
   handleConceptSet,
   getExpressionBuilder,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: MeasurementFilter) => {
   let query = getBaseDB()

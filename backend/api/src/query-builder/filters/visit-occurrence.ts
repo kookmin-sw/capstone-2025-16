@@ -1,4 +1,4 @@
-import { VisitOccurrenceFilter } from "../types/type";
+import { VisitOccurrenceFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -8,7 +8,7 @@ import {
   handleRowNumber,
   handleYearMinusWithNumberOperator,
   handleConceptSet,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: VisitOccurrenceFilter) => {
   let query = getBaseDB()

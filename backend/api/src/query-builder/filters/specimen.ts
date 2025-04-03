@@ -1,4 +1,4 @@
-import { SpecimenFilter } from "../types/type";
+import { SpecimenFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -7,7 +7,7 @@ import {
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: SpecimenFilter) => {
   let query = getBaseDB()

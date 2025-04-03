@@ -1,4 +1,4 @@
-import { DrugExposureFilter } from "../types/type";
+import { DrugExposureFilter } from "../../types/type";
 import {
   getBaseDB,
   handleAgeWithNumberOperator,
@@ -8,7 +8,7 @@ import {
   handleRowNumber,
   handleStringWithOperator,
   handleConceptSet,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: DrugExposureFilter) => {
   let query = getBaseDB()
