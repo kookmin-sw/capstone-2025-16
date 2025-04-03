@@ -5,21 +5,30 @@
 <div class="specimen-container">
   <h2 class="title">Specimen Information</h2>
 
-  {#each specimen as spec}
-    <div class="specimen-row">
-      <span class="info"><strong>Date:</strong> {spec.specimen_date}</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Concept ID:</strong> 
-        <span class="highlight">{spec.specimen_concept_id}</span>
-      </span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Quantity:</strong> 
-        <span class="highlight-blue">{spec.quantity}</span>
-      </span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Unit Concept ID:</strong> {spec.unit_concept_id}</span>
-    </div>
-  {/each}
+  {#if specimen && specimen.length > 0}
+    <table class="specimen-table w-full border border-gray-200 text-sm text-left mb-6">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Concept ID</th>
+          <th class="px-4 py-2 border-b">Quantity</th>
+          <th class="px-4 py-2 border-b">Unit Concept ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each specimen as spec}
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 border-b">{spec.specimen_date}</td>
+            <td class="px-4 py-2 border-b">{spec.specimen_concept_id}</td>
+            <td class="px-4 py-2 border-b">{spec.quantity}</td>
+            <td class="px-4 py-2 border-b">{spec.unit_concept_id}</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  {:else}
+    <p class="text-gray-500 text-sm mb-6">No specimen data available.</p>
+  {/if}
 </div>
 
 <style>
@@ -35,40 +44,5 @@
     font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
-  }
-
-  .specimen-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    flex-wrap: wrap;
-    font-size: 1rem;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    white-space: nowrap;
-  }
-
-  .info {
-    font-weight: normal;
-    font-size: 1.0rem;
-    margin-right: 10px;
-  }
-
-  .divider {
-    color: #888;
-    font-weight: bold;
-    margin: 0 10px;
-  }
-
-  /* 강조 표시 (Concept ID) */
-  .highlight {
-    color: #16a34a; /* Tailwind text-green-600 */
-    font-weight: bold;
-  }
-
-  /* 강조 표시 (Quantity) */
-  .highlight-blue {
-    color: #2563eb; /* Tailwind text-blue-600 */
-    font-weight: bold;
   }
 </style>
