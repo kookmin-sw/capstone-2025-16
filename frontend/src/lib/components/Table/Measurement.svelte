@@ -47,39 +47,4 @@
     font-weight: bold;
     margin-bottom: 10px;
   }
-
-  .measurement-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    font-size: 1rem;
-    flex-wrap: wrap;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    white-space: nowrap;
-  }
-
-  .info {
-    font-weight: normal;
-    font-size: 1.0rem;
-    margin-right: 10px;
-  }
-
-  .divider {
-    color: #888;
-    font-weight: bold;
-    margin: 0 10px;
-  }
-
-  /* 정상 값 (초록색) */
-  .normal {
-    color: green;
-    font-weight: bold;
-  }
-
-  /* 비정상 값 (빨간색) */
-  .abnormal {
-    color: red;
-    font-weight: bold;
-  }
 </style>
