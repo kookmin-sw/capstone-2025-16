@@ -14,7 +14,6 @@
       <thead class="bg-gray-100">
         <tr>
           <th class="px-4 py-2 border-b">Type</th>
-          <th class="px-4 py-2 border-b">ID</th>
           <th class="px-4 py-2 border-b">Period</th>
           <th class="px-4 py-2 border-b">Status / Count</th>
         </tr>
@@ -24,7 +23,6 @@
           {#each conditionOccurrence as cond}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-2 border-b">Occurrence</td>
-              <td class="px-4 py-2 border-b">{cond.condition_occurrence_id}</td>
               <td class="px-4 py-2 border-b">{cond.condition_start_date} ~ {cond.condition_end_date}</td>
               <td class="px-4 py-2 border-b">{cond.condition_status_source_value}</td>
             </tr>
@@ -34,7 +32,6 @@
           {#each conditionEra as era}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-2 border-b">Era</td>
-              <td class="px-4 py-2 border-b">{era.condition_era_id}</td>
               <td class="px-4 py-2 border-b">{era.condition_era_start_date} ~ {era.condition_era_end_date}</td>
               <td class="px-4 py-2 border-b">{era.condition_occurrence_count} times</td>
             </tr>
@@ -63,7 +60,7 @@
     font-weight: bold;
     margin-bottom: 10px;
   }
-  
+
   .info {
     font-weight: normal;
     font-size: 1.0rem;
