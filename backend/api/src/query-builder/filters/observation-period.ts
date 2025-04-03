@@ -1,16 +1,16 @@
-import { db } from "../db/types";
-import { ObservationPeriodFilter } from "../types/type";
+import { ObservationPeriodFilter } from "../../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleYearMinusWithNumberOperator,
-} from "./base";
+} from "../base";
 
 export const getQuery = (a: ObservationPeriodFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("observation_period")
     .select(({ fn }) => [
       "observation_period.person_id as person_id",
@@ -69,7 +69,7 @@ export const getQuery = (a: ObservationPeriodFilter) => {
   }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_observation_period"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);

@@ -12,8 +12,37 @@ import {
   DateWithOperator,
   NumberWithOperator,
   StringWithOperator,
+  Identifier,
 } from "../types/type";
 import { PartitionByExpression } from "kysely/dist/cjs/parser/partition-by-parser";
+import { db } from "../db/types";
+
+export const getBaseDB = () => {
+  return db;
+};
+
+export const getExpressionBuilder = <DB, TB extends keyof DB, O>(
+  query: SelectQueryBuilder<DB, TB, O>
+) => {
+  return expressionBuilder<DB, TB>();
+};
+
+export const handleConceptSet = <DB, TB extends keyof DB, O>(
+  query: SelectQueryBuilder<DB, TB, O>,
+  column: StringReference<DB, TB>,
+  conceptSet: Identifier
+) => {
+  // 우선 타입스크립트 오류는 ignore
+  return query.where(
+    column,
+    "in",
+    // @ts-ignore
+    db
+      .selectFrom("codesets")
+      .select("concept_id")
+      .where("codeset_id", "=", conceptSet)
+  );
+};
 
 type OrderBy<DB, TB extends keyof DB> =
   | {
@@ -40,12 +69,8 @@ export const handleRowNumber = <
       .over((ob) => {
         let tmp = ob;
 
-        // typescript 오류를 피하기 위한 의미없는 if문
-        if (Array.isArray(partitionBy)) {
-          tmp = ob.partitionBy(partitionBy);
-        } else {
-          tmp = ob.partitionBy(partitionBy);
-        }
+        // @ts-ignore
+        tmp = ob.partitionBy(partitionBy);
 
         if (!Array.isArray(orderBy)) {
           orderBy = [orderBy];
@@ -101,7 +126,7 @@ export const handleYearMinusWithNumberOperator = <DB, TB extends keyof DB, O>(
   date2: StringReference<DB, TB>,
   operator: NumberWithOperator
 ) => {
-  const eb = expressionBuilder<DB, TB>();
+  const eb = getExpressionBuilder(query);
   return handleNumberWithOperator(
     query,
     eb(
@@ -119,7 +144,7 @@ export const handleAgeWithNumberOperator = <DB, TB extends keyof DB, O>(
   birthColumn: StringReference<DB, TB>,
   operator: NumberWithOperator
 ) => {
-  const eb = expressionBuilder<DB, TB>();
+  const eb = getExpressionBuilder(query);
   return handleNumberWithOperator(
     query,
     eb(eb.fn("_get_year", [eb.ref(dateColumn)]), "-", eb.ref(birthColumn)),
@@ -152,7 +177,7 @@ export const handleStringWithOperator = <DB, TB extends keyof DB, O>(
     }
   }
 
-  const eb = expressionBuilder<DB, TB>();
+  const eb = getExpressionBuilder(query);
 
   if (operator.startsWith) {
     if (Array.isArray(operator.startsWith) && !operator.startsWith.length) {
@@ -201,7 +226,7 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
   column: Expression<Date> | ReferenceExpression<DB, TB>,
   operator: DateWithOperator
 ) => {
-  const eb = expressionBuilder<DB, TB>();
+  const eb = getExpressionBuilder(query);
 
   if (typeof operator === "string") {
     return query.where(column, "=", eb.fn("_to_date", [eb.val(operator)]));
@@ -339,7 +364,7 @@ export const handleIdentifierWithOperator = <DB, TB extends keyof DB, O>(
   column: Expression<string> | ReferenceExpression<DB, TB>,
   operator: IdentifierWithOperator
 ) => {
-  const eb = expressionBuilder<DB, TB>();
+  const eb = getExpressionBuilder(query);
 
   if (typeof operator === "string") {
     return query.where(column, "=", eb.fn("_to_int64", [eb.val(operator)]));

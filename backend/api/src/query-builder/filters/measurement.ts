@@ -1,15 +1,18 @@
-import { db } from "../db/types";
-import { MeasurementFilter } from "../types/type";
+import { expressionBuilder } from "kysely";
+import { MeasurementFilter } from "../../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
-} from "./base";
+  handleConceptSet,
+  getExpressionBuilder,
+} from "../base";
 
 export const getQuery = (a: MeasurementFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("measurement")
     .select(({ fn }) => [
       "measurement.person_id as person_id",
@@ -29,6 +32,14 @@ export const getQuery = (a: MeasurementFilter) => {
       "visit_occurrence.visit_occurrence_id"
     )
     .leftJoin("provider", "measurement.provider_id", "provider.provider_id");
+
+  if (a.conceptset) {
+    query = handleConceptSet(
+      query,
+      "measurement.measurement_concept_id",
+      a.conceptset
+    );
+  }
 
   if (a.age) {
     query = handleAgeWithNumberOperator(
@@ -103,7 +114,25 @@ export const getQuery = (a: MeasurementFilter) => {
     );
   }
 
-  // TODO: abnormal
+  if (a.abnormal) {
+    const eb = getExpressionBuilder(query);
+    query = query.where(
+      eb.or([
+        eb("measurement.value_as_number", ">", eb.ref("measurement.range_low")),
+        eb(
+          "measurement.value_as_number",
+          "<",
+          eb.ref("measurement.range_high")
+        ),
+        eb(
+          "measurement.value_as_concept_id",
+          "in",
+          // @ts-ignore
+          ["4155142", "4155143"].map((e) => eb.fn("_to_int64", [eb.val(e)]))
+        ),
+      ])
+    );
+  }
 
   if (a.rangeLow) {
     query = handleNumberWithOperator(
@@ -129,10 +158,16 @@ export const getQuery = (a: MeasurementFilter) => {
     );
   }
 
-  // TODO: source
+  if (a.source) {
+    query = handleConceptSet(
+      query,
+      "measurement.measurement_source_concept_id",
+      a.source
+    );
+  }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_measurement"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);

@@ -1,15 +1,17 @@
-import { db } from "../db/types";
-import { ConditionEraFilter } from "../types/type";
+import { format } from "sql-formatter";
+import { ConditionEraFilter } from "../../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
-} from "./base";
+  handleConceptSet,
+} from "../base";
 
 export const getQuery = (a: ConditionEraFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("condition_era")
     .select(({ fn }) => [
       "condition_era.person_id as person_id",
@@ -23,6 +25,14 @@ export const getQuery = (a: ConditionEraFilter) => {
       ),
     ])
     .leftJoin("person", "condition_era.person_id", "person.person_id");
+
+  if (a.conceptset) {
+    query = handleConceptSet(
+      query,
+      "condition_era.condition_concept_id",
+      a.conceptset
+    );
+  }
 
   if (a.startAge) {
     query = handleAgeWithNumberOperator(
@@ -67,7 +77,7 @@ export const getQuery = (a: ConditionEraFilter) => {
   }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_condition_era"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);
@@ -75,3 +85,24 @@ export const getQuery = (a: ConditionEraFilter) => {
 
   return query;
 };
+
+// {
+//   let { sql, parameters } = getQuery({
+//     conceptset: "0",
+//     first: true,
+//     startAge: 10,
+//     endAge: 20,
+//     gender: "4992392",
+//     startDate: "2020-01-01",
+//     endDate: "2020-12-31",
+//   }).compile();
+//   parameters.forEach(
+//     (e, idx) =>
+//       (sql = sql.replace(
+//         sql.includes("?") ? "?" : `$${idx + 1}`,
+//         typeof e === "string" ? `'${e}'` : `${e}`
+//       ))
+//   );
+//   sql += ";";
+//   console.log(format(sql));
+// }

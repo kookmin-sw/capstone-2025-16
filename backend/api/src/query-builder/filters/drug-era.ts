@@ -1,16 +1,17 @@
-import { db } from "../db/types";
-import { DrugEraFilter } from "../types/type";
+import { DrugEraFilter } from "../../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleYearMinusWithNumberOperator,
-} from "./base";
+  handleConceptSet,
+} from "../base";
 
 export const getQuery = (a: DrugEraFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("drug_era")
     .select(({ fn }) => [
       "drug_era.person_id as person_id",
@@ -24,6 +25,10 @@ export const getQuery = (a: DrugEraFilter) => {
       ),
     ])
     .leftJoin("person", "drug_era.person_id", "person.person_id");
+
+  if (a.conceptset) {
+    query = handleConceptSet(query, "drug_era.drug_concept_id", a.conceptset);
+  }
 
   if (a.startAge) {
     query = handleAgeWithNumberOperator(
@@ -85,7 +90,7 @@ export const getQuery = (a: DrugEraFilter) => {
   }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_drug_era"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);

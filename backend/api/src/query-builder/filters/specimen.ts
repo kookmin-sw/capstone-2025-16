@@ -1,15 +1,16 @@
-import { db } from "../db/types";
-import { SpecimenFilter } from "../types/type";
+import { SpecimenFilter } from "../../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
-} from "./base";
+  handleConceptSet,
+} from "../base";
 
 export const getQuery = (a: SpecimenFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("specimen")
     .select(({ fn }) => [
       "specimen.person_id as person_id",
@@ -23,6 +24,14 @@ export const getQuery = (a: SpecimenFilter) => {
       ),
     ])
     .leftJoin("person", "specimen.person_id", "person.person_id");
+
+  if (a.conceptset) {
+    query = handleConceptSet(
+      query,
+      "specimen.specimen_concept_id",
+      a.conceptset
+    );
+  }
 
   if (a.age) {
     query = handleAgeWithNumberOperator(
@@ -82,7 +91,7 @@ export const getQuery = (a: SpecimenFilter) => {
   }
 
   if (a.first) {
-    return db
+    return getBaseDB()
       .selectFrom(query.as("filtered_specimen"))
       .where("ordinal", "=", 1)
       .select(["person_id", "start_date", "end_date"]);

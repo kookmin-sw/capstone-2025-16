@@ -1,15 +1,16 @@
-import { db } from "../db/types";
-import { DeathFilter } from "../types/type";
+import { DeathFilter } from "../../types/type";
 import {
+  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
-} from "./base";
+  handleConceptSet,
+} from "../base";
 
 export const getQuery = (a: DeathFilter) => {
-  let query = db
+  let query = getBaseDB()
     .selectFrom("death")
     .select(({ fn }) => [
       "death.person_id as person_id",
@@ -17,6 +18,14 @@ export const getQuery = (a: DeathFilter) => {
       "death.death_date as end_date",
     ])
     .leftJoin("person", "death.person_id", "person.person_id");
+
+  if (a.conceptset) {
+    query = handleConceptSet(
+      query,
+      "death.death_type_concept_id",
+      a.conceptset
+    );
+  }
 
   if (a.age) {
     query = handleAgeWithNumberOperator(
@@ -47,7 +56,9 @@ export const getQuery = (a: DeathFilter) => {
     );
   }
 
-  // TODO: cause
+  if (a.cause) {
+    query = handleConceptSet(query, "death.cause_source_concept_id", a.cause);
+  }
 
   return query;
 };

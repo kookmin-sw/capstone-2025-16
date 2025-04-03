@@ -98,7 +98,7 @@ export type Concept = {
   concept_code: string;
   valid_start_date: string;
   valid_end_date: string;
-  invalid_reason: string;
+  invalid_reason?: string;
 
   isExcluded?: boolean;
   includeDescendants?: boolean;
