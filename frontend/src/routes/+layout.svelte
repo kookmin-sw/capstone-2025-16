@@ -34,7 +34,7 @@
 		<div class="relative mx-auto max-w-[1280px] px-8">
 			<div class="flex">
 				<!-- 로고 영역 -->
-				<div class="w-[200px] h-[60px] flex items-center justify-center gap-2">
+				<a href="/" class="w-[200px] h-[60px] flex items-center justify-center gap-2">
 					<svg 
 						class="w-6 h-6 text-blue-600" 
 						fill="none" 
@@ -52,7 +52,7 @@
 							Bento
 						</span>
 					</p>
-				</div>
+				</a>
 
 				<!-- 메인 네비게이션 -->
 				<nav class="flex-1" aria-label="Main navigation">
