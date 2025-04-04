@@ -19,11 +19,7 @@
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-2 border-b">{measure.measurement_date}</td>
             <td class="px-4 py-2 border-b">{measure.measurement_concept_id}</td>
-            <td class="px-4 py-2 border-b">
-              <span class="{measure.value_as_number >= measure.range_low && measure.value_as_number <= measure.range_high ? 'text-green-600' : 'text-red-600'}">
-                {measure.value_as_number}
-              </span>
-            </td>
+            <td class="px-4 py-2 border-b">{measure.value_as_number}</td>
           </tr>
         {/each}
       </tbody>
