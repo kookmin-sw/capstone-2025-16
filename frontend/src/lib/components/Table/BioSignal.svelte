@@ -14,9 +14,7 @@
     <div class="bio-signal-row">
       <span class="info"><strong>Date:</strong> {signal.bio_signal_date}</span>
       <span class="divider">|</span>
-      <span class="info"><strong>Concept ID:</strong> 
-        <span class="highlight">{signal.bio_signal_concept_id}</span>
-      </span>
+      <span class="info"><strong>Concept ID:</strong> {signal.bio_signal_concept_id}</span>
       <span class="divider">|</span>
       <span class="info"><strong>Source Value:</strong> {signal.bio_signal_source_value}</span>
     </div>
@@ -67,19 +65,7 @@
     font-weight: bold;
     margin: 0 10px;
   }
-
-  /* 강조 표시 (Concept ID) */
-  .highlight {
-    color: #16a34a; /* Tailwind text-green-600 */
-    font-weight: bold;
-  }
-
-  /* 강조 표시 (File Path) */
-  .highlight-blue {
-    color: #2563eb; /* Tailwind text-blue-600 */
-    font-weight: bold;
-  }
-
+  
   /* 이미지 미리보기 스타일 */
   .image-preview {
     max-width: 100px;
