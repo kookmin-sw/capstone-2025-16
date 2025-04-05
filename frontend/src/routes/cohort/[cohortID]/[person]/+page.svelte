@@ -10,6 +10,7 @@
     import Specimen from "$lib/components/Table/Specimen.svelte";
     import BioSignal from "$lib/components/Table/BioSignal.svelte";
     import * as d3 from "d3";
+    import Footer from '$lib/components/Footer.svelte';
 
     import analysisData from '$lib/data/patientAnalysisTest.json';
     import ChartCard from '$lib/components/ChartCard.svelte';
@@ -543,6 +544,7 @@
             {/each}
         {/if}
     {/if}
+    <Footer />
 </div>
 
 <style>
