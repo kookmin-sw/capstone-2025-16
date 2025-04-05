@@ -49,8 +49,8 @@
         ? ORGANIZATION_AFFILIATIONS[selectedOrg][selectedCenter]
         : [];
 
-    $: isActive = selectedLab && ORGANIZATION_AFFILIATIONS[selectedOrg]?.[selectedCenter]?.[selectedLab] 
-        ? ORGANIZATION_AFFILIATIONS[selectedOrg][selectedCenter][selectedLab] 
+    $: isActive = ORGANIZATION_AFFILIATIONS[selectedOrg]?.[selectedCenter]?.[selectedLab]
+        ? ORGANIZATION_AFFILIATIONS[selectedOrg][selectedCenter][selectedLab]
         : [];
 
     // 이메일 유효성 검사
@@ -131,7 +131,7 @@
                 <select id="center" bind:value={selectedCenter} class="border p-2 mt-1 w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="" disabled selected>Select a center</option>
                     {#each centers as center}
-                    <option value={center}>{center}</option>
+                        <option value={center}>{center}</option>
                     {/each}
                 </select>
             </div>
@@ -143,8 +143,8 @@
                 <label for="lab" class="block font-semibold mb-1">Lab</label>
                 <select for="lab" bind:value={selectedLab} class="border p-2 mt-1 w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="" disabled selected>Select a lab</option>
-                    {#each labs as lab}
-                    <option value={lab}>{lab}</option>
+                    {#each labs as lab, index}
+                        <option value={index}>{lab}</option>
                     {/each}
                 </select>
             </div>
