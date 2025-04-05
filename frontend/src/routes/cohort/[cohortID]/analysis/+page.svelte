@@ -11,7 +11,7 @@
     import BarChart from "$lib/components/Charts/BarChart/BarChart.svelte"
     import BarChartWrapper from "$lib/components/Charts/BarChart/BarChartWrapper.svelte"
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
-
+    import Footer from '$lib/components/Footer.svelte';
     let activeTab = 'default'; // 탭 활성화 상태 관리
 
     let isTableView = {
@@ -306,9 +306,8 @@
             </div>
         </div>
     {/if}
-    
 </div>
-
+<Footer />
 
 <style>
     .tab {

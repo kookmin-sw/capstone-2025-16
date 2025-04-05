@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import Footer from '$lib/components/Footer.svelte';
 
   let searchQuery = "";
   let searchInput = "";
@@ -291,4 +292,5 @@
       </div>
     </div>
   {/if}
+  <Footer />
 </div>

@@ -1,5 +1,6 @@
 <script>
     import analysisData from '$lib/data/singleCohortAnalysisTest.json';
+    import Footer from '$lib/components/Footer.svelte';
 </script>
 
 <div class="pl-4 pr-4">
@@ -36,6 +37,12 @@
             </div>
         </div>
     </div>
-
-    (코호트 구성에 대한 내용 추가 예정)
 </div>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <div class="flex-1 overflow-y-auto">
+        <div class="p-6">
+            (코호트 구성에 대한 내용 추가 예정)
+        </div>
+        <Footer />
+    </div>
