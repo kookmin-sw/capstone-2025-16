@@ -93,6 +93,20 @@
 									Concept Sets
 								</a>
 							</div>
+
+							<!-- Person 메뉴 -->
+							<div class="w-[200px]">
+								<a 
+									href="/person"
+									role="menuitem"
+									tabindex="-1"
+									onmouseenter={() => activeMenu = 'person'}
+									class="flex items-center h-[60px] w-full px-6 text-[15px] transition-all duration-200
+										{activeMenu === 'person' ? 'text-slate-900 font-semibold' : 'text-slate-700 font-medium'} 
+										hover:text-slate-900 hover:font-semibold">
+									Person
+								</a>
+							</div>
 						</div>
 					</div>
 				</nav>
@@ -152,6 +166,19 @@
 											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
 											onmouseenter={() => activeMenu = 'concepts'}>
 											Concept Set Definition
+										</a>
+									</li>
+								</ul>
+							</div>
+
+							<!-- Person 섹션 -->
+							<div class="w-[200px] py-4 border-r border-slate-300">
+								<ul class="space-y-3">
+									<li>
+										<a href="/person" 
+											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
+											onmouseenter={() => activeMenu = 'person'}>
+											Person Search
 										</a>
 									</li>
 								</ul>
