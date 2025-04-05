@@ -5,3 +5,8 @@ export const AGE_GROUPS = [
   ];
 
 export const SINGLE_DATA_COLOR = '#3498db'
+
+export const ORGANIZATION_AFFILIATIONS = {
+  "서울대학교병원" : { "융합의학기술원" : ["BioMedical Informatics Lab", "Medical Vision Lab, MVL", "Translational Immunology Lab, TIL lab", "Clinical Proteomics Laboratory, SNUH-CPL", "Medical Spatial Computing Lab (MediSC Lab)", "Medical Robotics and Actuator Systems Laboratory", "Translational Biomaterials Laboratory", "Biomedical Machine learning and Design", "Bioelectronics and Neural Engineering Lab", "HUMAN Lab, H LAB"]},
+  "개인연구자" : [],
+};
