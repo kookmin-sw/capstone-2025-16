@@ -20,7 +20,7 @@
 		{ key: 'default', label: 'Default Chart' },
 		{ key: 'customizable', label: 'Customizable Chart' },
 	];
-    
+
     let isTableView = {
         genderRatio: false,
         mortality: false,
@@ -32,6 +32,28 @@
         topTenProcedures: false,
         topTenMeasurements: false
     };
+
+    // cohort features 임시 데이터
+    const procedureData = [
+        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.687 },
+        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.687 },
+        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.687 },
+        { ID: "1000024", Name: "Hypertension", Influence: 0.512 },
+        { ID: "1000025", Name: "Diabetes", Influence: 0.478 },
+        { ID: "1000026", Name: "Asthma", Influence: 0.432 },
+        { ID: "1000027", Name: "Arthritis", Influence: 0.421 }
+    ];
+
+    const conditionData = [
+        { ID: "1000024", Name: "Delirium", Influence: 0.547 },
+        { ID: "1000123", Name: "Hyperlidemia", Influence: 0.533 },
+        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.445 },
+        { ID: "1000026", Name: "Asthma", Influence: 0.432 },
+        { ID: "1000027", Name: "Arthritis", Influence: 0.421 },
+        { ID: "1000028", Name: "Depression", Influence: 0.398 },
+        { ID: "1000029", Name: "Anxiety", Influence: 0.376 }
+    ];
+
     function switchTab(tab) { // 탭을 바꿀 때 활성 탭 상태 변경 함수
         activeTab = tab;
     }
@@ -92,6 +114,65 @@
             코호트 구성 탭 화면
         </div>
     {/if}
+
+    {#if activeTab === 'features'}
+        <div class="border rounded-lg bg-white shadow-sm h-[300px] flex flex-col">
+            <div class="p-4 border-b">
+                <h2 class="text-base text-gray-700">Cohort Characteristics(Procedure, Condition)</h2>
+            </div>
+            <div class="p-4 flex-1">
+                <div class="grid grid-cols-2 gap-4 h-full">
+                    <div class="h-full">
+                        <h3 class="text-xs text-gray-500 mb-2">Procedure</h3>
+                        <div class="overflow-y-auto h-[170px] border rounded">
+                            <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {#each procedureData as { ID, Name, Influence }}
+                                        <tr>
+                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{ID}</td>
+                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Name}</td>
+                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Influence}</td>
+                                        </tr>
+                                    {/each}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="h-full">
+                        <h3 class="text-xs text-gray-500 mb-2">Condition</h3>
+                        <div class="overflow-y-auto h-[170px] border rounded">
+                            <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {#each conditionData as { ID, Name, Influence }}
+                                        <tr>
+                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{ID}</td>
+                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Name}</td>
+                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Influence}</td>
+                                        </tr>
+                                    {/each}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/if}
+
 
     {#if activeTab == 'default'}
         <div class="w-full">
