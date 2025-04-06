@@ -11,6 +11,7 @@
 	export let selectedOption = '';
 	export let hasTableView = false;
 	export let isTableView = false;
+	export let hasXButton = true;
 
 	const dispatch = createEventDispatcher();
 
@@ -73,7 +74,8 @@
 		{/if}
 
 		{#if hasTableView}
-			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
+			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute top-6
+				{hasXButton ? 'right-14' : 'right-6'}">
 				<button 
 					class="px-2 py-0.5 text-xs rounded-full transition-colors
 						{!isTableView ? 
@@ -93,11 +95,13 @@
 			</div>
 		{/if}
 
-		<button 
-			class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer absolute right-6 top-6"
-			on:click={closeCard}>
-			✕
-		</button>
+		{#if hasXButton}
+			<button 
+				class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer absolute right-6 top-6"
+				on:click={closeCard}>
+				✕
+			</button>
+		{/if}
 	</div>
 		<!-- 차트 컨텐츠 영역 -->
 		<div class="h-[calc(100%-2rem)] flex flex-col overflow-x-auto">
@@ -107,6 +111,8 @@
 				<slot name="table" />
 			{/if}
 		</div>
+	</div>
+
 	</div>
 {/if}
 
