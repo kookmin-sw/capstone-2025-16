@@ -48,11 +48,11 @@
 
 <style>
     .legend-container {
-        max-width: 100%;  /* 컨테이너 최대 너비 제한 */
+        max-width: 100%;
     }
 
     .legend-item {
-        padding: 0.25rem 0.5rem;
+        padding: 0.025rem 0.5rem;
         border-radius: 1rem;
     }
 
