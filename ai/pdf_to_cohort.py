@@ -1,6 +1,6 @@
 import cohort_json_schema as cohort_json_schema
+from pdf_to_text import extract_cohort_definition_from_pdf
 
-import pymupdf
 import os
 import re
 import json
@@ -104,11 +104,9 @@ These keywords will be used to search for concept codes in a structured OMOP CDM
    - age: For age criteria (MANDATORY for DemographicCriteria type)
 
 2. Important:
-   - [CRITICAL] Only extract criteria from sections clearly labeled as inclusion/exclusion criteria
    - [CRITICAL] Each concept should appear only ONCE
    - [CRITICAL] DO NOT include any Markdown formatting
    - [CRITICAL] DO NOT include explanations or additional text
-   - [CRITICAL] Return ONLY the JSON object, no other text
    - [CRITICAL] DO NOT include any introductory text like "Here is..." or "The extracted criteria are:"
    - [CRITICAL] DO NOT include any ```json or ``` markers
    - [CRITICAL] For Measurement type:
@@ -125,12 +123,6 @@ These keywords will be used to search for concept codes in a structured OMOP CDM
 {{
   "criteria": [
     {{
-      "type": "DemographicCriteria",
-      "name": "Age",
-      "age": {{ "gt": 18, "lt": 65 }},
-      "exclusion": false
-    }},
-    {{
       "type": "ConditionOccurrence",
       "name": "Diabetes",
       "exclusion": false
@@ -140,6 +132,12 @@ These keywords will be used to search for concept codes in a structured OMOP CDM
       "name": "Hemoglobin",
       "exclusion": true,
       "valueAsNumber": {{ "gt": 13 }}
+    }},
+    {{
+      "type": "DemographicCriteria",
+      "name": "Age",
+      "age": {{ "gt": 18, "lt": 65 }},
+      "exclusion": false
     }}
   ]
 }}
@@ -182,50 +180,32 @@ SEARCH_QUERY_REFINEMENT_PROMPT = """
 Original Term: "{term}"
 """
 
-# 1. PDF에서 텍스트 추출
-def extract_text_from_pdf(pdf_path) -> str:
-    doc = pymupdf.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text() + "\n"
-    return text
-
 # 2. 키워드 검색어 + type 자동 추출
 def extract_terms_from_text(text: str) -> list:
-    """
-    PDF 텍스트에서 코호트 기준을 추출하여 리스트 형태로 반환
-    """
+    
+    
     response = client.chat.completions.create(
         model=model_name,
         messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
-                  {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(
-                      text=text,
-                      example=cohort_json_schema.JSON_OUTPUT_EXAMPLE
-                  )}]
+                 {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}]
     )
-
+    llm_response = response.choices[0].message.content
+    
     try:
-        # 응답에서 JSON 부분만 추출
-        content = response.choices[0].message.content.strip()
+        # 응답에서 리스트 부분만 추출
+        content = llm_response.strip()
         
         # Markdown 코드 블록 제거
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0].strip()
-        elif "```" in content:
+        if "```" in content:
             content = content.split("```")[1].strip()
-        
-        # 불필요한 텍스트 제거
-        if "Here is" in content:
-            content = content.split("Here is")[-1].strip()
-        if "The extracted criteria are:" in content:
-            content = content.split("The extracted criteria are:")[-1].strip()
+            print("\n[``` 마크다운 블록 제거 후]:")
+            print(content)
         
         # LLM 응답을 JSON으로 변환
         cohort_json = json.loads(content)
-        
-        # criteria 리스트 생성
+
         criteria_list = []
-        
+
         # 모든 criteria 처리
         for criteria in cohort_json.get("criteria", []):
             if "type" in criteria and "name" in criteria:
@@ -238,14 +218,8 @@ def extract_terms_from_text(text: str) -> list:
                         "valueAsNumber": criteria.get("valueAsNumber"),
                         "age": criteria.get("age")
                     })
-        
+
         return criteria_list
-    
-    except json.JSONDecodeError as e:
-        print(f"\n[JSONDecodeError]")
-        print(f"Error: {e}")
-        print(f"Response content: {response.choices[0].message.content}")
-        return None
     
     except Exception as e:
         print(f"\n[Unexpected Error]")
@@ -253,7 +227,7 @@ def extract_terms_from_text(text: str) -> list:
         print(f"Error type: {type(e)}")
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
-        return None
+        return []
 
 # 불필요한 정보가 추가된 문구를 제거하는 함수 
 def clean_term(term):
@@ -427,10 +401,14 @@ def main():
     pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
     
     # 1. PDF에서 텍스트 추출
-    extracted_text = extract_text_from_pdf(pdf_path)
+    # extracted_text = extract_text_from_pdf(pdf_path)
+    implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
     
-    # 2. 텍스트에서 criteria 추출
-    extracted_criteria = extract_terms_from_text(extracted_text)
+    print("\n[Implementable Criteria 부분만]:")
+    print(implementable_text)
+    
+    # 2. 텍스트에서 criteria 추출 (implementable 부분만 사용)
+    extracted_criteria = extract_terms_from_text(implementable_text)
     print("\n[extracted_criteria]:")
     print(json.dumps(extracted_criteria, indent=2, ensure_ascii=False))
     
