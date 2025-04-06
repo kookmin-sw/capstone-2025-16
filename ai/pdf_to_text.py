@@ -148,7 +148,7 @@ def extract_cohort_definition_from_pdf(pdf_path):
     
     content = response.choices[0].message.content
     
-    # "## Non-implementable Criteria"를 기준으로 텍스트 분리
+    # "Non-implementable Criteria"를 기준으로 텍스트 분리
     parts = content.split("Non-implementable Criteria")
     implementable_text = parts[0].strip() if len(parts) > 0 else ""
     non_implementable_text = ("Non-implementable Criteria" + parts[1].strip()) if len(parts) > 1 else ""

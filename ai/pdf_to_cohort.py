@@ -192,16 +192,11 @@ def extract_terms_from_text(text: str) -> list:
     llm_response = response.choices[0].message.content
     
     try:
-        # 응답에서 리스트 부분만 추출
         content = llm_response.strip()
         
-        # Markdown 코드 블록 제거
         if "```" in content:
             content = content.split("```")[1].strip()
-            print("\n[``` 마크다운 블록 제거 후]:")
-            print(content)
         
-        # LLM 응답을 JSON으로 변환
         cohort_json = json.loads(content)
 
         criteria_list = []
