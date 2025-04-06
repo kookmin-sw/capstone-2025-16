@@ -8,10 +8,28 @@ clickhouse_client = Client(
 )
 
 # 단어 검색 쿼리
+# query = """
+# SELECT concept_id, concept_name, domain_id
+# FROM concept 
+# WHERE concept_name ILIKE '%sepsis%'
+# AND domain_id = 'Condition'
+# AND invalid_reason IS NULL
+# LIMIT 20;
+# """
 query = """
-SELECT concept_id, concept_name, domain_id
+SELECT 
+    concept_id,
+    concept_name,
+    domain_id,
+    vocabulary_id,
+    concept_class_id,
+    standard_concept,
+    concept_code,
+    valid_start_date,
+    valid_end_date,
+    invalid_reason
 FROM concept 
-WHERE concept_name ILIKE '%Acute Respiratory Distress Syndrome%'
+WHERE concept_name ILIKE 'sepsis'
 AND domain_id = 'Condition'
 AND invalid_reason IS NULL
 LIMIT 20;

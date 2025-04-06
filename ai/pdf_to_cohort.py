@@ -1,5 +1,6 @@
 import cohort_json_schema as cohort_json_schema
 from pdf_to_text import extract_cohort_definition_from_pdf
+from get_omop_concept_id import clean_term, get_omop_concept_id, get_concept_set_domain_id, update_concept_set_items, get_concept_ids
 
 import os
 import re
@@ -183,7 +184,6 @@ Original Term: "{term}"
 # 2. 키워드 검색어 + type 자동 추출
 def extract_terms_from_text(text: str) -> list:
     
-    
     response = client.chat.completions.create(
         model=model_name,
         messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
@@ -228,87 +228,6 @@ def extract_terms_from_text(text: str) -> list:
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
         return []
-
-# 불필요한 정보가 추가된 문구를 제거하는 함수 
-def clean_term(term):
-    return re.sub(r"\s*\(.*?\)", "", term).strip() 
-
-# 3. ClickHouse에서 concept 정보 조회
-def get_omop_concept_id(term: str, domain_id: str) -> list:
-    cleaned_term = clean_term(term).replace('%', '%%')
-    
-    query = """
-    SELECT 
-        concept_id,
-        concept_name,
-        domain_id,
-        vocabulary_id,
-        concept_class_id,
-        standard_concept,
-        concept_code,
-        valid_start_date,
-        valid_end_date,
-        invalid_reason
-    FROM concept 
-    WHERE concept_name ILIKE %(term)s 
-    AND domain_id = %(domain_id)s 
-    AND invalid_reason IS NULL
-    LIMIT 3
-    """
-    
-    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id})
-    
-    # Concept 객체로 변환
-    concepts = []
-    for result in results:
-        concept = {
-            "concept_id": str(result[0]),  # Identifier는 string
-            "concept_name": result[1],
-            "domain_id": result[2],
-            "vocabulary_id": result[3],
-            "concept_class_id": result[4],
-            "standard_concept": result[5],
-            "concept_code": result[6],
-            "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,  # date를 문자열로 변환
-            "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,    # date를 문자열로 변환
-            "invalid_reason": result[9],
-            "includeDescendants": True,  # 기본값 설정
-            "includeMapped": True
-        }
-        concepts.append(concept)
-    
-    return concepts
-
-# concept_set_id에 해당하는 filter의 type을 찾아 domain_id를 반환
-def get_concept_set_domain_id(cohort_json: dict, concept_set_id: str) -> str:
-    for group in cohort_json.get("cohort", []):
-        for container in group.get("containers", []):
-            for filter_obj in container.get("filters", []):
-                if filter_obj.get("conceptset") == concept_set_id:
-                    criteria_type = filter_obj["type"]
-                    criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
-                    if criteria_info:
-                        return criteria_info["Domain_id"]
-    return None
-
-# concept_set의 items를 DB에서 조회한 결과로 업데이트
-def update_concept_set_items(concept_set: dict, domain_id: str) -> dict:
-    if not domain_id:
-        return concept_set
-        
-    concept_results = get_omop_concept_id(concept_set["name"], domain_id)
-    if concept_results:
-        concept_set["items"] = concept_results
-    return concept_set
-
-# cohort_json의 conceptset에서 concept_id를 조회하여 업데이트
-def get_concept_ids(cohort_json: dict) -> dict:
-    for concept_set in cohort_json.get("conceptsets", []):
-        if "name" in concept_set and "conceptset_id" in concept_set:
-            domain_id = get_concept_set_domain_id(cohort_json, concept_set["conceptset_id"])
-            concept_set = update_concept_set_items(concept_set, domain_id)
-    
-    return cohort_json
 
 # 4. 검색어 변경하여 재검색
 def refine_search_query(term) -> str:
