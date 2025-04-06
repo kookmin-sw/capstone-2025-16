@@ -66,6 +66,8 @@
         </div>
         <Footer />
     </div>
+<Footer />
+
 <style>
     .tab {
         padding: 0.75rem 1.5rem;
