@@ -78,8 +78,9 @@ export interface BaseGroup {
   containers: [FirstContainer, ...SubsequentContainer[]];
 }
 
+// first group 안에는 DemographicFilter가 들어갈 수 없음
 export interface FirstGroup extends BaseGroup {
-  mergeByPersonId?: boolean;
+  mergeByPersonId?: boolean; // person_id 기준으로 group by
 }
 
 export interface SubsequentGroup extends BaseGroup {
