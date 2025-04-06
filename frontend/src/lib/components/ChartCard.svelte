@@ -38,8 +38,8 @@
 	class:col-span-2={type === 'third'}>
 
 	<!-- 헤더 영역 -->
-	<div class="flex items-center gap-2 h-[25px]">
-		<span class="text-base font-semibold">{title}</span>
+	<div class="flex items-center gap-2 h-[10px]">
+		<span class="text-sm font-semibold">{title}</span>
 		<div class="group relative">
 			<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
 			<div class="absolute bottom-full mb-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -75,7 +75,7 @@
 		{/if}
 
 		{#if hasTableView}
-			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute top-6
+			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute top-5
 				{hasXButton ? 'right-14' : 'right-6'}">
 				<button 
 					class="px-2 py-0.5 text-xs rounded-full transition-colors

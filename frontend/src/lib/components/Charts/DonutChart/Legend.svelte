@@ -39,7 +39,7 @@
             on:mouseleave={() => hoveredLabel = null}
         >
             <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {colorScale(label)}"></div>
-            <span class="text-sm whitespace-nowrap">
+            <span class="text-xs whitespace-nowrap">
                 {label}
             </span>
         </div>
