@@ -34,7 +34,7 @@
 		<div class="relative mx-auto max-w-[1280px] px-8">
 			<div class="flex">
 				<!-- 로고 영역 -->
-				<div class="w-[200px] h-[60px] flex items-center justify-center gap-2">
+				<a href="/" class="w-[200px] h-[60px] flex items-center justify-center gap-2">
 					<svg 
 						class="w-6 h-6 text-blue-600" 
 						fill="none" 
@@ -52,7 +52,7 @@
 							Bento
 						</span>
 					</p>
-				</div>
+				</a>
 
 				<!-- 메인 네비게이션 -->
 				<nav class="flex-1" aria-label="Main navigation">
@@ -91,6 +91,20 @@
 										{activeMenu === 'concepts' ? 'text-slate-900 font-semibold' : 'text-slate-700 font-medium'} 
 										hover:text-slate-900 hover:font-semibold">
 									Concept Sets
+								</a>
+							</div>
+
+							<!-- Person 메뉴 -->
+							<div class="w-[200px]">
+								<a 
+									href="/person"
+									role="menuitem"
+									tabindex="-1"
+									onmouseenter={() => activeMenu = 'person'}
+									class="flex items-center h-[60px] w-full px-6 text-[15px] transition-all duration-200
+										{activeMenu === 'person' ? 'text-slate-900 font-semibold' : 'text-slate-700 font-medium'} 
+										hover:text-slate-900 hover:font-semibold">
+									Person
 								</a>
 							</div>
 						</div>
@@ -152,6 +166,19 @@
 											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
 											onmouseenter={() => activeMenu = 'concepts'}>
 											Concept Set Definition
+										</a>
+									</li>
+								</ul>
+							</div>
+
+							<!-- Person 섹션 -->
+							<div class="w-[200px] py-4 border-r border-slate-300">
+								<ul class="space-y-3">
+									<li>
+										<a href="/person" 
+											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
+											onmouseenter={() => activeMenu = 'person'}>
+											Person Search
 										</a>
 									</li>
 								</ul>
