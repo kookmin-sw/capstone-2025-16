@@ -8,6 +8,7 @@
     export let showLegend = true;
 
     const margin = { top: 30, right: 120, bottom: 50, left: 50 };
+    if(!showLegend) margin.right = 30;
     let chartContainer;
     let width;
     let height;
