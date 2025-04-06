@@ -320,7 +320,6 @@ def main():
     pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
     
     # 1. PDF에서 텍스트 추출
-    # extracted_text = extract_text_from_pdf(pdf_path)
     implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
     
     print("\n[Implementable Criteria 부분만]:")

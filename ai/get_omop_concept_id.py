@@ -24,29 +24,72 @@ def clean_term(term):
     return re.sub(r"\s*\(.*?\)", "", term).strip() 
 
 # ClickHouse에서 concept 정보 조회
-def get_omop_concept_id(term: str, domain_id: str) -> list:
+def get_omop_concept_id(term: str, domain_id: str, limit: int = 3) -> list:
     cleaned_term = clean_term(term)
     
     query = """
-    SELECT 
-        concept_id,
-        concept_name,
-        domain_id,
-        vocabulary_id,
-        concept_class_id,
-        standard_concept,
-        concept_code,
-        valid_start_date,
-        valid_end_date,
-        invalid_reason
-    FROM concept 
-    WHERE concept_name ILIKE %(term)s
-    AND domain_id = %(domain_id)s 
-    AND invalid_reason IS NULL
-    LIMIT 3
+    WITH limited_concepts AS
+    (
+        SELECT
+            concept_id,
+            concept_name,
+            domain_id,
+            vocabulary_id,
+            concept_class_id,
+            standard_concept,
+            concept_code,
+            valid_start_date,
+            valid_end_date,
+            invalid_reason
+        FROM concept
+        WHERE (concept_name ILIKE %(term)s) AND (domain_id = %(domain_id)s) AND (invalid_reason IS NULL)
+    )
+    SELECT
+        lc.concept_id,
+        lc.concept_name,
+        lc.domain_id,
+        lc.vocabulary_id,
+        lc.concept_class_id,
+        lc.standard_concept,
+        lc.concept_code,
+        lc.valid_start_date,
+        lc.valid_end_date,
+        lc.invalid_reason,
+        COALESCE(pc.parent_count, 0) AS parent_count,
+        COALESCE(cc.child_count, 0) AS child_count
+    FROM limited_concepts AS lc
+    LEFT JOIN
+    (
+        SELECT
+            descendant_concept_id AS concept_id,
+            COUNT(*) AS parent_count
+        FROM concept_ancestor
+        WHERE descendant_concept_id IN (
+            SELECT concept_id
+            FROM limited_concepts
+        )
+        GROUP BY descendant_concept_id
+    ) AS pc ON lc.concept_id = pc.concept_id
+    LEFT JOIN
+    (
+        SELECT
+            ancestor_concept_id AS concept_id,
+            COUNT(*) AS child_count
+        FROM concept_ancestor
+        WHERE ancestor_concept_id IN (
+            SELECT concept_id
+            FROM limited_concepts
+        )
+        GROUP BY ancestor_concept_id
+    ) AS cc ON lc.concept_id = cc.concept_id
+    ORDER BY child_count DESC
     """
     
     results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id})
+    
+    # 결과가 너무 많으면 limit만큼만 반환 -> 나중에 늘릴 예정
+    if len(results) > limit:
+        results = results[:limit]
     
     # Concept 객체로 변환
     concepts = []
@@ -62,6 +105,8 @@ def get_omop_concept_id(term: str, domain_id: str) -> list:
             "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,  # date를 문자열로 변환
             "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,    # date를 문자열로 변환
             "invalid_reason": result[9],
+            "parent_count": result[10],    # 부모 개념 수
+            "child_count": result[11],     # 자식 개념 수
             "includeDescendants": True,  # 기본값 설정
             "includeMapped": True
         }
@@ -100,14 +145,14 @@ def get_concept_ids(cohort_json: dict) -> dict:
     
     return cohort_json
 
+
+
 # 테스트용 함수
 def test_concept_search(term: str, domain_id: str):
-    """
-    주어진 용어와 도메인 ID로 개념을 검색하고 결과를 출력하는 테스트 함수
-    """
     concepts = get_omop_concept_id(term, domain_id)
     if concepts:
         print(f"'{term}' 검색 결과 ({len(concepts)}개):")
+        print("=" * 60)
         for concept in concepts:
             print(f"Concept ID: {concept['concept_id']}")
             print(f"Concept Name: {concept['concept_name']}")
@@ -116,13 +161,12 @@ def test_concept_search(term: str, domain_id: str):
             print(f"Class: {concept['concept_class_id']}")
             print(f"Standard: {concept['standard_concept']}")
             print(f"Code: {concept['concept_code']}")
-            print("---")
+            print(f"Parents Count: {concept['parent_count']} | Children Count: {concept['child_count']}")
+            print("=" * 60)
     else:
         print(f"'{term}' 검색 결과가 없습니다.")
 
-# 메인 실행 부분
 if __name__ == "__main__":
-    # 테스트 예제
     print("===== 검색 테스트 =====")
     test_concept_search("Sepsis", "Condition")
     test_concept_search("Diabetes Mellitus", "Condition")
