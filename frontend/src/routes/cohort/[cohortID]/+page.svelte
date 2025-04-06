@@ -1,6 +1,16 @@
 <script>
     import analysisData from '$lib/data/singleCohortAnalysisTest.json';
     import Footer from '$lib/components/Footer.svelte';
+    let activeTab = 'default';
+    const tabs = [
+		{ key: 'definition', label: 'Definition' },
+		{ key: 'features', label: 'Features' },
+		{ key: 'default', label: 'Default Chart' },
+		{ key: 'customizable', label: 'Customizable Chart' },
+	];
+    function switchTab(tab) { // 탭을 바꿀 때 활성 탭 상태 변경 함수
+        activeTab = tab;
+    }
 </script>
 
 <div class="pl-4 pr-4">
@@ -39,10 +49,33 @@
     </div>
 </div>
 
-    <!-- 메인 컨텐츠 영역 -->
-    <div class="flex-1 overflow-y-auto">
+<div class="w-full mb-5 border-b border-gray-300">
+	<div class="flex">
+		{#each tabs as tab}
+			<button
+				class="tab {activeTab === tab.key ? 'active' : ''}"
+				on:click={() => switchTab(tab.key)}
+			>
+				{tab.label}
+			</button>
+		{/each}
+	</div>
+</div>
         <div class="p-6">
             (코호트 구성에 대한 내용 추가 예정)
         </div>
         <Footer />
     </div>
+<style>
+    .tab {
+        padding: 0.75rem 1.5rem;
+        margin-right: 1rem;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+    }
+    
+    .tab.active {
+        border-bottom: 2px solid #000;
+        font-weight: 500;
+    }
+</style>
