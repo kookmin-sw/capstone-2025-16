@@ -388,7 +388,7 @@ export const buildQuery = (
       .selectFrom("temp_cohort")
       .groupBy("cohort_id")
       .orderBy("cohort_id", "asc")
-      .select(({ fn }) => ["cohort_id", fn.count("cohort_id").as("count")])
+      .select(({ fn }) => ["cohort_id", fn.count("person_id").as("count")])
   );
 
   // TODO: insert into final cohort
