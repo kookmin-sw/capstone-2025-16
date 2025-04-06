@@ -32,12 +32,13 @@
 
 {#if visible}
 <div 
-	class="bg-white border border-gray-300 rounded-lg shadow-md p-6 h-[300px] relative mb-1 w-full"
-	class:col-span-4={type === 'full'}
-	class:col-span-2={type === 'half'}>
+	class="flex flex-col h-[300px] bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full"
+	class:col-span-6={type === 'full'}
+	class:col-span-3={type === 'half'}
+	class:col-span-2={type === 'third'}>
 
 	<!-- 헤더 영역 -->
-	<div class="flex items-center gap-2">
+	<div class="flex items-center gap-2 h-[25px]">
 		<span class="text-base font-semibold">{title}</span>
 		<div class="group relative">
 			<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
@@ -103,11 +104,13 @@
 			</button>
 		{/if}
 	</div>
-		<!-- 차트 컨텐츠 영역 -->
-		<div class="h-[calc(100%-2rem)] flex flex-col overflow-x-auto">
-			{#if !isTableView}
-				<slot />
-			{:else}
+
+	<!-- 차트 컨텐츠 영역 -->
+	<div class="flex-1 overflow-y-auto px-2">
+		<div class="h-full overflow-visible">
+		{#if !isTableView}
+			<slot />
+		{:else}
 				<slot name="table" />
 			{/if}
 		</div>
