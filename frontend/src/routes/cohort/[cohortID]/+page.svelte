@@ -61,11 +61,21 @@
 		{/each}
 	</div>
 </div>
+
+<div class="pb-10">
+    {#if activeTab === 'definition'}
         <div class="p-6">
-            (코호트 구성에 대한 내용 추가 예정)
+            코호트 구성 탭 화면
         </div>
-        <Footer />
-    </div>
+    {/if}
+
+    {#if activeTab == 'customizable'}
+        <div class="p-6">
+            customizable tab 화면
+        </div>
+    {/if}
+</div>
+
 <Footer />
 
 <style>
