@@ -1,8 +1,8 @@
 import { Router } from "express";
-import pingRoutes from "./pingRoutes";
+import pingRoute from "./ping.route";
 
 const router = Router();
 
-router.use("/api", pingRoutes);
+router.use("/ping", pingRoute);
 
 export default router;
