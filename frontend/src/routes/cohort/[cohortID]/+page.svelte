@@ -34,7 +34,7 @@
         topTenMeasurements: false
     });
 
-    let tabElements = [];
+    let tabElements = $state(Array(tabs.length).fill(null));
     let indicatorStyle = $state('');
     let resizeObserver;
 
@@ -140,12 +140,12 @@
 
 <div class="w-full mb-5 border-b border-gray-300">
 	<div class="flex relative">
-		{#each tabs as tab}
+		{#each tabs as tab, i}
 			<button
 				class="tab"
 				class:active={activeTab === tab.key}
 				onclick={() => switchTab(tab.key)}
-				bind:this={tabElements[tabs.indexOf(tab)]}
+				bind:this={tabElements[i]}
                 data-key={tab.key}
 			>
 				{tab.label}
