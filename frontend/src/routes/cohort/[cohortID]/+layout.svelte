@@ -97,21 +97,28 @@
 	</div>
 
 	<div class="flex w-full px-2 py-2">
-		<input
-			type="text"
-			class="h-8 w-full rounded-sm border border-zinc-200 bg-zinc-50 text-left shadow-sm placeholder:text-xs text-xs"
-			placeholder="Enter Person ID"
-			bind:value={searchQuery}
-			onkeydown={(e) => {
-				if(e.key === "Enter") filterData();
-			}}
-		/>
-		<button onclick={filterData} aria-label="Search-Person-ID">
-			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
-				<path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-			</svg>
-		</button>
+		<div class="relative flex-1">
+			<input
+				type="text"
+				class="h-8 w-full rounded-lg border border-zinc-200 bg-white pl-3 pr-9 text-xs transition-colors placeholder:text-gray-400 hover:border-zinc-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+				placeholder="Enter Person ID"
+				bind:value={searchQuery}
+				onkeydown={(e) => {
+					if(e.key === "Enter") filterData();
+				}}
+			/>
+			<button 
+				onclick={filterData} 
+				aria-label="Search-Person-ID"
+				class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+					<path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+				</svg>
+			</button>
+		</div>
 	</div>
+
 	<div class="h-[100vh] w-full px-2" bind:this={cohortDiv}>
 		<div class="flex flex-col rounded-sm border-r border-t border-l border-zinc-200 bg-zinc-50 max-h-full overflow-y-auto">
 			{#each paginatedData as user}
