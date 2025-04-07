@@ -78,18 +78,19 @@
                         on:mouseenter={() => hoveredSlice = slice}
                         on:mouseleave={() => hoveredSlice = null}
                     />
-                    {#if hoveredSlice === slice}
+                    {/each}
+
+                    {#if hoveredSlice}
                         <text
-                            transform={`translate(${arc.centroid(slice)})`}
+                            transform={`translate(${arc.centroid(hoveredSlice)})`}
                             text-anchor="middle"
                             class="value-text"
                         >
-                            <tspan x="0" dy="-0.5em" class="label">{slice.data[0]}</tspan>
-                            <tspan x="0" dy="1.2em" class="value">{slice.data[1]}</tspan>
-                            <tspan x="0" dy="1.2em" class="percent">({calculatePercent(slice.data[1])})</tspan>
+                            <tspan x="0" dy="-0.5em" class="label">{hoveredSlice.data[0]}</tspan>
+                            <tspan x="0" dy="1.2em" class="value">{hoveredSlice.data[1]}</tspan>
+                            <tspan x="0" dy="1.2em" class="percent">({calculatePercent(hoveredSlice.data[1])})</tspan>
                         </text>
                     {/if}
-                {/each}
             </g>
         </svg>
     {:else}
@@ -122,7 +123,7 @@
 
     .value-text {
         font-size: 13px;
-        fill: white;
+        fill: #303030;
         pointer-events: none;
     }
 

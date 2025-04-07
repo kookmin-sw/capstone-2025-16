@@ -1,6 +1,5 @@
 <script>
   export let data = { headers: [], rows: [] };
-
   $: headers = data.headers;
   $: rows = data.rows;
 </script>
@@ -11,7 +10,7 @@
       <thead class="bg-gray-50">
         <tr>
           {#each headers as header}
-            <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th class="px-2 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
               {header}
             </th>
           {/each}
@@ -21,7 +20,7 @@
         {#each rows as row}
           <tr class="hover:bg-gray-50">
             {#each headers as header}
-              <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900">
+              <td class="px-2 py-2 whitespace-nowrap text-[10px] text-gray-900">
                 {row[header].toLocaleString()}
               </td>
             {/each}

@@ -3,6 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { filter } from 'd3';
 	import { onMount, tick } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import analysisData from '$lib/data/singleCohortAnalysisTest.json';
 
 	let { children, data } = $props();
     const cohortID = $page.params.cohortID;
@@ -73,16 +75,27 @@
 </script>
 
 <div class="fixed left-0 top-[65px] flex h-[calc(100vh-60px)] w-[200px] flex-col border-r border-zinc-200">
-	<div>
-		<div class="flex justify-center mt-2 ml-2 mr-2">
-			<button
-			  class="h-8 w-full text-sm cursor-pointer border border-gray-300 rounded bg-gray-50 hover:bg-gray-100"
-			  onclick={() => goto(`/cohort/${cohortID}/analysis`)}
-			>
-			  Analysis Report
-			</button>
-		</div>
+	<div class="px-2 pt-2">
+		<button 
+			class="w-full flex items-center justify-between px-3 py-2 bg-white rounded-lg border hover:bg-blue-50 transition-colors group"
+			onclick={() => goto(`/cohort/${cohortID}`)}
+		>
+			<div class="flex-1 min-w-0">
+				<div class="flex items-center gap-1">
+					<span class="text-[10px] font-medium text-gray-400 truncate">{analysisData.basicInfo?.id || cohortID}</span>
+				</div>
+				<div class="flex items-center gap-1">
+					<div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{analysisData.basicInfo?.name || "Cohort"}</div>
+				</div>
+			</div>
+			<div class="flex items-center text-gray-400 group-hover:text-blue-600">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+				</svg>
+			</div>
+		</button>
 	</div>
+
 	<div class="flex w-full px-2 py-2">
 		<input
 			type="text"

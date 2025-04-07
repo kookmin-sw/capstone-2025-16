@@ -534,7 +534,7 @@
 
     <!-- 차트 그리드 및 Footer -->
     <div class="flex-1 overflow-y-auto">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-6">
         {#if selectItems[0].checked}
           <ChartCard 
             title="Gender Ratio" 
