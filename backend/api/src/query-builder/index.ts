@@ -11,10 +11,22 @@ import * as observationPeriod from "./filters/observation-period";
 import * as procedureOccurrence from "./filters/procedure-occurrence";
 import * as specimen from "./filters/specimen";
 import * as visitOccurrence from "./filters/visit-occurrence";
-import { CohortDefinition, ConceptSet, Concept } from "../types/type";
+import * as demographic from "./filters/demographic";
+import {
+  CohortDefinition,
+  ConceptSet,
+  Concept,
+  SubsequentGroup,
+  Cohort,
+  FirstGroup,
+  Filter,
+  FirstContainer,
+  SubsequentContainer,
+} from "../types/type";
 import { getBaseDB, getExpressionBuilder } from "./base";
-import { Compilable } from "kysely";
+import { Compilable, SelectQueryBuilder, sql } from "kysely";
 import { format } from "sql-formatter";
+import { Database } from "../db/types";
 
 const buildConceptQuery = (concepts: Concept[]) => {
   if (!concepts.length) {
@@ -90,18 +102,76 @@ const buildConceptQuery = (concepts: Concept[]) => {
   return query;
 };
 
-export const buildQuery = (cohort: CohortDefinition) => {
-  const query: Compilable[] = [
+const handleFilter = (filter: Filter) => {
+  switch (filter.type) {
+    case "condition_era":
+      return conditionEra.getQuery(filter);
+    case "condition_occurrence":
+      return conditionOccurrence.getQuery(filter);
+    case "death":
+      return death.getQuery(filter);
+    case "device_exposure":
+      return deviceExposure.getQuery(filter);
+    case "dose_era":
+      return doseEra.getQuery(filter);
+    case "drug_era":
+      return drugEra.getQuery(filter);
+    case "drug_exposure":
+      return drugExposure.getQuery(filter);
+    case "measurement":
+      return measurement.getQuery(filter);
+    case "observation":
+      return observation.getQuery(filter);
+    case "observation_period":
+      return observationPeriod.getQuery(filter);
+    case "procedure_occurrence":
+      return procedureOccurrence.getQuery(filter);
+    case "specimen":
+      return specimen.getQuery(filter);
+    case "visit_occurrence":
+      return visitOccurrence.getQuery(filter);
+    case "demographic":
+      return demographic.getQuery(filter);
+    default:
+      throw new Error(`Unknown filter type: ${filter}`);
+  }
+};
+
+export const buildQuery = (
+  cohortdef: CohortDefinition,
+  database: "clickhouse" | "postgres" = "clickhouse"
+) => {
+  const queries: Compilable[] = [
     getBaseDB()
       .schema.createTable("codesets")
       .temporary()
-      .addColumn("codeset_id", "bigint") // bigint is compatible with clickhouse
-      .addColumn("concept_id", "bigint"),
+      .addColumn(
+        "codeset_id",
+        database === "clickhouse" ? sql`Int64` : "bigint"
+      )
+      .addColumn(
+        "concept_id",
+        database === "clickhouse" ? sql`Int64` : "bigint"
+      ),
+    getBaseDB()
+      .schema.createTable("temp_cohort")
+      .temporary()
+      .addColumn("cohort_id", database === "clickhouse" ? sql`Int64` : "bigint")
+      .addColumn("person_id", database === "clickhouse" ? sql`Int64` : "bigint")
+      .addColumn("start_date", database === "clickhouse" ? sql`Date32` : "date")
+      .addColumn("end_date", database === "clickhouse" ? sql`Date32` : "date"),
   ];
 
-  if (cohort.conceptsets) {
-    cohort.conceptsets.map((e) => {
-      query.push(
+  const cleanupQueries: Compilable[] = [
+    getBaseDB().schema.dropTable("codesets"),
+    getBaseDB().schema.dropTable("temp_cohort"),
+  ];
+
+  const { conceptsets, cohort } = cohortdef;
+
+  if (conceptsets) {
+    conceptsets.map((e) => {
+      queries.push(
         getBaseDB()
           .insertInto("codesets")
           .columns(["codeset_id", "concept_id"])
@@ -138,5 +208,190 @@ export const buildQuery = (cohort: CohortDefinition) => {
     });
   }
 
-  return query;
+  if (cohort && cohort.length) {
+    const [firstGroup, ...subsequentGroups] = cohort;
+
+    // Process first group
+    {
+      let query: any[] = [];
+
+      let [firstContainer, ...subsequentContainers] = firstGroup.containers;
+
+      let firstContainerQuery;
+      for (const filter of firstContainer.filters) {
+        if (!firstContainerQuery) {
+          firstContainerQuery = getBaseDB()
+            .selectFrom(handleFilter(filter).as("first_query"))
+            .select(["person_id", "start_date", "end_date"]);
+        } else {
+          firstContainerQuery = firstContainerQuery.where(
+            "person_id",
+            "in",
+            getBaseDB()
+              .selectFrom(handleFilter(filter).as("filter_query"))
+              .select("person_id")
+          );
+        }
+      }
+
+      query.push(firstContainerQuery);
+
+      for (const container of subsequentContainers) {
+        let subsequentContainerQuery: any;
+        for (const filter of container.filters) {
+          if (!subsequentContainerQuery) {
+            subsequentContainerQuery = getBaseDB()
+              .selectFrom(handleFilter(filter).as("subsequent_query"))
+              .select(["person_id", "start_date", "end_date"]);
+          } else {
+            subsequentContainerQuery = subsequentContainerQuery.where(
+              "person_id",
+              "in",
+              getBaseDB()
+                .selectFrom(handleFilter(filter).as("filter_query"))
+                .select("person_id")
+            );
+          }
+        }
+
+        if (container.operator === "OR") {
+          query.push(subsequentContainerQuery);
+        } else if (
+          container.operator === "AND" ||
+          container.operator === "NOT"
+        ) {
+          query = query.map((e) =>
+            e.where(
+              "person_id",
+              container.operator === "NOT" ? "not in" : "in",
+              getBaseDB()
+                .selectFrom(subsequentContainerQuery.as("subsequent_query"))
+                .select("person_id")
+            )
+          );
+        }
+      }
+
+      queries.push(
+        ...query.map((e) =>
+          getBaseDB()
+            .insertInto("temp_cohort")
+            .expression(
+              getBaseDB()
+                .selectFrom(e)
+                .select(({ eb }) => [
+                  eb.fn<any>("_to_int64", [eb.val(1)]).as("cohort_id"),
+                  "person_id",
+                  "start_date",
+                  "end_date",
+                ])
+            )
+        )
+      );
+    }
+
+    let cohortId = 2;
+    // Process subsequent groups
+    for (const group of subsequentGroups) {
+      let [firstContainer, ...subsequentContainers] = group.containers;
+
+      let firstContainerQuery: any;
+      for (const filter of firstContainer.filters) {
+        if (!firstContainerQuery) {
+          firstContainerQuery = getBaseDB()
+            .selectFrom(handleFilter(filter).as("first_query"))
+            .select("person_id");
+        } else {
+          firstContainerQuery = firstContainerQuery.where(
+            "person_id",
+            "in",
+            getBaseDB()
+              .selectFrom(handleFilter(filter).as("filter_query"))
+              .select("person_id")
+          );
+        }
+      }
+
+      for (const container of subsequentContainers) {
+        let subsequentContainerQuery: any;
+        for (const filter of container.filters) {
+          if (!subsequentContainerQuery) {
+            subsequentContainerQuery = getBaseDB()
+              .selectFrom(handleFilter(filter).as("subsequent_query"))
+              .select("person_id");
+          } else {
+            subsequentContainerQuery = subsequentContainerQuery.where(
+              "person_id",
+              "in",
+              getBaseDB()
+                .selectFrom(handleFilter(filter).as("filter_query"))
+                .select("person_id")
+            );
+          }
+        }
+
+        if (container.operator === "OR") {
+          firstContainerQuery = getBaseDB()
+            .selectFrom(
+              firstContainerQuery
+                .unionAll(subsequentContainerQuery)
+                .as("union_query")
+            )
+            .selectAll();
+        } else if (container.operator === "AND") {
+          firstContainerQuery = getBaseDB()
+            .selectFrom(
+              firstContainerQuery
+                .intersect(subsequentContainerQuery)
+                .as("intersect_query")
+            )
+            .selectAll();
+        } else if (container.operator === "NOT") {
+          firstContainerQuery = getBaseDB()
+            .selectFrom(
+              firstContainerQuery
+                .except(subsequentContainerQuery)
+                .as("except_query")
+            )
+            .selectAll();
+        }
+      }
+
+      queries.push(
+        getBaseDB()
+          .insertInto("temp_cohort")
+          .expression(
+            getBaseDB()
+              .selectFrom("temp_cohort")
+              .select(({ eb }) => [
+                eb.fn<any>("_to_int64", [eb.val(cohortId)]).as("cohort_id"),
+                "person_id",
+                "start_date",
+                "end_date",
+              ])
+              .where(({ eb }) =>
+                eb(
+                  "cohort_id",
+                  "=",
+                  eb.fn<any>("_to_int64", [eb.val(cohortId - 1)])
+                )
+              )
+              .where("person_id", "in", firstContainerQuery)
+          )
+      );
+      cohortId++;
+    }
+  }
+
+  queries.push(
+    getBaseDB()
+      .selectFrom("temp_cohort")
+      .groupBy("cohort_id")
+      .orderBy("cohort_id", "asc")
+      .select(({ fn }) => ["cohort_id", fn.count("person_id").as("count")])
+  );
+
+  // TODO: insert into final cohort
+
+  return [...queries, ...cleanupQueries];
 };
