@@ -1,3 +1,14 @@
+csv
+
+*.ipynb
+*.csv
+*.sql
+*.json
+
+chaewon.py
+graph.py
+test.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

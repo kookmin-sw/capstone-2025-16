@@ -11,6 +11,7 @@
 	export let selectedOption = '';
 	export let hasTableView = false;
 	export let isTableView = false;
+	export let hasXButton = true;
 
 	const dispatch = createEventDispatcher();
 
@@ -31,13 +32,14 @@
 
 {#if visible}
 <div 
-	class="bg-white border border-gray-300 rounded-lg shadow-md p-6 h-[350px] relative mb-7 w-full"
-	class:col-span-2={type === 'full'}
-	class:col-span-1={type === 'half'}>
+	class="flex flex-col h-[300px] bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full"
+	class:col-span-6={type === 'full'}
+	class:col-span-3={type === 'half'}
+	class:col-span-2={type === 'third'}>
 
 	<!-- 헤더 영역 -->
-	<div class="flex items-center gap-3">
-		<span class="text-lg font-semibold">{title}</span>
+	<div class="flex items-center gap-2 h-[10px]">
+		<span class="text-sm font-semibold">{title}</span>
 		<div class="group relative">
 			<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
 			<div class="absolute bottom-full mb-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -48,7 +50,7 @@
 		{#if showSelector && options.length > 0}
 			<div class="relative inline-block">
 				<button 
-					class="text-sm font-medium text-gray-700 hover:text-blue-600 flex items-center gap-2 min-w-[150px]"
+					class="text-xs font-medium text-gray-700 hover:text-blue-600 flex items-center gap-2 min-w-[150px]"
 					on:click|stopPropagation={() => isDropdownOpen = !isDropdownOpen}>
 					<span class="truncate">{options.find(opt => opt.id === selectedOption)?.name || 'Select'}</span>
 					<svg class="w-4 h-4 text-current flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
@@ -61,7 +63,7 @@
 						class="absolute z-10 left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[200px]">
 						{#each options as option}
 							<button
-								class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 
+								class="w-full px-4 py-2 text-xs text-left hover:bg-gray-100 
 										{selectedOption === option.id ? 'text-blue-600 font-medium' : 'text-gray-700'}"
 								on:click|stopPropagation={() => handleSelect(option.id)}>
 								{option.name}
@@ -73,7 +75,8 @@
 		{/if}
 
 		{#if hasTableView}
-			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
+			<div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute top-5
+				{hasXButton ? 'right-14' : 'right-6'}">
 				<button 
 					class="px-2 py-0.5 text-xs rounded-full transition-colors
 						{!isTableView ? 
@@ -93,20 +96,26 @@
 			</div>
 		{/if}
 
-		<button 
-			class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer absolute right-6 top-6"
-			on:click={closeCard}>
-			✕
-		</button>
+		{#if hasXButton}
+			<button 
+				class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer absolute right-6 top-6"
+				on:click={closeCard}>
+				✕
+			</button>
+		{/if}
 	</div>
-		<!-- 차트 컨텐츠 영역 -->
-		<div class="h-[calc(100%-2rem)] flex flex-col overflow-x-auto">
-			{#if !isTableView}
-				<slot />
-			{:else}
+
+	<!-- 차트 컨텐츠 영역 -->
+	<div class="flex-1 overflow-y-auto px-2">
+		<div class="h-full overflow-visible">
+		{#if !isTableView}
+			<slot />
+		{:else}
 				<slot name="table" />
 			{/if}
 		</div>
+	</div>
+
 	</div>
 {/if}
 

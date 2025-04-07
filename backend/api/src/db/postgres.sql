@@ -1,0 +1,24 @@
+CREATE OR REPLACE FUNCTION _to_date(a text)
+RETURNS date AS $$
+  SELECT a::date;
+$$ LANGUAGE SQL IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION _get_year(a anyelement)
+RETURNS integer AS $$
+  SELECT EXTRACT(YEAR FROM a)::integer;
+$$ LANGUAGE SQL IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION _nullif(a anyelement, b anyelement)
+RETURNS anyelement AS $$
+  SELECT NULLIF(a, b);
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION _ifnull(a anyelement, b anyelement)
+RETURNS anyelement AS $$
+  SELECT COALESCE(a, b);
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION _to_int64(a text)
+RETURNS bigint AS $$
+  SELECT a::bigint;
+$$ LANGUAGE SQL IMMUTABLE STRICT;
