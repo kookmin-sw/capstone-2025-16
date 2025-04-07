@@ -3,9 +3,10 @@ import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
 
 export interface Database {
   codesets: Codesets; // temp table
-  temp_cohort: Cohort; // temp table
+  temp_cohort_detail: CohortDetail; // temp table
 
   cohort: Cohort;
+  cohort_detail: CohortDetail;
 
   condition_era: ConditionEra;
   drug_era: DrugEra;
@@ -48,6 +49,11 @@ export interface Codesets {
 }
 
 export interface Cohort {
+  cohort_id: string;
+  name: string;
+}
+
+export interface CohortDetail {
   cohort_id: string;
   person_id: string;
   start_date: string;

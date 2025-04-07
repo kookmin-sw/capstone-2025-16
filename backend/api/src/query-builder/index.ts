@@ -12,21 +12,10 @@ import * as procedureOccurrence from "./filters/procedure-occurrence";
 import * as specimen from "./filters/specimen";
 import * as visitOccurrence from "./filters/visit-occurrence";
 import * as demographic from "./filters/demographic";
-import {
-  CohortDefinition,
-  ConceptSet,
-  Concept,
-  SubsequentGroup,
-  Cohort,
-  FirstGroup,
-  Filter,
-  FirstContainer,
-  SubsequentContainer,
-} from "../types/type";
-import { getBaseDB, getExpressionBuilder } from "./base";
-import { Compilable, SelectQueryBuilder, sql } from "kysely";
+import { CohortDefinition, Concept, Filter } from "../types/type";
+import { getBaseDB } from "./base";
+import { Compilable, sql } from "kysely";
 import { format } from "sql-formatter";
-import { Database } from "../db/types";
 
 const buildConceptQuery = (concepts: Concept[]) => {
   if (!concepts.length) {
@@ -102,7 +91,7 @@ const buildConceptQuery = (concepts: Concept[]) => {
   return query;
 };
 
-const handleFilter = (filter: Filter) => {
+const handleFilter = (filter: Filter, prev_cohort_id: number) => {
   switch (filter.type) {
     case "condition_era":
       return conditionEra.getQuery(filter);
@@ -131,7 +120,7 @@ const handleFilter = (filter: Filter) => {
     case "visit_occurrence":
       return visitOccurrence.getQuery(filter);
     case "demographic":
-      return demographic.getQuery(filter);
+      return demographic.getQuery(filter, prev_cohort_id);
     default:
       throw new Error(`Unknown filter type: ${filter}`);
   }
@@ -141,30 +130,46 @@ export const buildQuery = (
   cohortdef: CohortDefinition,
   database: "clickhouse" | "postgres" = "clickhouse"
 ) => {
-  const queries: Compilable[] = [
-    getBaseDB()
-      .schema.createTable("codesets")
-      .temporary()
-      .addColumn(
-        "codeset_id",
-        database === "clickhouse" ? sql`Int64` : "bigint"
-      )
-      .addColumn(
-        "concept_id",
-        database === "clickhouse" ? sql`Int64` : "bigint"
-      ),
-    getBaseDB()
-      .schema.createTable("temp_cohort")
-      .temporary()
-      .addColumn("cohort_id", database === "clickhouse" ? sql`Int64` : "bigint")
-      .addColumn("person_id", database === "clickhouse" ? sql`Int64` : "bigint")
-      .addColumn("start_date", database === "clickhouse" ? sql`Date32` : "date")
-      .addColumn("end_date", database === "clickhouse" ? sql`Date32` : "date"),
+  const queries: (Compilable | Compilable[])[] = [
+    [
+      getBaseDB()
+        .schema.createTable("codesets")
+        .temporary()
+        .addColumn(
+          "codeset_id",
+          database === "clickhouse" ? sql`Int64` : "bigint"
+        )
+        .addColumn(
+          "concept_id",
+          database === "clickhouse" ? sql`Int64` : "bigint"
+        ),
+      getBaseDB()
+        .schema.createTable("temp_cohort_detail")
+        .temporary()
+        .addColumn(
+          "cohort_id",
+          database === "clickhouse" ? sql`Int64` : "bigint"
+        )
+        .addColumn(
+          "person_id",
+          database === "clickhouse" ? sql`Int64` : "bigint"
+        )
+        .addColumn(
+          "start_date",
+          database === "clickhouse" ? sql`Date32` : "date"
+        )
+        .addColumn(
+          "end_date",
+          database === "clickhouse" ? sql`Date32` : "date"
+        ),
+    ],
   ];
 
-  const cleanupQueries: Compilable[] = [
-    getBaseDB().schema.dropTable("codesets"),
-    getBaseDB().schema.dropTable("temp_cohort"),
+  const cleanupQueries: (Compilable | Compilable[])[] = [
+    [
+      getBaseDB().schema.dropTable("codesets"),
+      getBaseDB().schema.dropTable("temp_cohort_detail"),
+    ],
   ];
 
   const { conceptsets, cohort } = cohortdef;
@@ -208,6 +213,7 @@ export const buildQuery = (
     });
   }
 
+  let cohortId = 2;
   if (cohort && cohort.length) {
     const [firstGroup, ...subsequentGroups] = cohort;
 
@@ -221,14 +227,14 @@ export const buildQuery = (
       for (const filter of firstContainer.filters) {
         if (!firstContainerQuery) {
           firstContainerQuery = getBaseDB()
-            .selectFrom(handleFilter(filter).as("first_query"))
+            .selectFrom(handleFilter(filter, 0).as("first_query"))
             .select(["person_id", "start_date", "end_date"]);
         } else {
           firstContainerQuery = firstContainerQuery.where(
             "person_id",
             "in",
             getBaseDB()
-              .selectFrom(handleFilter(filter).as("filter_query"))
+              .selectFrom(handleFilter(filter, 0).as("filter_query"))
               .select("person_id")
           );
         }
@@ -241,14 +247,14 @@ export const buildQuery = (
         for (const filter of container.filters) {
           if (!subsequentContainerQuery) {
             subsequentContainerQuery = getBaseDB()
-              .selectFrom(handleFilter(filter).as("subsequent_query"))
+              .selectFrom(handleFilter(filter, 0).as("subsequent_query"))
               .select(["person_id", "start_date", "end_date"]);
           } else {
             subsequentContainerQuery = subsequentContainerQuery.where(
               "person_id",
               "in",
               getBaseDB()
-                .selectFrom(handleFilter(filter).as("filter_query"))
+                .selectFrom(handleFilter(filter, 0).as("filter_query"))
                 .select("person_id")
             );
           }
@@ -273,9 +279,9 @@ export const buildQuery = (
       }
 
       queries.push(
-        ...query.map((e) =>
+        query.map((e) =>
           getBaseDB()
-            .insertInto("temp_cohort")
+            .insertInto("temp_cohort_detail")
             .expression(
               getBaseDB()
                 .selectFrom(e)
@@ -290,7 +296,6 @@ export const buildQuery = (
       );
     }
 
-    let cohortId = 2;
     // Process subsequent groups
     for (const group of subsequentGroups) {
       let [firstContainer, ...subsequentContainers] = group.containers;
@@ -299,14 +304,14 @@ export const buildQuery = (
       for (const filter of firstContainer.filters) {
         if (!firstContainerQuery) {
           firstContainerQuery = getBaseDB()
-            .selectFrom(handleFilter(filter).as("first_query"))
+            .selectFrom(handleFilter(filter, cohortId - 1).as("first_query"))
             .select("person_id");
         } else {
           firstContainerQuery = firstContainerQuery.where(
             "person_id",
             "in",
             getBaseDB()
-              .selectFrom(handleFilter(filter).as("filter_query"))
+              .selectFrom(handleFilter(filter, cohortId - 1).as("filter_query"))
               .select("person_id")
           );
         }
@@ -317,14 +322,18 @@ export const buildQuery = (
         for (const filter of container.filters) {
           if (!subsequentContainerQuery) {
             subsequentContainerQuery = getBaseDB()
-              .selectFrom(handleFilter(filter).as("subsequent_query"))
+              .selectFrom(
+                handleFilter(filter, cohortId - 1).as("subsequent_query")
+              )
               .select("person_id");
           } else {
             subsequentContainerQuery = subsequentContainerQuery.where(
               "person_id",
               "in",
               getBaseDB()
-                .selectFrom(handleFilter(filter).as("filter_query"))
+                .selectFrom(
+                  handleFilter(filter, cohortId - 1).as("filter_query")
+                )
                 .select("person_id")
             );
           }
@@ -359,10 +368,10 @@ export const buildQuery = (
 
       queries.push(
         getBaseDB()
-          .insertInto("temp_cohort")
+          .insertInto("temp_cohort_detail")
           .expression(
             getBaseDB()
-              .selectFrom("temp_cohort")
+              .selectFrom("temp_cohort_detail")
               .select(({ eb }) => [
                 eb.fn<any>("_to_int64", [eb.val(cohortId)]).as("cohort_id"),
                 "person_id",
@@ -383,15 +392,32 @@ export const buildQuery = (
     }
   }
 
-  queries.push(
+  queries.push([
     getBaseDB()
-      .selectFrom("temp_cohort")
+      .selectFrom("temp_cohort_detail")
       .groupBy("cohort_id")
       .orderBy("cohort_id", "asc")
-      .select(({ fn }) => ["cohort_id", fn.count("person_id").as("count")])
-  );
-
-  // TODO: insert into final cohort
+      .select(({ fn }) => ["cohort_id", fn.count("person_id").as("count")]),
+    getBaseDB()
+      .insertInto("cohort_detail")
+      .expression(
+        getBaseDB()
+          .selectFrom("temp_cohort_detail")
+          .select(({ eb }) => [
+            eb.fn<any>("_to_int64", [eb.val(1)]).as("cohort_id"), // TODO: 코호트 아이디 추가
+            "person_id",
+            "start_date",
+            "end_date",
+          ])
+          .where(({ eb }) =>
+            eb(
+              "cohort_id",
+              "=",
+              eb.fn<any>("_to_int64", [eb.val(cohortId - 1)])
+            )
+          )
+      ),
+  ]);
 
   return [...queries, ...cleanupQueries];
 };
