@@ -12,8 +12,9 @@
     import BarChartWrapper from "$lib/components/Charts/BarChart/BarChartWrapper.svelte"
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
     import Footer from '$lib/components/Footer.svelte';
-    
-    let activeTab = 'default';
+    import { onMount, onDestroy } from 'svelte';
+
+    let activeTab = $state('default');
     const tabs = [
 		{ key: 'definition', label: 'Definition' },
 		{ key: 'features', label: 'Features' },
@@ -21,7 +22,7 @@
 		{ key: 'customizable', label: 'Customizable Chart' },
 	];
 
-    let isTableView = {
+    let isTableView = $state({
         genderRatio: false,
         mortality: false,
         visitTypeRatio: false,
@@ -31,9 +32,11 @@
         topTenConditions: false,
         topTenProcedures: false,
         topTenMeasurements: false
-    };
+    });
 
     let tabElements = [];
+    let indicatorStyle = $state('');
+    let resizeObserver;
 
     // cohort features 임시 데이터
     const procedureData = [
@@ -56,21 +59,47 @@
         { ID: "1000029", Name: "Anxiety", Influence: 0.376 }
     ];
 
-    function switchTab(tab) {
-        activeTab = tab;
-    }
-
-    function getActiveTabStyle(elements) {
-        if (!elements || elements.length === 0) return '';
-        const activeElement = elements.find(el => el.dataset.key === activeTab);
-        if (!activeElement) return '';
+    function updateIndicator() {
+        if (!tabElements || tabElements.length === 0) return;
+        const activeElement = tabElements.find(el => el?.dataset.key === activeTab);
+        if (!activeElement) return;
         
-        const containerLeft = elements[0].parentElement.getBoundingClientRect().left;
+        const containerLeft = tabElements[0].parentElement.getBoundingClientRect().left;
         const activeLeft = activeElement.getBoundingClientRect().left;
         const relativeLeft = activeLeft - containerLeft;
         
-        return `left: ${relativeLeft}px; width: ${activeElement.offsetWidth}px`;
+        indicatorStyle = `left: ${relativeLeft}px; width: ${activeElement.offsetWidth}px`;
     }
+
+    function switchTab(tab) {
+        activeTab = tab;
+        updateIndicator();
+    }
+
+    onMount(() => {
+        updateIndicator();
+        
+        resizeObserver = new ResizeObserver(() => {
+            updateIndicator();
+        });
+
+        const tabContainer = tabElements[0]?.parentElement;
+        if (tabContainer) {
+            resizeObserver.observe(tabContainer);
+        }
+    });
+
+    onDestroy(() => {
+        if (resizeObserver) {
+            resizeObserver.disconnect();
+        }
+    });
+
+    $effect(() => {
+        if (activeTab) {
+            updateIndicator();
+        }
+    });
 </script>
 
 <div class="pl-4 pr-4">
@@ -115,17 +144,17 @@
 			<button
 				class="tab"
 				class:active={activeTab === tab.key}
-				on:click={() => switchTab(tab.key)}
+				onclick={() => switchTab(tab.key)}
 				bind:this={tabElements[tabs.indexOf(tab)]}
                 data-key={tab.key}
 			>
 				{tab.label}
 			</button>
 		{/each}
-		<div
+		<div 
 			class="absolute bottom-0 h-0.5 bg-black transition-all duration-300 ease-in-out"
-			style={getActiveTabStyle(tabElements)}>
-        </div>
+			style={indicatorStyle}
+		></div>
 	</div>
 </div>
 
