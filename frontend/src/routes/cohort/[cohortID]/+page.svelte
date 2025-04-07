@@ -14,7 +14,7 @@
     import Footer from '$lib/components/Footer.svelte';
     import { onMount, onDestroy } from 'svelte';
 
-    let activeTab = $state('default');
+    let activeTab = $state('definition');
     const tabs = [
 		{ key: 'definition', label: 'Definition' },
 		{ key: 'features', label: 'Features' },
