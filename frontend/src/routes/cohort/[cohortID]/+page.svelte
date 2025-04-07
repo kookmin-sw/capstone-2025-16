@@ -33,6 +33,8 @@
         topTenMeasurements: false
     };
 
+    let tabElements = [];
+
     // cohort features 임시 데이터
     const procedureData = [
         { ID: "1000023", Name: "Hyperlidemia", Influence: 0.687 },
@@ -54,8 +56,20 @@
         { ID: "1000029", Name: "Anxiety", Influence: 0.376 }
     ];
 
-    function switchTab(tab) { // 탭을 바꿀 때 활성 탭 상태 변경 함수
+    function switchTab(tab) {
         activeTab = tab;
+    }
+
+    function getActiveTabStyle(elements) {
+        if (!elements || elements.length === 0) return '';
+        const activeElement = elements.find(el => el.dataset.key === activeTab);
+        if (!activeElement) return '';
+        
+        const containerLeft = elements[0].parentElement.getBoundingClientRect().left;
+        const activeLeft = activeElement.getBoundingClientRect().left;
+        const relativeLeft = activeLeft - containerLeft;
+        
+        return `left: ${relativeLeft}px; width: ${activeElement.offsetWidth}px`;
     }
 </script>
 
@@ -96,15 +110,22 @@
 </div>
 
 <div class="w-full mb-5 border-b border-gray-300">
-	<div class="flex">
+	<div class="flex relative">
 		{#each tabs as tab}
 			<button
-				class="tab {activeTab === tab.key ? 'active' : ''}"
+				class="tab"
+				class:active={activeTab === tab.key}
 				on:click={() => switchTab(tab.key)}
+				bind:this={tabElements[tabs.indexOf(tab)]}
+                data-key={tab.key}
 			>
 				{tab.label}
 			</button>
 		{/each}
+		<div
+			class="absolute bottom-0 h-0.5 bg-black transition-all duration-300 ease-in-out"
+			style={getActiveTabStyle(tabElements)}>
+        </div>
 	</div>
 </div>
 
@@ -424,10 +445,10 @@
         margin-right: 1rem;
         cursor: pointer;
         border-bottom: 2px solid transparent;
+        position: relative;
     }
     
     .tab.active {
-        border-bottom: 2px solid #000;
         font-weight: 500;
     }
 </style>
