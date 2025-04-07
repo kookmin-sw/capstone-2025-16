@@ -149,7 +149,10 @@
                 .attr("stroke-width", 2)
                 .attr("class", `point-${series}`)
                 .style("opacity", opacity)
+                .style("pointer-events", isVisible ? "auto" : "none")
                 .on("mouseover", function(event, d) {
+                    if (!visibleSeries.has(series)) return;
+                    
                     d3.select(this)
                         .transition()
                         .duration(200)
@@ -170,6 +173,8 @@
                         `);
                 })
                 .on("mouseout", function() {
+                    if (!visibleSeries.has(series)) return;
+                    
                     d3.select(this)
                         .transition()
                         .duration(200)
