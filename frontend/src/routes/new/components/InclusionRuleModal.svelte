@@ -1,12 +1,4 @@
-<!-- 
-  포함 규칙(Inclusion Rule) 관리 모달 컴포넌트
-  기능:
-  - 포함 규칙 편집
-  - 논리 연산자(ALL, ANY, AT_LEAST) 설정
-  - 조건 그룹 중첩 구조 지원
-  - 인구통계학 기준 추가
-  - 조건 추가 및 편집
--->
+
 <script>
   import { createEventDispatcher } from 'svelte';
   import { 
@@ -604,12 +596,12 @@
                 >
                   + 조건 추가
                 </button>
-                <button 
+                <!-- <button 
                   class="px-2 py-1 text-xs text-green-600 hover:text-green-800 border border-green-200 rounded hover:bg-green-50"
                   on:click={() => addNewDemographicCriteria()}
                 >
                   + 인구통계학
-                </button>
+                </button> -->
                 <button 
                   class="px-2 py-1 text-xs text-purple-600 hover:text-purple-800 border border-purple-200 rounded hover:bg-purple-50"
                   on:click={() => addNewSubGroup()}
@@ -902,12 +894,12 @@
                             >
                               + 조건 추가
                             </button>
-                            <button 
+                            <!-- <button 
                               class="px-2 py-1 text-xs text-green-600 hover:text-green-800 border border-green-200 rounded hover:bg-green-50"
                               on:click={() => addNewDemographicCriteria(null, group.path)}
                             >
                               + 인구통계학
-                            </button>
+                            </button> -->
                             <button 
                               class="px-2 py-1 text-xs text-purple-600 hover:text-purple-800 border border-purple-200 rounded hover:bg-purple-50"
                               on:click={() => addNewSubGroup(null, group.path)}
