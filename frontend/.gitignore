@@ -1,5 +1,7 @@
 node_modules
 
+Atlas-master/*
+
 # Output
 .output
 .vercel
