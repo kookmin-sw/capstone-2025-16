@@ -1,11 +1,4 @@
-<!-- 
-  End Strategy Modal Component for Atlas-compatible Cohort Builder
-  
-  This component allows editing of cohort end strategy, including:
-  - Selecting strategy type (default, dateOffset, customEra)
-  - Configuring date offset strategy parameters
-  - Configuring custom era strategy parameters
--->
+
 
 <script>
   import { createEventDispatcher } from 'svelte';
@@ -19,9 +12,6 @@
     updateCustomEraOffset
   } from '../models/EndStrategy.js';
   
-  // Props
-
-  // let {show = false, endStrategy = null, conceptSets = []} = $props();
   let {show = false, endStrategy = null, conceptSets = []} = $props();
   
   // Event dispatcher
