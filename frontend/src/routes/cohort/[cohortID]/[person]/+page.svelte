@@ -150,7 +150,9 @@
             .append("svg")
             .attr("width", width)
             .attr("height", height)
-            .style("border", "1px solid black");
+            .style("border", "1px solid #d1d5db")
+            .style("border-radius", "6px")
+            .style("box-shadow", "0 1px 3px rgba(0, 0, 0, 0.1)");
         }
         svg.selectAll("*").remove();
         return svg;
@@ -354,11 +356,14 @@
 <header class="py-4 bg-white border-b w-full">
     <div class="flex justify-between py-2">
         <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
-            <span class="info"><strong>ID : </strong> {personTable.person_id}</span>
-            <span class="divider">|</span>
-            <span class="info"><strong>Gender : </strong> {genderCodes[personTable.gender_concept_id]}</span>
-            <span class="divider">|</span>
-            <span class="info"><strong>Date : </strong> {personTable.year_of_birth}.{personTable.month_of_birth}.{personTable.day_of_birth}</span>
+            <span class="text-sm text-gray-400">ID</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.person_id}</span>
+            <span class="text-gray-200 mx-3">|</span>
+            <span class="text-sm text-gray-400">Gender</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[personTable.gender_concept_id]}</span>
+            <span class="text-gray-200 mx-3">|</span>
+            <span class="text-sm text-gray-400">Birth</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.year_of_birth}.{personTable.month_of_birth}.{personTable.day_of_birth}</span>
         </div>
         <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
             <button 
@@ -377,7 +382,7 @@
 <div class="pt-8 pb-[60px] flex flex-col gap-5">
     {#if !isStatisticsView}
         <div class="w-full">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-6 gap-4">
                 <ChartCard
                     title="Visit Type Ratio"
                     description="The ratio of visits by visit type."
@@ -546,17 +551,3 @@
     {/if}
     <Footer />
 </div>
-
-<style>
-    .info {
-        font-weight: normal;
-        font-size: 1.1rem;
-        margin: 0 8px;
-    }
-
-    .divider {
-        color: #888;
-        font-weight: bold;
-        margin: 0 8px;
-    }
-</style>
