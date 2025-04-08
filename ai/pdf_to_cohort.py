@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 openai_api_key = os.environ.get('OPENAI_API_KEY')
-openai_api_base = "https://api.lambdalabs.com/v1"
+openai_api_base = os.environ.get('OPENAI_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 
 client = OpenAI(

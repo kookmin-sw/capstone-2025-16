@@ -12,7 +12,7 @@ clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
 clickhouse_user = os.environ.get('CLICKHOUSE_USER')
 clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
 openai_api_key = os.environ.get('OPENAI_API_KEY')
-openai_api_base = "https://api.lambdalabs.com/v1"
+openai_api_base = os.environ.get('OPENAI_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 
 # ClickHouse 클라이언트 초기화
