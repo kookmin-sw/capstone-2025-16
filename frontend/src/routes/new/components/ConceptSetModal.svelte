@@ -1,10 +1,10 @@
 <!-- 
-  개념 집합(Concept Set) 관리 모달 컴포넌트
-  기능:
-  - 개념 집합 목록 보기
-  - 개념 집합 생성/편집/삭제
-  - 개념 검색 및 추가
-  - 개념 속성 편집(포함/제외, 하위계층 포함, 매핑된 개념 포함) 
+  Concept Set Management Modal Component
+  Features:
+  - View concept set list
+  - Create/Edit/Delete concept sets
+  - Search and add concepts
+  - Edit concept properties (include/exclude, include descendants, include mapped concepts) 
 -->
 <script>
   import { createEventDispatcher } from 'svelte';
@@ -17,51 +17,51 @@
     importConceptSetFromJson
   } from '../models/ConceptSet.js';
   
-  // 이벤트 디스패처 설정
+  // Event dispatcher setup
   const dispatch = createEventDispatcher();
   
-  // 모달 표시 여부
+  // Modal visibility
   export let show = false;
   
-  // 개념 집합 목록 (코호트 표현식에서 가져옴)
+  // Concept set list (from cohort expression)
   export let conceptSets = [];
   
-  // 현재 활성화된 탭
+  // Currently active tab
   let activeTab = 'list'; // 'list', 'edit', 'search', 'import'
   
-  // 현재 선택된 개념 집합 인덱스
+  // Currently selected concept set index
   let selectedConceptSetIndex = -1;
   
-  // 개념 집합 편집용 임시 객체
+  // Temporary object for editing concept set
   let editingConceptSet = null;
   
-  // 새 개념 집합 생성
+  // Create new concept set
   function createNewConceptSet() {
     const newConceptSet = createConceptSet({
       name: `Concept Set ${conceptSets.length + 1}`,
     });
     
-    // 데이터 복사본 만들기
+    // Create data copy
     const updatedConceptSets = [...conceptSets, newConceptSet];
     
-    // 상위 컴포넌트에 업데이트 알림
+    // Notify parent component of update
     dispatch('update', { conceptSets: updatedConceptSets });
     
-    // 편집 모드로 전환
+    // Switch to edit mode
     selectedConceptSetIndex = updatedConceptSets.length - 1;
     editConceptSet(selectedConceptSetIndex);
   }
   
-  // 개념 집합 삭제
+  // Delete concept set
   function deleteConceptSet(index) {
-    if (confirm("정말로 이 개념 집합을 삭제하시겠습니까?")) {
+    if (confirm("Are you sure you want to delete this concept set?")) {
       const updatedConceptSets = [...conceptSets];
       updatedConceptSets.splice(index, 1);
       
-      // 상위 컴포넌트에 업데이트 알림
+      // Notify parent component of update
       dispatch('update', { conceptSets: updatedConceptSets });
       
-      // 현재 선택된 개념 집합 초기화
+      // Reset current selected concept set
       if (selectedConceptSetIndex === index) {
         selectedConceptSetIndex = -1;
         editingConceptSet = null;
@@ -71,35 +71,35 @@
     }
   }
   
-  // 개념 집합 편집 시작
+  // Start editing concept set
   function editConceptSet(index) {
     selectedConceptSetIndex = index;
-    editingConceptSet = JSON.parse(JSON.stringify(conceptSets[index])); // 깊은 복사
+    editingConceptSet = JSON.parse(JSON.stringify(conceptSets[index])); // Deep copy
     activeTab = 'edit';
   }
   
-  // 개념 집합 이름 변경
+  // Change concept set name
   function updateConceptSetName(name) {
     if (editingConceptSet) {
       editingConceptSet.name = name;
     }
   }
   
-  // 편집 중인 개념 집합 저장
+  // Save editing concept set
   function saveConceptSet() {
     if (editingConceptSet && selectedConceptSetIndex >= 0) {
       const updatedConceptSets = [...conceptSets];
       updatedConceptSets[selectedConceptSetIndex] = editingConceptSet;
       
-      // 상위 컴포넌트에 업데이트 알림
+      // Notify parent component of update
       dispatch('update', { conceptSets: updatedConceptSets });
       
-      // 목록 화면으로 돌아가기
+      // Return to list view
       activeTab = 'list';
     }
   }
   
-  // 개념 집합 항목 속성 업데이트
+  // Update concept set item property
   function updateItemProperty(conceptId, property, value) {
     if (editingConceptSet) {
       const updatedSet = updateConceptSetItem(
@@ -112,7 +112,7 @@
     }
   }
   
-  // 개념 집합에서 항목 제거
+  // Remove item from concept set
   function removeItem(conceptId) {
     if (editingConceptSet) {
       const updatedSet = removeConceptFromSet(editingConceptSet, conceptId);
@@ -120,19 +120,19 @@
     }
   }
   
-  // 검색 결과 (데모용 가상 데이터)
+  // Search results (demo virtual data)
   let searchResults = [];
   let searchTerm = '';
   
-  // 검색 기능 (실제로는 API 호출이 필요)
+  // Search function (API call needed in production)
   function searchConcepts() {
-    // 데모용 가상 데이터 - 실제로는 API 호출 필요
+    // Demo virtual data - API call needed in production
     if (searchTerm.trim() === '') {
       searchResults = [];
       return;
     }
     
-    // 데모용 가상 검색 결과
+    // Demo virtual search results
     searchResults = [
       {
         CONCEPT_ID: 1,
@@ -175,7 +175,7 @@
     );
   }
   
-  // 검색 결과에서 개념 추가
+  // Add concept from search results
   function addConceptFromSearch(concept) {
     if (editingConceptSet) {
       const updatedSet = addConceptToSet(editingConceptSet, concept);
@@ -183,7 +183,7 @@
     }
   }
   
-  // JSON 가져오기/내보내기
+  // JSON import/export
   let importJson = '';
   
   function exportToJson() {
@@ -197,32 +197,32 @@
     try {
       const imported = importConceptSetFromJson(importJson);
       
-      // 유효성 검사 (최소한 이름이 있는지)
+      // Validation (at least name exists)
       if (!imported.name) {
-        alert('유효하지 않은 개념 집합 JSON입니다.');
+        alert('Invalid concept set JSON.');
         return;
       }
       
       const updatedConceptSets = [...conceptSets, imported];
       
-      // 상위 컴포넌트에 업데이트 알림
+      // Notify parent component of update
       dispatch('update', { conceptSets: updatedConceptSets });
       
-      // 편집 모드로 전환
+      // Switch to edit mode
       selectedConceptSetIndex = updatedConceptSets.length - 1;
       editConceptSet(selectedConceptSetIndex);
       
-      // 입력 초기화
+      // Reset input
       importJson = '';
       
-      // 성공 메시지
-      alert('개념 집합이 성공적으로 가져와졌습니다.');
+      // Success message
+      alert('Concept set imported successfully.');
     } catch (e) {
-      alert('JSON 파싱 오류: ' + e.message);
+      alert('JSON parsing error: ' + e.message);
     }
   }
   
-  // 모달 닫기
+  // Close modal
   function closeModal() {
     show = false;
     dispatch('close');
@@ -230,13 +230,13 @@
 </script>
 
 {#if show}
-  <!-- 모달 오버레이 -->
+  <!-- Modal overlay -->
   <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <!-- 모달 컨테이너 -->
+    <!-- Modal container -->
     <div class="bg-white rounded-lg shadow-xl w-[800px] max-h-[90vh] flex flex-col">
-      <!-- 모달 헤더 -->
+      <!-- Modal header -->
       <div class="flex items-center justify-between px-6 py-4 border-b">
-        <h2 class="text-xl font-bold text-gray-800">개념 집합 관리</h2>
+        <h2 class="text-xl font-bold text-gray-800">Concept Set Management</h2>
         <button 
           class="text-gray-400 hover:text-gray-600"
           on:click={closeModal}
@@ -247,53 +247,53 @@
         </button>
       </div>
       
-      <!-- 모달 탭 -->
+      <!-- Modal tabs -->
       <div class="flex border-b">
         <button 
           class="px-4 py-2 text-sm font-medium {activeTab === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
           on:click={() => activeTab = 'list'}
         >
-          개념 집합 목록
+          Concept Set List
         </button>
         {#if editingConceptSet}
           <button 
             class="px-4 py-2 text-sm font-medium {activeTab === 'edit' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
             on:click={() => activeTab = 'edit'}
           >
-            {editingConceptSet.name} 편집
+            Edit {editingConceptSet.name}
           </button>
           <button 
             class="px-4 py-2 text-sm font-medium {activeTab === 'search' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
             on:click={() => activeTab = 'search'}
           >
-            개념 검색
+            Search Concepts
           </button>
         {/if}
         <button 
           class="px-4 py-2 text-sm font-medium {activeTab === 'import' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
           on:click={() => activeTab = 'import'}
         >
-          가져오기/내보내기
+          Import/Export
         </button>
       </div>
       
-      <!-- 모달 콘텐츠 -->
+      <!-- Modal content -->
       <div class="flex-1 p-6 overflow-auto">
-        <!-- 개념 집합 목록 탭 -->
+        <!-- Concept set list tab -->
         {#if activeTab === 'list'}
           <div class="flex justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-800">개념 집합 목록</h3>
+            <h3 class="text-lg font-medium text-gray-800">Concept Set List</h3>
             <button 
               class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
               on:click={createNewConceptSet}
             >
-              + 새 개념 집합
+              + New Concept Set
             </button>
           </div>
           
           {#if conceptSets.length === 0}
             <div class="text-center py-10 text-gray-500">
-              개념 집합이 없습니다. 새 개념 집합을 만들어보세요.
+              No concept sets. Create a new concept set.
             </div>
           {:else}
             <div class="space-y-2">
@@ -301,20 +301,20 @@
                 <div class="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
                   <div>
                     <p class="font-medium text-gray-800">{conceptSet.name}</p>
-                    <p class="text-sm text-gray-500">{conceptSet.expression.items.length}개 개념</p>
+                    <p class="text-sm text-gray-500">{conceptSet.expression.items.length} concepts</p>
                   </div>
                   <div class="flex space-x-2">
                     <button 
                       class="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
                       on:click={() => editConceptSet(index)}
                     >
-                      편집
+                      Edit
                     </button>
                     <button 
                       class="px-2 py-1 text-sm text-red-600 hover:text-red-800"
                       on:click={() => deleteConceptSet(index)}
                     >
-                      삭제
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -322,10 +322,10 @@
             </div>
           {/if}
         
-        <!-- 개념 집합 편집 탭 -->
+        <!-- Concept set edit tab -->
         {:else if activeTab === 'edit' && editingConceptSet}
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">개념 집합 이름</label>
+            <label class="block text-sm font-medium text-gray-700">Concept Set Name</label>
             <input 
               type="text" 
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
@@ -335,30 +335,30 @@
           </div>
           
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-800">포함된 개념</h3>
+            <h3 class="text-lg font-medium text-gray-800">Included Concepts</h3>
             <button 
               class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
               on:click={() => activeTab = 'search'}
             >
-              + 개념 추가
+              + Add Concept
             </button>
           </div>
           
           {#if editingConceptSet.expression.items.length === 0}
             <div class="text-center py-10 text-gray-500">
-              개념이 없습니다. 개념 검색 탭에서 개념을 추가하세요.
+              No concepts. Add concepts from the search tab.
             </div>
           {:else}
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">개념 ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">개념 이름</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제외</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">하위계층 포함</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">매핑된 개념 포함</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작업</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exclude</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Include Descendants</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Include Mapped</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -395,7 +395,7 @@
                           class="text-red-600 hover:text-red-900"
                           on:click={() => removeItem(item.concept.CONCEPT_ID)}
                         >
-                          삭제
+                          Delete
                         </button>
                       </td>
                     </tr>
@@ -410,29 +410,29 @@
               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               on:click={saveConceptSet}
             >
-              저장
+              Save
             </button>
           </div>
         
-        <!-- 개념 검색 탭 -->
+        <!-- Concept search tab -->
         {:else if activeTab === 'search' && editingConceptSet}
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">개념 검색</label>
+            <label class="block text-sm font-medium text-gray-700">Search Concepts</label>
             <div class="mt-1 flex rounded-md shadow-sm">
               <input 
                 type="text" 
                 class="flex-1 min-w-0 block w-full px-3 py-2 rounded-l-md border border-gray-300"
-                placeholder="개념 이름으로 검색 (예: diabetes, hypertension)"
+                placeholder="Search by concept name (e.g., diabetes, hypertension)"
                 bind:value={searchTerm}
               />
               <button 
                 class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100"
                 on:click={searchConcepts}
               >
-                검색
+                Search
               </button>
             </div>
-            <p class="mt-1 text-xs text-gray-500">* 이 데모에서는 Type 2 diabetes, Hypertension, Myocardial infarction 등의 키워드로 검색해보세요.</p>
+            <p class="mt-1 text-xs text-gray-500">* In this demo, try searching with keywords like Type 2 diabetes, Hypertension, Myocardial infarction.</p>
           </div>
           
           {#if searchResults.length > 0}
@@ -440,12 +440,12 @@
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">개념 ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">개념 이름</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">도메인</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">어휘</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">클래스</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작업</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vocabulary</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -461,7 +461,7 @@
                           class="text-blue-600 hover:text-blue-900"
                           on:click={() => addConceptFromSearch(concept)}
                         >
-                          추가
+                          Add
                         </button>
                       </td>
                     </tr>
@@ -471,18 +471,18 @@
             </div>
           {:else if searchTerm}
             <div class="text-center py-10 text-gray-500">
-              검색 결과가 없습니다. 다른 키워드로 검색해보세요.
+              No search results. Try a different keyword.
             </div>
           {/if}
         
-        <!-- 가져오기/내보내기 탭 -->
+        <!-- Import/Export tab -->
         {:else if activeTab === 'import'}
           <div class="space-y-6">
             <div>
-              <h3 class="text-lg font-medium text-gray-800 mb-2">개념 집합 가져오기</h3>
+              <h3 class="text-lg font-medium text-gray-800 mb-2">Import Concept Set</h3>
               <textarea 
                 class="w-full h-40 p-3 border rounded-md"
-                placeholder="여기에 개념 집합 JSON을 붙여넣으세요"
+                placeholder="Paste concept set JSON here"
                 bind:value={importJson}
               ></textarea>
               <button 
@@ -490,13 +490,13 @@
                 disabled={!importJson.trim()}
                 on:click={importFromJson}
               >
-                가져오기
+                Import
               </button>
             </div>
             
             {#if editingConceptSet}
               <div>
-                <h3 class="text-lg font-medium text-gray-800 mb-2">개념 집합 내보내기</h3>
+                <h3 class="text-lg font-medium text-gray-800 mb-2">Export Concept Set</h3>
                 <textarea 
                   class="w-full h-40 p-3 border rounded-md"
                   readonly
@@ -505,13 +505,13 @@
                 <button 
                   class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                   on:click={() => {
-                    // 클립보드에 복사
+                    // Copy to clipboard
                     navigator.clipboard.writeText(exportToJson())
-                      .then(() => alert('클립보드에 복사되었습니다!'))
-                      .catch(err => alert('클립보드 복사 실패: ' + err));
+                      .then(() => alert('Copied to clipboard!'))
+                      .catch(err => alert('Failed to copy to clipboard: ' + err));
                   }}
                 >
-                  클립보드에 복사
+                  Copy to Clipboard
                 </button>
               </div>
             {/if}
@@ -519,13 +519,13 @@
         {/if}
       </div>
       
-      <!-- 모달 푸터 -->
+      <!-- Modal footer -->
       <div class="px-6 py-4 border-t flex justify-end">
         <button 
           class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
           on:click={closeModal}
         >
-          닫기
+          Close
         </button>
       </div>
     </div>

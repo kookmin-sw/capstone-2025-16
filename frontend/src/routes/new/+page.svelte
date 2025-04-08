@@ -20,7 +20,7 @@
 				containers: [
 					// 첫 번째 컨테이너 (필수)
 					{
-						name: "Initial Group",
+						name: "Container 1",
 						filters: []
 					}
 				]
@@ -380,7 +380,7 @@
 	// 새 컨테이너 추가 함수
 	function addContainer(groupIndex) {
 		const newContainer = {
-			name: `컨테이너 ${cohortDefinition.cohort[groupIndex].containers.length + 1}`,
+			name: `Container ${cohortDefinition.cohort[groupIndex].containers.length + 1}`,
 			operator: "AND", // 첫 번째 컨테이너가 아닌 경우 연산자 지정
 			filters: []
 		};
@@ -422,7 +422,7 @@
 			not: false,
 			containers: [
 				{
-					name: "컨테이너 1",
+					name: "Container 1",
 					filters: []
 				}
 			]
@@ -617,7 +617,7 @@
 			<!-- Initial Group Section -->
 				<div class="mb-6">
 					<div class="mb-4 flex items-center justify-between">
-						<h3 class="text-lg font-semibold text-gray-800">Initial Group (First Group)</h3>
+						<h3 class="text-lg font-semibold text-gray-800">Initial Group</h3>
 						<button 
 							class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
 							on:click={() => addContainer(0)}
@@ -651,7 +651,7 @@
 									<div class="flex items-center">
 										{#if containerIndex > 0}
 											<select 
-												class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 text-sm"
+												class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 text-sm pr-8"
 												value={container.operator}
 												on:change={(e) => updateContainerOperator(0, containerIndex, e.target.value)}
 											>
@@ -811,7 +811,7 @@
 														</div>
 														{#if containerIndex > 0}
 															<select 
-																class="mr-2 rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+																class="mr-2 rounded border border-gray-300 bg-white px-2 py-1 text-xs pr-6"
 																value={container.operator}
 																on:change={(e) => updateContainerOperator(actualGroupIndex, containerIndex, e.target.value)}
 															>
