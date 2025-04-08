@@ -550,28 +550,10 @@
 	}
 </script>
 
-<header class="fixed left-0 top-0 z-10 flex h-10 w-full border-b border-gray-300 bg-white shadow-sm">
-	<p class="flex w-[200px] items-center justify-center border-r border-gray-300 text-center text-lg font-bold text-gray-800">
-		Bento
-	</p>
-	<div class="flex items-center gap-6 pl-4 text-sm">
-		<a
-			href="/cohort"
-			class="w-fit text-center {pathname === '/cohort' ? 'font-semibold text-blue-600' : 'text-gray-700 hover:text-blue-500'}"
-		>
-			Cohort Definition
-		</a>
-		<a
-			href="/inference"
-			class="w-fit text-center {pathname === '/inference' ? 'font-semibold text-blue-600' : 'text-gray-700 hover:text-blue-500'}"
-		>
-			Model Inference
-		</a>
-	</div>
-</header>
+
 
 <!-- Left Sidebar -->
-<div class="fixed left-0 top-10 flex h-[calc(100vh-40px)] w-[200px] flex-col overflow-y-auto border-r border-gray-300 bg-gray-50">
+<div class="fixed left-0 top-[60px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-auto border-r border-gray-300 bg-gray-50">
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<h3 class="mb-3 text-sm font-bold text-gray-700">Initial Group</h3>
 		{#if cohortDefinition.cohort[0].containers[0].filters.length === 0}
@@ -623,7 +605,7 @@
 </div>
 
 <!-- Main Content Area -->
-<div class="fixed left-[200px] top-10 h-[calc(100vh-40px)] w-[calc(100vw-600px)] overflow-y-auto">
+<div class="fixed left-[200px] top-[60px] h-[calc(100vh-60px)] w-[calc(100vw-600px)] overflow-y-auto">
 	<div class="flex h-full">
 		<!-- Main Panel -->
 		<div class="flex flex-1 flex-col p-5">
@@ -925,7 +907,7 @@
 		<!-- Right Panel - Filter Add/Edit -->
 	</div>
 </div>
-<div class="fixed right-0 top-[40px] h-[calc(100vh-40px)] w-[400px] border-l border-gray-300 bg-gray-50 p-5 overflow-y-auto">
+<div class="fixed right-0 top-[60px] h-[calc(100vh-60px)] w-[400px] border-l border-gray-300 bg-gray-50 p-5 overflow-y-auto">
 	{#if selectedDomainType === null}
 		<div class="mb-4">
 			<!-- Display context info based on the currentGroupSection and editing indices -->
@@ -948,9 +930,9 @@
 					class="w-full rounded-md border border-blue-200 bg-white p-3 text-left transition-colors hover:bg-blue-50"
 					on:click={() => selectedDomainType = domain.type}
 				>
-					<div class="flex items-center justify-between">
+					<div class="flex items-center justify-start">
 						<span class="font-medium text-blue-600">{domain.name}</span>
-						<span class="text-xs text-gray-500">?</span>
+						
 					</div>
 					<p class="mt-1 text-xs text-gray-500">{domain.description}</p>
 				</button>
