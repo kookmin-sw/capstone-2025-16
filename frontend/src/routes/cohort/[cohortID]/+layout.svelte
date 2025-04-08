@@ -74,7 +74,7 @@
 	}
 </script>
 
-<div class="fixed left-0 top-[65px] flex h-[calc(100vh-60px)] w-[200px] flex-col border-r border-zinc-200">
+<div class="fixed left-0 top-[65px] flex h-[calc(100vh-65px)] w-[200px] flex-col border-r border-zinc-200">
 	<div class="px-2 pt-2">
 		<button 
 			class="w-full flex items-center justify-between px-3 py-2 bg-white rounded-lg border hover:bg-blue-50 transition-colors group"
@@ -119,9 +119,9 @@
 		</div>
 	</div>
 
-	<div class="h-[100vh] w-full px-2" bind:this={cohortDiv}>
+	<div class="flex-1 overflow-y-auto px-2" bind:this={cohortDiv}>
 		<!-- 환자 목록 -->
-		<div class="flex flex-col rounded-lg border border-zinc-200 bg-white max-h-full overflow-y-auto shadow-sm">
+		<div class="flex flex-col rounded-lg border border-zinc-200 bg-white shadow-sm">
 			{#each paginatedData as user}
 				<a href="/cohort/{cohortID}/{user.personid}" class="group transition-colors duration-200 hover:bg-zinc-50">
 					<div class="flex items-center justify-between px-4 py-2 border-b border-zinc-100 h-[33px]">
@@ -170,7 +170,6 @@
 			</button>
 		</div>
 	</div>
-	
 </div>
 
 <div class="relative left-[200px] px-6 w-[calc(100%-206px)]">
