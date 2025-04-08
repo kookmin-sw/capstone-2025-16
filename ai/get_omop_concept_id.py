@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from clickhouse_driver import Client
 import cohort_json_schema
+from openai import OpenAI
 
 # 환경 변수 로드
 load_dotenv()
@@ -10,6 +11,9 @@ clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
 clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
 clickhouse_user = os.environ.get('CLICKHOUSE_USER')
 clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
+openai_api_key = os.environ.get('OPENAI_API_KEY')
+openai_api_base = "https://api.lambdalabs.com/v1"
+model_name = os.environ.get('LLM_MODEL')
 
 # ClickHouse 클라이언트 초기화
 clickhouse_client = Client(
@@ -19,12 +23,82 @@ clickhouse_client = Client(
     password=clickhouse_password
 )
 
+# OpenAI 클라이언트 초기화
+openai_client = OpenAI(
+    api_key=openai_api_key,
+    base_url=openai_api_base,
+)
+
+# 코호트 검색어 수정 - system
+COHORT_JSON_SYSTEM_PROMPT = f"""
+Role:  
+Act as a **medical terminology search assistant** specialized in optimizing clinical terms for OMOP CDM database retrieval.
+
+Context:  
+You are given a medical term that failed to return a valid `concept_id` during OMOP CDM lookup. Your job is to improve the search term so it aligns better with standardized terminology used in the OMOP database.
+
+Instructions:  
+1. If the given term is an abbreviation (e.g., `"ESA"`), expand it to the full medical term (e.g., `"Erythropoiesis Stimulating Agent"`).
+2. Replace vague or overly specific phrases with broader, standardized equivalents.
+   - For example:  
+     `"Sodium bicarbonate therapy"` → `"Sodium bicarbonate"`  
+     `"Hemoglobin level over 13 g/dL"` → `"Hemoglobin"`
+
+**Modified Examples**:
+- Input: `"ESA"` → Output: `Erythropoiesis Stimulating Agent`
+- Input: `"Sodium bicarbonate therapy"` → Output: `Sodium bicarbonate`
+- Input: `"T2DM"` → Output: `Type 2 Diabetes Mellitus`
+- Input: `"CKD"` → Output: `Chronic Kidney Disease`
+"""
+
+# 코호트 검색어 수정 - user
+SEARCH_QUERY_REFINEMENT_PROMPT = """
+Original Term: "{term}"
+
+I need a more standardized medical term that will work better for database lookup.
+If this is an abbreviation, please expand it to the full term.
+If this is a specific treatment or condition with qualifiers, please convert it to a more general standard term.
+
+IMPORTANT: Return ONLY the modified term, with no explanations or additional text.
+"""
+
 # 불필요한 정보가 추가된 문구를 제거하는 함수 
 def clean_term(term):
     return re.sub(r"\s*\(.*?\)", "", term).strip() 
 
-# ClickHouse에서 concept 정보 조회
-def get_omop_concept_id(term: str, domain_id: str, limit: int = 3) -> list:
+# 검색어 변경하여 재검색
+def refine_search_query(term) -> str:
+    """
+    의학 용어를 OMOP CDM 데이터베이스에 더 적합한 형태로 수정합니다.
+    약어를 풀거나, 너무 구체적인 표현을 표준 용어로 변환합니다.
+    """
+    response = openai_client.chat.completions.create(
+        model=model_name,
+        messages=[
+            {"role": "system", "content": COHORT_JSON_SYSTEM_PROMPT},
+            {"role": "user", "content": SEARCH_QUERY_REFINEMENT_PROMPT.format(term=term)}
+        ]
+    )
+
+    refined_term = response.choices[0].message.content.strip()
+    print(f"검색어 수정: '{term}' → '{refined_term}'")
+    return refined_term
+
+# ClickHouse에서 concept 정보 조회 (검색 결과가 없으면 용어 수정하여 재시도)
+# # 결과가 너무 많으면 limit만큼만 반환 -> 나중에 늘릴 예정
+def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: bool = True) -> list:
+    """
+    주어진 용어와 도메인에 맞는 concept 정보를 조회합니다.
+    
+    Args:
+        term: 검색할 의학 용어
+        domain_id: 도메인 ID (예: 'Condition', 'Drug', 'Measurement' 등)
+        limit: 반환할 최대 결과 수
+        auto_refine: 검색 결과가 없을 경우 자동으로 용어를 수정하여 재검색할지 여부
+        
+    Returns:
+        concept 정보 목록
+    """
     cleaned_term = clean_term(term)
     
     query = """
@@ -87,7 +161,15 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3) -> list:
     
     results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id})
     
-    # 결과가 너무 많으면 limit만큼만 반환 -> 나중에 늘릴 예정
+    # 결과가 없고 auto_refine이 True이면 용어를 수정하여 재검색
+    if not results and auto_refine:
+        print(f"'{cleaned_term}' 검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
+        refined_term = refine_search_query(cleaned_term)
+        if refined_term != cleaned_term:
+            # 무한 재귀 방지를 위해 auto_refine=False로 설정
+            return get_omop_concept_id(refined_term, domain_id, limit, auto_refine=False)
+    
+    # 결과가 너무 많으면 limit만큼만 반환
     if len(results) > limit:
         results = results[:limit]
     
@@ -145,13 +227,23 @@ def get_concept_ids(cohort_json: dict) -> dict:
     
     return cohort_json
 
-
-
+################################################################################
 # 테스트용 함수
-def test_concept_search(term: str, domain_id: str):
-    concepts = get_omop_concept_id(term, domain_id)
+def test_concept_search(term: str, domain_id: str, auto_refine: bool = True):
+    """
+    주어진 용어와 도메인 ID로 개념을 검색하고 결과를 출력하는 테스트 함수
+    
+    Args:
+        term: 검색할 의학 용어
+        domain_id: 도메인 ID (예: 'Condition', 'Drug', 'Measurement' 등)
+        auto_refine: 검색 결과가 없을 경우 자동으로 용어를 수정하여 재검색할지 여부
+    """
+    print(f"\n[검색] 용어: '{term}', 도메인: '{domain_id}'")
+    concepts = get_omop_concept_id(term, domain_id, auto_refine=auto_refine)
+    
     if concepts:
-        print(f"'{term}' 검색 결과 ({len(concepts)}개):")
+        print(f"검색 결과 ({len(concepts)}개):")
+        print(f"자식 수가 많은 순으로 정렬됨")
         print("=" * 60)
         for concept in concepts:
             print(f"Concept ID: {concept['concept_id']}")
@@ -168,6 +260,13 @@ def test_concept_search(term: str, domain_id: str):
 
 if __name__ == "__main__":
     print("===== 검색 테스트 =====")
+    
+    # 일반 검색 테스트
     test_concept_search("Sepsis", "Condition")
-    test_concept_search("Diabetes Mellitus", "Condition")
-    test_concept_search("Hemoglobin", "Measurement") 
+    
+    # 검색 결과가 없는 경우
+    test_concept_search("ARDS", "Condition")
+    test_concept_search("T2DM", "Condition") 
+    
+    # 구체적인 표현 -> 일반 표현
+    test_concept_search("Hemoglobin level over 13 g/dL", "Measurement") 

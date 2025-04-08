@@ -1,33 +1,20 @@
 import cohort_json_schema as cohort_json_schema
 from pdf_to_text import extract_cohort_definition_from_pdf
-from get_omop_concept_id import clean_term, get_omop_concept_id, get_concept_set_domain_id, update_concept_set_items, get_concept_ids
+from get_omop_concept_id import clean_term, get_omop_concept_id, get_concept_set_domain_id, update_concept_set_items, get_concept_ids, refine_search_query
 
 import os
-import re
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
-from clickhouse_driver import Client
 
 load_dotenv()
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 openai_api_base = "https://api.lambdalabs.com/v1"
 model_name = os.environ.get('LLM_MODEL')
-clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
-clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
-clickhouse_user = os.environ.get('CLICKHOUSE_USER')
-clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
 
 client = OpenAI(
     api_key=openai_api_key,
     base_url=openai_api_base,
-)
-
-clickhouse_client = Client(
-    host=clickhouse_host,
-    database=clickhouse_database,
-    user=clickhouse_user, 
-    password=clickhouse_password
 )
 
 STRICT_REQUIREMENT = f"""
@@ -224,16 +211,6 @@ def extract_terms_from_text(text: str) -> list:
         print(f"Traceback: {traceback.format_exc()}")
         return []
 
-# 4. 검색어 변경하여 재검색
-def refine_search_query(term) -> str:
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=[{"role": "system", "content": COHORT_JSON_SYSTEM_PROMPT},
-                  {"role": "user", "content": SEARCH_QUERY_REFINEMENT_PROMPT.format(term=term)}]
-    )
-
-    return response.choices[0].message.content.strip()
-
 # 5. 추출된 criteria를 OMOP CDM JSON 형식으로 변환
 def create_cohort_json(extracted_criteria: list) -> dict:
     result = {
@@ -308,7 +285,6 @@ def create_cohort_json(extracted_criteria: list) -> dict:
     return result
 
 def main():
-    # 현재 스크립트의 디렉토리 경로
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     # PDF 파일 경로

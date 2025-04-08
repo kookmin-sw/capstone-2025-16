@@ -58,11 +58,9 @@ def extract_cohort_definition_from_pdf(pdf_path):
 
     The following types of criteria CANNOT be directly implemented in OMOP CDM:
     - Subjective assessments without clear definitions
-    - Complex clinical reasoning that requires human judgment
     - Criteria based on unstructured data (e.g., physician notes interpretation)
     - Free text descriptions that cannot be mapped to standard concepts
     - Patient-reported outcomes not captured in structured data
-    - Criteria requiring non-EHR data sources (e.g., specialized registry data)
     - Complex temporal relationships that cannot be expressed in the CDM
 
     When handling medical terminology:
