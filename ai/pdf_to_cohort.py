@@ -31,7 +31,7 @@ Strict requirements:
      * not: Boolean (true for exclusion criteria)
 
 2. Each filter MUST include:
-   - type: The type of criteria (must be one of: ["ConditionEra", "ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence", "VisitDetail", "LocationRegion", "DemographicCriteria"])
+   - type: The type of criteria (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - first: true
    - conceptset: String (matching conceptset_id)
 
@@ -42,7 +42,7 @@ Strict requirements:
    - If a concept_id is not available, explicitly set the value to null
 
 4. For age criteria:
-   - Use "ObservationPeriod" as type
+   - Use "demographic" as type
    - Include "age" with appropriate operator
 """
 
@@ -87,12 +87,12 @@ Instructions:
 2. Ignore criteria that require complex logic or cannot be directly mapped to OMOP concepts
 3. Return the criteria in the following JSON format:
 
+Required JSON Format:
 {{
   "conceptsets": [
     {{
       "conceptset_id": "0",  // MUST be a string
-      "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words like "diagnosis" or "treatment"
-      "type": "ConditionOccurrence",  // MUST be one of: ConditionOccurrence, DrugExposure, ProcedureOccurrence, Measurement, Observation, DeviceExposure
+      "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
       "items": []  // MUST be an empty array
     }}
   ],
@@ -110,7 +110,21 @@ Instructions:
           ]
         }}
       ]
-    }}
+    }},
+    {{// Group 2: Demographic Criteria
+      "containers": [
+        {{
+          "name": "age",
+          "filters": [
+            {{
+              "type": "demographic",
+              "first": true,
+              "age": {{ "gte": 20 }}
+            }}
+          ]
+        }}
+      ]
+    }},
   ]
 }}
 
@@ -122,10 +136,11 @@ CRITICAL RULES:
    - conceptset_id (string)
    - name (medical term)
    - items (empty array)
+   - DO NOT include type field in conceptset
 
 2. Each container in cohort MUST have:
    - name (ONLY the medical term, NO additional words)
-   - filters type (must be one of: ["ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence", "VisitDetail", "LocationRegion", "DemographicCriteria"])
+   - type (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - Each filter MUST have:
      - type (one of the allowed types)
      - first: true
@@ -133,20 +148,16 @@ CRITICAL RULES:
 
 3. Important:
    - [CRITICAL] Each concept should appear only ONCE
-   - [CRITICAL] DO NOT include any Markdown formatting
-   - [CRITICAL] DO NOT include explanations or additional text
-   - [CRITICAL] DO NOT include any introductory text like "Here is..." or "The extracted criteria are:"
-   - [CRITICAL] DO NOT include any ```json or ``` markers
    - [CRITICAL] For Measurement type:
      * MUST include valueAsNumber with operator and value
      * Example: "Hemoglobin > 13" → {{ "valueAsNumber": {{ "gt": 13 }} }}
    - [CRITICAL] For age criteria:
-     * MUST use "DemographicCriteria" as type
+     * MUST use "demographic" as type
      * MUST include age value and operator
-     * Example: "Age > 18" → {{ "type": "DemographicCriteria", "name": "Age", "age": {{ "gt": 18 }} }}
-     * DemographicCriteria can ONLY be used in the second or later group in the cohort array
+     * Example: "Age > 18" → {{ "type": "demographic", "name": "Age", "age": {{ "gt": 18 }} }}
+     * demographic type can ONLY be used in the second or later group in the cohort array
    - For conditions:
-     * Use "ConditionOccurrence" as type (NOT ConditionEra)
+     * Use "condition_occurrence" as type (NOT condition_era)
 
 4. NEVER include:
    - Complex logic
@@ -166,34 +177,6 @@ and classify them into appropriate OMOP CDM domains.
 
 Extract the cohort selection criteria from the following text and return ONLY the JSON response:
 {text}
-"""
-
-# 코호트 검색어 수정 - system
-COHORT_JSON_SYSTEM_PROMPT = f"""
-Role:  
-Act as a **medical terminology search assistant** specialized in optimizing clinical terms for OMOP CDM database retrieval.
-
-Context:  
-You are given a medical term that failed to return a valid `concept_id` during OMOP CDM lookup. Your job is to improve the search term so it aligns better with standardized terminology used in the OMOP database.
-
-Instructions:  
-1. If the given term is an abbreviation (e.g., `"ESA"`), expand it to the full medical term (e.g., `"Erythropoiesis Stimulating Agent"`).
-2. Replace vague or overly specific phrases with broader, standardized equivalents.
-   - For example:  
-     `"Sodium bicarbonate therapy"` → `"Sodium bicarbonate"`  
-     `"Hemoglobin level over 13 g/dL"` → `"Hemoglobin"`
-
-{STRICT_REQUIREMENT}
-{STRICT_REQUIREMENT_SCHEMA}
-
-**Modified Examples**:
-- Input: `"ESA"` → Output: `Erythropoiesis Stimulating Agent`
-- Input: `"Sodium bicarbonate therapy"` → Output: `Sodium bicarbonate`
-"""
-
-# 코호트 검색어 수정 - user
-SEARCH_QUERY_REFINEMENT_PROMPT = """
-Original Term: "{term}"
 """
 
 def extract_terms_from_text(text: str) -> dict:
@@ -243,8 +226,8 @@ def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     # PDF 파일 경로
-    pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
-    # pdf_path = os.path.join(current_dir, "pdf", "NEJMoa2211868.pdf")
+    # pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
+    pdf_path = os.path.join(current_dir, "pdf", "NEJMoa2211868.pdf")
     
     # 1. PDF에서 텍스트 추출
     implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
