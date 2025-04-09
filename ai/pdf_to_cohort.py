@@ -241,19 +241,8 @@ def extract_terms_from_text(text: str) -> dict:
         print(f"Traceback: {traceback.format_exc()}")
         return {"conceptsets": [], "cohort": []}
 
-def main():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # PDF 파일 경로
-    # pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
-    pdf_path = os.path.join(current_dir, "pdf", "NEJMoa2211868.pdf")
-    
-    # 1. PDF에서 텍스트 추출
-    implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
-    
-    print("\n[Implementable Criteria 부분만]:")
-    print(implementable_text)
-    
+# 텍스트에서 코호트 정의를 추출하여 JSON 형식으로 변환
+def text_to_json(implementable_text: str) -> dict:
     # 2. 텍스트에서 criteria 추출 (implementable 부분만 사용)
     cohort_json = extract_terms_from_text(implementable_text)
     print("\n[cohort_json]:")
@@ -269,11 +258,32 @@ def main():
     print("\n[cohort_json with concept_ids]:")
     print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
     
+    return cohort_json
+
+
+def main():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # PDF 파일 경로
+    # pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
+    # pdf_path = os.path.join(current_dir, "pdf", "NEJMoa2211868.pdf")
+    pdf_path = os.path.join(current_dir, "pdf", "jama_dulhunty_2024_oi_240070_1723741887.30473.pdf")
+    
+    # 1. PDF에서 텍스트 추출
+    implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
+    
+    print("\n[Implementable Criteria 부분만]:")
+    print(implementable_text)
+    
+    # 2. 텍스트에서 COHORT JSON 추출
+    cohort_json = text_to_json(implementable_text)
+
     # 4. JSON 파일로 저장
     output_file = os.path.join(current_dir, "cohort_criteria_sample.json")
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(cohort_json, f, indent=4, ensure_ascii=False)
     print(f"\nCohort definition saved to: {output_file}")
+
 
 if __name__ == "__main__":
     main()
