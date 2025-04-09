@@ -21,33 +21,7 @@ const cohortExample: CohortDefinition = {
     {
       conceptset_id: "0",
       name: "Hemodialysis",
-      type: "ProcedureOccurrence",
-      items: [
-        {
-          concept_id: "101",
-          concept_name: "Hemodialysis",
-          domain_id: "Procedure",
-          vocabulary_id: "OMOP",
-          concept_class_id: "Procedure",
-          standard_concept: "S",
-          concept_code: "HD01",
-          valid_start_date: "2000-01-01",
-          valid_end_date: "2099-12-31",
-          invalid_reason: ""
-        },
-        {
-          concept_id: "102",
-          concept_name: "Hemodialysis2",
-          domain_id: "Procedure",
-          vocabulary_id: "OMOP",
-          concept_class_id: "Procedure",
-          standard_concept: "S",
-          concept_code: "HD02",
-          valid_start_date: "2000-01-01",
-          valid_end_date: "2099-12-31",
-          invalid_reason: ""
-        }
-      ]
+      items: []
     }
     // 추가 conceptset 항목이 있으면 여기에 추가합니다.
   ],
@@ -90,8 +64,22 @@ const cohortExample: CohortDefinition = {
         }
       ]
     },
+    {// Group 2: Demographic Criteria
+      containers: [
+        {
+          name: "age",
+          filters: [
+            {
+              type: "demographic",
+              first: true,
+              age: { gte: 20 }
+            }
+          ]
+        }
+      ]
+    },
     {
-      // Group 2: Exclusion Criteria
+      // Group 3: Exclusion Criteria
       not: true,
       containers: [
         {

@@ -6,6 +6,7 @@ import os
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
+import re
 
 load_dotenv()
 openai_api_key = os.environ.get('OPENAI_API_KEY')
@@ -73,25 +74,64 @@ Output Example:
     - Ensure that each domain has the correct key: drugType, procedureType, observationType, etc.
 """
 
-# 코호트 키워드 뽑기 - system
+# 코호트 json 뽑기 - system
 COHORT_EXTRACTION_SYSTEM_PROMPT = f"""
-Role: Medical Cohort Extraction Expert
+Role:  
+Act as a **medical cohort definition expert** specialized in converting clinical trial eligibility criteria into OMOP CDM JSON format.
 
-Context:
-You are an AI assistant that extracts key OMOP-compatible medical keywords from clinical trial eligibility criteria.
-These keywords will be used to search for concept codes in a structured OMOP CDM concept database.
+Context:  
+You are given a clinical trial's eligibility criteria section. Your job is to convert these criteria into a structured JSON format that follows the OMOP CDM specification.
+
+Instructions:  
+1. Extract ONLY the implementable criteria (those that can be directly converted to OMOP CDM concepts)
+2. Ignore criteria that require complex logic or cannot be directly mapped to OMOP concepts
+3. Return the criteria in the following JSON format:
+
+{{
+  "conceptsets": [
+    {{
+      "conceptset_id": "0",  // MUST be a string
+      "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words like "diagnosis" or "treatment"
+      "type": "ConditionOccurrence",  // MUST be one of: ConditionOccurrence, DrugExposure, ProcedureOccurrence, Measurement, Observation, DeviceExposure
+      "items": []  // MUST be an empty array
+    }}
+  ],
+  "cohort": [
+    {{
+      "containers": [
+        {{
+          "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
+          "filters": [  // MUST be an array
+            {{
+              "type": "condition_occurrence",  // MUST match the conceptset type
+              "first": true,  // MUST be true
+              "conceptset": "0"  // MUST match the conceptset_id
+            }}
+          ]
+        }}
+      ]
+    }}
+  ]
+}}
 
 {STRICT_REQUIREMENT}
+{STRICT_REQUIREMENT_SCHEMA}
 
-## Rules
-1. Extract only the following information for each criterion:
-   - type: The type of criteria (must be one of: ["ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence", "VisitDetail", "LocationRegion", "DemographicCriteria"])
-   - name: The medical term or concept name
-   - exclusion: Boolean (true for exclusion criteria)
-   - valueAsNumber: For measurement criteria (MANDATORY for Measurement type)
-   - age: For age criteria (MANDATORY for DemographicCriteria type)
+CRITICAL RULES:
+1. Each conceptset MUST have:
+   - conceptset_id (string)
+   - name (medical term)
+   - items (empty array)
 
-2. Important:
+2. Each container in cohort MUST have:
+   - name (ONLY the medical term, NO additional words)
+   - filters type (must be one of: ["ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence", "VisitDetail", "LocationRegion", "DemographicCriteria"])
+   - Each filter MUST have:
+     - type (one of the allowed types)
+     - first: true
+     - conceptset (matching conceptset_id)
+
+3. Important:
    - [CRITICAL] Each concept should appear only ONCE
    - [CRITICAL] DO NOT include any Markdown formatting
    - [CRITICAL] DO NOT include explanations or additional text
@@ -104,33 +144,21 @@ These keywords will be used to search for concept codes in a structured OMOP CDM
      * MUST use "DemographicCriteria" as type
      * MUST include age value and operator
      * Example: "Age > 18" → {{ "type": "DemographicCriteria", "name": "Age", "age": {{ "gt": 18 }} }}
+     * DemographicCriteria can ONLY be used in the second or later group in the cohort array
    - For conditions:
      * Use "ConditionOccurrence" as type (NOT ConditionEra)
 
-3. Return ONLY this exact JSON format (no other text):
-{{
-  "criteria": [
-    {{
-      "type": "ConditionOccurrence",
-      "name": "Diabetes",
-      "exclusion": false
-    }},
-    {{
-      "type": "Measurement",
-      "name": "Hemoglobin",
-      "exclusion": true,
-      "valueAsNumber": {{ "gt": 13 }}
-    }},
-    {{
-      "type": "DemographicCriteria",
-      "name": "Age",
-      "age": {{ "gt": 18, "lt": 65 }},
-      "exclusion": false
-    }}
-  ]
-}}
+4. NEVER include:
+   - Complex logic
+   - Non-implementable criteria
+   - Criteria without clear OMOP CDM mappings
+   - Additional words like "diagnosis", "treatment", "therapy", etc.
+   - type field in conceptset
+
+4. ALWAYS maintain the exact structure shown above
 """
-# 코호트 키워드 뽑기 - user
+
+# 코호트 json 뽑기 - user
 COHORT_EXTRACTION_PROMPT = """
 You are an AI assistant specialized in processing medical cohort selection criteria.
 Your task is to extract medical conditions, treatments, medications, and procedures mentioned explicitly in the provided text
@@ -168,15 +196,26 @@ SEARCH_QUERY_REFINEMENT_PROMPT = """
 Original Term: "{term}"
 """
 
-# 2. 키워드 검색어 + type 자동 추출
-def extract_terms_from_text(text: str) -> list:
+def extract_terms_from_text(text: str) -> dict:
+    """
+    텍스트에서 코호트 정의를 추출합니다.
     
+    Args:
+        text: 코호트 정의가 포함된 텍스트
+        
+    Returns:
+        OMOP CDM cohort JSON
+    """
     response = client.chat.completions.create(
         model=model_name,
         messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
                  {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}]
     )
     llm_response = response.choices[0].message.content
+    
+    # 디버깅을 위한 출력
+    print("\n[LLM 응답 원본]:")
+    print(llm_response)
     
     try:
         content = llm_response.strip()
@@ -185,23 +224,12 @@ def extract_terms_from_text(text: str) -> list:
             content = content.split("```")[1].strip()
         
         cohort_json = json.loads(content)
-
-        criteria_list = []
-
-        # 모든 criteria 처리
-        for criteria in cohort_json.get("criteria", []):
-            if "type" in criteria and "name" in criteria:
-                criteria_info = cohort_json_schema.map_criteria_info(criteria["type"])
-                if criteria_info:
-                    criteria_list.append({
-                        "type": criteria["type"],
-                        "name": criteria["name"],
-                        "exclusion": criteria.get("exclusion", False),
-                        "valueAsNumber": criteria.get("valueAsNumber"),
-                        "age": criteria.get("age")
-                    })
-
-        return criteria_list
+        
+        # 디버깅을 위한 출력
+        print("\n[파싱된 JSON]:")
+        print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
+        
+        return cohort_json
     
     except Exception as e:
         print(f"\n[Unexpected Error]")
@@ -209,86 +237,14 @@ def extract_terms_from_text(text: str) -> list:
         print(f"Error type: {type(e)}")
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
-        return []
-
-# 5. 추출된 criteria를 OMOP CDM JSON 형식으로 변환
-def create_cohort_json(extracted_criteria: list) -> dict:
-    result = {
-        "conceptsets": [],
-        "cohort": []
-    }
-    
-    concept_set_id = 0
-    
-    # inclusion criteria 처리
-    inclusion_containers = []
-    exclusion_containers = []
-    
-    for criteria in extracted_criteria:
-        if criteria.get("age"):
-            filter_obj = {
-                "type": "DemographicCriteria",
-                "first": True,
-                "age": criteria["age"]
-            }
-        else:
-            # ConceptSet 생성
-            concept_set = {
-                "conceptset_id": str(concept_set_id),
-                "name": criteria["name"],
-                "items": []  # DB에서 조회 후 업데이트
-            }
-            result["conceptsets"].append(concept_set)
-            
-            # Filter 생성
-            filter_obj = {
-                "type": criteria["type"],
-                "first": True,
-                "conceptset": str(concept_set_id)
-            }
-            
-            # 추가 필터 조건
-            if criteria.get("valueAsNumber"):
-                filter_obj["valueAsNumber"] = criteria["valueAsNumber"]
-        
-        # Container 생성
-        container = {
-            "name": criteria["name"],
-            "filters": [filter_obj]
-        }
-        
-        # inclusion/exclusion 구분
-        if criteria.get("exclusion", False):
-            if len(exclusion_containers) > 0:
-                container["operator"] = "AND"
-            exclusion_containers.append(container)
-        else:
-            if len(inclusion_containers) > 0:
-                container["operator"] = "AND"
-            inclusion_containers.append(container)
-        
-        if not criteria.get("age"):  # age가 아닌 경우에만 concept_set_id 증가
-            concept_set_id += 1
-
-    # cohort에 groups 추가
-    if inclusion_containers:
-        result["cohort"].append({
-            "containers": inclusion_containers
-        })
-    
-    if exclusion_containers:
-        result["cohort"].append({
-            "not": True,
-            "containers": exclusion_containers
-        })
-    
-    return result
+        return {"conceptsets": [], "cohort": []}
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     # PDF 파일 경로
     pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
+    # pdf_path = os.path.join(current_dir, "pdf", "NEJMoa2211868.pdf")
     
     # 1. PDF에서 텍스트 추출
     implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
@@ -297,26 +253,22 @@ def main():
     print(implementable_text)
     
     # 2. 텍스트에서 criteria 추출 (implementable 부분만 사용)
-    extracted_criteria = extract_terms_from_text(implementable_text)
-    print("\n[extracted_criteria]:")
-    print(json.dumps(extracted_criteria, indent=2, ensure_ascii=False))
-    
-    if not extracted_criteria:
-        print("Failed to extract criteria")
-        return
-    
-    # 3. OMOP CDM JSON 구조 생성
-    cohort_json = create_cohort_json(extracted_criteria)
+    cohort_json = extract_terms_from_text(implementable_text)
     print("\n[cohort_json]:")
     print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
     
-    # 4. DB에서 concept_id 조회
+    if not cohort_json or (not cohort_json.get("conceptsets") and not cohort_json.get("cohort")):
+        print("Failed to extract criteria")
+        return
+    
+    # 3. DB에서 concept_id 조회
+    from get_omop_concept_id import get_concept_ids
     cohort_json = get_concept_ids(cohort_json)
     print("\n[cohort_json with concept_ids]:")
     print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
     
-    # 5. JSON 파일로 저장
-    output_file = os.path.join(current_dir, "cohort_criteria.json")
+    # 4. JSON 파일로 저장
+    output_file = os.path.join(current_dir, "cohort_criteria_sample.json")
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(cohort_json, f, indent=4, ensure_ascii=False)
     print(f"\nCohort definition saved to: {output_file}")
