@@ -55,7 +55,7 @@
 				</a>
 
 				<!-- 메인 네비게이션 -->
-				<nav class="flex-1" aria-label="Main navigation">
+				<nav class="flex flex-1" aria-label="Main navigation">
 					<div 
 						role="menubar"
 						tabindex="0"
@@ -107,6 +107,26 @@
 									Person
 								</a>
 							</div>
+						</div>
+					</div>
+					<div class="flex w-full justify-end">
+						<div>
+							<a 
+								href="/login"
+								tabindex="-1"
+								class="flex items-center h-[60px] w-full px-6 text-[15px] transition-all duration-200
+									hover:text-slate-900 hover:font-semibold">
+								Login
+							</a>
+						</div>
+						<div>
+							<a 
+								href="/register"
+								tabindex="-1"
+								class="flex items-center h-[60px] w-full px-6 text-[15px] transition-all duration-200
+									hover:text-slate-900 hover:font-semibold">
+								Register
+							</a>
 						</div>
 					</div>
 				</nav>
