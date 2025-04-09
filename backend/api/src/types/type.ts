@@ -84,7 +84,7 @@ export interface FirstGroup extends BaseGroup {
 }
 
 export interface SubsequentGroup extends BaseGroup {
-  not: boolean | undefined | null;
+  not?: boolean | null;
 }
 
 export type Cohort = [FirstGroup, ...SubsequentGroup[]];
