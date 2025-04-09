@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 import re
 
 load_dotenv()
-openai_api_key = os.environ.get('OPENAI_API_KEY')
-openai_api_base = os.environ.get('OPENAI_API_BASE')
+openai_api_key = os.environ.get('OPENROUTER_API_KEY')
+openai_api_base = os.environ.get('OPENROUTER_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 
 client = OpenAI(
@@ -156,6 +156,7 @@ CRITICAL RULES:
      * MUST include age value and operator
      * Example: "Age > 18" → {{ "type": "demographic", "name": "Age", "age": {{ "gt": 18 }} }}
      * demographic type can ONLY be used in the second or later group in the cohort array
+     * [CRITICAL] The first group MUST contain only medical conditions, procedures, or other non-demographic criteria
    - For conditions:
      * Use "condition_occurrence" as type (NOT condition_era)
 
@@ -165,6 +166,8 @@ CRITICAL RULES:
    - Criteria without clear OMOP CDM mappings
    - Additional words like "diagnosis", "treatment", "therapy", etc.
    - type field in conceptset
+   - [CRITICAL] ANY explanations, comments, or text outside the JSON structure
+   - [CRITICAL] ANY text that describes what you're doing or why
 
 4. ALWAYS maintain the exact structure shown above
 """
@@ -192,7 +195,8 @@ def extract_terms_from_text(text: str) -> dict:
     response = client.chat.completions.create(
         model=model_name,
         messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
-                 {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}]
+                 {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}],
+        temperature=0.0 
     )
     llm_response = response.choices[0].message.content
     
@@ -207,6 +211,21 @@ def extract_terms_from_text(text: str) -> dict:
             content = content.split("```")[1].strip()
         
         cohort_json = json.loads(content)
+        
+        # conceptset_id를 순차적으로 재할당
+        conceptset_id_map = {}
+        for i, conceptset in enumerate(cohort_json.get("conceptsets", [])):
+            old_id = conceptset.get("conceptset_id")
+            new_id = str(i)
+            conceptset_id_map[old_id] = new_id
+            conceptset["conceptset_id"] = new_id
+        
+        # cohort 내의 conceptset 참조 업데이트
+        for group in cohort_json.get("cohort", []):
+            for container in group.get("containers", []):
+                for filter in container.get("filters", []):
+                    if "conceptset" in filter:
+                        filter["conceptset"] = conceptset_id_map.get(filter["conceptset"], filter["conceptset"])
         
         # 디버깅을 위한 출력
         print("\n[파싱된 JSON]:")
