@@ -11,8 +11,8 @@ clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
 clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
 clickhouse_user = os.environ.get('CLICKHOUSE_USER')
 clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
-openai_api_key = os.environ.get('OPENAI_API_KEY')
-openai_api_base = "https://api.lambdalabs.com/v1"
+openai_api_key = os.environ.get('OPENROUTER_API_KEY')
+openai_api_base = os.environ.get('OPENROUTER_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 
 # ClickHouse 클라이언트 초기화
@@ -87,18 +87,6 @@ def refine_search_query(term) -> str:
 # ClickHouse에서 concept 정보 조회 (검색 결과가 없으면 용어 수정하여 재시도)
 # # 결과가 너무 많으면 limit만큼만 반환 -> 나중에 늘릴 예정
 def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: bool = True) -> list:
-    """
-    주어진 용어와 도메인에 맞는 concept 정보를 조회합니다.
-    
-    Args:
-        term: 검색할 의학 용어
-        domain_id: 도메인 ID (예: 'Condition', 'Drug', 'Measurement' 등)
-        limit: 반환할 최대 결과 수
-        auto_refine: 검색 결과가 없을 경우 자동으로 용어를 수정하여 재검색할지 여부
-        
-    Returns:
-        concept 정보 목록
-    """
     cleaned_term = clean_term(term)
     
     query = """
@@ -198,14 +186,24 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
 
 # concept_set_id에 해당하는 filter의 type을 찾아 domain_id를 반환
 def get_concept_set_domain_id(cohort_json: dict, concept_set_id: str) -> str:
+    # print(f"\n[디버깅] concept_set_id '{concept_set_id}'에 대한 도메인 ID 검색:")
+    
     for group in cohort_json.get("cohort", []):
         for container in group.get("containers", []):
             for filter_obj in container.get("filters", []):
                 if filter_obj.get("conceptset") == concept_set_id:
                     criteria_type = filter_obj["type"]
+                    # print(f"- 찾은 criteria_type: {criteria_type}")
+                    
                     criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
                     if criteria_info:
-                        return criteria_info["Domain_id"]
+                        domain_id = criteria_info["Domain_id"]
+                        # print(f"- 매핑된 domain_id: {domain_id}")
+                        return domain_id
+                    # else:
+                    #     print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+    
+    # print(f"- concept_set_id '{concept_set_id}'에 대한 도메인 ID를 찾을 수 없습니다.")
     return None
 
 # concept_set의 items를 DB에서 조회한 결과로 업데이트

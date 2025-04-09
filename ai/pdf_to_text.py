@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-openai_api_key = os.environ.get('OPENAI_API_KEY')
-openai_api_base = "https://api.lambdalabs.com/v1"
+openai_api_key = os.environ.get('OPENROUTER_API_KEY')
+openai_api_base = os.environ.get('OPENROUTER_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 client = OpenAI(
     api_key=openai_api_key,
@@ -33,14 +33,14 @@ def extract_cohort_definition_from_pdf(pdf_path):
     
     # 코호트 추출을 위한 프롬프트
     cohort_prompt = f"""
-    You are an expert in extracting cohort definitions (inclusion and exclusion criteria) from clinical documents and mapping them to OMOP CDM compatible format.
+    You are an expert in extracting cohort definitions from clinical documents.
     Please identify and organize the patient inclusion criteria and exclusion criteria from the given text.
 
-    IMPORTANT: Cohort criteria (inclusion and exclusion) are typically grouped together in specific sections or paragraphs. Look for sections labeled with terms like "Eligibility Criteria", "Selection Criteria", "Inclusion/Exclusion Criteria", etc. Focus on these complete sections rather than trying to piece together criteria from separate parts of the document.
+    IMPORTANT: Look for sections labeled with terms like "Eligibility Criteria", "Selection Criteria", "Inclusion/Exclusion Criteria", etc.
 
-    CRITICAL: Each criterion must be listed separately on its own line. If a single line contains multiple conditions (e.g., "Patients diagnosed with sepsis-3 and ARDS"), split it into separate criteria (e.g., "Patients diagnosed with sepsis-3" and "Patients diagnosed with ARDS"). Never combine multiple medical conditions in a single criterion.
+    CRITICAL: Each criterion must be listed separately on its own line. If a single line contains multiple conditions, split it into separate criteria.
 
-    Based on the OMOP CDM schema, you should categorize the criteria into two groups:
+    Based on the OMOP CDM schema, categorize the criteria into two groups:
     1. Criteria that can be implemented in OMOP CDM
     2. Criteria that cannot be directly implemented in OMOP CDM
 
@@ -58,7 +58,7 @@ def extract_cohort_definition_from_pdf(pdf_path):
 
     The following types of criteria CANNOT be directly implemented in OMOP CDM:
     - Subjective assessments without clear definitions
-    - Criteria based on unstructured data (e.g., physician notes interpretation)
+    - Criteria based on unstructured data
     - Free text descriptions that cannot be mapped to standard concepts
     - Patient-reported outcomes not captured in structured data
     - Complex temporal relationships that cannot be expressed in the CDM
@@ -66,9 +66,8 @@ def extract_cohort_definition_from_pdf(pdf_path):
     When handling medical terminology:
     1. Preserve the original medical terms as written in the document.
     2. [CRITICAL] If abbreviations are used, you MUST expand them to their full medical terms.
-       This is the MOST IMPORTANT rule - always expand all medical abbreviations.
        Examples:
-       * "ESA" → "Erythropoiesis Stimulating Agent "
+       * "ESA" → "Erythropoiesis Stimulating Agent"
        * "CKD" → "Chronic Kidney Disease"
        * "HTN" → "Hypertension"
        * "DM" → "Diabetes Mellitus"
@@ -79,10 +78,9 @@ def extract_cohort_definition_from_pdf(pdf_path):
        * "T2DM" → "Type 2 Diabetes Mellitus"
        * "COPD" → "Chronic Obstructive Pulmonary Disease"
        * "AKI" → "Acute Kidney Injury"
-    3. Keep specific measurements and thresholds exactly as stated (e.g., "Hemoglobin value more than 13 g/dL").
+    3. Keep specific measurements and thresholds exactly as stated.
     4. Maintain the original context of each criterion.
-    5. For vague or overly specific medical terms, consider using standard medical terminology while preserving the original meaning.
-       Example: "Sodium bicarbonate therapy" → "Sodium bicarbonate"
+    5. For vague or overly specific medical terms, use standard medical terminology while preserving the original meaning.
 
     Your response MUST follow this format:
 
@@ -110,31 +108,9 @@ def extract_cohort_definition_from_pdf(pdf_path):
 
     If there are no criteria in any section, write "None identified." in that section.
 
-    Here's an example of what your output might look like:
-
-    Implementable Criteria
-    Inclusion Criteria
-    1. Patients who are 20 years old or older.
-    2. Patients with hemodialysis (HD).
-    3. Patients using Erythropoiesis Stimulating Agent therapy for at least three months.
-    4. Patients with iron deficiency anemia.
-
-    Exclusion Criteria
-    1. Patients in intensive care unit.
-    2. Patients with hemoglobin value more than 13 g/dL.
-    3. Kidney transplant patients.
-    
-    Non-implementable Criteria
-    Inclusion Criteria
-    1. First intensive care unit admission.
-    
-    Exclusion Criteria
-    1. Patients with sepsis or active infections. (Requires specific definition of "active infections")
-    2. An ICU stay duration of less than 24 hours.
-
     Here is the text to analyze:
     {formatted_input}
-    """
+"""
     
     response = client.chat.completions.create(
         model=model_name,

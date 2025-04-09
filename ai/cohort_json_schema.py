@@ -21,33 +21,7 @@ const cohortExample: CohortDefinition = {
     {
       conceptset_id: "0",
       name: "Hemodialysis",
-      type: "ProcedureOccurrence",
-      items: [
-        {
-          concept_id: "101",
-          concept_name: "Hemodialysis",
-          domain_id: "Procedure",
-          vocabulary_id: "OMOP",
-          concept_class_id: "Procedure",
-          standard_concept: "S",
-          concept_code: "HD01",
-          valid_start_date: "2000-01-01",
-          valid_end_date: "2099-12-31",
-          invalid_reason: ""
-        },
-        {
-          concept_id: "102",
-          concept_name: "Hemodialysis2",
-          domain_id: "Procedure",
-          vocabulary_id: "OMOP",
-          concept_class_id: "Procedure",
-          standard_concept: "S",
-          concept_code: "HD02",
-          valid_start_date: "2000-01-01",
-          valid_end_date: "2099-12-31",
-          invalid_reason: ""
-        }
-      ]
+      items: []
     }
     // 추가 conceptset 항목이 있으면 여기에 추가합니다.
   ],
@@ -90,8 +64,22 @@ const cohortExample: CohortDefinition = {
         }
       ]
     },
+    {// Group 2: Demographic Criteria
+      containers: [
+        {
+          name: "age",
+          filters: [
+            {
+              type: "demographic",
+              first: true,
+              age: { gte: 20 }
+            }
+          ]
+        }
+      ]
+    },
     {
-      // Group 2: Exclusion Criteria
+      // Group 3: Exclusion Criteria
       not: true,
       containers: [
         {
@@ -544,67 +532,63 @@ def map_criteria_info(criteria_type):
     CriteriaType을 Domain_id(clickhouse 도메인)와 type(OMOP CDM type)으로 매핑
     """
     criteria_info = {
-        "ConditionEra": {
-            "Domain_id": "Condition",
-            "type": "condition_era"
-        },
-        "ConditionOccurrence": {
+        "condition_occurrence": {
             "Domain_id": "Condition",
             "type": "condition_occurrence"
         },
-        "Death": {
+        "death": {
             "Domain_id": "Death",
             "type": "death"
         },
-        "DeviceExposure": {
+        "device_exposure": {
             "Domain_id": "Device",
             "type": "device_exposure"
         },
-        "DoseEra": {
+        "dose_era": {
             "Domain_id": "Drug",
             "type": "dose_era"
         },
-        "DrugEra": {
+        "drug_era": {
             "Domain_id": "Drug",
             "type": "drug_era"
         },
-        "DrugExposure": {
+        "drug_exposure": {
             "Domain_id": "Drug",
             "type": "drug_exposure"
         },
-        "Measurement": {
+        "measurement": {
             "Domain_id": "Measurement",
             "type": "measurement"
         },
-        "Observation": {
+        "observation": {
             "Domain_id": "Observation",
             "type": "observation"
         },
-        "ObservationPeriod": {
+        "observation_period": {
             "Domain_id": "Observation",
             "type": "observation_period"
         },
-        "ProcedureOccurrence": {
+        "procedure_occurrence": {
             "Domain_id": "Procedure",
             "type": "procedure_occurrence"
         },
-        "Specimen": {
+        "specimen": {
             "Domain_id": "Specimen",
             "type": "specimen"
         },
-        "VisitOccurrence": {
+        "visit_occurrence": {
             "Domain_id": "Visit",
             "type": "visit_occurrence"
         },
-        "VisitDetail": {
+        "visit_detail": {
             "Domain_id": "Visit",
             "type": "visit_detail"
         },
-        "LocationRegion": {
+        "location_region": {
             "Domain_id": "Geography",
             "type": "location_region"
         },
-        "DemographicCriteria": {
+        "demographic": {
             "Domain_id": "Demographic",
             "type": "demographic"
         }
