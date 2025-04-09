@@ -51,6 +51,10 @@ export interface Codesets {
 export interface Cohort {
   cohort_id: string;
   name: string;
+  description: string;
+  author: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CohortDetail {

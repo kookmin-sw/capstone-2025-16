@@ -126,10 +126,14 @@ const handleFilter = (filter: Filter, prev_cohort_id: number) => {
   }
 };
 
-export const buildQuery = (
-  cohortdef: CohortDefinition,
-  database: "clickhouse" | "postgres" = "clickhouse"
-) => {
+export const buildQuery = (options: {
+  cohortId?: string;
+  cohortDef: CohortDefinition;
+  database?: "clickhouse" | "postgres";
+}) => {
+  let { cohortId, cohortDef, database } = options;
+  database = database || "clickhouse";
+
   const queries: (Compilable | Compilable[])[] = [
     [
       getBaseDB()
@@ -172,9 +176,9 @@ export const buildQuery = (
     ],
   ];
 
-  const { conceptsets, cohort } = cohortdef;
+  const { conceptsets, cohort } = cohortDef;
 
-  if (conceptsets) {
+  if (conceptsets && conceptsets.length) {
     conceptsets.map((e) => {
       queries.push(
         getBaseDB()
@@ -213,7 +217,7 @@ export const buildQuery = (
     });
   }
 
-  let cohortId = 2;
+  let tempCohortId = 2;
   if (cohort && cohort.length) {
     const [firstGroup, ...subsequentGroups] = cohort;
 
@@ -278,6 +282,19 @@ export const buildQuery = (
         }
       }
 
+      if (firstGroup.mergeByPersonId) {
+        query = query.map((e) =>
+          getBaseDB()
+            .selectFrom(e.as("tmp"))
+            .groupBy("person_id")
+            .select(({ eb }) => [
+              "person_id",
+              eb.fn.min("start_date").as("start_date"),
+              eb.fn.max("end_date").as("end_date"),
+            ])
+        );
+      }
+
       queries.push(
         query.map((e) =>
           getBaseDB()
@@ -304,14 +321,18 @@ export const buildQuery = (
       for (const filter of firstContainer.filters) {
         if (!firstContainerQuery) {
           firstContainerQuery = getBaseDB()
-            .selectFrom(handleFilter(filter, cohortId - 1).as("first_query"))
+            .selectFrom(
+              handleFilter(filter, tempCohortId - 1).as("first_query")
+            )
             .select("person_id");
         } else {
           firstContainerQuery = firstContainerQuery.where(
             "person_id",
             "in",
             getBaseDB()
-              .selectFrom(handleFilter(filter, cohortId - 1).as("filter_query"))
+              .selectFrom(
+                handleFilter(filter, tempCohortId - 1).as("filter_query")
+              )
               .select("person_id")
           );
         }
@@ -323,7 +344,7 @@ export const buildQuery = (
           if (!subsequentContainerQuery) {
             subsequentContainerQuery = getBaseDB()
               .selectFrom(
-                handleFilter(filter, cohortId - 1).as("subsequent_query")
+                handleFilter(filter, tempCohortId - 1).as("subsequent_query")
               )
               .select("person_id");
           } else {
@@ -332,7 +353,7 @@ export const buildQuery = (
               "in",
               getBaseDB()
                 .selectFrom(
-                  handleFilter(filter, cohortId - 1).as("filter_query")
+                  handleFilter(filter, tempCohortId - 1).as("filter_query")
                 )
                 .select("person_id")
             );
@@ -371,53 +392,73 @@ export const buildQuery = (
           .insertInto("temp_cohort_detail")
           .expression(
             getBaseDB()
-              .selectFrom("temp_cohort_detail")
+              .selectFrom(
+                getBaseDB()
+                  .selectFrom("temp_cohort_detail")
+                  .selectAll()
+                  .where(({ eb }) =>
+                    eb(
+                      "cohort_id",
+                      "=",
+                      eb.fn<any>("_to_int64", [eb.val(tempCohortId - 1)])
+                    )
+                  )
+                  .where("person_id", "in", firstContainerQuery)
+                  .as("tmp")
+              )
               .select(({ eb }) => [
-                eb.fn<any>("_to_int64", [eb.val(cohortId)]).as("cohort_id"),
+                eb.fn<any>("_to_int64", [eb.val(tempCohortId)]).as("cohort_id"),
                 "person_id",
                 "start_date",
                 "end_date",
               ])
-              .where(({ eb }) =>
-                eb(
-                  "cohort_id",
-                  "=",
-                  eb.fn<any>("_to_int64", [eb.val(cohortId - 1)])
-                )
-              )
-              .where("person_id", "in", firstContainerQuery)
           )
       );
-      cohortId++;
+      tempCohortId++;
     }
   }
 
-  queries.push([
+  const finalQueries: Compilable[] = [
     getBaseDB()
       .selectFrom("temp_cohort_detail")
       .groupBy("cohort_id")
       .orderBy("cohort_id", "asc")
-      .select(({ fn }) => ["cohort_id", fn.count("person_id").as("count")]),
-    getBaseDB()
-      .insertInto("cohort_detail")
-      .expression(
-        getBaseDB()
-          .selectFrom("temp_cohort_detail")
-          .select(({ eb }) => [
-            eb.fn<any>("_to_int64", [eb.val(1)]).as("cohort_id"), // TODO: 코호트 아이디 추가
-            "person_id",
-            "start_date",
-            "end_date",
-          ])
-          .where(({ eb }) =>
-            eb(
-              "cohort_id",
-              "=",
-              eb.fn<any>("_to_int64", [eb.val(cohortId - 1)])
+      .select(({ fn }) => [
+        "cohort_id as group_id",
+        fn.count("person_id").as("count"),
+      ]),
+  ];
+
+  if (cohortId) {
+    finalQueries.push(
+      getBaseDB()
+        .insertInto("cohort_detail")
+        .expression(
+          getBaseDB()
+            .selectFrom(
+              getBaseDB()
+                .selectFrom("temp_cohort_detail")
+                .selectAll()
+                .where(({ eb }) =>
+                  eb(
+                    "cohort_id",
+                    "=",
+                    eb.fn<any>("_to_int64", [eb.val(tempCohortId - 1)])
+                  )
+                )
+                .as("tmp")
             )
-          )
-      ),
-  ]);
+            .select(({ eb }) => [
+              eb.val(cohortId).as("cohort_id"),
+              "person_id",
+              "start_date",
+              "end_date",
+            ])
+        )
+    );
+  }
+
+  queries.push(finalQueries);
 
   return [...queries, ...cleanupQueries];
 };
