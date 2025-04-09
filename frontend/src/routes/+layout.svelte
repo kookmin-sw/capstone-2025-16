@@ -107,7 +107,7 @@
 						</div>
 						<div>
 							<a 
-								href="/join"
+								href="/register"
 								tabindex="-1"
 								class="flex items-center h-[60px] w-full px-6 text-[15px] transition-all duration-200
 									hover:text-slate-900 hover:font-semibold">
