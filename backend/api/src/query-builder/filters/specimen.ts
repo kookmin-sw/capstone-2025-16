@@ -14,8 +14,6 @@ export const getQuery = (a: SpecimenFilter) => {
     .selectFrom("specimen")
     .select(({ fn }) => [
       "specimen.person_id as person_id",
-      "specimen.specimen_date as start_date",
-      "specimen.specimen_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -94,7 +92,7 @@ export const getQuery = (a: SpecimenFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_specimen"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

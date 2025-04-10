@@ -129,7 +129,7 @@ export type FilterMap = {
   procedure_occurrence: ProcedureOccurrenceFilter;
   specimen: SpecimenFilter;
   visit_occurrence: VisitOccurrenceFilter;
-  demographic: DemographicFilter;
+  // demographic: DemographicFilter;
 };
 
 /**
@@ -374,14 +374,14 @@ export interface VisitOccurrenceFilter {
 /**
  * demographic 도메인에 대한 필터 인터페이스입니다.
  */
-export interface DemographicFilter {
-  age?: NumberWithOperator;
-  gender?: IdentifierWithOperator;
-  startDate?: DateWithOperator;
-  endDate?: DateWithOperator;
-  raceType?: IdentifierWithOperator;
-  ethnicityType?: IdentifierWithOperator;
-}
+// export interface DemographicFilter {
+//   age?: NumberWithOperator;
+//   gender?: IdentifierWithOperator;
+//   startDate?: DateWithOperator;
+//   endDate?: DateWithOperator;
+//   raceType?: IdentifierWithOperator;
+//   ethnicityType?: IdentifierWithOperator;
+// }
 
 /**
  * 코호트 예시

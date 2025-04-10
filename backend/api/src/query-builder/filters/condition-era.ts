@@ -4,7 +4,6 @@ import {
   getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
-  handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
@@ -15,8 +14,6 @@ export const getQuery = (a: ConditionEraFilter) => {
     .selectFrom("condition_era")
     .select(({ fn }) => [
       "condition_era.person_id as person_id",
-      "condition_era.condition_era_start_date as start_date",
-      "condition_era.condition_era_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -80,7 +77,7 @@ export const getQuery = (a: ConditionEraFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_condition_era"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

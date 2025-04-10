@@ -14,8 +14,6 @@ export const getQuery = (a: ObservationPeriodFilter) => {
     .selectFrom("observation_period")
     .select(({ fn }) => [
       "observation_period.person_id as person_id",
-      "observation_period.observation_period_start_date as start_date",
-      "observation_period.observation_period_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -72,7 +70,7 @@ export const getQuery = (a: ObservationPeriodFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_observation_period"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

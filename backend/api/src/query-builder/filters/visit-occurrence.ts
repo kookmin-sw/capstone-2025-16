@@ -15,8 +15,6 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
     .selectFrom("visit_occurrence")
     .select(({ fn }) => [
       "visit_occurrence.person_id as person_id",
-      "visit_occurrence.visit_start_date as start_date",
-      "visit_occurrence.visit_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -122,7 +120,7 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_visit_occurrence"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

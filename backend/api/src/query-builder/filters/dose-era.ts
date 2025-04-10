@@ -15,8 +15,6 @@ export const getQuery = (a: DoseEraFilter) => {
     .selectFrom("dose_era")
     .select(({ fn }) => [
       "dose_era.person_id as person_id",
-      "dose_era.dose_era_start_date as start_date",
-      "dose_era.dose_era_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -97,7 +95,7 @@ export const getQuery = (a: DoseEraFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_dose_era"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

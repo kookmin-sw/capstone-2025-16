@@ -37,8 +37,17 @@ export interface Database {
 }
 
 export const db = new Kysely<Database>({
-  dialect: new ClickhouseDialect(),
-  // dialect: new PostgresDialect(undefined as any),
+  dialect:
+    process.env.DB_TYPE === "clickhouse" || !process.env.DB_TYPE
+      ? new ClickhouseDialect({
+          options: {
+            url: `http://${process.env.DB_HOST}:${process.env.DB_PORT}`,
+            username: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+          },
+        })
+      : new PostgresDialect(undefined as any),
 });
 
 // id should be string (bigint)
@@ -60,8 +69,6 @@ export interface Cohort {
 export interface CohortDetail {
   cohort_id: string;
   person_id: string;
-  start_date: string;
-  end_date: string;
 }
 
 export interface ConditionEra {

@@ -16,8 +16,6 @@ export const getQuery = (a: MeasurementFilter) => {
     .selectFrom("measurement")
     .select(({ fn }) => [
       "measurement.person_id as person_id",
-      "measurement.measurement_date as start_date",
-      "measurement.measurement_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -170,7 +168,7 @@ export const getQuery = (a: MeasurementFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_measurement"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

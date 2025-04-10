@@ -15,8 +15,6 @@ export const getQuery = (a: ObservationFilter) => {
     .selectFrom("observation")
     .select(({ fn }) => [
       "observation.person_id as person_id",
-      "observation.observation_date as start_date",
-      "observation.observation_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -141,7 +139,7 @@ export const getQuery = (a: ObservationFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_observation"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

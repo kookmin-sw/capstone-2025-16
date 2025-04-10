@@ -3,7 +3,6 @@ import {
   getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
-  handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
@@ -14,8 +13,6 @@ export const getQuery = (a: ConditionOccurrenceFilter) => {
     .selectFrom("condition_occurrence")
     .select(({ fn }) => [
       "condition_occurrence.person_id as person_id",
-      "condition_occurrence.condition_start_date as start_date",
-      "condition_occurrence.condition_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -120,7 +117,7 @@ export const getQuery = (a: ConditionOccurrenceFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_condition_occurrence"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

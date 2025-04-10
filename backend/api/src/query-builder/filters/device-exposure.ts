@@ -14,8 +14,6 @@ export const getQuery = (a: DeviceExposureFilter) => {
     .selectFrom("device_exposure")
     .select(({ fn }) => [
       "device_exposure.person_id as person_id",
-      "device_exposure.device_exposure_start_date as start_date",
-      "device_exposure.device_exposure_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -128,7 +126,7 @@ export const getQuery = (a: DeviceExposureFilter) => {
     return getBaseDB()
       .selectFrom(query.as("filtered_device_exposure"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

@@ -3,20 +3,14 @@ import {
   getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
-  handleNumberWithOperator,
   handleIdentifierWithOperator,
-  handleRowNumber,
   handleConceptSet,
 } from "../base";
 
 export const getQuery = (a: DeathFilter) => {
   let query = getBaseDB()
     .selectFrom("death")
-    .select(({ fn }) => [
-      "death.person_id as person_id",
-      "death.death_date as start_date",
-      "death.death_date as end_date",
-    ])
+    .select("death.person_id as person_id")
     .leftJoin("person", "death.person_id", "person.person_id");
 
   if (a.conceptset) {
