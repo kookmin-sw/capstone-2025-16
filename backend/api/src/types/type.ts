@@ -79,15 +79,9 @@ export interface BaseGroup {
 }
 
 // first group 안에는 DemographicFilter가 들어갈 수 없음
-export interface FirstGroup extends BaseGroup {
-  mergeByPersonId?: boolean; // person_id 기준으로 group by
-}
+export interface InitialGroup extends BaseGroup {}
 
-export interface SubsequentGroup extends BaseGroup {
-  not?: boolean | null;
-}
-
-export type Cohort = [FirstGroup, ...SubsequentGroup[]];
+export interface ComparisonGroup extends BaseGroup {}
 
 export type Concept = {
   concept_id: Identifier;
@@ -114,7 +108,8 @@ export interface ConceptSet {
 
 export interface CohortDefinition {
   conceptsets?: ConceptSet[];
-  cohort: Cohort;
+  initialGroup: InitialGroup;
+  comparisonGroup?: ComparisonGroup;
 }
 
 /**
@@ -391,59 +386,54 @@ export interface DemographicFilter {
 /**
  * 코호트 예시
  *
- * 코호트는 그룹 배열로 구성되고, AND 연산으로 결합됩니다. 첫번째를 제외한 그룹은 모두 NOT 연산을 사용할 수 있습니다. 예시: (group1 AND (NOT group2) AND group3)
+ * 코호트는 initialGroup, comparisonGroup으로 구성되고, AND 연산으로 결합됩니다.
  * 각 그룹은 컨테이너 배열로 구성됩니다. 컨테이너는 AND, OR, NOT 연산을 사용할 수 있습니다. 복잡한 연산은 불가능하고, 항상 왼쪽에서 오른쪽으로 연산됩니다. 예시: (container1 AND container2) OR container3
  * 각 컨테이너는 필터 배열로 구성됩니다. 필터는 모두 AND 연산으로 결합됩니다.
  *
  */
 const cohort1: CohortDefinition = {
   conceptsets: [],
-  cohort: [
-    {
-      // Group 1
-      containers: [
-        {
-          name: "컨테이너 1",
-          filters: [
-            {
-              type: "condition_era",
-              first: true,
-              startAge: {
-                gte: 18,
-              },
+  initialGroup: {
+    containers: [
+      {
+        name: "컨테이너 1",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+            startAge: {
+              gte: 18,
             },
-            {
-              type: "observation",
-              first: true,
-            },
-          ],
-        },
-        {
-          operator: "OR",
-          name: "컨테이너 2",
-          filters: [
-            {
-              type: "condition_era",
-              first: true,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      // Group 2
-      not: true,
-      containers: [
-        {
-          name: "컨테이너 3",
-          filters: [
-            {
-              type: "measurement",
-              first: true,
-            },
-          ],
-        },
-      ],
-    },
-  ],
+          },
+          {
+            type: "observation",
+            first: true,
+          },
+        ],
+      },
+      {
+        operator: "OR",
+        name: "컨테이너 2",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+          },
+        ],
+      },
+    ],
+  },
+  comparisonGroup: {
+    containers: [
+      {
+        name: "컨테이너 3",
+        filters: [
+          {
+            type: "measurement",
+            first: true,
+          },
+        ],
+      },
+    ],
+  },
 };
