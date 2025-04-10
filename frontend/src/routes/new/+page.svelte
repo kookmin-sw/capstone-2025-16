@@ -7,8 +7,10 @@
 	import { page } from '$app/state';
 	import ConceptSetModal from './components/ConceptSetModal.svelte';
 	import InclusionRuleModal from './components/InclusionRuleModal.svelte';
+	import CohortAIModal from './components/CohortAIModal.svelte';
 
 	let pathname = $state(page.url.pathname);
+	let showCohortAIModal = $state(false);
 
 	// Types TS 기반 새로운 코호트 구조 정의
 	// 코호트 정의 기본 구조
@@ -37,6 +39,13 @@
 			}
 		]
 	});
+	
+	// Handle AI generated cohort
+	function handleCohortAISubmit(data) {
+		console.log('AI Cohort Data:', data);
+		// Here you would process the AI-generated cohort definition
+		// and update the cohortDefinition state
+	}
 
 	// Types.ts 기반 도메인 타입
 	const domainTypes = [
@@ -664,6 +673,14 @@
 				<p class="text-sm text-gray-600">
 					Define the characteristics of patients to include in your cohort.
 				</p>
+				<button 
+					class="mt-3 relative rounded-2xl px-4 py-2 flex items-center"
+					on:click={() => showCohortAIModal = true}
+				>
+					<span class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-gradient-rotation"></span>
+					<span class="absolute inset-[3px] rounded-xl bg-white"></span>
+					<span class="relative text-sm font-medium bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">use Cohort AI </span>
+				</button>
 			</div>
 
 			<!-- Initial Group Section -->
@@ -1231,4 +1248,30 @@
 	conceptSets={cohortDefinition.conceptsets}
 	on:update={handleConceptSetUpdate}
 	on:close={() => (showConceptSetModal = false)}
+/>
+
+<style>
+	@keyframes gradient-rotate {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
+	}
+	
+	:global(.animate-gradient-rotation) {
+		background-size: 200% 200%;
+		animation: gradient-rotate 3s ease infinite;
+	}
+</style>
+
+<!-- Cohort AI Modal -->
+<CohortAIModal 
+	bind:show={showCohortAIModal}
+	onClose={() => showCohortAIModal = false}
+	onSubmit={handleCohortAISubmit}
 />
