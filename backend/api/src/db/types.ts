@@ -1,5 +1,5 @@
 import { Kysely, PostgresDialect } from "kysely";
-import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
+import { ClickhouseDialect } from "./dialects/clickhouse";
 
 export interface Database {
   codesets: Codesets; // temp table
@@ -64,6 +64,7 @@ export interface Cohort {
   author: string;
   created_at: string;
   updated_at: string;
+  cohort_definition: string;
 }
 
 export interface CohortDetail {
