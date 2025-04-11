@@ -1,6 +1,5 @@
 import { DrugExposureFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -9,14 +8,14 @@ import {
   handleStringWithOperator,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: DrugExposureFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
+  let query = db
     .selectFrom("drug_exposure")
     .select(({ fn }) => [
       "drug_exposure.person_id as person_id",
-      "drug_exposure.drug_exposure_start_date as start_date",
-      "drug_exposure.drug_exposure_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -34,6 +33,7 @@ export const getQuery = (a: DrugExposureFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "drug_exposure.drug_concept_id",
       a.conceptset
@@ -152,6 +152,7 @@ export const getQuery = (a: DrugExposureFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "drug_exposure.drug_source_concept_id",
       a.source
@@ -167,10 +168,10 @@ export const getQuery = (a: DrugExposureFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_drug_exposure"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

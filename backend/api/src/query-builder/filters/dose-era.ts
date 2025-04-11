@@ -1,6 +1,5 @@
 import { DoseEraFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -9,14 +8,14 @@ import {
   handleYearMinusWithNumberOperator,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: DoseEraFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
+  let query = db
     .selectFrom("dose_era")
     .select(({ fn }) => [
       "dose_era.person_id as person_id",
-      "dose_era.dose_era_start_date as start_date",
-      "dose_era.dose_era_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -27,7 +26,12 @@ export const getQuery = (a: DoseEraFilter) => {
     .leftJoin("person", "dose_era.person_id", "person.person_id");
 
   if (a.conceptset) {
-    query = handleConceptSet(query, "dose_era.drug_concept_id", a.conceptset);
+    query = handleConceptSet(
+      db,
+      query,
+      "dose_era.drug_concept_id",
+      a.conceptset
+    );
   }
 
   if (a.startAge) {
@@ -94,10 +98,10 @@ export const getQuery = (a: DoseEraFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_dose_era"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

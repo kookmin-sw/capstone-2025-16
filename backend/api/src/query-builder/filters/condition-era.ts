@@ -1,22 +1,20 @@
 import { format } from "sql-formatter";
 import { ConditionEraFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
-  handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: ConditionEraFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: ConditionEraFilter) => {
+  let query = db
     .selectFrom("condition_era")
     .select(({ fn }) => [
       "condition_era.person_id as person_id",
-      "condition_era.condition_era_start_date as start_date",
-      "condition_era.condition_era_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -28,6 +26,7 @@ export const getQuery = (a: ConditionEraFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "condition_era.condition_concept_id",
       a.conceptset
@@ -77,10 +76,10 @@ export const getQuery = (a: ConditionEraFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_condition_era"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

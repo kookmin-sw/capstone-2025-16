@@ -1,6 +1,5 @@
 import { SpecimenFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -8,14 +7,14 @@ import {
   handleRowNumber,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: SpecimenFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: SpecimenFilter) => {
+  let query = db
     .selectFrom("specimen")
     .select(({ fn }) => [
       "specimen.person_id as person_id",
-      "specimen.specimen_date as start_date",
-      "specimen.specimen_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
@@ -27,6 +26,7 @@ export const getQuery = (a: SpecimenFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "specimen.specimen_concept_id",
       a.conceptset
@@ -91,10 +91,10 @@ export const getQuery = (a: SpecimenFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_specimen"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;
