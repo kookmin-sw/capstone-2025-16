@@ -40,32 +40,6 @@ export class ClickhouseConnection implements DatabaseConnection {
   }
 
   async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
-    // if (compiledQuery.query.kind === "InsertQueryNode") {
-    //   const values = [
-    //     compiledQuery.query.columns?.map((c) => c.column.name) ?? [],
-    //     // @ts-expect-error: fix types
-    //     ...(compiledQuery.query.values?.values.map((v) => v.values) ?? []),
-    //   ];
-
-    //   const schema = compiledQuery.query.into?.table?.schema?.name;
-    //   const table = compiledQuery.query.into?.table.identifier.name ?? "";
-    //   const fullQualifiedTable = schema ? `${schema}.${table}` : table;
-    //   const resultSet = await this.#client.insert({
-    //     table: fullQualifiedTable,
-    //     format: "JSONCompactEachRowWithNames",
-    //     values,
-    //     clickhouse_settings: {
-    //       date_time_input_format: "best_effort",
-    //     },
-    //   });
-
-    //   return {
-    //     rows: [],
-    //     numAffectedRows: BigInt(resultSet.summary?.written_rows ?? 0),
-    //     numChangedRows: BigInt(resultSet.summary?.written_rows ?? 0),
-    //   };
-    // }
-
     if (
       compiledQuery.query.kind === "InsertQueryNode" ||
       compiledQuery.query.kind === "UpdateQueryNode" ||
