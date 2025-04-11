@@ -648,7 +648,8 @@ export class VisitOccurrenceFilterValidator extends BaseFilterValidator {
   placeOfService?: IdentifierWithOperator;
 }
 
-// Demographic filter validator
+// Demographic filter validator - commented out as it's not in the FilterMap
+/**
 export class DemographicFilterValidator extends BaseFilterValidator {
   @IsEnum(["demographic"] as const)
   type!: "demographic";
@@ -677,6 +678,7 @@ export class DemographicFilterValidator extends BaseFilterValidator {
   @IsIdentifierWithOperator()
   ethnicityType?: IdentifierWithOperator;
 }
+*/
 
 // Combined filter validator that can validate any filter type
 export class FilterValidator {
@@ -714,8 +716,9 @@ export class FilterValidator {
         return SpecimenFilterValidator;
       case "visit_occurrence":
         return VisitOccurrenceFilterValidator;
-      case "demographic":
-        return DemographicFilterValidator;
+      // Remove or comment out the demographic case since it's commented out in the FilterMap
+      // case "demographic":
+      //   return DemographicFilterValidator;
       default:
         return Object;
     }
@@ -733,8 +736,8 @@ export class FilterValidator {
     | ObservationPeriodFilterValidator
     | ProcedureOccurrenceFilterValidator
     | SpecimenFilterValidator
-    | VisitOccurrenceFilterValidator
-    | DemographicFilterValidator;
+    | VisitOccurrenceFilterValidator;
+  // | DemographicFilterValidator; // Commented out as it's not in the FilterMap
 }
 
 // First container doesn't have an operator
@@ -771,16 +774,12 @@ export class BaseGroupValidator {
 
 // First group validator
 export class FirstGroupValidator extends BaseGroupValidator {
-  @IsOptional()
-  @IsBoolean()
-  mergeByPersonId?: boolean;
+  // Remove mergeByPersonId as it's not in the InitialGroup interface
 }
 
 // Subsequent group validator
 export class SubsequentGroupValidator extends BaseGroupValidator {
-  @IsOptional()
-  @IsBoolean()
-  not?: boolean;
+  // Remove not property as it's not in the ComparisonGroup interface
 }
 
 // Cohort definition validator
@@ -791,11 +790,12 @@ export class CohortDefinitionValidator {
   @Type(() => ConceptSetValidator)
   conceptsets?: ConceptSetValidator[];
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type((options) => {
-    const index = options?.object?.cohort?.indexOf(options.object);
-    return index === 0 ? FirstGroupValidator : SubsequentGroupValidator;
-  })
-  cohort!: [FirstGroupValidator, ...SubsequentGroupValidator[]];
+  @ValidateNested()
+  @Type(() => FirstGroupValidator)
+  initialGroup!: FirstGroupValidator;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SubsequentGroupValidator)
+  comparisonGroup?: SubsequentGroupValidator;
 }
