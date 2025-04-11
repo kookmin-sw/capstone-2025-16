@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   getCohorts,
-  getCohort,
+  getCohortDetails,
   createNewCohort,
   updateExistingCohort,
   removeExistingCohort,
@@ -18,8 +18,8 @@ const router = Router();
 // GET /cohort - 코호트 리스트 출력
 router.get("/", getCohorts);
 
-// GET /cohort/:cohort_id - 특정 코호트 출력
-router.get("/:cohort_id", validateParams(CohortIdParamDto), getCohort);
+// GET /cohort/:cohort_id - 특정 코호트 person_id 리스트 출력
+router.get("/:cohort_id", validateParams(CohortIdParamDto), getCohortDetails);
 
 // POST /cohort - 코호트 생성
 router.post("/", validateBody(CreateCohortRequestDto), createNewCohort);

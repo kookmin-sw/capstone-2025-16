@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   getAllCohorts,
-  getCohortById,
+  getCohortDetailsById,
   createCohort,
   updateCohort,
   deleteCohort,
@@ -20,13 +20,13 @@ export const getCohorts = async (
   next(await getAllCohorts());
 };
 
-export const getCohort = async (
+export const getCohortDetails = async (
   req: Request<CohortIdParamDto>,
   res: Response,
   next: NextFunction
 ) => {
   const { cohortId } = req.params;
-  next(await getCohortById(cohortId));
+  next(await getCohortDetailsById(cohortId));
 };
 
 export const createNewCohort = async (

@@ -5,26 +5,33 @@ import { uuidv7 } from "uuidv7";
 import { buildQuery } from "../query-builder";
 
 export const getAllCohorts = async () => {
+  // TODO: pagenation?
+
   return new HttpResponse(
     200,
     await getBaseDB().selectFrom("cohort").selectAll().execute()
   );
 };
 
-export const getCohortById = async (id: string) => {
-  let cohort = await getBaseDB()
-    .selectFrom("cohort")
-    .selectAll()
-    .where("cohort_id", "=", id)
-    .executeTakeFirst();
+export const getCohortDetailsById = async (id: string) => {
+  // TODO: pagenation?
 
-  if (!cohort) {
+  let cohort = await getBaseDB()
+    .selectFrom("cohort_detail")
+    .select("person_id")
+    .where("cohort_id", "=", id)
+    .execute();
+
+  if (!cohort || cohort.length === 0) {
     return new HttpResponse(404, {
       message: "Cohort not found",
     });
   }
 
-  return new HttpResponse(200, cohort);
+  return new HttpResponse(
+    200,
+    cohort.map((e) => e.person_id)
+  );
 };
 
 export const createCohort = async (
@@ -104,6 +111,12 @@ export const updateCohort = async (
     })
     .where("cohort_id", "=", cohortId)
     .execute();
+
+  if (result.length === 0 || result[0].numUpdatedRows === 0n) {
+    return new HttpResponse(404, {
+      message: "Cohort not found",
+    });
+  }
 
   let arr: number[] = [];
   if (cohortDef) {
