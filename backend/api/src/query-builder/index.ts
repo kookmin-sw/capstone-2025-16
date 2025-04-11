@@ -14,19 +14,27 @@ import * as visitOccurrence from "./filters/visit-occurrence";
 // import * as demographic from "./filters/demographic";
 import { CohortDefinition, Concept, Filter } from "../types/type";
 import { getBaseDB } from "./base";
-import { Compilable, SelectQueryBuilder, sql } from "kysely";
+import {
+  CreateTableBuilder,
+  DeleteQueryBuilder,
+  DropTableBuilder,
+  InsertQueryBuilder,
+  SelectQueryBuilder,
+  sql,
+} from "kysely";
 import { format } from "sql-formatter";
 import { Database } from "../db/types";
+import { Kysely } from "kysely";
 
-const buildConceptQuery = (concepts: Concept[]) => {
+const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
   if (!concepts.length) {
-    return getBaseDB()
+    return db
       .selectFrom("concept")
       .select("concept.concept_id")
       .where(({ eb }) => eb(eb.val(1), "=", eb.val(0)));
   }
 
-  let query = getBaseDB()
+  let query = db
     .selectFrom("concept")
     .select("concept.concept_id")
     .where(({ eb }) =>
@@ -40,7 +48,7 @@ const buildConceptQuery = (concepts: Concept[]) => {
   let descendant = concepts.filter((e) => e.includeDescendants);
   if (descendant.length) {
     query = query.unionAll(
-      getBaseDB()
+      db
         .selectFrom("concept")
         .select("concept.concept_id")
         .leftJoin(
@@ -67,7 +75,7 @@ const buildConceptQuery = (concepts: Concept[]) => {
   if (mapped.length) {
     query = query.unionAll(
       // @ts-ignore
-      getBaseDB()
+      db
         .selectFrom(query.as("concept_mapped"))
         .leftJoin(
           "concept_relationship",
@@ -92,34 +100,34 @@ const buildConceptQuery = (concepts: Concept[]) => {
   return query;
 };
 
-const handleFilter = (filter: Filter) => {
+const handleFilter = (db: Kysely<Database>, filter: Filter) => {
   switch (filter.type) {
     case "condition_era":
-      return conditionEra.getQuery(filter);
+      return conditionEra.getQuery(db, filter);
     case "condition_occurrence":
-      return conditionOccurrence.getQuery(filter);
+      return conditionOccurrence.getQuery(db, filter);
     case "death":
-      return death.getQuery(filter);
+      return death.getQuery(db, filter);
     case "device_exposure":
-      return deviceExposure.getQuery(filter);
+      return deviceExposure.getQuery(db, filter);
     case "dose_era":
-      return doseEra.getQuery(filter);
+      return doseEra.getQuery(db, filter);
     case "drug_era":
-      return drugEra.getQuery(filter);
+      return drugEra.getQuery(db, filter);
     case "drug_exposure":
-      return drugExposure.getQuery(filter);
+      return drugExposure.getQuery(db, filter);
     case "measurement":
-      return measurement.getQuery(filter);
+      return measurement.getQuery(db, filter);
     case "observation":
-      return observation.getQuery(filter);
+      return observation.getQuery(db, filter);
     case "observation_period":
-      return observationPeriod.getQuery(filter);
+      return observationPeriod.getQuery(db, filter);
     case "procedure_occurrence":
-      return procedureOccurrence.getQuery(filter);
+      return procedureOccurrence.getQuery(db, filter);
     case "specimen":
-      return specimen.getQuery(filter);
+      return specimen.getQuery(db, filter);
     case "visit_occurrence":
-      return visitOccurrence.getQuery(filter);
+      return visitOccurrence.getQuery(db, filter);
     // case "demographic":
     //   return demographic.getQuery(filter);
     default:
@@ -127,18 +135,28 @@ const handleFilter = (filter: Filter) => {
   }
 };
 
-export const buildQuery = (options: {
-  cohortId?: string;
-  cohortDef: CohortDefinition;
-  database?: "clickhouse" | "postgres";
-}) => {
+type ExecutableBuilder =
+  | CreateTableBuilder<any, any>
+  | InsertQueryBuilder<any, any, any>
+  | DeleteQueryBuilder<any, any, any>
+  | DropTableBuilder
+  | SelectQueryBuilder<any, any, any>;
+
+export const buildQuery = (
+  db: Kysely<Database>,
+  options: {
+    cohortId?: string;
+    cohortDef: CohortDefinition;
+    database?: "clickhouse" | "postgres";
+  }
+) => {
   let { cohortId, cohortDef, database } = options;
   database = database || "clickhouse";
 
-  const queries: (Compilable | Compilable[])[] = [
+  const queries: (ExecutableBuilder | ExecutableBuilder[])[] = [
     [
-      getBaseDB()
-        .schema.createTable("codesets")
+      db.schema
+        .createTable("codesets")
         .temporary()
         .addColumn(
           "codeset_id",
@@ -148,8 +166,8 @@ export const buildQuery = (options: {
           "concept_id",
           database === "clickhouse" ? sql`Int64` : "bigint"
         ),
-      getBaseDB()
-        .schema.createTable("temp_cohort_detail")
+      db.schema
+        .createTable("temp_cohort_detail")
         .temporary()
         .addColumn(
           "cohort_id",
@@ -162,10 +180,10 @@ export const buildQuery = (options: {
     ],
   ];
 
-  const cleanupQueries: (Compilable | Compilable[])[] = [
+  const cleanupQueries: (ExecutableBuilder | ExecutableBuilder[])[] = [
     [
-      getBaseDB().schema.dropTable("codesets"),
-      getBaseDB().schema.dropTable("temp_cohort_detail"),
+      db.schema.dropTable("codesets"),
+      db.schema.dropTable("temp_cohort_detail"),
     ],
   ];
 
@@ -174,15 +192,16 @@ export const buildQuery = (options: {
   if (conceptsets && conceptsets.length) {
     conceptsets.map((e) => {
       queries.push(
-        getBaseDB()
+        db
           .insertInto("codesets")
           .columns(["codeset_id", "concept_id"])
           .expression(
-            getBaseDB()
+            db
               .selectFrom(
-                buildConceptQuery(e.items.filter((e) => !e.isExcluded)).as(
-                  "concept_include"
-                )
+                buildConceptQuery(
+                  db,
+                  e.items.filter((e) => !e.isExcluded)
+                ).as("concept_include")
               )
               .select(({ eb }) => [
                 eb
@@ -192,9 +211,10 @@ export const buildQuery = (options: {
               ])
               .distinctOn(["concept_include.concept_id"])
               .leftJoin(
-                buildConceptQuery(e.items.filter((e) => e.isExcluded)).as(
-                  "concept_exclude"
-                ),
+                buildConceptQuery(
+                  db,
+                  e.items.filter((e) => e.isExcluded)
+                ).as("concept_exclude"),
                 "concept_include.concept_id",
                 "concept_exclude.concept_id"
               )
@@ -216,9 +236,9 @@ export const buildQuery = (options: {
     let query: SelectQueryBuilder<Database, any, any> | undefined;
     for (let filter of container.filters) {
       if (!query) {
-        query = handleFilter(filter);
+        query = handleFilter(db, filter);
       } else {
-        query = query.intersect(handleFilter(filter));
+        query = query.intersect(handleFilter(db, filter));
       }
     }
 
@@ -226,7 +246,7 @@ export const buildQuery = (options: {
 
     switch ("operator" in container && container.operator) {
       case "AND":
-        query = getBaseDB()
+        query = db
           .selectFrom("temp_cohort_detail")
           .select("person_id")
           .where(({ eb }) =>
@@ -235,7 +255,7 @@ export const buildQuery = (options: {
           .where("person_id", "in", query);
         break;
       case "OR":
-        query = getBaseDB()
+        query = db
           .selectFrom("temp_cohort_detail")
           .select("person_id")
           .where(({ eb }) =>
@@ -244,7 +264,7 @@ export const buildQuery = (options: {
           .union(query);
         break;
       case "NOT":
-        query = getBaseDB()
+        query = db
           .selectFrom("temp_cohort_detail")
           .select("person_id")
           .where(({ eb }) =>
@@ -257,10 +277,10 @@ export const buildQuery = (options: {
     }
 
     queries.push(
-      getBaseDB()
+      db
         .insertInto("temp_cohort_detail")
         .expression(
-          getBaseDB()
+          db
             .selectFrom(query.as("tmp"))
             .select(({ eb }) => [
               eb.fn<any>("_to_int64", [eb.val(i + 1)]).as("cohort_id"),
@@ -277,9 +297,9 @@ export const buildQuery = (options: {
       let query: SelectQueryBuilder<Database, any, any> | undefined;
       for (let filter of container.filters) {
         if (!query) {
-          query = handleFilter(filter);
+          query = handleFilter(db, filter);
         } else {
-          query = query.intersect(handleFilter(filter));
+          query = query.intersect(handleFilter(db, filter));
         }
       }
 
@@ -287,7 +307,7 @@ export const buildQuery = (options: {
 
       switch ("operator" in container && container.operator) {
         case "AND":
-          query = getBaseDB()
+          query = db
             .selectFrom("temp_cohort_detail")
             .select("person_id")
             .where(({ eb }) =>
@@ -302,7 +322,7 @@ export const buildQuery = (options: {
             .where("person_id", "in", query);
           break;
         case "OR":
-          query = getBaseDB()
+          query = db
             .selectFrom("temp_cohort_detail")
             .select("person_id")
             .where(({ eb }) =>
@@ -315,7 +335,7 @@ export const buildQuery = (options: {
               )
             )
             .union(
-              getBaseDB()
+              db
                 .selectFrom("temp_cohort_detail")
                 .select("person_id")
                 .where(({ eb }) =>
@@ -331,7 +351,7 @@ export const buildQuery = (options: {
             );
           break;
         case "NOT":
-          query = getBaseDB()
+          query = db
             .selectFrom("temp_cohort_detail")
             .select("person_id")
             .where(({ eb }) =>
@@ -346,7 +366,7 @@ export const buildQuery = (options: {
             .except(query);
           break;
         default:
-          query = getBaseDB()
+          query = db
             .selectFrom("temp_cohort_detail")
             .select("person_id")
             .where(({ eb }) =>
@@ -363,10 +383,10 @@ export const buildQuery = (options: {
       }
 
       queries.push(
-        getBaseDB()
+        db
           .insertInto("temp_cohort_detail")
           .expression(
-            getBaseDB()
+            db
               .selectFrom(query.as("tmp"))
               .select(({ eb }) => [
                 eb
@@ -381,8 +401,8 @@ export const buildQuery = (options: {
     }
   }
 
-  const finalQueries: Compilable[] = [
-    getBaseDB()
+  const finalQueries: ExecutableBuilder[] = [
+    db
       .selectFrom("temp_cohort_detail")
       .groupBy("cohort_id")
       .orderBy("cohort_id", "asc")
@@ -393,31 +413,33 @@ export const buildQuery = (options: {
   ];
 
   if (cohortId) {
+    queries.push(
+      db.deleteFrom("cohort_detail").where("cohort_id", "=", cohortId)
+    );
+
     finalQueries.push(
-      getBaseDB()
-        .insertInto("cohort_detail")
-        .expression(
-          getBaseDB()
-            .selectFrom(
-              getBaseDB()
-                .selectFrom("temp_cohort_detail")
-                .select("person_id")
-                .where(({ eb }) =>
-                  eb(
-                    "cohort_id",
-                    "=",
-                    eb.fn<any>("_to_int64", [
-                      eb.val(
-                        initialGroup.containers.length +
-                          (comparisonGroup?.containers.length ?? 0)
-                      ),
-                    ])
-                  )
+      db.insertInto("cohort_detail").expression(
+        db
+          .selectFrom(
+            db
+              .selectFrom("temp_cohort_detail")
+              .select("person_id")
+              .where(({ eb }) =>
+                eb(
+                  "cohort_id",
+                  "=",
+                  eb.fn<any>("_to_int64", [
+                    eb.val(
+                      initialGroup.containers.length +
+                        (comparisonGroup?.containers.length ?? 0)
+                    ),
+                  ])
                 )
-                .as("tmp")
-            )
-            .select(({ eb }) => [eb.val(cohortId).as("cohort_id"), "person_id"])
-        )
+              )
+              .as("tmp")
+          )
+          .select(({ eb }) => [eb.val(cohortId).as("cohort_id"), "person_id"])
+      )
     );
   }
 

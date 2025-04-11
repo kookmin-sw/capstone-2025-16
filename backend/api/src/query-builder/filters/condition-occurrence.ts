@@ -1,15 +1,19 @@
 import { ConditionOccurrenceFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: ConditionOccurrenceFilter) => {
-  let query = getBaseDB()
+export const getQuery = (
+  db: Kysely<Database>,
+  a: ConditionOccurrenceFilter
+) => {
+  let query = db
     .selectFrom("condition_occurrence")
     .select(({ fn }) => [
       "condition_occurrence.person_id as person_id",
@@ -34,6 +38,7 @@ export const getQuery = (a: ConditionOccurrenceFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "condition_occurrence.condition_concept_id",
       a.conceptset
@@ -99,6 +104,7 @@ export const getQuery = (a: ConditionOccurrenceFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "condition_occurrence.condition_source_concept_id",
       a.source
@@ -114,7 +120,7 @@ export const getQuery = (a: ConditionOccurrenceFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_condition_occurrence"))
       .where("ordinal", "=", 1)
       .select("person_id");

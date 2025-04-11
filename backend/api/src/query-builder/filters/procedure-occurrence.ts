@@ -1,6 +1,5 @@
 import { ProcedureOccurrenceFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -8,9 +7,14 @@ import {
   handleRowNumber,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: ProcedureOccurrenceFilter) => {
-  let query = getBaseDB()
+export const getQuery = (
+  db: Kysely<Database>,
+  a: ProcedureOccurrenceFilter
+) => {
+  let query = db
     .selectFrom("procedure_occurrence")
     .select(({ fn }) => [
       "procedure_occurrence.person_id as person_id",
@@ -35,6 +39,7 @@ export const getQuery = (a: ProcedureOccurrenceFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "procedure_occurrence.procedure_concept_id",
       a.conceptset
@@ -100,6 +105,7 @@ export const getQuery = (a: ProcedureOccurrenceFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "procedure_occurrence.procedure_source_concept_id",
       a.source
@@ -115,7 +121,7 @@ export const getQuery = (a: ProcedureOccurrenceFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_procedure_occurrence"))
       .where("ordinal", "=", 1)
       .select("person_id");

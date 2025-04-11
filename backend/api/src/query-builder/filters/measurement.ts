@@ -1,7 +1,6 @@
 import { expressionBuilder } from "kysely";
 import { MeasurementFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -10,9 +9,11 @@ import {
   handleConceptSet,
   getExpressionBuilder,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: MeasurementFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
+  let query = db
     .selectFrom("measurement")
     .select(({ fn }) => [
       "measurement.person_id as person_id",
@@ -33,6 +34,7 @@ export const getQuery = (a: MeasurementFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "measurement.measurement_concept_id",
       a.conceptset
@@ -158,6 +160,7 @@ export const getQuery = (a: MeasurementFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "measurement.measurement_source_concept_id",
       a.source
@@ -165,7 +168,7 @@ export const getQuery = (a: MeasurementFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_measurement"))
       .where("ordinal", "=", 1)
       .select("person_id");

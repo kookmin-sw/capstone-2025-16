@@ -1,17 +1,17 @@
 import { VisitOccurrenceFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
-  handleNumberWithOperator,
   handleIdentifierWithOperator,
   handleRowNumber,
   handleYearMinusWithNumberOperator,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: VisitOccurrenceFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: VisitOccurrenceFilter) => {
+  let query = db
     .selectFrom("visit_occurrence")
     .select(({ fn }) => [
       "visit_occurrence.person_id as person_id",
@@ -36,6 +36,7 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "visit_occurrence.visit_concept_id",
       a.conceptset
@@ -94,6 +95,7 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "visit_occurrence.visit_source_concept_id",
       a.source
@@ -117,7 +119,7 @@ export const getQuery = (a: VisitOccurrenceFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_visit_occurrence"))
       .where("ordinal", "=", 1)
       .select("person_id");

@@ -1,6 +1,5 @@
 import { ObservationFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -9,9 +8,11 @@ import {
   handleStringWithOperator,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: ObservationFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: ObservationFilter) => {
+  let query = db
     .selectFrom("observation")
     .select(({ fn }) => [
       "observation.person_id as person_id",
@@ -32,6 +33,7 @@ export const getQuery = (a: ObservationFilter) => {
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "observation.observation_concept_id",
       a.conceptset
@@ -121,6 +123,7 @@ export const getQuery = (a: ObservationFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "observation.observation_source_concept_id",
       a.source
@@ -136,7 +139,7 @@ export const getQuery = (a: ObservationFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_observation"))
       .where("ordinal", "=", 1)
       .select("person_id");
