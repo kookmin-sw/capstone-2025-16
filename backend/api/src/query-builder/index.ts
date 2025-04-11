@@ -147,7 +147,7 @@ export const buildQuery = (
   options: {
     cohortId?: string;
     cohortDef: CohortDefinition;
-    database?: "clickhouse" | "postgres";
+    database?: "clickhouse" | "postgres" | string;
   }
 ) => {
   let { cohortId, cohortDef, database } = options;

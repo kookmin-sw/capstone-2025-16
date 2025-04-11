@@ -4,9 +4,9 @@ export class HttpResponse {
   status: number;
   data: string | object;
 
-  constructor(status: number, data: string | object) {
+  constructor(status: number, data?: string | object) {
     this.status = status;
-    this.data = data;
+    this.data = data ?? "";
   }
 }
 
