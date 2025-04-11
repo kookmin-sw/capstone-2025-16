@@ -3,6 +3,7 @@ import { CompiledQuery, DatabaseConnection, QueryResult } from "kysely";
 import { createClient } from "@clickhouse/client";
 import { ClickhouseDialectConfig } from ".";
 import { NodeClickHouseClient } from "@clickhouse/client/dist/client";
+import { randomUUID } from "crypto";
 
 export class ClickhouseConnection implements DatabaseConnection {
   #client: NodeClickHouseClient;
@@ -14,6 +15,7 @@ export class ClickhouseConnection implements DatabaseConnection {
         ...config.options?.clickhouse_settings,
         date_time_input_format: "best_effort",
       },
+      session_id: randomUUID(),
     });
   }
 
@@ -38,33 +40,34 @@ export class ClickhouseConnection implements DatabaseConnection {
   }
 
   async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
-    if (compiledQuery.query.kind === "InsertQueryNode") {
-      const values = [
-        compiledQuery.query.columns?.map((c) => c.column.name) ?? [],
-        // @ts-expect-error: fix types
-        ...(compiledQuery.query.values?.values.map((v) => v.values) ?? []),
-      ];
+    // if (compiledQuery.query.kind === "InsertQueryNode") {
+    //   const values = [
+    //     compiledQuery.query.columns?.map((c) => c.column.name) ?? [],
+    //     // @ts-expect-error: fix types
+    //     ...(compiledQuery.query.values?.values.map((v) => v.values) ?? []),
+    //   ];
 
-      const schema = compiledQuery.query.into?.table?.schema?.name;
-      const table = compiledQuery.query.into?.table.identifier.name ?? "";
-      const fullQualifiedTable = schema ? `${schema}.${table}` : table;
-      const resultSet = await this.#client.insert({
-        table: fullQualifiedTable,
-        format: "JSONCompactEachRowWithNames",
-        values,
-        clickhouse_settings: {
-          date_time_input_format: "best_effort",
-        },
-      });
+    //   const schema = compiledQuery.query.into?.table?.schema?.name;
+    //   const table = compiledQuery.query.into?.table.identifier.name ?? "";
+    //   const fullQualifiedTable = schema ? `${schema}.${table}` : table;
+    //   const resultSet = await this.#client.insert({
+    //     table: fullQualifiedTable,
+    //     format: "JSONCompactEachRowWithNames",
+    //     values,
+    //     clickhouse_settings: {
+    //       date_time_input_format: "best_effort",
+    //     },
+    //   });
 
-      return {
-        rows: [],
-        numAffectedRows: BigInt(resultSet.summary?.written_rows ?? 0),
-        numChangedRows: BigInt(resultSet.summary?.written_rows ?? 0),
-      };
-    }
+    //   return {
+    //     rows: [],
+    //     numAffectedRows: BigInt(resultSet.summary?.written_rows ?? 0),
+    //     numChangedRows: BigInt(resultSet.summary?.written_rows ?? 0),
+    //   };
+    // }
 
     if (
+      compiledQuery.query.kind === "InsertQueryNode" ||
       compiledQuery.query.kind === "UpdateQueryNode" ||
       compiledQuery.query.kind === "SelectQueryNode"
     ) {
@@ -72,7 +75,25 @@ export class ClickhouseConnection implements DatabaseConnection {
 
       const resultSet = await this.#client.query({
         query,
+        clickhouse_settings: {
+          ...(compiledQuery.query.kind === "InsertQueryNode" && {
+            date_time_input_format: "best_effort",
+          }),
+        },
       });
+
+      if (compiledQuery.query.kind === "InsertQueryNode") {
+        const summary = resultSet.response_headers["x-clickhouse-summary"];
+        const summaryObj = JSON.parse(
+          Array.isArray(summary) ? summary[0] : summary ?? "{}"
+        );
+        return {
+          rows: [],
+          numAffectedRows: BigInt(summaryObj.written_rows ?? 0),
+          numChangedRows: BigInt(summaryObj.written_rows ?? 0),
+        };
+      }
+
       const response = await resultSet.json();
 
       return {
