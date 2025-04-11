@@ -11,7 +11,7 @@ import * as observationPeriod from "./filters/observation-period";
 import * as procedureOccurrence from "./filters/procedure-occurrence";
 import * as specimen from "./filters/specimen";
 import * as visitOccurrence from "./filters/visit-occurrence";
-// import * as demographic from "./filters/demographic";
+import * as demographic from "./filters/demographic";
 import { CohortDefinition, Concept, Filter } from "../types/type";
 import { getBaseDB } from "./base";
 import {
@@ -128,8 +128,8 @@ const handleFilter = (db: Kysely<Database>, filter: Filter) => {
       return specimen.getQuery(db, filter);
     case "visit_occurrence":
       return visitOccurrence.getQuery(db, filter);
-    // case "demographic":
-    //   return demographic.getQuery(filter);
+    case "demographic":
+      return demographic.getQuery(db, filter);
     default:
       throw new Error(`Unknown filter type: ${filter}`);
   }
