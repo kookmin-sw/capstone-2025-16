@@ -388,6 +388,7 @@
                     description="The ratio of visits by visit type."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.visitTypeRatio}
                     on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
                 >
@@ -409,6 +410,7 @@
                     description="The ratio of visits by department."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.departmentVisits}
                     on:toggleView={({ detail }) => isTableView.departmentVisits = detail}
                 >
@@ -430,6 +432,7 @@
                     description= "The list of the top 10 most frequently prescribed medications."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenDrugs}
                     on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
                 >
@@ -452,6 +455,7 @@
                     description="The list of the top 10 most frequently diagnosed medical conditions."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenConditions}
                     on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
                 >
@@ -474,6 +478,7 @@
                     description="The list of the top 10 most frequently performed procedures and medical tests."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenProcedures}
                     on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
                 >
@@ -496,6 +501,7 @@
                     description="The list of the top 10 most frequently recorded clinical measurements."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenMeasurements}
                     on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
                 >
