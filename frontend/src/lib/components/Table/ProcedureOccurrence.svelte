@@ -9,18 +9,18 @@
     <table class="procedure-table w-full border border-gray-200 text-sm text-left mb-6">
       <thead class="bg-gray-100">
         <tr>
-          <th class="px-4 py-2 border-b">Date</th>
           <th class="px-4 py-2 border-b">Concept ID</th>
-          <th class="px-4 py-2 border-b">Type Concept ID</th>
+          <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Value</th>
           <th class="px-4 py-2 border-b">Quantity</th>
         </tr>
       </thead>
       <tbody>
         {#each procedureOccurrence as proc}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{proc.procedure_date}</td>
             <td class="px-4 py-2 border-b">{proc.procedure_concept_id}</td>
-            <td class="px-4 py-2 border-b">{proc.procedure_type_concept_id ? proc.procedure_type_concept_id : "N/A"}</td>
+            <td class="px-4 py-2 border-b">{proc.procedure_date}</td>
+            <td class="px-4 py-2 border-b">{proc.procedure_source_value}</td>
             <td class="px-4 py-2 border-b">{proc.quantity}</td>
           </tr>
         {/each}
