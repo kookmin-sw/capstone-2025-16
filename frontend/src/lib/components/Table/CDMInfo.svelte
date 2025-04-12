@@ -13,7 +13,7 @@
       <span class="info"><strong>Concept ID:</strong> {visitOccurrence[0].visit_concept_id}</span>
     </div>
     <div class="care-info">
-      <span class="info"><strong>Care Site:</strong> <span class="highlight">{careSite.care_site_name}</span></span>
+      <span class="info"><strong>Care Site:</strong> {careSite.care_site_name}</span>
       <span class="info"><strong>Address:</strong> {location.address_1}, {location.address_2} / {location.zip}</span>
     </div>
   </div>
@@ -68,10 +68,5 @@
       flex-direction: column;
       align-items: flex-start;
     }
-  }
-
-  .highlight {
-    color: #2563eb; /* Tailwind text-blue-600 */
-    font-weight: bold;
   }
 </style>
