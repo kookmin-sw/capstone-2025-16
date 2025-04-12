@@ -9,10 +9,7 @@ import { Kysely } from "kysely";
 import { Database } from "../../db/types";
 
 export const getQuery = (db: Kysely<Database>, a: DeathFilter) => {
-  let query = db
-    .selectFrom("death")
-    .select("death.person_id as person_id")
-    .leftJoin("person", "death.person_id", "person.person_id");
+  let query = db.selectFrom("death").select("death.person_id as person_id");
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -23,21 +20,31 @@ export const getQuery = (db: Kysely<Database>, a: DeathFilter) => {
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "death.death_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "death.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "death.death_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    query = joinedQuery;
   }
 
   if (a.date) {

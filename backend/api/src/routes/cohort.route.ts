@@ -18,23 +18,23 @@ const router = Router();
 // GET /cohort - 코호트 리스트 출력
 router.get("/", getCohorts);
 
-// GET /cohort/:cohort_id - 특정 코호트 person_id 리스트 출력
-router.get("/:cohort_id", validateParams(CohortIdParamDto), getCohortDetails);
+// GET /cohort/:cohortId - 특정 코호트 person_id 리스트 출력
+router.get("/:cohortId", validateParams(CohortIdParamDto), getCohortDetails);
 
 // POST /cohort - 코호트 생성
 router.post("/", validateBody(CreateCohortRequestDto), createNewCohort);
 
-// PUT /cohort/:cohort_id - 코호트 수정
+// PUT /cohort/:cohortId - 코호트 수정
 router.put(
-  "/:cohort_id",
+  "/:cohortId",
   validateParams(CohortIdParamDto),
   validateBody(UpdateCohortRequestDto),
   updateExistingCohort
 );
 
-// DELETE /cohort/:cohort_id - 코호트 삭제
+// DELETE /cohort/:cohortId - 코호트 삭제
 router.delete(
-  "/:cohort_id",
+  "/:cohortId",
   validateParams(CohortIdParamDto),
   removeExistingCohort
 );

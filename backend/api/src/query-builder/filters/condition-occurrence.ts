@@ -23,18 +23,7 @@ export const getQuery = (
         "condition_occurrence.person_id",
         "condition_occurrence.condition_start_date"
       ),
-    ])
-    .leftJoin("person", "condition_occurrence.person_id", "person.person_id")
-    .leftJoin(
-      "visit_occurrence",
-      "condition_occurrence.visit_occurrence_id",
-      "visit_occurrence.visit_occurrence_id"
-    )
-    .leftJoin(
-      "provider",
-      "condition_occurrence.provider_id",
-      "provider.provider_id"
-    );
+    ]);
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -45,21 +34,32 @@ export const getQuery = (
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "condition_occurrence.condition_start_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "condition_occurrence.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "condition_occurrence.condition_start_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.conditionStatus) {
@@ -95,11 +95,20 @@ export const getQuery = (
   }
 
   if (a.visitType) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "visit_occurrence",
+      "condition_occurrence.visit_occurrence_id",
+      "visit_occurrence.visit_occurrence_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "visit_occurrence.visit_concept_id",
       a.visitType
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.source) {
@@ -112,11 +121,20 @@ export const getQuery = (
   }
 
   if (a.providerSpecialty) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "provider",
+      "condition_occurrence.provider_id",
+      "provider.provider_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "provider.specialty_concept_id",
       a.providerSpecialty
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.first) {
