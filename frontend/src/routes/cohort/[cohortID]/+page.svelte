@@ -18,8 +18,7 @@
     const tabs = [
 		{ key: 'definition', label: 'Definition' },
 		{ key: 'features', label: 'Features' },
-		{ key: 'default', label: 'Default Chart' },
-		{ key: 'customizable', label: 'Customizable Chart' },
+		{ key: 'charts', label: 'Charts' },
 	];
 
     let isTableView = $state({
@@ -224,7 +223,7 @@
     {/if}
 
 
-    {#if activeTab == 'default'}
+    {#if activeTab == 'charts'}
         <div class="w-full">
             <div class="grid grid-cols-6 gap-4">
                 <ChartCard
@@ -459,11 +458,6 @@
         </div>
     {/if}
 
-    {#if activeTab == 'customizable'}
-        <div class="p-6">
-            customizable tab 화면
-        </div>
-    {/if}
 </div>
 
 <Footer />
