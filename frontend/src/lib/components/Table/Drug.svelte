@@ -23,7 +23,7 @@
     <table class="drug-table w-full border border-gray-200 text-sm text-left">
       <thead class="bg-gray-100">
         <tr>
-          <th class="px-4 py-2 border-b">Drug Exposure ID</th>
+          <th class="px-4 py-2 border-b">Drug Concept ID</th>
           <th class="px-4 py-2 border-b">Exposure Period</th>
           <th class="px-4 py-2 border-b">Quantity</th>
           <th class="px-4 py-2 border-b">Days Supply</th>
@@ -32,7 +32,7 @@
       <tbody>
         {#each drugExposure as exposure}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{exposure.drug_exposure_id}</td>
+            <td class="px-4 py-2 border-b">{exposure.drug_concept_id}</td>
             <td class="px-4 py-2 border-b">
               {exposure.drug_exposure_start_date} ~ {exposure.drug_exposure_end_date}
             </td>
