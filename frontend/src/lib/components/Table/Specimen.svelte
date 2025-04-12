@@ -9,19 +9,17 @@
     <table class="specimen-table w-full border border-gray-200 text-sm text-left mb-6">
       <thead class="bg-gray-100">
         <tr>
-          <th class="px-4 py-2 border-b">Date</th>
           <th class="px-4 py-2 border-b">Concept ID</th>
-          <th class="px-4 py-2 border-b">Quantity</th>
-          <th class="px-4 py-2 border-b">Unit Concept ID</th>
+          <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Value</th>
         </tr>
       </thead>
       <tbody>
         {#each specimen as spec}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{spec.specimen_date}</td>
             <td class="px-4 py-2 border-b">{spec.specimen_concept_id}</td>
-            <td class="px-4 py-2 border-b">{spec.quantity}</td>
-            <td class="px-4 py-2 border-b">{spec.unit_concept_id}</td>
+            <td class="px-4 py-2 border-b">{spec.specimen_date}</td>
+            <td class="px-4 py-2 border-b">{spec.specimen_source_value}</td>
           </tr>
         {/each}
       </tbody>
