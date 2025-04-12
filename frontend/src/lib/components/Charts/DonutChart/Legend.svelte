@@ -39,7 +39,7 @@
             on:mouseleave={() => hoveredLabel = null}
         >
             <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {colorScale(label)}"></div>
-            <span class="text-sm whitespace-nowrap">
+            <span class="text-xs whitespace-nowrap">
                 {label}
             </span>
         </div>
@@ -48,11 +48,11 @@
 
 <style>
     .legend-container {
-        max-width: 100%;  /* 컨테이너 최대 너비 제한 */
+        max-width: 100%;
     }
 
     .legend-item {
-        padding: 0.25rem 0.5rem;
+        padding: 0.025rem 0.5rem;
         border-radius: 1rem;
     }
 

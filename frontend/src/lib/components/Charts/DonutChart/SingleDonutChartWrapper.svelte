@@ -7,8 +7,8 @@
     let hoveredLabel = null;
 </script>
 
-<div class="flex flex-col items-center justify-center h-full">
-    <div class="flex-1 flex items-center justify-center">
+<div class="flex flex-col items-center justify-start h-full">
+    <div class="flex items-center justify-center">
         <DonutChart 
             {data}
             {hoveredLabel}
@@ -16,7 +16,9 @@
             height={200}
         />
     </div>
-    <Legend {data} bind:hoveredLabel />
+    <div class="w-full">
+        <Legend {data} bind:hoveredLabel />
+    </div>
 </div>
 
 <style>

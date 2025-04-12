@@ -1,4 +1,4 @@
-import cohort_json_schema as cohort_json_schema
+import cohort_json_schema  
 import fitz  # pymupdf
 import os
 from clickhouse_driver import Client
@@ -38,7 +38,7 @@ def search_concept_ids(keywords):
         query = """
         SELECT concept_id, concept_name, domain_id
         FROM concept
-        WHERE lower(concept_name) LIKE lower(%({keyword})s)
+        WHERE lower(concept_name) LIKE lower(%(keyword)s)
         LIMIT 10
         """
         res = clickhouse.execute(query, {'keyword': f'%{keyword.strip().replace("%", "%%")}%'})
@@ -66,7 +66,6 @@ llm = ChatOpenAI(
 )
 
 # 0. [추가] Atlas 기반 코호트 관련성 필터 체인
-# PDF 전체 텍스트에서 측정 가능하고 관찰 가능한 eligibility criteria(아틀라스 기반 코호트 구성에 필요한 내용)만 선별
 prompt_atlas_filter = PromptTemplate(
     input_variables=["pdf_text"],
     template="""
@@ -159,7 +158,9 @@ A valid OMOP CDM JSON structure including "entry", "inclusion" with "and"/"not" 
 keyword_chain = LLMChain(llm=llm, prompt=prompt_keywords)
 
 # (3) 최종 JSON 생성
-cohort_schema = {cohort_json_schema.JSON_SCHEMA}
+# cohort_json_schema.py 파일에 정의된 OMOP CDM JSON 스키마를 변수에 할당 (문자열 또는 dict 형태)
+omop_cdm_schema = cohort_json_schema.JSON_SCHEMA
+
 prompt_json = PromptTemplate(
     input_variables=["criteria", "concept_list", "schema"],
     template="""
@@ -204,7 +205,9 @@ def run_pipeline(pdf_path):
     keyword_text = keyword_chain.invoke({"criteria_text": criteria_text})
     print("\n[키워드 추출 결과]")
     print(keyword_text)
-    keywords = [k.strip() for k in keyword_text.split(",")]
+    
+    # 추출된 키워드를 쉼표로 구분하여 리스트로 변환
+    keywords = [k.strip() for k in keyword_text.split(",") if k.strip()]
 
     # ClickHouse에서 해당 키워드에 해당하는 concept_id 검색
     concept_list = search_concept_ids(keywords)
@@ -216,7 +219,7 @@ def run_pipeline(pdf_path):
     json_result = json_chain.invoke({
         "criteria": criteria_text,
         "concept_list": concept_list,
-        "schema": cohort_schema
+        "schema": omop_cdm_schema
     })
 
     print("\n[최종 JSON 결과]")

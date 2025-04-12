@@ -14,7 +14,8 @@
   import { transformTopTenData } from "$lib/components/Charts/StackedBarChart/topTenChartTransformer.js";
   import StackedBarChartWrapper from "$lib/components/Charts/StackedBarChart/StackedBarChartWrapper.svelte";
   import StackedBarChartTableView from "$lib/components/Charts/StackedBarChart/StackedBarChartTableView.svelte";
-  
+  import Footer from '$lib/components/Footer.svelte';
+
   // 코호트 데이터
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
@@ -531,9 +532,9 @@
       </div>
     </div>
 
-    <!-- 차트 그리드 -->
-    <div class="flex-1 overflow-y-auto p-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- 차트 그리드 및 Footer -->
+    <div class="flex-1 overflow-y-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 p-6">
         {#if selectItems[0].checked}
           <ChartCard 
             title="Gender Ratio" 
@@ -858,8 +859,8 @@
           </ChartCard>
         {/if}
       </div>
+      <Footer />
     </div>
   </div>
 </div>
-
 <svelte:window on:click={handleClickOutside} /> 

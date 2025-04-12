@@ -1,11 +1,12 @@
 import { Kysely, PostgresDialect } from "kysely";
-import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
+import { ClickhouseDialect } from "./dialects/clickhouse";
 
 export interface Database {
   codesets: Codesets; // temp table
-  temp_cohort: Cohort; // temp table
+  temp_cohort_detail: CohortDetail; // temp table
 
   cohort: Cohort;
+  cohort_detail: CohortDetail;
 
   condition_era: ConditionEra;
   drug_era: DrugEra;
@@ -36,8 +37,17 @@ export interface Database {
 }
 
 export const db = new Kysely<Database>({
-  dialect: new ClickhouseDialect(),
-  // dialect: new PostgresDialect(undefined as any),
+  dialect:
+    process.env.DB_TYPE === "clickhouse" || !process.env.DB_TYPE
+      ? new ClickhouseDialect({
+          options: {
+            url: `http://${process.env.DB_HOST}:${process.env.DB_PORT}`,
+            username: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+          },
+        })
+      : new PostgresDialect(undefined as any),
 });
 
 // id should be string (bigint)
@@ -49,9 +59,17 @@ export interface Codesets {
 
 export interface Cohort {
   cohort_id: string;
+  name: string;
+  description: string;
+  author: string;
+  created_at: string;
+  updated_at: string;
+  cohort_definition: string;
+}
+
+export interface CohortDetail {
+  cohort_id: string;
   person_id: string;
-  start_date: string;
-  end_date: string;
 }
 
 export interface ConditionEra {

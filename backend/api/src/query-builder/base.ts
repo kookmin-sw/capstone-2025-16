@@ -6,6 +6,9 @@ import {
   SelectQueryBuilder,
   StringReference,
   expressionBuilder,
+  TableExpression,
+  JoinReferenceExpression,
+  SelectQueryBuilderWithLeftJoin,
 } from "kysely";
 import {
   IdentifierWithOperator,
@@ -15,6 +18,8 @@ import {
   Identifier,
 } from "../types/type";
 import { PartitionByExpression } from "kysely/dist/cjs/parser/partition-by-parser";
+import { Database } from "../db/types";
+import { Kysely } from "kysely";
 import { db } from "../db/types";
 
 export const getBaseDB = () => {
@@ -28,6 +33,7 @@ export const getExpressionBuilder = <DB, TB extends keyof DB, O>(
 };
 
 export const handleConceptSet = <DB, TB extends keyof DB, O>(
+  db: Kysely<Database>,
   query: SelectQueryBuilder<DB, TB, O>,
   column: StringReference<DB, TB>,
   conceptSet: Identifier

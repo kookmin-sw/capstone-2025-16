@@ -1,6 +1,5 @@
 import { DrugExposureFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -9,52 +8,57 @@ import {
   handleStringWithOperator,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: DrugExposureFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
+  let query = db
     .selectFrom("drug_exposure")
     .select(({ fn }) => [
       "drug_exposure.person_id as person_id",
-      "drug_exposure.drug_exposure_start_date as start_date",
-      "drug_exposure.drug_exposure_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
         "drug_exposure.person_id",
         "drug_exposure.drug_exposure_start_date"
       ),
-    ])
-    .leftJoin("person", "drug_exposure.person_id", "person.person_id")
-    .leftJoin(
-      "visit_occurrence",
-      "drug_exposure.visit_occurrence_id",
-      "visit_occurrence.visit_occurrence_id"
-    )
-    .leftJoin("provider", "drug_exposure.provider_id", "provider.provider_id");
+    ]);
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "drug_exposure.drug_concept_id",
       a.conceptset
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "drug_exposure.drug_exposure_start_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "drug_exposure.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "drug_exposure.drug_exposure_start_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.startDate) {
@@ -82,11 +86,20 @@ export const getQuery = (a: DrugExposureFilter) => {
   }
 
   if (a.visitType) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "visit_occurrence",
+      "drug_exposure.visit_occurrence_id",
+      "visit_occurrence.visit_occurrence_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "visit_occurrence.visit_concept_id",
       a.visitType
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.stopReason) {
@@ -152,6 +165,7 @@ export const getQuery = (a: DrugExposureFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "drug_exposure.drug_source_concept_id",
       a.source
@@ -159,18 +173,27 @@ export const getQuery = (a: DrugExposureFilter) => {
   }
 
   if (a.providerSpecialty) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "provider",
+      "drug_exposure.provider_id",
+      "provider.provider_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "provider.specialty_concept_id",
       a.providerSpecialty
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_drug_exposure"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

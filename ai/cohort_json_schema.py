@@ -1,816 +1,597 @@
+JSON_INPUT_EXAMPLE = """
+Input Text Example:
+3.1. Inclusion criteria  
+Patients who are 20 years old or older.
+Patients with hemodialysis.
+Patients using ESA therapy for at least three months.
+Patients with iron deficiency anemia.
+
+3.2. Exclusion criteria  
+Patients in intensive care unit.  
+Patients with hemoglobin value more than 13 g/dL.  
+Kidney transplant patients.  
+Patients with sepsis or active infections.
+"""
+
 JSON_OUTPUT_EXAMPLE = """
-{
-  "PrimaryCriteria": {
-    "CriteriaList": [
-      {
-        "CriteriaType": "ProcedureOccurrence",
-        "ConceptName": "hemodialysis",
-        "ProcedureOccurrence": {}
-      }
-    ],
-    "PrimaryCriteriaLimit": {
-      "Type": 0,
-      "Count": 1
+다음은 주어진 임상시험 텍스트를 바탕으로 OMOP CDM 규격에 맞게 구성된 최종 JSON 예시입니다:
+
+const cohortExample: CohortDefinition = {
+  conceptsets: [
+    {
+      conceptset_id: "0",
+      name: "Hemodialysis",
+      items: []
     }
-  },
-  "AdditionalCriteria": {
-    "Type": "ALL",
-    "CriteriaList": [],
-    "DemographicCriteriaList": [],
-    "Groups": [
-      {
-        "Type": "ALL",
-        "CriteriaList": [
-          {
-            "Criteria": {
-              "CriteriaType": "ObservationPeriod",
-              "AgeAtStart": {
-                "Value": 18,
-                "Op": "gte"
-              },
-              "ObservationPeriod": {}
+    // 추가 conceptset 항목이 있으면 여기에 추가합니다.
+  ],
+  cohort: [
+    {
+      // Group 1: Inclusion Criteria
+      containers: [
+        {
+          name: "hemodialysis",
+          filters: [
+            {
+              type: "procedure_occurrence",
+              first: true,
+              conceptset: "0",
+              age: { gte: 20 }
             }
-          },
-          {
-            "Criteria": {
-              "CriteriaType": "DrugExposure",
-              "ConceptName": "erythropoiesis stimulating agent",
-              "DrugExposure": {}
+          ]
+        },
+        {
+          operator: "AND",
+          name: "ESA therapy",
+          filters: [
+            {
+              type: "drug_exposure",
+              first: true,
+              conceptset: "1"
             }
-          },
-          {
-            "Criteria": {
-              "CriteriaType": "ConditionOccurrence",
-              "ConceptName": "iron deficiency anemia",
-              "ConditionOccurrence": {}
+          ]
+        },
+        {
+          operator: "AND",
+          name: "iron deficiency anemia",
+          filters: [
+            {
+              type: "condition_era",
+              first: true,
+              conceptset: "2"
             }
-          }
-        ],
-        "DemographicCriteriaList": [],
-        "Groups": []
-      },
-      {
-        "Type": "NONE",
-        "CriteriaList": [
-          {
-            "Criteria": {
-              "CriteriaType": "VisitOccurrence",
-              "ConceptName": "intensive care unit",
-              "VisitOccurrence": {}
+          ]
+        }
+      ]
+    },
+    {// Group 2: Demographic Criteria
+      containers: [
+        {
+          name: "age",
+          filters: [
+            {
+              type: "demographic",
+              first: true,
+              age: { gte: 20 }
             }
-          },
-          {
-            "Criteria": {
-              "CriteriaType": "Measurement",
-              "ConceptName": "hemoglobin",
-              "Measurement": {},
-              "ValueAsNumber": {
-                "Value": 13,
-                "Op": "gt"
-              }
+          ]
+        }
+      ]
+    },
+    {
+      // Group 3: Exclusion Criteria
+      not: true,
+      containers: [
+        {
+          name: "intensive care unit",
+          filters: [
+            {
+              type: "observation",
+              first: true,
+              conceptset: "3"
             }
-          },
-          {
-            "Criteria": {
-              "CriteriaType": "ProcedureOccurrence",
-              "ConceptName": "kidney transplant",
-              "ProcedureOccurrence": {}
+          ]
+        },
+        {
+          operator: "AND",
+          name: "hemoglobin > 13 g/dL",
+          filters: [
+            {
+              type: "measurement",
+              first: true,
+              measurementType: { eq: "234567" },
+              valueAsNumber: { gt: 13 },
+              conceptset: "4"
             }
-          },
-          {
-            "Criteria": {
-              "CriteriaType": "ConditionOccurrence",
-              "ConceptName": "sepsis",
-              "ConditionOccurrence": {}
+          ]
+        },
+        {
+          operator: "AND",
+          name: "kidney transplant",
+          filters: [
+            {
+              type: "procedure_occurrence",
+              first: true,
+              conceptset: "5"
             }
-          }
-        ],
-        "DemographicCriteriaList": [],
-        "Groups": []
-      }
-    ]
-  },
-  "ConceptSets": [],
-  "EndStrategy": {
-    "DateField": "EndDate",
-    "Offset": 0
-  },
-  "cdmVersionRange": ">=5.0.0",
-  "includeAllDescendants": true,
-  "includedCovariateConceptIds": [],
-  "CensoringCriteria": [],
-  "InclusionRules": [],
-  "CollapseSettings": {
-    "CollapseType": "ERA",
-    "EraPad": 0
-  }
-}
+          ]
+        },
+        {
+          operator: "AND",
+          name: "sepsis or active infections",
+          filters: [
+            {
+              type: "condition_era",
+              first: true,
+              conceptset: "6"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
 """
 
 JSON_SCHEMA = """
 The following is the required JSON format to be returned.
-/*******************************************************************************
- * Copyright 2025 Observational Health Data Sciences and Informatics
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * 특정 값을 필터링하기 위한 일반적인 비교 연산자를 나타냅니다.
  *
- * Authors: Christopher Knoll, Gowtham Rao
- ******************************************************************************/
-
-import { ConceptSet } from './ConceptSet';
-
-export enum CollapseType {
-  ERA = "ERA",
-  NONE = "NONE"
+ * - `Operator<T>` 내의 모든 조건은 AND 로직으로 결합됩니다.
+ *   예시:
+ *   `{ gt: 1, lt: 3 }` → `(VALUE > 1 AND VALUE < 3)`
+ *
+ * - 특정 조건에 배열(`T[]`)이 제공되면, OR 조건으로 처리됩니다.
+ *   예시:
+ *   `{ gt: [1, 5] }` → `(VALUE > 1 OR VALUE > 5)`
+ */
+export interface Operator<T> {
+  neq?: T | T[];
+  eq?: T | T[];
+  gt?: T | T[];
+  gte?: T | T[];
+  lt?: T | T[];
+  lte?: T | T[];
 }
 
-export class CollapseSettings {
-  EraPad: number = 0;
-  CollapseType: CollapseType = CollapseType.ERA;
+/**
+ * 문자열을 대상으로 하는 필터링 연산을 나타냅니다.
+ *
+ * - `StringOperator` 내의 조건들은 AND 로직으로 결합됩니다.
+ * - 배열이 주어진 조건은 OR 조건으로 처리됩니다.
+ *
+ * 예시:
+ * `{ startsWith: ["a", "b"], endsWith: ["c", "d"] }`
+ * → `((VALUE LIKE "a%" OR VALUE LIKE "b%") AND (VALUE LIKE "%c" OR VALUE LIKE "%d"))`
+ */
+export interface StringOperator {
+  neq?: string | string[];
+  eq?: string | string[];
+  startsWith?: string | string[];
+  endsWith?: string | string[];
+  contains?: string | string[];
 }
 
-export class NumericRange {
-  Value: number = 0;
-  Op: string = "gt";
-  Extent?: number;
-  // Add these for compatibility with Window.Endpoint
-  Days?: number;
-  Coeff?: number;
+export type Identifier = string;
+
+export interface IdentifierOperator {
+  neq?: Identifier | Identifier[];
+  eq?: Identifier | Identifier[];
 }
 
-export class TextFilter {
-  Text: string = "";
-  Op: string = "contains";
+/**
+ * 숫자(정수/실수) 관련 연산자를 나타냅니다.
+ */
+export type NumberWithOperator = number | Operator<number>;
+
+/**
+ * 식별자(string) 관련 연산자를 나타냅니다.
+ */
+export type IdentifierWithOperator = Identifier | IdentifierOperator;
+
+/**
+ * 날짜(문자열) 관련 연산자를 나타냅니다.
+ */
+export type DateWithOperator = string | Operator<string>;
+
+/**
+ * 문자열 관련 연산자를 나타냅니다.
+ */
+export type StringWithOperator = string | StringOperator;
+
+export interface BaseContainer {
+  name: string;
+  filters: Filter[];
 }
 
-export class Period {
-  StartDate: Date = new Date();
-  EndDate: Date = new Date();
+export interface FirstContainer extends BaseContainer {}
+
+export interface SubsequentContainer extends BaseContainer {
+  operator: "AND" | "OR" | "NOT";
 }
 
-export class DateRange {
-  StartDate?: Date;
-  EndDate?: Date;
-  
-  // Add these for compatibility with old code
-  Value?: string | Date;
-  Extent?: string | Date;
-  Op?: string;
+export interface BaseGroup {
+  containers: [FirstContainer, ...SubsequentContainer[]];
 }
 
-export class Window {
-  Start: NumericRange | null = null;
-  End: NumericRange | null = null;
-  UseIndexEnd: boolean = false;
-  UseEventEnd: boolean = false;
-  // Properties for ObservationFilter compatibility
-  ObservationTypeExclude?: boolean = false;
-  ObservationType?: number[] = [];
-  // Properties to bridge namespace usage
-  PriorDays?: number;
-  PostDays?: number;
+export interface FirstGroup extends BaseGroup {
+  mergeByPersonId?: boolean;
 }
 
-export class DateOffsetStrategy {
-  DateField: string = "";
-  Offset: number = 0;
+export interface SubsequentGroup extends BaseGroup {
+  not: boolean | undefined | null;
 }
 
-export class DateAdjustment {
-  StartOffset: number = 0;
-  EndOffset: number = 0;
+export type Cohort = [FirstGroup, ...SubsequentGroup[]];
+
+export type Concept = {
+  concept_id: Identifier;
+  concept_name: string;
+  domain_id: string;
+  vocabulary_id: string;
+  concept_class_id: string;
+  standard_concept: string;
+  concept_code: string;
+  valid_start_date: string;
+  valid_end_date: string;
+  invalid_reason: string;
+
+  isExcluded?: boolean;
+  includeDescendants?: boolean;
+  includeMapped?: boolean;
+};
+
+export interface ConceptSet {
+  id: Identifier;
+  name: string;
+  items: Concept[];
 }
 
-export class EndStrategy {
-  DateField?: string;
-  Offset?: number;
+export interface CohortDefinition {
+  conceptsets?: ConceptSet[];
+  cohort: Cohort;
 }
 
-export class CustomEraStrategy extends EndStrategy {
-  DrugCodesetId: number = 0;
-  GapDays: number = 0;
-  Offset: number = 0;
+/**
+ * 도메인 타입에 따른 필터 맵핑입니다.
+ */
+export type FilterMap = {
+  condition_era: ConditionEraFilter;
+  condition_occurrence: ConditionOccurrenceFilter;
+  death: DeathFilter;
+  device_exposure: DeviceExposureFilter;
+  dose_era: DoseEraFilter;
+  drug_era: DrugEraFilter;
+  drug_exposure: DrugExposureFilter;
+  measurement: MeasurementFilter;
+  observation: ObservationFilter;
+  observation_period: ObservationPeriodFilter;
+  procedure_occurrence: ProcedureOccurrenceFilter;
+  specimen: SpecimenFilter;
+  visit_occurrence: VisitOccurrenceFilter;
+  demographic: DemographicFilter;
+};
+
+/**
+ * 각 도메인 타입을 FilterMap의 키 값으로부터 추출합니다.
+ */
+export type DomainType = keyof FilterMap;
+
+/**
+ * 모든 가능한 필터 타입을 정의합니다.
+ */
+export type Filter = {
+  [K in DomainType]: { type: K } & FilterMap[K];
+}[DomainType];
+
+/**
+ * condition_era 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface ConditionEraFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  startAge?: NumberWithOperator;
+  endAge?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  conditionCount?: NumberWithOperator;
+  length?: NumberWithOperator;
 }
 
-export class ConceptSetSelection {
-  Min: number = 1;
-  Max: number = 1;
-  CodesetId?: number;
+/**
+ * condition_occurrence 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface ConditionOccurrenceFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  conditionStatus?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  conditionType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  //stopReason?: StringWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
-export class Occurrence {
-  Type: number = 0;  // 0: exactly, 1: at least, 2: at most
-  Count: number = 0;
-  IsDistinct: boolean = false;
+/**
+ * death 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface DeathFilter {
+  conceptset?: Identifier;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  date?: DateWithOperator;
+  deathType?: IdentifierWithOperator;
+  cause?: NumberWithOperator;
 }
 
-import { ConditionEraProperties, ConditionOccurrenceProperties, DrugExposureProperties, DrugEraProperties } from './Criteria';
-
-export class Criteria {
-  CriteriaType?: string = null;
-  CriteriaName: string = "";
-  Domain?: string = null;
-  CodesetId?: number = null;
-  OccurrenceStartDate?: any;
-  OccurrenceEndDate?: any;
-  FirstOccurrenceOnly?: boolean = false;
-  DateAdjustment?: DateAdjustment = null;
-  
-  // First property for history checks
-  First?: boolean = false;
-  
-  // Domain-specific nested properties
-  ConditionEra?: ConditionEraProperties;
-  ConditionOccurrence?: ConditionOccurrenceProperties;
-  DrugExposure?: DrugExposureProperties;
-  DrugEra?: DrugEraProperties;
-  
-  // ConditionOccurrence
-  ConditionTypeExclude?: boolean;
-  ConditionType?: number[];
-  ConditionSourceConcept?: number;
-  ConditionStatus?: number[];
-  ConditionStatusExclude?: boolean;
-  StopReason?: TextFilter;
-  
-  // Death
-  DeathDate?: any;
-  DeathType?: number[];
-  DeathTypeExclude?: boolean;
-  
-  // DeviceExposure
-  DeviceType?: number[];
-  DeviceTypeExclude?: boolean;
-  UniqueDeviceId?: TextFilter;
-  Quantity?: NumericRange;
-  DeviceSourceConcept?: number;
-  
-  // DoseEra
-  DoseValue?: NumericRange;
-  UnitConceptId?: number;
-  EraStartDate?: any;
-  EraEndDate?: any;
-  
-  // DrugExposure
-  DrugType?: number[];
-  DrugTypeExclude?: boolean;
-  Refills?: NumericRange;
-  DaysSupply?: NumericRange;
-  Route?: number[];
-  RouteExclude?: boolean;
-  EffectiveDrugDose?: NumericRange;
-  DoseUnit?: number[];
-  DoseUnitExclude?: boolean;
-  LotNumber?: TextFilter;
-  DrugSourceConcept?: number;
-  
-  // DrugEra
-  EraLength?: NumericRange;
-  OccurrenceCount?: NumericRange;
-  GapDays?: NumericRange;
-  
-  // Measurement
-  MeasurementType?: number[];
-  MeasurementTypeExclude?: boolean;
-  Operator?: number[];
-  OperatorExclude?: boolean;
-  Value?: any;
-  ValueAsNumber?: NumericRange;
-  ValueAsString?: TextFilter;
-  ValueAsConcept?: number[];
-  ValueAsConceptExclude?: boolean;
-  Unit?: number[];
-  UnitExclude?: boolean;
-  MeasurementSourceConcept?: number;
-  RangeLow?: number;
-  RangeHigh?: number;
-  RangeLowRatio?: number;
-  RangeHighRatio?: number;
-  
-  // Observation
-  ObservationType?: number[];
-  ObservationTypeExclude?: boolean;
-  Qualifier?: TextFilter;
-  ValueAsDateTime?: any;
-  ObservationSourceConcept?: number;
-  
-  // ObservationPeriod
-  AgeAtStart?: NumericRange;
-  AgeAtEnd?: NumericRange;
-  UserDefinedPeriod?: boolean = false;
-  PeriodStartDate?: any;
-  PeriodEndDate?: any;
-  PeriodType?: number[];
-  PeriodTypeExclude?: boolean;
-  PeriodLength?: number;
-  
-  // ProcedureOccurrence
-  ProcedureType?: number[];
-  ProcedureTypeExclude?: boolean;
-  Modifier?: TextFilter;
-  ProcedureQuantity?: NumericRange;
-  ProcedureSourceConcept?: number;
-  
-  // Specimen
-  SpecimenType?: number[];
-  SpecimenTypeExclude?: boolean;
-  SpecimenUnit?: number[];
-  SpecimenUnitExclude?: boolean;
-  AnatomicSite?: number[];
-  AnatomicSiteExclude?: boolean;
-  DiseaseStatus?: number[];
-  DiseaseStatusExclude?: boolean;
-  SpecimenSourceConcept?: number;
-  SourceId?: string;
-  
-  // VisitOccurrence & VisitDetail
-  VisitType?: number[];
-  VisitTypeExclude?: boolean;
-  VisitLength?: NumericRange;
-  VisitSourceConcept?: number;
-  VisitDetailStartDate?: any;
-  VisitDetailEndDate?: any;
-  VisitDetailLength?: number;
-  VisitDetailSourceConcept?: number;
-  
-  // Additional Shared Properties
-  Age?: NumericRange;
-  Gender?: number[];
-  GenderExclude?: boolean;
-  Race?: number[];
-  RaceExclude?: boolean;
-  Ethnicity?: number[];
-  EthnicityExclude?: boolean;
-  
-  // PayerPlanPeriod
-  PayerPlanPeriodStartDate?: any;
-  PayerPlanPeriodEndDate?: any;
-  PayerConcept?: number;
-  PayerSourceConcept?: number;
-  PlanConcept?: number;
-  PlanSourceConcept?: number;
-  SponsorConcept?: number;
-  SponsorSourceConcept?: number;
-  StopReasonConcept?: number;
-  StopReasonSourceConcept?: number;
-  Payer?: TextFilter;
-  Plan?: TextFilter;
-  Sponsor?: TextFilter;
-  TerminationReason?: TextFilter;
-  
-  // LocationRegion
-  RegionConcept?: number;
-  RegionSourceConcept?: number;
-  StartDate?: any;
-  EndDate?: any;
-  
-  // For conceptset selections
-  VisitDetailTypeCS?: ConceptSetSelection;
-  GenderCS?: ConceptSetSelection;
-  ProviderSpecialtyCS?: ConceptSetSelection;
-  PlaceOfServiceCS?: ConceptSetSelection;
-  
-  // For correlated criteria
-  CorrelatedCriteria?: any;
+/**
+ * device_exposure 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface DeviceExposureFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  deviceType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  uniqueDeviceId?: StringWithOperator;
+  quantity?: NumberWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
-export class ConditionOccurrence extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "ConditionOccurrence";
-    this.CriteriaName = "Condition Occurrence";
-    this.Domain = "condition";
-  }
+/**
+ * dose_era 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface DoseEraFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  startAge?: NumberWithOperator;
+  endAge?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  doseUnit?: IdentifierWithOperator;
+  length?: NumberWithOperator;
+  doseValue?: NumberWithOperator;
 }
 
-export class ConditionEra extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "ConditionEra";
-    this.CriteriaName = "Condition Era";
-    this.Domain = "condition";
-  }
+/**
+ * drug_era 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface DrugEraFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  startAge?: NumberWithOperator;
+  endAge?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  length?: NumberWithOperator;
+  eraExposureCount?: NumberWithOperator;
 }
 
-export class Death extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "Death";
-    this.CriteriaName = "Death";
-    this.Domain = "death";
-  }
+/**
+ * drug_exposure 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface DrugExposureFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  drugType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  stopReason?: StringWithOperator;
+  refill?: NumberWithOperator;
+  quantity?: NumberWithOperator;
+  daysSupply?: NumberWithOperator;
+  routeType?: IdentifierWithOperator;
+  effectiveDose?: NumberWithOperator;
+  doseUnit?: NumberWithOperator;
+  lotNumber?: StringWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
-export class DeviceExposure extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "DeviceExposure";
-    this.CriteriaName = "Device Exposure";
-    this.Domain = "device";
-  }
+/**
+ * measurement 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface MeasurementFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  date?: DateWithOperator;
+  measurementType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  operatorType?: IdentifierWithOperator;
+  valueAsNumber?: NumberWithOperator;
+  valueAsConcept?: IdentifierWithOperator;
+  unitType?: IdentifierWithOperator;
+  abnormal?: boolean;
+  rangeLow?: NumberWithOperator;
+  rangeHigh?: NumberWithOperator;
+  //rangeLowRatio?: NumberWithOperator;
+  //rangeHighRatio?: NumberWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
+  source?: IdentifierWithOperator;
 }
 
-export class DoseEra extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "DoseEra";
-    this.CriteriaName = "Dose Era";
-    this.Domain = "drug";
-  }
+/**
+ * observation 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface ObservationFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  date?: DateWithOperator;
+  observationType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  valueAsNumber?: NumberWithOperator;
+  valueAsString?: StringWithOperator;
+  valueAsConcept?: IdentifierWithOperator;
+  qualifierType?: IdentifierWithOperator;
+  unitType?: IdentifierWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
-export class DrugEra extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "DrugEra";
-    this.CriteriaName = "Drug Era";
-    this.Domain = "drug";
-  }
+/**
+ * observation_period 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface ObservationPeriodFilter {
+  first?: boolean;
+  startAge?: NumberWithOperator;
+  endAge?: NumberWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  //periodType?: BigIntWithOperator;
+  length?: NumberWithOperator;
 }
 
-export class DrugExposure extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "DrugExposure";
-    this.CriteriaName = "Drug Exposure";
-    this.Domain = "drug";
-  }
+/**
+ * procedure_occurrence 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface ProcedureOccurrenceFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  procedureType?: IdentifierWithOperator;
+  visitType?: IdentifierWithOperator;
+  modifierType?: IdentifierWithOperator;
+  quantity?: NumberWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
 }
 
-export class Measurement extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "Measurement";
-    this.CriteriaName = "Measurement";
-    this.Domain = "measurement";
-  }
+/**
+ * specimen 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface SpecimenFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  date?: DateWithOperator;
+  specimenType?: IdentifierWithOperator;
+  quantity?: NumberWithOperator;
+  unitType?: IdentifierWithOperator;
+  anatomicSiteType?: IdentifierWithOperator;
+  diseaseStatus?: IdentifierWithOperator;
+  //source?: StringWithOperator;
 }
 
-export class Observation extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "Observation";
-    this.CriteriaName = "Observation";
-    this.Domain = "observation";
-  }
+/**
+ * visit_occurrence 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface VisitOccurrenceFilter {
+  conceptset?: Identifier;
+  first?: boolean;
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  visitType?: IdentifierWithOperator;
+  length?: NumberWithOperator;
+  source?: IdentifierWithOperator;
+  providerSpecialty?: IdentifierWithOperator;
+  placeOfService?: NumberWithOperator;
+  //location?: NumberWithOperator;
 }
 
-export class ObservationPeriod extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "ObservationPeriod";
-    this.CriteriaName = "Observation Period";
-    this.Domain = "observation_period";
-  }
+/**
+ * demographic 도메인에 대한 필터 인터페이스입니다.
+ */
+export interface DemographicFilter {
+  age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  startDate?: DateWithOperator;
+  endDate?: DateWithOperator;
+  raceType?: IdentifierWithOperator;
+  ethnicityType?: IdentifierWithOperator;
 }
 
-export class PayerPlanPeriod extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "PayerPlanPeriod";
-    this.CriteriaName = "Payer Plan Period";
-    this.Domain = "payer_plan_period";
-  }
-}
-
-export class ProcedureOccurrence extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "ProcedureOccurrence";
-    this.CriteriaName = "Procedure Occurrence";
-    this.Domain = "procedure";
-  }
-}
-
-export class Specimen extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "Specimen";
-    this.CriteriaName = "Specimen";
-    this.Domain = "specimen";
-  }
-}
-
-export class VisitOccurrence extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "VisitOccurrence";
-    this.CriteriaName = "Visit Occurrence";
-    this.Domain = "visit";
-  }
-}
-
-export class VisitDetail extends Criteria {
-  // Don't declare these properties here since they're already in the base class 
-  
-  constructor() {
-    super();
-    this.CriteriaType = "VisitDetail";
-    this.CriteriaName = "Visit Detail";
-    this.Domain = "visit_detail";
-  }
-}
-
-export class LocationRegion extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "LocationRegion";
-    this.CriteriaName = "Location Region";
-    this.Domain = "location";
-  }
-}
-
-export class DemographicCriteria extends Criteria {
-  constructor() {
-    super();
-    this.CriteriaType = "DemographicCriteria";
-    this.CriteriaName = "Demographics";
-    this.Domain = null;
-  }
-}
-
-export class ObservationFilter {
-  ObservationTypeExclude: boolean = false;
-  ObservationType: number[] = [];
-  
-  constructor(options?: any) {
-    if (options) {
-      Object.assign(this, options);
-    }
-  }
-}
-
-export class WindowedCriteria {
-  Criteria?: Criteria;
-  Window?: Window;
-  
-  constructor(options?: any) {
-    if (options) {
-      Object.assign(this, options);
-    }
-  }
-}
-
-export class ResultLimit {
-  Type: number = 0;
-  Count: number = 0;
-}
-
-export class CriteriaGroup {
-  Type: string = "ALL";
-  CriteriaList: (Criteria | WindowedCriteria)[] = [];
-  DemographicCriteriaList: DemographicCriteria[] = [];
-  Groups: CriteriaGroup[] = [];
-  Count: number = 0;
-  
-  constructor(options?: any) {
-    if (options) {
-      Object.assign(this, options);
-    }
-  }
-  
-  /**
-   * Checks if the criteria group is empty (has no criteria of any kind)
-   * @returns true if the group has no criteria, otherwise false
-   */
-  isEmpty(): boolean {
-    return (!this.CriteriaList || this.CriteriaList.length === 0) && 
-           (!this.DemographicCriteriaList || this.DemographicCriteriaList.length === 0) &&
-           (!this.Groups || this.Groups.length === 0);
-  }
-}
-
-export class CorelatedCriteria {
-  Criteria?: Criteria;
-  StartWindow?: Window;
-  EndWindow?: Window;
-  Occurrence?: Occurrence;
-  RestrictVisit?: boolean = false;
-  // Properties to be compatible with Criteria
-  CriteriaType?: string;
-  CriteriaName?: string;
-  Domain?: string;
-  CodesetId?: number;
-  // Add correlated criteria specific properties
-  CorrelatedCriteria?: any;
-  
-  constructor(options?: any) {
-    if (options) {
-      Object.assign(this, options);
-    }
-  }
-}
-
-export class InclusionRule {
-  name: string = "";
-  description?: string;
-  expression?: CriteriaGroup;
-  
-  constructor(options?: any) {
-    if (options) {
-      Object.assign(this, options);
-    }
-  }
-}
-
-export class PrimaryCriteria {
-  // PascalCase로 변경 (Java와 일치)
-  CriteriaList: Criteria[] = [];
-  ObservationWindow?: Window;
-  PrimaryCriteriaLimit?: ResultLimit;
-  
-  constructor(options?: any) {
-    if (options) {
-      // Java 스타일 속성 직접 매핑
-      if (options.CriteriaList) {
-        this.CriteriaList = options.CriteriaList;
-      }
-      
-      if (options.ObservationWindow) {
-        // ObservationWindow 처리
-        this.ObservationWindow = {
-          // Window 인터페이스와 호환되도록 변환
-          Start: options.ObservationWindow.PriorDays !== undefined 
-            ? { Value: options.ObservationWindow.PriorDays, Op: "eq" } 
-            : null,
-          End: options.ObservationWindow.PostDays !== undefined 
-            ? { Value: options.ObservationWindow.PostDays, Op: "eq" } 
-            : null,
-          UseIndexEnd: false,
-          UseEventEnd: false
-        };
-      }
-      
-      if (options.PrimaryCriteriaLimit) {
-        this.PrimaryCriteriaLimit = options.PrimaryCriteriaLimit;
-      }
-      
-      // 남은 속성 적용
-      Object.assign(this, options);
-    }
-  }
-}
-
-export class CohortExpression {
-  cdmVersionRange?: string;
-  
-  // PascalCase로 변경 (Java와 일치)
-  PrimaryCriteria?: PrimaryCriteria;
-  AdditionalCriteria?: CriteriaGroup;
-  
-  ObservationWindow?: Window;
-  
-  ConceptSets: ConceptSet[] = [];
-  
-  includeAllDescendants: boolean = true;
-  includedCovariateConceptIds: number[] = [];
-  CensorWindow?: Window;
-  CensoringCriteria: CorelatedCriteria[] = [];
-  QualifiedLimit?: ResultLimit;
-  ExpressionLimit?: ResultLimit;
-  InclusionRules: InclusionRule[] = [];
-  censoring: ObservationFilter = new ObservationFilter();
-  CollapseSettings?: CollapseSettings;
-  EndStrategy?: EndStrategy;
-  
-  constructor(options?: any) {
-    if (options) {
-      // Initial copy of all properties
-      Object.assign(this, options);
-      
-      // Ensure nested objects have proper types - use PascalCase directly (Java style)
-      if (options.PrimaryCriteria) {
-        this.PrimaryCriteria = new PrimaryCriteria(options.PrimaryCriteria);
-      }
-      
-      if (options.AdditionalCriteria) {
-        this.AdditionalCriteria = new CriteriaGroup(options.AdditionalCriteria);
-      }
-      
-      if (options.InclusionRules) {
-        this.InclusionRules = options.InclusionRules.map((rule: any) => new InclusionRule(rule));
-      }
-      
-      if (options.censoring) {
-        this.censoring = new ObservationFilter(options.censoring);
-      }
-      
-      // Handle concept sets properly - use PascalCase for ConceptSets
-      if (Array.isArray(options.ConceptSets)) {
-        console.log('Found ConceptSets property');
-        // Import at the top will cause circular dependency issues
-        // To avoid this, we'll import dynamically here
-        const ConceptSet = require('./ConceptSet').default;
-        
-        this.ConceptSets = options.ConceptSets.map((cs: any) => {
-          console.log(`Processing concept set ${cs.id} with name '${cs.name}'`);
-          return new ConceptSet(cs);
-        });
-        
-        console.log(`Processed ${this.ConceptSets.length} concept sets`);
-      }
-    }
-  }
-}
-
-export default CohortExpression;
 """
 
 def map_criteria_info(criteria_type):
     """
-    CriteriaType을 CriteriaName(규격), Domain(규격), Domain_id(clickhouse 도메인)로 매핑
+    CriteriaType을 Domain_id(clickhouse 도메인)와 type(OMOP CDM type)으로 매핑
     """
     criteria_info = {
-        "ConditionEra": {
-            "CriteriaName": "Condition Era",
-            "Domain": "condition",
-            "Domain_id": "Condition"
+        "condition_occurrence": {
+            "Domain_id": "Condition",
+            "type": "condition_occurrence"
         },
-        "ConditionOccurrence": {
-            "CriteriaName": "Condition Occurrence",
-            "Domain": "condition",
-            "Domain_id": "Condition"
+        "death": {
+            "Domain_id": "Death",
+            "type": "death"
         },
-        "Death": {
-            "CriteriaName": "Death",
-            "Domain": "death",
-            "Domain_id": "Death"
+        "device_exposure": {
+            "Domain_id": "Device",
+            "type": "device_exposure"
         },
-        "DeviceExposure": {
-            "CriteriaName": "Device Exposure",
-            "Domain": "device",
-            "Domain_id": "Device"
+        "dose_era": {
+            "Domain_id": "Drug",
+            "type": "dose_era"
         },
-        "DoseEra": {
-            "CriteriaName": "Dose Era",
-            "Domain": "drug",
-            "Domain_id": "Drug"
+        "drug_era": {
+            "Domain_id": "Drug",
+            "type": "drug_era"
         },
-        "DrugEra": {
-            "CriteriaName": "Drug Era",
-            "Domain": "drug",
-            "Domain_id": "Drug"
+        "drug_exposure": {
+            "Domain_id": "Drug",
+            "type": "drug_exposure"
         },
-        "DrugExposure": {
-            "CriteriaName": "Drug Exposure",
-            "Domain": "drug",
-            "Domain_id": "Drug"
+        "measurement": {
+            "Domain_id": "Measurement",
+            "type": "measurement"
         },
-        "Measurement": {
-            "CriteriaName": "Measurement",
-            "Domain": "measurement",
-            "Domain_id": "Measurement"
+        "observation": {
+            "Domain_id": "Observation",
+            "type": "observation"
         },
-        "Observation": {
-            "CriteriaName": "Observation",
-            "Domain": "observation",
-            "Domain_id": "Observation"
+        "observation_period": {
+            "Domain_id": "Observation",
+            "type": "observation_period"
         },
-        "ObservationPeriod": {
-            "CriteriaName": "Observation Period",
-            "Domain": "observation_period",
-            "Domain_id": "Observation"
+        "procedure_occurrence": {
+            "Domain_id": "Procedure",
+            "type": "procedure_occurrence"
         },
-        "ProcedureOccurrence": {
-            "CriteriaName": "Procedure Occurrence",
-            "Domain": "procedure",
-            "Domain_id": "Procedure"
+        "specimen": {
+            "Domain_id": "Specimen",
+            "type": "specimen"
         },
-        "Specimen": {
-            "CriteriaName": "Specimen",
-            "Domain": "specimen",
-            "Domain_id": "Specimen"
+        "visit_occurrence": {
+            "Domain_id": "Visit",
+            "type": "visit_occurrence"
         },
-        "VisitOccurrence": {
-            "CriteriaName": "Visit Occurrence",
-            "Domain": "visit",
-            "Domain_id": "Visit"
+        "visit_detail": {
+            "Domain_id": "Visit",
+            "type": "visit_detail"
         },
-        "VisitDetail": {
-            "CriteriaName": "Visit Detail",
-            "Domain": "visit_detail",
-            "Domain_id": "Visit"
+        "location_region": {
+            "Domain_id": "Geography",
+            "type": "location_region"
         },
-        "LocationRegion": {
-            "CriteriaName": "Location Region",
-            "Domain": "location",
-            "Domain_id": "Geography"
-        },
-        "DemographicCriteria": {
-            "CriteriaName": "Demographics",
-            "Domain": None,
-            "Domain_id": None
+        "demographic": {
+            "Domain_id": "Demographic",
+            "type": "demographic"
         }
     }
     
-    return criteria_info.get(criteria_type, None)
+    return criteria_info.get(criteria_type)

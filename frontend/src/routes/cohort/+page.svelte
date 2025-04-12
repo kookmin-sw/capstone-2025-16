@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import Footer from '$lib/components/Footer.svelte';
 
   let searchQuery = "";
   let searchInput = "";
@@ -277,7 +278,7 @@
     </div>
   </div>
 
-  <!-- 에러 메시지 - 화면 하단 중앙에 고정 -->
+  <!-- Error Message -->
   {#if errorMessage}
     <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
       <div class="bg-red-50 border border-red-200 rounded-md shadow-lg px-6 py-3 text-sm text-red-600 flex items-center">
@@ -291,4 +292,5 @@
       </div>
     </div>
   {/if}
+  <Footer />
 </div>

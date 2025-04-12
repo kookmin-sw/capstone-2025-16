@@ -1,6 +1,5 @@
 import { DrugEraFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -9,51 +8,65 @@ import {
   handleYearMinusWithNumberOperator,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: DrugEraFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: DrugEraFilter) => {
+  let query = db
     .selectFrom("drug_era")
     .select(({ fn }) => [
       "drug_era.person_id as person_id",
-      "drug_era.drug_era_start_date as start_date",
-      "drug_era.drug_era_end_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
         "drug_era.person_id",
         "drug_era.drug_era_start_date"
       ),
-    ])
-    .leftJoin("person", "drug_era.person_id", "person.person_id");
+    ]);
 
   if (a.conceptset) {
-    query = handleConceptSet(query, "drug_era.drug_concept_id", a.conceptset);
-  }
-
-  if (a.startAge) {
-    query = handleAgeWithNumberOperator(
+    query = handleConceptSet(
+      db,
       query,
-      "drug_era.drug_era_start_date",
-      "person.year_of_birth",
-      a.startAge
+      "drug_era.drug_concept_id",
+      a.conceptset
     );
   }
 
-  if (a.endAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "drug_era.drug_era_end_date",
-      "person.year_of_birth",
-      a.endAge
+  if (a.startAge || a.endAge || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "drug_era.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.startAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "drug_era.drug_era_start_date",
+        "person.year_of_birth",
+        a.startAge
+      );
+    }
+
+    if (a.endAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "drug_era.drug_era_end_date",
+        "person.year_of_birth",
+        a.endAge
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    query = joinedQuery;
   }
 
   if (a.startDate) {
@@ -90,10 +103,10 @@ export const getQuery = (a: DrugEraFilter) => {
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_drug_era"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

@@ -5,3 +5,8 @@ export const AGE_GROUPS = [
   ];
 
 export const SINGLE_DATA_COLOR = '#3498db'
+
+export const ORGANIZATION_AFFILIATIONS = {
+  "서울대학교병원" : ["융합의학기술원"],
+  "개인연구자" : [],
+};

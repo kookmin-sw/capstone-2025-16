@@ -1,6 +1,5 @@
 import { ObservationFilter } from "../../types/type";
 import {
-  getBaseDB,
   handleAgeWithNumberOperator,
   handleDateWithOperator,
   handleNumberWithOperator,
@@ -9,52 +8,57 @@ import {
   handleStringWithOperator,
   handleConceptSet,
 } from "../base";
+import { Kysely } from "kysely";
+import { Database } from "../../db/types";
 
-export const getQuery = (a: ObservationFilter) => {
-  let query = getBaseDB()
+export const getQuery = (db: Kysely<Database>, a: ObservationFilter) => {
+  let query = db
     .selectFrom("observation")
     .select(({ fn }) => [
       "observation.person_id as person_id",
-      "observation.observation_date as start_date",
-      "observation.observation_date as end_date",
       ...handleRowNumber(
         a.first,
         fn,
         "observation.person_id",
         "observation.observation_date"
       ),
-    ])
-    .leftJoin("person", "observation.person_id", "person.person_id")
-    .leftJoin(
-      "visit_occurrence",
-      "observation.visit_occurrence_id",
-      "visit_occurrence.visit_occurrence_id"
-    )
-    .leftJoin("provider", "observation.provider_id", "provider.provider_id");
+    ]);
 
   if (a.conceptset) {
     query = handleConceptSet(
+      db,
       query,
       "observation.observation_concept_id",
       a.conceptset
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "observation.observation_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "observation.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "observation.observation_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.date) {
@@ -74,11 +78,20 @@ export const getQuery = (a: ObservationFilter) => {
   }
 
   if (a.visitType) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "visit_occurrence",
+      "observation.visit_occurrence_id",
+      "visit_occurrence.visit_occurrence_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "visit_occurrence.visit_concept_id",
       a.visitType
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.valueAsNumber) {
@@ -123,6 +136,7 @@ export const getQuery = (a: ObservationFilter) => {
 
   if (a.source) {
     query = handleConceptSet(
+      db,
       query,
       "observation.observation_source_concept_id",
       a.source
@@ -130,18 +144,27 @@ export const getQuery = (a: ObservationFilter) => {
   }
 
   if (a.providerSpecialty) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "provider",
+      "observation.provider_id",
+      "provider.provider_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "provider.specialty_concept_id",
       a.providerSpecialty
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.first) {
-    return getBaseDB()
+    return db
       .selectFrom(query.as("filtered_observation"))
       .where("ordinal", "=", 1)
-      .select(["person_id", "start_date", "end_date"]);
+      .select("person_id");
   }
 
   return query;

@@ -1,427 +1,1136 @@
 <!-- 
-	TODO:
-		토글 형식으로 이벤트 자세한 정보 접었다 펴기
-		좌측 페이지에 바로가기 페이지 만들기
-
+	New Cohort Builder Implementation - Based on types.ts specification
 -->
 
 <script>
 	import '../../app.css';
 	import { page } from '$app/state';
-
-	import IntegrationEditor from './@components/events/editable/IntegrationEditor.svelte';
-	import EventDisplayRouter from './@components/events/display/EventDisplayRouter.svelte';
+	import ConceptSetModal from './components/ConceptSetModal.svelte';
+	import InclusionRuleModal from './components/InclusionRuleModal.svelte';
+	
 	let pathname = $state(page.url.pathname);
 
-	const events = [
-		'Condition Era',
-		'Condition Occurrence',
-		'Death',
-		'Device Exposure',
-		'Dose Era',
-		'Drug Era',
-		'Drug Exposure',
-		'Measurement',
-		'Observation',
-		'Observation Period',
-		'Procedure Occurrence',
-		'Specimen',
-		'Visit Occurrence',
-		'Demographic'
+	// Types TS 기반 새로운 코호트 구조 정의
+	// 코호트 정의 기본 구조
+	let cohortDefinition = $state({
+		conceptsets: [],
+		cohort: [
+			// 첫 번째 그룹 (First Group)
+			{
+				containers: [
+					// 첫 번째 컨테이너 (필수)
+					{
+						name: "Container 1",
+						filters: []
+					}
+				]
+			}
+		]
+	});
+	
+	// Types.ts 기반 도메인 타입
+	const domainTypes = [
+		{ type: "condition_era", name: "Condition Era", description: "Find patients with specific diagnosis periods." },
+		{ type: "condition_occurrence", name: "Condition Occurrence", description: "Find patients with specific diagnoses." },
+		{ type: "death", name: "Death", description: "Find patients based on death information." },
+		{ type: "device_exposure", name: "Device Exposure", description: "Find patients based on device exposure." },
+		{ type: "dose_era", name: "Dose Era", description: "Find patients based on dose periods." },
+		{ type: "drug_era", name: "Drug Era", description: "Find patients exposed to drug during periods." },
+		{ type: "drug_exposure", name: "Drug Exposure", description: "Find patients based on drug exposure." },
+		{ type: "measurement", name: "Measurement", description: "Find patients based on test measurement results." },
+		{ type: "observation", name: "Observation", description: "Find patients based on observation information." },
+		{ type: "observation_period", name: "Observation Period", description: "Find patients based on observation periods." },
+		{ type: "procedure_occurrence", name: "Procedure Occurrence", description: "Find patients who received medical procedures." },
+		{ type: "specimen", name: "Specimen", description: "Find patients based on specimen samples." },
+		{ type: "visit_occurrence", name: "Visit Occurrence", description: "Find patients based on hospital visits." },
+		{ type: "demographic", name: "Demographic", description: "Find patients based on demographic characteristics." }
 	];
-
-	const descriptions = {
-		'Condition Era': '특정 진단 기간을 가진 환자를 찾습니다.',
-		'Condition Occurrence': '특정 진단을 가진 환자를 찾습니다.',
-		Death: 'Death를 기반으로 환자를 찾습니다.',
-		'Device Exposure': 'Device exposure에 따라 환자를 찾습니다.',
-		'Dose Era': 'Dose Era에 따라 환자를 찾습니다.',
-		'Drug Era': '시간이 지남에 따라 약물에 노출된 환자를 찾습니다.',
-		'Drug Exposure': '특정 Drug나 약 종류에 노출된 환자를 찾습니다.',
-		Measurement: 'Measurement을 기반으로 환자를 찾습니다.',
-		Observation: 'Lab tests 또는 다른 observation을 기반으로 환자를 찾습니다.',
-		'Observation Period': 'Observation Period를 기반으로 환자를 찾습니다.',
-		'Payer Plan Period': 'Payer Plan Period에 따라 환자를 찾습니다.',
-		'Procedure Occurrence': '특정 procedure를 경험한 환자를 찾습니다.',
-		Specimen: 'Specimen을 기반으로 환자를 찾습니다.',
-		Visit: 'Visit 정보를 기반으로 환자를 찾습니다.',
-		'Visit detail': 'Find patients based on visit detail information.',
-		'From Reusable': 'Add criteria from list of reusables'
+	
+	// 도메인별 속성 정의
+	const domainProperties = {
+		"condition_era": [
+			{ name: "conceptset", label: "Condition Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Occurrence Only", type: "checkbox" },
+			{ name: "startAge", label: "Age at Era Start", type: "numberrange" },
+			{ name: "endAge", label: "Age at Era End", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "conditionCount", label: "Condition Count", type: "numberrange" },
+			{ name: "length", label: "Era Length", type: "numberrange" }
+		],
+		"condition_occurrence": [
+			{ name: "conceptset", label: "Condition Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Occurrence Only", type: "checkbox" },
+			{ name: "age", label: "Age at Occurrence", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "conditionStatus", label: "Condition Status", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "conditionType", label: "Condition Type", type: "concept" },
+			{ name: "visitType", label: "Visit Type", type: "concept" },
+			{ name: "source", label: "Source", type: "concept" },
+			{ name: "providerSpecialty", label: "Provider Specialty", type: "concept" }
+		],
+		"death": [
+			{ name: "conceptset", label: "Cause of Death Concept Set", type: "conceptset" },
+			{ name: "age", label: "Age at Death", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "date", label: "Death Date", type: "daterange" },
+			{ name: "deathType", label: "Death Type", type: "concept" },
+			{ name: "cause", label: "Cause", type: "concept" }
+		],
+		"device_exposure": [
+			{ name: "conceptset", label: "Device Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Exposure Only", type: "checkbox" },
+			{ name: "age", label: "Age at Exposure", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "deviceType", label: "Device Type", type: "concept" },
+			{ name: "visitType", label: "Visit Type", type: "concept" },
+			{ name: "uniqueDeviceId", label: "Unique Device ID", type: "string" },
+			{ name: "quantity", label: "Quantity", type: "numberrange" },
+			{ name: "source", label: "Source", type: "concept" },
+			{ name: "providerSpecialty", label: "Provider Specialty", type: "concept" }
+		],
+		"dose_era": [
+			{ name: "conceptset", label: "Drug Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Era Only", type: "checkbox" },
+			{ name: "startAge", label: "Age at Era Start", type: "numberrange" },
+			{ name: "endAge", label: "Age at Era End", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "doseUnit", label: "Dose Unit", type: "concept" },
+			{ name: "length", label: "Era Length", type: "numberrange" },
+			{ name: "doseValue", label: "Dose Value", type: "numberrange" }
+		],
+		"drug_era": [
+			{ name: "conceptset", label: "Drug Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Era Only", type: "checkbox" },
+			{ name: "startAge", label: "Age at Era Start", type: "numberrange" },
+			{ name: "endAge", label: "Age at Era End", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "length", label: "Era Length", type: "numberrange" },
+			{ name: "eraExposureCount", label: "Era Exposure Count", type: "numberrange" }
+		],
+		"drug_exposure": [
+			{ name: "conceptset", label: "Drug Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Exposure Only", type: "checkbox" },
+			{ name: "age", label: "Age at Exposure", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "drugType", label: "Drug Type", type: "concept" },
+			{ name: "visitType", label: "Visit Type", type: "concept" },
+			{ name: "stopReason", label: "Stop Reason", type: "string" },
+			{ name: "refill", label: "Refill", type: "numberrange" },
+			{ name: "quantity", label: "Quantity", type: "numberrange" },
+			{ name: "daysSupply", label: "Days Supply", type: "numberrange" },
+			{ name: "routeType", label: "Route Type", type: "concept" },
+			{ name: "effectiveDose", label: "Effective Dose", type: "numberrange" },
+			{ name: "doseUnit", label: "Dose Unit", type: "concept" },
+			{ name: "lotNumber", label: "Lot Number", type: "string" },
+			{ name: "source", label: "Source", type: "concept" },
+			{ name: "providerSpecialty", label: "Provider Specialty", type: "concept" }
+		],
+		"measurement": [
+			{ name: "conceptset", label: "Measurement Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Measurement Only", type: "checkbox" },
+			{ name: "age", label: "Age at Measurement", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "date", label: "Measurement Date", type: "daterange" },
+			{ name: "measurementType", label: "Measurement Type", type: "concept" },
+			{ name: "visitType", label: "Visit Type", type: "concept" },
+			{ name: "operatorType", label: "Operator Type", type: "concept" },
+			{ name: "valueAsNumber", label: "Value as Number", type: "numberrange" },
+			{ name: "valueAsConcept", label: "Value as Concept", type: "concept" },
+			{ name: "unitType", label: "Unit Type", type: "concept" },
+			{ name: "abnormal", label: "Abnormal Result", type: "checkbox" },
+			{ name: "rangeLow", label: "Range Low", type: "numberrange" },
+			{ name: "rangeHigh", label: "Range High", type: "numberrange" },
+			{ name: "providerSpecialty", label: "Provider Specialty", type: "concept" },
+			{ name: "source", label: "Source", type: "concept" }
+		],
+		"observation": [
+			{ name: "conceptset", label: "Observation Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Observation Only", type: "checkbox" },
+			{ name: "age", label: "Age at Observation", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "date", label: "Observation Date", type: "daterange" },
+			{ name: "observationType", label: "Observation Type", type: "concept" },
+			{ name: "visitType", label: "Visit Type", type: "concept" },
+			{ name: "valueAsNumber", label: "Value as Number", type: "numberrange" },
+			{ name: "valueAsString", label: "Value as String", type: "string" },
+			{ name: "valueAsConcept", label: "Value as Concept", type: "concept" },
+			{ name: "qualifierType", label: "Qualifier Type", type: "concept" },
+			{ name: "unitType", label: "Unit Type", type: "concept" },
+			{ name: "source", label: "Source", type: "concept" },
+			{ name: "providerSpecialty", label: "Provider Specialty", type: "concept" }
+		],
+		"observation_period": [
+			{ name: "first", label: "First Period Only", type: "checkbox" },
+			{ name: "startAge", label: "Age at Period Start", type: "numberrange" },
+			{ name: "endAge", label: "Age at Period End", type: "numberrange" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "length", label: "Period Length", type: "numberrange" }
+		],
+		"procedure_occurrence": [
+			{ name: "conceptset", label: "Procedure Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Procedure Only", type: "checkbox" },
+			{ name: "age", label: "Age at Procedure", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Procedure Date", type: "daterange" },
+			{ name: "procedureType", label: "Procedure Type", type: "concept" },
+			{ name: "visitType", label: "Visit Type", type: "concept" },
+			{ name: "modifierType", label: "Modifier Type", type: "concept" },
+			{ name: "quantity", label: "Quantity", type: "numberrange" },
+			{ name: "source", label: "Source", type: "concept" },
+			{ name: "providerSpecialty", label: "Provider Specialty", type: "concept" }
+		],
+		"specimen": [
+			{ name: "conceptset", label: "Specimen Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Specimen Only", type: "checkbox" },
+			{ name: "age", label: "Age at Specimen Collection", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "date", label: "Specimen Date", type: "daterange" },
+			{ name: "specimenType", label: "Specimen Type", type: "concept" },
+			{ name: "quantity", label: "Quantity", type: "numberrange" },
+			{ name: "unitType", label: "Unit Type", type: "concept" },
+			{ name: "anatomicSiteType", label: "Anatomic Site Type", type: "concept" },
+			{ name: "diseaseStatus", label: "Disease Status", type: "concept" }
+		],
+		"visit_occurrence": [
+			{ name: "conceptset", label: "Visit Concept Set", type: "conceptset" },
+			{ name: "first", label: "First Visit Only", type: "checkbox" },
+			{ name: "age", label: "Age at Visit Start", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "visitType", label: "Visit Type", type: "concept" },
+			{ name: "length", label: "Visit Length", type: "numberrange" },
+			{ name: "source", label: "Source", type: "concept" },
+			{ name: "providerSpecialty", label: "Provider Specialty", type: "concept" },
+			{ name: "placeOfService", label: "Place of Service", type: "concept" }
+		],
+		"demographic": [
+			{ name: "age", label: "Age", type: "numberrange" },
+			{ name: "gender", label: "Gender", type: "concept" },
+			{ name: "startDate", label: "Start Date", type: "daterange" },
+			{ name: "endDate", label: "End Date", type: "daterange" },
+			{ name: "raceType", label: "Race", type: "concept" },
+			{ name: "ethnicityType", label: "Ethnicity", type: "concept" }
+		]
 	};
+	
+	// 편집 관련 상태 변수
+	let selectedDomainType = $state(null); // 선택된 도메인 타입
+	let editingFilterIndex = $state(null); // 편집할 필터 인덱스 
+	let editingGroupIndex = $state(0); // 편집할 그룹 인덱스
+	let editingContainerIndex = $state(0); // 편집할 컨테이너 인덱스
 
-	const added_events = $state([]);
-	let expandedEvent = $state(null);
-	let editedEvent = $state(null);
+	// 현재 편집중인 필터 속성 값
+	let currentFilterValues = $state({});
+	
+	// 임시 값 저장 (범위 입력 등을 위한)
+	let tempRangeValues = $state({});
 
-	let eventdata = $state({});
-
-	let cohort = $state({
-		entry: {
-			and: []
-		}
-	});
-
-	let mouseYCoordinate = $state(null); // pointer y coordinate within client
-
-	let draggingItem = $state(null);
-	let draggingItemId = $state(null);
-	let draggingItemIndex = $state(null);
-
+	// 드래그 앤 드롭 관련 변수
+	let draggedItem = $state(null);
+	let draggedItemIndex = $state(null);
 	let hoveredItemIndex = $state(null);
-
-	// 자동 스크롤 관련 변수들
-	let autoScrollInterval;
-	const SCROLL_SPEED = 10; // 스크롤 속도 (px)
-	const SCROLL_ZONE = 100; // 스크롤 시작되는 영역 크기 (px)
-
-	let mouseDownTimer = $state(null);
-	let longPressDelay = 200; // 0.2초
-
-	// 자동 스크롤 함수
-	function handleAutoScroll(mouseY) {
-		// 이전 인터벌 제거
-		if (autoScrollInterval) {
-			clearInterval(autoScrollInterval);
-		}
-
-		const viewportHeight = window.innerHeight;
-		const scrollContainer = document.querySelector('.main-container');
-
-		// 상단 스크롤 영역
-		if (mouseY < SCROLL_ZONE) {
-			autoScrollInterval = setInterval(() => {
-				scrollContainer.scrollBy(0, -SCROLL_SPEED);
-			}, 16); // 약 60fps
-		}
-		// 하단 스크롤 영역
-		else if (mouseY > viewportHeight - SCROLL_ZONE) {
-			autoScrollInterval = setInterval(() => {
-				scrollContainer.scrollBy(0, SCROLL_SPEED);
-			}, 16);
-		}
+	
+	// 컨테이너 드래그 앤 드롭 관련 변수
+	let draggedContainerIndex = $state(null);
+	let hoveredContainerIndex = $state(null);
+	let draggedGroupIndex = $state(null);
+	
+	// 모달 관련 상태 변수
+	let showConceptSetModal = $state(false);
+	let showInclusionRuleModal = $state(false);
+	let editingRuleIndex = $state(-1);
+	
+	// 필터 초기화 함수
+	function resetFilterValues() {
+		currentFilterValues = {};
+		selectedDomainType = null;
+		editingFilterIndex = null;
 	}
-
-	// 스크롤 정지 함수
-	function stopAutoScroll() {
-		if (autoScrollInterval) {
-			clearInterval(autoScrollInterval);
-			autoScrollInterval = null;
-		}
-	}
-
-	// $effect(() => {
-	// 	// prevents the ghost flickering at the top
-	// 	if (mouseYCoordinate == null || mouseYCoordinate == 0) {
-	// 		showGhost = false;
-	// 	}
-	// });
-
-	$effect(() => {
-		if (
-			draggingItemIndex != null &&
-			hoveredItemIndex != null &&
-			draggingItemIndex != hoveredItemIndex
-		) {
-			// added_events 배열의 항목 순서 변경
-			[added_events[draggingItemIndex], added_events[hoveredItemIndex]] = [
-				added_events[hoveredItemIndex],
-				added_events[draggingItemIndex]
-			];
-
-			// cohort.entry.and 배열의 항목도 같은 순서로 변경
-			[cohort.entry.and[draggingItemIndex], cohort.entry.and[hoveredItemIndex]] = [
-				cohort.entry.and[hoveredItemIndex],
-				cohort.entry.and[draggingItemIndex]
-			];
-
-			console.log(cohort.entry.and);
-
-			// balance
-			draggingItemIndex = hoveredItemIndex;
-		}
-	});
-</script>
-
-<div
-	class="fixed left-0 top-[70px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-scroll border-r border-zinc-200"
->
-	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
-		<p class="mb-4 text-sm font-bold">cohort initial events</p>
-		{#each cohort.entry.and as event}
-			<p class=" mb-4 ml-2 rounded-md bg-blue-50 px-2 py-1 text-xs leading-4 text-blue-600">
-				{event.type
-					? event.type
-							.replace('_', ' ')
-							.split(' ')
-							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-							.join(' ') + ' Event'
-					: ''}<br />
-			</p>
-		{/each}
-		<p class=" mb-4 ml-2 rounded-md bg-blue-50 px-2 py-1 text-xs leading-4 text-blue-600">
-			Condition Era Event
-		</p>
-		<p class=" mb-4 ml-2 rounded-md bg-blue-50 px-2 py-1 text-xs leading-4 text-blue-500">
-			Occurrence Event
-		</p>
-	</div>
-	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
-		<p class="mb-4 text-sm font-bold">Inclusion Criteria</p>
-		<p class="mb-4 ml-2 text-xs leading-4">
-			- Diagnosis Occurrence: OMOPUveitis<br />
-			- Observation Period<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-			- Drug Exposure<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-		</p>
-	</div>
-	<div class=" flex w-full flex-col border-b border-zinc-200 px-2 py-2">
-		<p class="mb-4 text-sm font-bold">Exclusion Criteria</p>
-		<p class="mb-4 ml-2 text-xs leading-4">
-			- Diagnosis Occurrence: OMOPUveitis<br />
-			- Observation Period<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-			- Drug Exposure<br /> <span class="ml-2 text-xs"> 2022-01-01 ~ 2022-12-31</span><br />
-		</p>
-	</div>
-</div>
-
-<svelte:window
-	on:mousemove={(e) => {
-		if (draggingItemId) {
-			const eventsContainer = document.querySelector('.events-container');
-			const containerRect = eventsContainer.getBoundingClientRect();
-			const containerPadding = parseInt(window.getComputedStyle(eventsContainer).paddingTop);
-
-			// events-container 영역 안에 있는지 확인 (패딩 포함)
-			if (
-				e.clientY >= containerRect.top + containerPadding &&
-				e.clientY <= containerRect.bottom - containerPadding
-			) {
-				// padding 값을 포함하여 Y 좌표 계산
-				mouseYCoordinate = e.target.offsetTop + e.offsetY;
-				handleAutoScroll(e.clientY);
+	
+	// 필터 생성 함수
+	function createFilter() {
+		if (!selectedDomainType) return;
+		
+		// 기본 필터 객체 생성
+		const newFilter = {
+			type: selectedDomainType
+		};
+		
+		// 설정된 속성값 추가
+		for (const key in currentFilterValues) {
+			if (currentFilterValues[key] !== null && 
+				currentFilterValues[key] !== undefined &&
+				!(typeof currentFilterValues[key] === 'boolean' && currentFilterValues[key] === false) &&
+				!Array.isArray(currentFilterValues[key])) {
+				newFilter[key] = currentFilterValues[key];
 			}
 		}
-	}}
-	on:mouseup={(e) => {
-		if (draggingItemId) {
-			mouseYCoordinate = e.clientY;
-			draggingItemId = null;
-			hoveredItemIndex = null;
-			stopAutoScroll();
+		
+		// 현재 편집중인 필터가 있는 경우 업데이트
+		if (editingFilterIndex !== null) {
+			cohortDefinition.cohort[editingGroupIndex].containers[editingContainerIndex].filters[editingFilterIndex] = newFilter;
+		} else {
+			// 새 필터 추가
+			cohortDefinition.cohort[editingGroupIndex].containers[editingContainerIndex].filters.push(newFilter);
 		}
-	}}
-/>
-<div class="fixed left-[200px] top-[50px] h-[calc(100vh-30px)] w-[calc(100vw-200px)]">
-	<div class="flex h-full w-full">
-		<div class="main-container flex w-full flex-col overflow-y-scroll p-8 text-lg">
-			<p class="mb-4 text-2xl font-bold text-zinc-800">Cohort Initial Events</p>
-			<!-- <p class="mb-4 ml-2">Diagnosis Occurrence: <span class="inline-block px-3 py-1 rounded-full border border-blue-200 text-blue-500 px-2 text-xs bg-gradient-to-r from-blue-50 to-white">OMOPUveitis</span> 
-				<span class="inline-block px-3 py-1 rounded-full border border-blue-200 text-blue-500 px-2 text-xs
-				bg-gradient-to-r from-blue-50 to-white
-					">change</span>
-			</p> -->
-			<p class="flex">
-				with continuous observation of at least <input
-					type="number"
-					class="mx-2 w-16 rounded-md border border-zinc-200 px-2 text-sm"
-				/>
-				days before and
-				<input type="number" class="ml-2 w-16 rounded-md border border-zinc-200 px-2 text-sm" />
-			</p>
-			<p class="flex">
-				days after event index date Limit initial events to:
-				<select class="mx-2 rounded-md border border-zinc-200 px-2 text-sm">
-					<option value="earliest">all event</option>
-					<option value="earliest">earliest event</option>
-					<option value="latest">latest event</option>
-				</select> per person.
-			</p>
+		
+		// 상태 초기화
+		resetFilterValues();
+	}
+	
+	// 필터 수정 함수
+	function editFilter(groupIndex, containerIndex, filterIndex) {
+		editingGroupIndex = groupIndex;
+		editingContainerIndex = containerIndex;
+		editingFilterIndex = filterIndex;
+		
+		const filter = cohortDefinition.cohort[groupIndex].containers[containerIndex].filters[filterIndex];
+		selectedDomainType = filter.type;
+		
+		// 기존 값 로드
+		currentFilterValues = { ...filter };
+		delete currentFilterValues.type; // type 속성 제외
+	}
+	
+	// 필터 삭제 함수
+	function removeFilter(groupIndex, containerIndex, filterIndex) {
+		cohortDefinition.cohort[groupIndex].containers[containerIndex].filters.splice(filterIndex, 1);
+	}
+	
+	// 조건 타입 이름 표시 함수
+	function getDomainTypeName(type) {
+		const domainType = domainTypes.find(dt => dt.type === type);
+		return domainType ? domainType.name : type;
+	}
+	
+	// 속성값 업데이트 함수
+	function updateFilterValue(property, value) {
+		currentFilterValues[property] = value;
+	}
+	
+	// 숫자 범위 업데이트 함수
+	function updateNumberRange(property, min, max) {
+		// Operator<number> 형식으로 저장
+		if (min !== null && min !== "" && max !== null && max !== "") {
+			currentFilterValues[property] = {
+				gte: Number(min),
+				lte: Number(max)
+			};
+		} else if (min !== null && min !== "") {
+			currentFilterValues[property] = {
+				gte: Number(min)
+			};
+		} else if (max !== null && max !== "") {
+			currentFilterValues[property] = {
+				lte: Number(max)
+			};
+		} else {
+			currentFilterValues[property] = null;
+		}
+	}
+	
+	// 날짜 범위 업데이트 함수
+	function updateDateRange(property, start, end) {
+		// Operator<string> 형식으로 저장
+		if (start && end) {
+			currentFilterValues[property] = {
+				gte: start,
+				lte: end
+			};
+		} else if (start) {
+			currentFilterValues[property] = {
+				gte: start
+			};
+		} else if (end) {
+			currentFilterValues[property] = {
+				lte: end
+			};
+		} else {
+			currentFilterValues[property] = null;
+		}
+	}
+	
+	// 문자열 연산자 업데이트 함수
+	function updateStringOperator(property, value, operator = "eq") {
+		if (!value) {
+			currentFilterValues[property] = null;
+			return;
+		}
+		
+		// StringOperator 형식으로 저장
+		const operatorObj = {};
+		operatorObj[operator] = value;
+		currentFilterValues[property] = operatorObj;
+	}
+	
+	// 새 컨테이너 추가 함수
+	function addContainer(groupIndex) {
+		const newContainer = {
+			name: `Container ${cohortDefinition.cohort[groupIndex].containers.length + 1}`,
+			operator: "AND", // 첫 번째 컨테이너가 아닌 경우 연산자 지정
+			filters: []
+		};
+		
+		// 첫 번째 컨테이너인 경우 operator 제거
+		if (cohortDefinition.cohort[groupIndex].containers.length === 0) {
+			delete newContainer.operator;
+		}
+		
+		cohortDefinition.cohort[groupIndex].containers.push(newContainer);
+	}
+	
+	// 컨테이너 삭제 함수
+	function removeContainer(groupIndex, containerIndex) {
+		// 첫 번째 컨테이너는 삭제 불가
+		if (containerIndex === 0 && cohortDefinition.cohort[groupIndex].containers.length === 1) {
+			return;
+		}
+		
+		cohortDefinition.cohort[groupIndex].containers.splice(containerIndex, 1);
+	}
+	
+	// 컨테이너 이름 변경 함수
+	function updateContainerName(groupIndex, containerIndex, name) {
+		cohortDefinition.cohort[groupIndex].containers[containerIndex].name = name;
+	}
+	
+	// 컨테이너 연산자 변경 함수
+	function updateContainerOperator(groupIndex, containerIndex, operator) {
+		if (containerIndex > 0) { // 첫 번째 컨테이너는 연산자가 없음
+			cohortDefinition.cohort[groupIndex].containers[containerIndex].operator = operator;
+		}
+	}
+	
+	// 새 그룹 추가 함수
+	function addGroup() {
+		// 추가 그룹 (SubsequentGroup)
+		const newGroup = {
+			not: false,
+			containers: [
+				{
+					name: "Container 1",
+					filters: []
+				}
+			]
+		};
+		
+		cohortDefinition.cohort.push(newGroup);
+	}
+	
+	// 그룹 삭제 함수
+	function removeGroup(groupIndex) {
+		// 첫 번째 그룹(First Group)은 삭제 불가
+		if (groupIndex === 0) {
+			return;
+		}
+		
+		cohortDefinition.cohort.splice(groupIndex, 1);
+	}
+	
+	// 그룹 NOT 설정 함수
+	function toggleGroupNot(groupIndex) {
+		// 첫 번째 그룹(FirstGroup)은 not 속성이 없음
+		if (groupIndex > 0) {
+			cohortDefinition.cohort[groupIndex].not = !cohortDefinition.cohort[groupIndex].not;
+		}
+	}
+	
+	// 컨셉셋 업데이트 함수
+	function handleConceptSetUpdate(event) {
+		const { conceptSets } = event.detail;
+		cohortDefinition.conceptsets = conceptSets;
+	}
+	
+	// 컨셉셋 선택 함수
+	function selectConceptSet(id) {
+		currentFilterValues.conceptset = id;
+	}
+	
+	// 범위값 추출 함수
+	function extractRangeValue(operatorObj, key) {
+		if (!operatorObj) return "";
+		return operatorObj[key] !== undefined ? operatorObj[key] : "";
+	}
+	
+	// JSON 변환 함수
+	function getCohortDefinitionJSON() {
+		return JSON.stringify(cohortDefinition, null, 2);
+	}
+	
+	// 속성값 표시 함수
+	function displayPropertyValue(value, type) {
+		if (value === null || value === undefined) return "Not specified";
+		
+		if (typeof value === 'boolean') {
+			return value ? "Yes" : "No";
+		}
+		
+		if (typeof value === 'object') {
+			// Operator 객체인 경우 범위 표시
+			if (value.eq !== undefined) return `= ${value.eq}`;
+			if (value.neq !== undefined) return `≠ ${value.neq}`;
+			
+			let result = "";
+			if (value.gte !== undefined) result += `≥ ${value.gte}`;
+			if (value.gt !== undefined) result += `> ${value.gt}`;
+			if ((value.gte !== undefined || value.gt !== undefined) && 
+				(value.lte !== undefined || value.lt !== undefined)) result += " and ";
+			if (value.lte !== undefined) result += `≤ ${value.lte}`;
+			if (value.lt !== undefined) result += `< ${value.lt}`;
+			
+			// String Operator 객체인 경우
+			if (value.startsWith !== undefined) result += `Starts with ${value.startsWith}`;
+			if (value.endsWith !== undefined) result += `Ends with ${value.endsWith}`;
+			if (value.contains !== undefined) result += `Contains ${value.contains}`;
+			
+			return result || JSON.stringify(value);
+		}
+		
+		return value.toString();
+	}
+	
+	// 컨테이너 순서 변경 함수
+	function handleContainerReorder(groupIndex, draggedIndex, targetIndex) {
+		if (draggedIndex === targetIndex) return;
+		
+		const containers = [...cohortDefinition.cohort[groupIndex].containers];
+		
+		// 첫 번째 컨테이너는 operator가 없으므로 특별 처리
+		if (draggedIndex === 0 || targetIndex === 0) {
+			// 첫 번째 컨테이너가 관련된 경우, operator 이동 처리 필요
+			const temp = containers[draggedIndex];
+			containers.splice(draggedIndex, 1);
+			containers.splice(targetIndex, 0, temp);
+			
+			// operator 재설정
+			if (containers[0].operator) {
+				// 새 첫 번째 컨테이너에 operator가 있으면 제거
+				const firstOperator = containers[0].operator;
+				delete containers[0].operator;
+				
+				// 원래 첫 번째였던 컨테이너가 이동했으면 operator 추가
+				if (draggedIndex === 0 && targetIndex > 0) {
+					containers[1].operator = containers[1].operator || firstOperator || "AND";
+				}
+			}
+		} else {
+			// 첫 번째 컨테이너가 아닌 경우 일반적인 순서 변경
+			const temp = containers[draggedIndex];
+			containers.splice(draggedIndex, 1);
+			containers.splice(targetIndex, 0, temp);
+		}
+		
+		// 모든 컨테이너에 operator가 있는지 확인하고 첫 번째 이외의 컨테이너에 없으면 추가
+		for (let i = 1; i < containers.length; i++) {
+			if (!containers[i].operator) {
+				containers[i].operator = "AND";
+			}
+		}
+		
+		// 첫 번째 컨테이너에 operator가 있으면 제거
+		if (containers[0].operator) {
+			delete containers[0].operator;
+		}
+		
+		cohortDefinition.cohort[groupIndex].containers = containers;
+	}
+</script>
 
-			<div class="events-container relative flex flex-col py-10">
-				{#if mouseYCoordinate && draggingItemId}
-					<div
-						class="pointer-events-none absolute z-50 flex w-full flex-col rounded-md border border-zinc-200 bg-white p-4 shadow-lg"
-						style="top: {mouseYCoordinate}px;"
-					>
-						<p class="mb-4 text-lg font-bold">
-							{draggingItem.type
-								? draggingItem.type
-										.replace('_', ' ')
-										.split(' ')
-										.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-										.join(' ') + ' Event'
-								: ''}
-						</p>
-						<div class="ml-2 flex flex-col text-sm text-zinc-700">
-							<EventDisplayRouter eventdata={cohort.entry.and[draggingItemIndex]} />
-						</div>
-					</div>
-				{/if}
-				<div
-					class="mb-4 ml-2 flex flex-col rounded-md border border-transparent p-4 transition-all duration-300 ease-in-out hover:border-zinc-200 hover:shadow-lg"
-				>
-					<p class="mb-4 text-lg font-bold">Condition Era Event</p>
-					<p>
-						Condition: <span class="mb-4 text-blue-500">all types of conditions</span>
-					</p>
-					<div class="ml-2 flex flex-col space-y-2 text-sm text-zinc-700">
-						<p>Era start: before 2025-03-24</p>
-						<p>Occurrence count: greater than 8</p>
-						<p>Era start age: between 4 and 8</p>
-					</div>
+
+
+<!-- Left Sidebar -->
+<div class="fixed left-0 top-[60px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-auto border-r border-gray-300 bg-gray-50">
+	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
+		<h3 class="mb-3 text-sm font-bold text-gray-700">Initial Group</h3>
+		{#if cohortDefinition.cohort[0].containers[0].filters.length === 0}
+			<p class="mb-2 ml-2 text-xs text-gray-500 italic">No initial filters defined</p>
+		{:else}
+			{#each cohortDefinition.cohort[0].containers[0].filters as filter}
+				<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
+					<p class="text-xs font-medium text-blue-700">{getDomainTypeName(filter.type)}</p>
 				</div>
-				<div
-					class="mb-4 ml-2 flex flex-col rounded-md border border-transparent p-4 transition-all duration-300 ease-in-out hover:border-zinc-200 hover:shadow-lg"
-				>
-					<p class="mb-4 text-lg font-bold">Observation Event</p>
-
-					<p>
-						Observation: <span class="mb-4 text-blue-500">all types of observations</span>
+			{/each}
+		{/if}
+	</div>
+	
+	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
+		<h3 class="mb-3 text-sm font-bold text-gray-700">Additional Groups</h3>
+		{#if cohortDefinition.cohort.length <= 1}
+			<p class="mb-2 ml-2 text-xs text-gray-500 italic">No additional groups defined</p>
+		{:else}
+			{#each cohortDefinition.cohort.slice(1) as group, index}
+				<div class="mb-2 rounded-md bg-green-50 px-2 py-1">
+					<p class="text-xs font-medium text-green-700">
+						{group.not ? "NOT " : ""}Group {index + 2}
 					</p>
-					<div class="ml-2 flex flex-col space-y-2 text-sm text-zinc-700">
-						<p>for the first time in the patient's hospital record</p>
-						<p>
-							Occurrence start: before 2025-03-10<br />
-						</p>
-					</div>
 				</div>
-				{#each cohort.entry.and as event, index}
-					<div
-						class="mb-4 ml-2 flex flex-col rounded-md border border-transparent p-4 transition-all duration-300 ease-in-out hover:border-zinc-200 hover:shadow-lg
-						{draggingItemId === event.id ? 'opacity-40' : ''}"
-						style="-webkit-user-select: none;"
-						on:mouseover={(e) => {
-							if (draggingItemId) {
-								hoveredItemIndex = index;
-							}
-						}}
-						on:mousedown={(e) => {
-							e.stopPropagation();
-							mouseDownTimer = setTimeout(() => {
-								if (!draggingItemId) {
-									mouseYCoordinate = e.target.offsetTop + e.offsetY;
-									console.log('dragstart', mouseYCoordinate);
-
-									draggingItem = event;
-									draggingItemIndex = index;
-									draggingItemId = JSON.stringify(event);
-								}
-							}, longPressDelay);
-						}}
-						on:mouseup={() => {
-							if (mouseDownTimer) {
-								clearTimeout(mouseDownTimer);
-								mouseDownTimer = null;
-							}
-						}}
-						on:mouseleave={() => {
-							if (mouseDownTimer) {
-								clearTimeout(mouseDownTimer);
-								mouseDownTimer = null;
-							}
-						}}
-					>
-
-						<p class="mb-4 text-lg font-bold">
-							{event.type
-								? event.type
-										.replace('_', ' ')
-										.split(' ')
-										.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-										.join(' ') + ' Event'
-								: ''}
-						</p>
-						<div class="ml-2 flex flex-col text-sm text-zinc-700">
-							<EventDisplayRouter eventdata={event} />
-						</div>
-					</div>
-				{/each}
-			</div>
+			{/each}
+		{/if}
+	</div>
+	
+	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
+		<div class="flex items-center justify-between mb-3">
+			<h3 class="text-sm font-bold text-gray-700">Concept Sets</h3>
+			<button 
+				class="text-xs text-blue-600 hover:text-blue-800"
+				on:click={() => showConceptSetModal = true}
+			>
+				Manage
+			</button>
 		</div>
-		<div
-			class="mr-4 mt-8 flex h-full w-[700px] flex-col items-center overflow-y-scroll rounded-3xl border-2 border-blue-100 px-4 py-8 pb-16 shadow-2xl"
-		>
-			{#if expandedEvent === null}
-				<p class="text-lg font-bold text-blue-600">Cohort Initial Events</p>
-				<p class="mb-3 text-sm text-blue-700">Click the event to add to the cohort.</p>
-				<div class="flex w-full flex-col gap-4 p-4">
-					{#each events as event}
-						<button
-							on:click={() => (expandedEvent = expandedEvent === event ? null : event)}
-							class="t ext-sm flex w-full flex-col justify-between rounded-md border border-blue-200 bg-blue-50
-							p-2 text-left text-blue-500 shadow-sm transition-all duration-300 ease-in-out hover:bg-blue-100"
-						>
-							<div class="flex w-full justify-between">
-								<p class="text-sm font-semibold">+ {event} Event</p>
-								<p class="groups relative text-xs font-bold text-zinc-500">
-									<span
-										class="absolute bottom-full left-1/2 hidden -translate-x-full whitespace-nowrap rounded bg-zinc-400 bg-opacity-20 px-2 py-1 text-xs font-normal text-zinc-800 backdrop-blur-sm group-hover:block"
-										>{descriptions[event]}</span
-									>
-									?
-								</p>
-							</div>
-						</button>
-					{/each}
+		{#if cohortDefinition.conceptsets.length === 0}
+			<p class="mb-2 ml-2 text-xs text-gray-500 italic">No concept sets defined</p>
+		{:else}
+			{#each cohortDefinition.conceptsets as conceptSet}
+				<div class="mb-2 rounded-md bg-purple-50 px-2 py-1">
+					<p class="text-xs font-medium text-purple-700">{conceptSet.name}</p>
 				</div>
-			{:else}
-				<div class="flex w-full items-center justify-between px-4 text-lg font-bold text-zinc-600">
-					<p class="text-2xl font-bold">
-						{expandedEvent} Event {#if editedEvent === expandedEvent}
-							수정
-						{:else}
-							추가
-						{/if}
-					</p>
-					<div />
-				</div>
-
-				<div
-					class="text-normal mt-2 w-full px-4 py-6 text-zinc-700"
-					on:click={(e) => e.stopPropagation()}
-				>
-					<p class="mt-4 text-lg font-bold">Addtional attributes</p>
-					<div class="w-full px-4 text-sm">
-						<IntegrationEditor
-							on:add={({ detail }) => (eventdata = detail)}
-							event_type={expandedEvent.toLowerCase().replace(' ', '_')}
-						/>
-					</div>
-					<div class="mt-4 flex w-full justify-center space-x-4">
-						<button
-							on:click={() => {
-								expandedEvent = null;
-								editedEvent = null;
-							}}
-							class="rounded-xl border border-zinc-400 bg-zinc-100 px-3 py-1 text-sm font-normal text-zinc-600 hover:text-zinc-700"
-						>
-							Cancel
-						</button>
-						<button
-							on:click={() => {
-								if (editedEvent === expandedEvent) {
-									editedEvent = null;
-									expandedEvent = null;
-								} else {
-									cohort.entry.and.push(eventdata);
-									added_events.push({
-										id: crypto.randomUUID(),
-										event_name: expandedEvent,
-										eventdata: eventdata
-									});
-								}
-								expandedEvent = null;
-							}}
-							class=" rounded-xl border border-blue-300 bg-blue-50 px-4 py-1 text-sm text-blue-600"
-						>
-							{#if editedEvent === expandedEvent}
-								Update Event
-							{:else}
-								Add Event
-							{/if}
-						</button>
-					</div>
-				</div>
-			{/if}
-		</div>
+			{/each}
+		{/if}
 	</div>
 </div>
+
+<!-- Main Content Area -->
+<div class="fixed left-[200px] top-[60px] h-[calc(100vh-60px)] w-[calc(100vw-600px)] overflow-y-auto">
+	<div class="flex h-full">
+		<!-- Main Panel -->
+		<div class="flex flex-1 flex-col p-5">
+			<div class="mb-8">
+				<h1 class="mb-2 text-2xl font-bold text-gray-800">Cohort Definition</h1>
+				<p class="text-sm text-gray-600">Define the characteristics of patients to include in your cohort.</p>
+			</div>
+			
+			<!-- Initial Group Section -->
+				<div class="mb-6">
+					<div class="mb-4 flex items-center justify-between">
+						<h3 class="text-lg font-semibold text-gray-800">Initial Group</h3>
+						<button 
+							class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+							on:click={() => addContainer(0)}
+						>
+							Add Container
+						</button>
+					</div>
+					
+					<div class="space-y-6">
+						{#each cohortDefinition.cohort[0].containers as container, containerIndex}
+							<div 
+								class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm cursor-move transition-all duration-200 {draggedContainerIndex === containerIndex && draggedGroupIndex === 0 ? 'opacity-50' : ''} {hoveredContainerIndex === containerIndex && draggedContainerIndex !== null && draggedContainerIndex !== containerIndex && draggedGroupIndex === 0 ? 'border-blue-400 bg-blue-50' : ''}"
+								draggable="true"
+								on:dragstart={() => {
+									draggedContainerIndex = containerIndex;
+									draggedGroupIndex = 0;
+								}}
+								on:dragover|preventDefault={() => {
+									hoveredContainerIndex = containerIndex;
+								}}
+								on:drop|preventDefault={() => {
+									if (draggedGroupIndex === 0) {
+										handleContainerReorder(0, draggedContainerIndex, hoveredContainerIndex);
+									}
+									draggedContainerIndex = null;
+									hoveredContainerIndex = null;
+									draggedGroupIndex = null;
+								}}
+							>
+								<div class="flex items-center justify-between mb-4">
+									<div class="flex items-center">
+										{#if containerIndex > 0}
+											<select 
+												class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 text-sm pr-8"
+												value={container.operator}
+												on:change={(e) => updateContainerOperator(0, containerIndex, e.target.value)}
+											>
+												<option value="AND">AND</option>
+												<option value="OR">OR</option>
+												<option value="NOT">NOT</option>
+											</select>
+										{/if}
+										<h4 class="text-lg font-medium text-blue-600">
+											<input 
+												type="text" 
+												class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
+												value={container.name}
+												on:change={(e) => updateContainerName(0, containerIndex, e.target.value)}
+											/>
+										</h4>
+									</div>
+									<div class="flex space-x-2">
+										<button 
+											class="text-sm text-blue-500 hover:text-blue-700"
+											on:click={() => {
+												editingGroupIndex = 0;
+												editingContainerIndex = containerIndex;
+												selectedDomainType = null;
+											}}
+										>
+											Add Filter
+										</button>
+										{#if containerIndex > 0 || cohortDefinition.cohort[0].containers.length > 1}
+											<button 
+												class="text-sm text-red-500 hover:text-red-700"
+												on:click={() => removeContainer(0, containerIndex)}
+											>
+												Remove
+											</button>
+										{/if}
+									</div>
+								</div>
+								
+								{#if container.filters.length === 0}
+									<div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6">
+										<p class="text-gray-500">No filters added. Click "Add Filter" to add a filter.</p>
+									</div>
+								{:else}
+									<div class="space-y-4">
+										{#each container.filters as filter, filterIndex}
+											<div class="rounded border border-gray-200 bg-gray-50 p-3">
+												<div class="flex items-center justify-between mb-2">
+													<h5 class="text-base font-medium text-gray-700">{getDomainTypeName(filter.type)}</h5>
+													<div class="flex space-x-2">
+														<button 
+															class="text-xs text-blue-500 hover:text-blue-700"
+															on:click={() => editFilter(0, containerIndex, filterIndex)}
+														>
+															Edit
+														</button>
+														<button 
+															class="text-xs text-red-500 hover:text-red-700"
+															on:click={() => removeFilter(0, containerIndex, filterIndex)}
+														>
+															Remove
+														</button>
+													</div>
+												</div>
+												
+												<div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+													{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
+														<div>
+															<span class="font-medium">{property}:</span> {displayPropertyValue(value)}
+														</div>
+													{/each}
+												</div>
+											</div>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</div>
+				
+				<!-- Additional Groups Section -->
+				<div class="mb-6">
+					<div class="mb-4 flex items-center justify-between">
+						<h3 class="text-lg font-semibold text-gray-800">Additional Groups (Inclusion Criteria)</h3>
+						<button 
+							class="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+							on:click={addGroup}
+						>
+							Add Group
+						</button>
+					</div>
+					
+					{#if cohortDefinition.cohort.length <= 1}
+						<div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-8">
+							<p class="text-gray-500">No additional groups defined. Click "Add Group" to create one.</p>
+						</div>
+					{:else}
+						<div class="space-y-6">
+							{#each cohortDefinition.cohort.slice(1) as group, groupIndex}
+								<!-- Actual index is groupIndex + 1 since we're slicing -->
+								{@const actualGroupIndex = groupIndex + 1}
+								<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+									<div class="flex items-center justify-between mb-4">
+										<div class="flex items-center">
+											<button
+												class="mr-2 rounded border border-gray-300 px-2 py-1 text-sm {group.not ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}"
+												on:click={() => toggleGroupNot(actualGroupIndex)}
+											>
+												{group.not ? "NOT" : "AND"}
+											</button>
+											<h4 class="text-lg font-medium text-green-600">Group {actualGroupIndex + 1}</h4>
+										</div>
+										<div class="flex space-x-2">
+											<button 
+												class="text-sm text-blue-500 hover:text-blue-700"
+												on:click={() => addContainer(actualGroupIndex)}
+											>
+												Add Container
+											</button>
+											<button 
+												class="text-sm text-red-500 hover:text-red-700"
+												on:click={() => removeGroup(actualGroupIndex)}
+											>
+												Remove Group
+											</button>
+										</div>
+									</div>
+									
+									<div class="space-y-4">
+										{#each group.containers as container, containerIndex}
+											<div 
+												class="rounded-lg border border-gray-200 bg-gray-50 p-3 cursor-move transition-all duration-200 {draggedContainerIndex === containerIndex && draggedGroupIndex === actualGroupIndex ? 'opacity-50' : ''} {hoveredContainerIndex === containerIndex && draggedContainerIndex !== null && draggedContainerIndex !== containerIndex && draggedGroupIndex === actualGroupIndex ? 'border-blue-400 bg-blue-50' : ''}"
+												draggable="true"
+												on:dragstart={() => {
+													draggedContainerIndex = containerIndex;
+													draggedGroupIndex = actualGroupIndex;
+												}}
+												on:dragover|preventDefault={() => {
+													hoveredContainerIndex = containerIndex;
+												}}
+												on:drop|preventDefault={() => {
+													if (draggedGroupIndex === actualGroupIndex) {
+														handleContainerReorder(actualGroupIndex, draggedContainerIndex, hoveredContainerIndex);
+													}
+													draggedContainerIndex = null;
+													hoveredContainerIndex = null;
+													draggedGroupIndex = null;
+												}}
+											>
+												<div class="flex items-center justify-between mb-3">
+													<div class="flex items-center">
+														<div class="mr-2 text-gray-400 hover:text-gray-600">
+															<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+															</svg>
+														</div>
+														{#if containerIndex > 0}
+															<select 
+																class="mr-2 rounded border border-gray-300 bg-white px-2 py-1 text-xs pr-6"
+																value={container.operator}
+																on:change={(e) => updateContainerOperator(actualGroupIndex, containerIndex, e.target.value)}
+															>
+																<option value="AND">AND</option>
+																<option value="OR">OR</option>
+																<option value="NOT">NOT</option>
+															</select>
+														{/if}
+														<h5 class="text-base font-medium text-gray-700">
+															<input 
+																type="text" 
+																class="w-full rounded border-0 bg-transparent p-0 text-base font-medium text-gray-700 focus:ring-0"
+																value={container.name}
+																on:change={(e) => updateContainerName(actualGroupIndex, containerIndex, e.target.value)}
+															/>
+														</h5>
+													</div>
+													<div class="flex space-x-2">
+														<button 
+															class="text-xs text-blue-500 hover:text-blue-700"
+															on:click={() => {
+																editingGroupIndex = actualGroupIndex;
+																editingContainerIndex = containerIndex;
+																selectedDomainType = null;
+															}}
+														>
+															Add Filter
+														</button>
+														{#if containerIndex > 0 || group.containers.length > 1}
+															<button 
+																class="text-xs text-red-500 hover:text-red-700"
+																on:click={() => removeContainer(actualGroupIndex, containerIndex)}
+															>
+																Remove
+															</button>
+														{/if}
+													</div>
+												</div>
+												
+												{#if container.filters.length === 0}
+													<div class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-4">
+														<p class="text-sm text-gray-500">No filters added. Click "Add Filter" to add a filter.</p>
+													</div>
+												{:else}
+													<div class="space-y-3">
+														{#each container.filters as filter, filterIndex}
+															<div class="rounded border border-gray-200 bg-white p-2">
+																<div class="flex items-center justify-between mb-1">
+																	<h6 class="text-sm font-medium text-gray-700">{getDomainTypeName(filter.type)}</h6>
+																	<div class="flex space-x-2">
+																		<button 
+																			class="text-xs text-blue-500 hover:text-blue-700"
+																			on:click={() => editFilter(actualGroupIndex, containerIndex, filterIndex)}
+																		>
+																			Edit
+																		</button>
+																		<button 
+																			class="text-xs text-red-500 hover:text-red-700"
+																			on:click={() => removeFilter(actualGroupIndex, containerIndex, filterIndex)}
+																		>
+																			Remove
+																		</button>
+																	</div>
+																</div>
+																
+																<div class="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs text-gray-600">
+																	{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
+																		<div>
+																			<span class="font-medium">{property}:</span> {displayPropertyValue(value)}
+																		</div>
+																	{/each}
+																</div>
+															</div>
+														{/each}
+													</div>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			
+			<!-- Cohort JSON display (for debugging) -->
+			<div class="mb-6 rounded-lg border border-gray-200 p-4">
+				<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON (Developer)</h3>
+				<pre class="h-60 overflow-auto rounded-md bg-gray-100 p-2 text-xs">{getCohortDefinitionJSON()}</pre>
+			</div>
+		</div>
+		
+		<!-- Right Panel - Filter Add/Edit -->
+	</div>
+</div>
+<div class="fixed right-0 top-[60px] h-[calc(100vh-60px)] w-[400px] border-l border-gray-300 bg-gray-50 p-5 overflow-y-auto">
+	{#if selectedDomainType === null}
+		<div class="mb-4">
+			<!-- Display context info based on the currentGroupSection and editing indices -->
+			{#if editingGroupIndex !== null && editingContainerIndex !== null}
+				<h3 class="mb-2 text-xl font-bold text-gray-800">
+					Add Filter to {editingGroupIndex === 0 ? 'Initial Group' : `Group ${editingGroupIndex + 1}`}
+				</h3>
+				<p class="mb-4 text-sm text-gray-600">
+					Container: {cohortDefinition.cohort[editingGroupIndex].containers[editingContainerIndex].name}
+				</p>
+			{:else}
+				<h3 class="mb-3 text-xl font-bold text-gray-800">Add Filter</h3>
+				<p class="mb-4 text-sm text-gray-600">Select a domain type to add a filter.</p>
+			{/if}
+		</div>
+		
+		<div class="space-y-2">
+			{#each domainTypes as domain}
+				<button
+					class="w-full rounded-md border border-blue-200 bg-white p-3 text-left transition-colors hover:bg-blue-50"
+					on:click={() => selectedDomainType = domain.type}
+				>
+					<div class="flex items-center justify-start">
+						<span class="font-medium text-blue-600">{domain.name}</span>
+						
+					</div>
+					<p class="mt-1 text-xs text-gray-500">{domain.description}</p>
+				</button>
+			{/each}
+		</div>
+	{:else}
+		<!-- Domain Type Filter Editing -->
+		<div class="mb-4">
+			<div class="flex items-center justify-between">
+				<h3 class="text-xl font-bold text-gray-800">
+					{getDomainTypeName(selectedDomainType)}
+				</h3>
+				<button 
+					class="text-sm text-gray-500 hover:text-gray-700"
+					on:click={() => {
+						selectedDomainType = null;
+						resetFilterValues();
+					}}
+				>
+					Cancel
+				</button>
+			</div>
+			<p class="mb-4 text-sm text-gray-600">Configure filter properties.</p>
+		</div>
+		
+		<div class="mb-6 space-y-4">
+			{#if domainProperties[selectedDomainType]}
+				{#each domainProperties[selectedDomainType] as property}
+					<!-- Property input fields by type -->
+					<div class="mb-3">
+						<label class="mb-1 block text-sm font-medium text-gray-700">
+							{property.label}
+						</label>
+						
+						{#if property.type === 'checkbox'}
+							<div class="flex items-center">
+								<input 
+									type="checkbox" 
+									class="h-4 w-4 rounded border-gray-300 text-blue-600" 
+									checked={currentFilterValues[property.name] === true}
+									on:change={(e) => updateFilterValue(property.name, e.target.checked)}
+								/>
+								<span class="ml-2 text-sm text-gray-600">
+									{property.name === 'first' ? 'Limit to first occurrence' : 
+									 property.name === 'abnormal' ? 'Abnormal result only' : ''}
+								</span>
+							</div>
+						{:else if property.type === 'conceptset'}
+							<select
+								class="w-full rounded-md border border-gray-300 p-2 text-sm"
+								value={currentFilterValues[property.name] || ''}
+								on:change={(e) => {
+									const value = e.target.value === '' ? null : e.target.value;
+									updateFilterValue(property.name, value);
+								}}
+							>
+								<option value="">Any</option>
+								{#each cohortDefinition.conceptsets as conceptSet, i}
+									<option value={conceptSet.conceptset_id}>{conceptSet.name || `Concept Set ${i+1}`}</option>
+								{/each}
+							</select>
+						{:else if property.type === 'concept'}
+							<div class="flex items-center">
+								<span class="text-sm text-gray-600 italic">
+									Concept selection not implemented in this demo
+								</span>
+							</div>
+						{:else if property.type === 'numberrange'}
+							<div class="flex items-center gap-2">
+								<input 
+									type="number" 
+									min="0" 
+									placeholder="Min" 
+									class="w-20 rounded-md border border-gray-300 p-1 text-sm"
+									value={extractRangeValue(currentFilterValues[property.name], 'gte')}
+									on:change={(e) => {
+										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
+										tempRangeValues[property.name].min = e.target.value;
+										updateNumberRange(
+											property.name, 
+											tempRangeValues[property.name].min,
+											tempRangeValues[property.name].max
+										);
+									}}
+								/>
+								<span class="text-gray-600">to</span>
+								<input 
+									type="number" 
+									min="0" 
+									placeholder="Max" 
+									class="w-20 rounded-md border border-gray-300 p-1 text-sm"
+									value={extractRangeValue(currentFilterValues[property.name], 'lte')}
+									on:change={(e) => {
+										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
+										tempRangeValues[property.name].max = e.target.value;
+										updateNumberRange(
+											property.name, 
+											tempRangeValues[property.name].min,
+											tempRangeValues[property.name].max
+										);
+									}}
+								/>
+								<span class="text-sm text-gray-600">
+									{property.name === 'age' || property.name === 'startAge' || property.name === 'endAge' ? 'years' : 
+									 property.name.includes('length') ? 'days' : ''}
+								</span>
+							</div>
+						{:else if property.type === 'daterange'}
+							<div class="flex items-center gap-2">
+								<input 
+									type="date" 
+									class="rounded-md border border-gray-300 p-1 text-sm"
+									value={extractRangeValue(currentFilterValues[property.name], 'gte')}
+									on:change={(e) => {
+										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
+										tempRangeValues[property.name].start = e.target.value;
+										updateDateRange(
+											property.name, 
+											tempRangeValues[property.name].start,
+											tempRangeValues[property.name].end
+										);
+									}}
+								/>
+								<span class="text-gray-600">to</span>
+								<input 
+									type="date" 
+									class="rounded-md border border-gray-300 p-1 text-sm"
+									value={extractRangeValue(currentFilterValues[property.name], 'lte')}
+									on:change={(e) => {
+										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
+										tempRangeValues[property.name].end = e.target.value;
+										updateDateRange(
+											property.name, 
+											tempRangeValues[property.name].start,
+											tempRangeValues[property.name].end
+										);
+									}}
+								/>
+							</div>
+						{:else if property.type === 'string'}
+							<div class="flex items-center gap-2">
+								<select
+									class="rounded-md border border-gray-300 p-1 text-sm"
+									on:change={(e) => {
+										const value = currentFilterValues[property.name]?.eq || 
+											currentFilterValues[property.name]?.contains || 
+											currentFilterValues[property.name]?.startsWith || 
+											currentFilterValues[property.name]?.endsWith || '';
+										updateStringOperator(property.name, value, e.target.value);
+									}}
+								>
+									<option value="eq">equals</option>
+									<option value="contains">contains</option>
+									<option value="startsWith">starts with</option>
+									<option value="endsWith">ends with</option>
+								</select>
+								<input 
+									type="text" 
+									class="flex-1 rounded-md border border-gray-300 p-1 text-sm"
+									value={
+										currentFilterValues[property.name]?.eq || 
+										currentFilterValues[property.name]?.contains || 
+										currentFilterValues[property.name]?.startsWith || 
+										currentFilterValues[property.name]?.endsWith || ''
+									}
+									on:change={(e) => {
+										const operator = 
+											currentFilterValues[property.name]?.eq !== undefined ? 'eq' :
+											currentFilterValues[property.name]?.contains !== undefined ? 'contains' :
+											currentFilterValues[property.name]?.startsWith !== undefined ? 'startsWith' :
+											currentFilterValues[property.name]?.endsWith !== undefined ? 'endsWith' : 'eq';
+										updateStringOperator(property.name, e.target.value, operator);
+									}}
+								/>
+							</div>
+						{/if}
+					</div>
+				{/each}
+			{:else}
+				<p class="text-gray-600 italic">No properties available for this domain type.</p>
+			{/if}
+		</div>
+		
+		<div class="mt-6 flex justify-end">
+			<button
+				class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+				on:click={createFilter}
+			>
+				{editingFilterIndex !== null ? 'Update' : 'Add'} Filter
+			</button>
+		</div>
+	{/if}
+</div>
+
+<!-- Concept Set Management Modal -->
+<ConceptSetModal 
+	bind:show={showConceptSetModal}
+	conceptSets={cohortDefinition.conceptsets}
+	on:update={handleConceptSetUpdate}
+	on:close={() => showConceptSetModal = false}
+/>

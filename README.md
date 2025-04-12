@@ -72,6 +72,14 @@ Syntax highlighted code block
 
 자세한 내용은 [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
+## Team
+| <img src="https://github.com/ima9ine4.png" width="150" height="150"/> | <img src="https://github.com/cg10036.png" width="150" height="150"/> | <img src="https://github.com/rktlskan021.png" width="150" height="150"/> | <img src="https://github.com/IamWonILuvWon.png" width="150" height="150"/> | <img src="https://github.com/honeybugs.png" width="150" height="150"/> | <img src="https://github.com/chloebh9.png" width="150" height="150"/> | <img src="https://github.com/bgw4399.png" width="150" height="150"/> |
+|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|
+| 임혜진<br/>[@ima9ine4](https://github.com/ima9ine4) | 이수혁<br/>[@cg10036](https://github.com/cg10036) | 이재영<br/>[@rktlskan021](https://github.com/rktlskan021) | 장원준<br/>[@IamWonILuvWon](https://github.com/IamWonILuvWon) | 권세건<br/>[@honeybugs](https://github.com/honeybugs) | 정채원<br/>[@chloebh9](https://github.com/chloebh9) | 배진우<br/>[@bgw4399](https://github.com/bgw4399) |
+
+
+
+
 ### Support or Contact
 
 readme 파일 생성에 추가적인 도움이 필요하면 [도움말](https://help.github.com/articles/about-readmes/) 이나 [contact support](https://github.com/contact) 을 이용하세요.

@@ -1,64 +1,53 @@
 import cohort_json_schema as cohort_json_schema
+from pdf_to_text import extract_cohort_definition_from_pdf
+from get_omop_concept_id import clean_term, get_omop_concept_id, get_concept_set_domain_id, update_concept_set_items, get_concept_ids, refine_search_query
 
-import pymupdf
 import os
-import re
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
-from clickhouse_driver import Client
+import re
 
 load_dotenv()
-openai_api_key = os.environ.get('OPENAI_API_KEY')
-openai_api_base = "https://api.lambdalabs.com/v1"
+openai_api_key = os.environ.get('OPENROUTER_API_KEY')
+openai_api_base = os.environ.get('OPENROUTER_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
-clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
-clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
-clickhouse_user = os.environ.get('CLICKHOUSE_USER')
-clickhouse_password = os.environ.get('CLICKHOUSE_PASSWORD')
 
 client = OpenAI(
     api_key=openai_api_key,
     base_url=openai_api_base,
 )
 
-clickhouse_client = Client(
-    host=clickhouse_host,
-    database=clickhouse_database,
-    user=clickhouse_user, 
-    password=clickhouse_password
-)
-
 STRICT_REQUIREMENT = f"""
 Instructions
 Strict requirements:
-1. For each item in the inclusion section:
-   - You must include the following keys:
-     - "CriteriaType" (must be one of: ["ConditionEra", "ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence", "VisitDetail", "LocationRegion", "DemographicCriteria"])
-     - "Domain" (will be automatically mapped based on CriteriaType)
-     - "Domain_id" (will be automatically mapped based on CriteriaType)
-     - "CodesetId" (will be filled later)
-     - "CriteriaName" (human readable name)
-   
-   - The "CriteriaType" must be one of the following valid values:
-     ["ConditionEra", "ConditionOccurrence", "Death", "DeviceExposure", "DoseEra", "DrugEra", "DrugExposure", "Measurement", "Observation", "ObservationPeriod", "ProcedureOccurrence", "Specimen", "VisitOccurrence"]
+1. Structure:
+   - conceptsets: Array of concept sets, each containing:
+     * conceptset_id: String (starting from "0")
+     * name: String (medical term)
+     * items: Array of concept objects from database
+   - cohort: Array of groups, each containing:
+     * containers: Array of containers with filters
+     * not: Boolean (true for exclusion criteria)
 
-2. For Measurement criteria:
-   - Include "ValueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
-   - For any field such as "MeasurementType", "DrugType", "ConditionType", etc., 
+2. Each filter MUST include:
+   - type: The type of criteria (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
+   - first: true
+   - conceptset: String (matching conceptset_id)
+
+3. For Measurement criteria:
+   - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
+   - For any field such as "measurementType", "drugType", "conditionType", etc., 
      do NOT invent or fabricate placeholder concept_id values
    - If a concept_id is not available, explicitly set the value to null
 
-3. You must use the exact concept_id and domain_id values provided in the concept list.
-   - Follow the exact structure shown in the schema
-   - Avoid creating entirely new diseases or medications unrelated to the input.
-   - Avoid adding extra qualifiers, descriptions, or text that didn't exist in the original term.
-   - **Do NOT fabricate or hallucinate any concept_id, domain_id, or type values.**
-   - If any required value is missing or uncertain, omit that item from the output.
-   - Include empty objects ({{}}) for type-specific properties
-   - Include ConceptName for reference (this will be used for concept mapping)
-   
-4. The final JSON **must strictly conform** to the OMOP CDM cohort JSON schema below:
+4. For age criteria:
+   - Use "demographic" as type
+   - Include "age" with appropriate operator
+"""
+
+STRICT_REQUIREMENT_SCHEMA = f"""
+5. The final JSON **must strictly conform** to the OMOP CDM cohort JSON schema below:
 OMOP CDM cohort JSON schema:
 {cohort_json_schema.JSON_SCHEMA}
 
@@ -68,550 +57,233 @@ DO NOT include or use any example data, JSON schema, or instructions shown above
 Your output must strictly reflect criteria that appear in the original text below.
 
 Input Text Example:
-3.1. Inclusion criteria  
-Patients who are 20 years old or older.
-Patients with hemodialysis.
-Patients using ESA therapy for at least three months.
-Patients with iron deficiency anemia.
-
-3.2. Exclusion criteria  
-Patients in intensive care unit.  
-Patients with hemoglobin value more than 13 g/dL.  
-Kidney transplant patients.  
-Patients with sepsis or active infections.
+{cohort_json_schema.JSON_INPUT_EXAMPLE}
 
 Output Example:
 {cohort_json_schema.JSON_OUTPUT_EXAMPLE}
 
-5. Output format:
+6. Output format:
     - Return only the JSON structure
     - Do not include any explanations or markdown
     - Ensure all required fields are present
     - DO NOT include explanations, comments, or additional text.
     - Return only raw JSON without any labels, headers, or formatting.
     - DO NOT include any Markdown formatting or explanations
-    - Any usage of Markdown fosmatting like ```json or ``` → strictly forbidden
+    - Any usage of Markdown formatting like ```json or ``` → strictly forbidden
     - Use valueAsNumber only for measurable criteria
     - Ensure that each domain has the correct key: drugType, procedureType, observationType, etc.
 """
 
-# 코호트 키워드 뽑기 - system
+# 코호트 json 뽑기 - system
 COHORT_EXTRACTION_SYSTEM_PROMPT = f"""
-Role: Medical Cohort Extraction Expert
+Role:  
+Act as a **medical cohort definition expert** specialized in converting clinical trial eligibility criteria into OMOP CDM JSON format.
 
-Context:
-You are an AI assistant that extracts key OMOP-compatible medical keywords from clinical trial eligibility criteria.
-These keywords will be used to search for concept codes in a structured OMOP CDM concept database.
+Context:  
+You are given a clinical trial's eligibility criteria section. Your job is to convert these criteria into a structured JSON format that follows the OMOP CDM specification.
+
+Instructions:  
+1. Extract ONLY the implementable criteria (those that can be directly converted to OMOP CDM concepts)
+2. Ignore criteria that require complex logic or cannot be directly mapped to OMOP concepts
+3. Return the criteria in the following JSON format:
+
+Required JSON Format:
+{{
+  "conceptsets": [
+    {{
+      "conceptset_id": "0",  // MUST be a string
+      "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
+      "items": []  // MUST be an empty array
+    }}
+  ],
+  "cohort": [
+    {{
+      "containers": [
+        {{
+          "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
+          "filters": [  // MUST be an array
+            {{
+              "type": "condition_occurrence",  // MUST match the conceptset type
+              "first": true,  // MUST be true
+              "conceptset": "0"  // MUST match the conceptset_id
+            }}
+          ]
+        }}
+      ]
+    }},
+    {{// Group 2: Demographic Criteria
+      "containers": [
+        {{
+          "name": "age",
+          "filters": [
+            {{
+              "type": "demographic",
+              "first": true,
+              "age": {{ "gte": 20 }}
+            }}
+          ]
+        }}
+      ]
+    }},
+  ]
+}}
 
 {STRICT_REQUIREMENT}
+{STRICT_REQUIREMENT_SCHEMA}
+
+CRITICAL RULES:
+1. Each conceptset MUST have:
+   - conceptset_id (string)
+   - name (medical term)
+   - items (empty array)
+   - DO NOT include type field in conceptset
+
+2. Each container in cohort MUST have:
+   - name (ONLY the medical term, NO additional words)
+   - type (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
+   - Each filter MUST have:
+     - type (one of the allowed types)
+     - first: true
+     - conceptset (matching conceptset_id)
+
+3. Important:
+   - [CRITICAL] Each concept should appear only ONCE
+   - [CRITICAL] For Measurement type:
+     * MUST include valueAsNumber with operator and value
+     * Example: "Hemoglobin > 13" → {{ "valueAsNumber": {{ "gt": 13 }} }}
+   - [CRITICAL] For age criteria:
+     * MUST use "demographic" as type
+     * MUST include age value and operator
+     * Example: "Age > 18" → {{ "type": "demographic", "name": "Age", "age": {{ "gt": 18 }} }}
+     * demographic type can ONLY be used in the second or later group in the cohort array
+     * [CRITICAL] The first group MUST contain only medical conditions, procedures, or other non-demographic criteria
+   - For conditions:
+     * Use "condition_occurrence" as type (NOT condition_era)
+
+4. NEVER include:
+   - Complex logic
+   - Non-implementable criteria
+   - Criteria without clear OMOP CDM mappings
+   - Additional words like "diagnosis", "treatment", "therapy", etc.
+   - type field in conceptset
+   - [CRITICAL] ANY explanations, comments, or text outside the JSON structure
+   - [CRITICAL] ANY text that describes what you're doing or why
+
+4. ALWAYS maintain the exact structure shown above
 """
-# 코호트 키워드 뽑기 - user
+
+# 코호트 json 뽑기 - user
 COHORT_EXTRACTION_PROMPT = """
 You are an AI assistant specialized in processing medical cohort selection criteria.
 Your task is to extract medical conditions, treatments, medications, and procedures mentioned explicitly in the provided text
 and classify them into appropriate OMOP CDM domains.
 
-## Rules
-1. Structure:
-   - PrimaryCriteria: The MAIN condition/procedure that defines the cohort (usually the first inclusion criteria)
-   - AdditionalCriteria:
-     - Groups[0] (Type: "ALL"): Additional inclusion criteria
-     - Groups[1] (Type: "NONE"): Exclusion criteria
-
-2. Each criteria MUST include:
-   - "CriteriaType": The type of criteria (e.g., "ConditionOccurrence", "DrugExposure", etc.)
-   - "ConceptName": [CRITICAL] This is the exact medical term that will be used for database search
-     * Must be precise and standardized medical terminology
-     * Avoid general descriptions or complex phrases
-     * Examples of good ConceptName:
-       - "sepsis" (not "sepsis or active infections")
-       - "hemodialysis" (not "patients with hemodialysis")
-       - "iron deficiency anemia" (exact medical condition)
-     * This field is crucial for finding correct concept_ids in the database
-   - Other required fields will be filled automatically
-
-3. Example format:
-   {{
-     "PrimaryCriteria": {{
-       "CriteriaList": [
-         {{
-           "CriteriaType": "ProcedureOccurrence",
-           "ConceptName": "hemodialysis",
-           "ProcedureOccurrence": {{}}
-         }}
-       ],
-       "PrimaryCriteriaLimit": {{
-         "Type": 0,
-         "Count": 1
-       }}
-     }},
-     "AdditionalCriteria": {{
-       "Type": "ALL",
-       "CriteriaList": [],
-       "DemographicCriteriaList": [],
-       "Groups": [
-         {{
-           "Type": "ALL",  # Inclusion criteria - MUST be met
-           "CriteriaList": [
-             {{
-               "Criteria": {{
-                 "CriteriaType": "ObservationPeriod",
-                 "AgeAtStart": {{
-                   "Value": 20,
-                   "Op": "gte"
-                 }},
-                 "ObservationPeriod": {{}}
-               }}
-             }},
-             {{
-               "Criteria": {{
-                 "CriteriaType": "DrugExposure",
-                 "ConceptName": "erythropoiesis stimulating agent",
-                 "DrugExposure": {{}}
-               }}
-             }},
-             {{
-               "Criteria": {{
-                 "CriteriaType": "ConditionOccurrence",
-                 "ConceptName": "iron deficiency anemia",
-                 "ConditionOccurrence": {{}}
-               }}
-             }}
-           ],
-           "DemographicCriteriaList": [],
-           "Groups": []
-         }},
-         {{
-           "Type": "NONE",  # Exclusion criteria - MUST NOT be met
-           "CriteriaList": [
-             {{
-               "Criteria": {{
-                 "CriteriaType": "VisitOccurrence",
-                 "ConceptName": "intensive care unit",
-                 "VisitOccurrence": {{}}
-               }}
-             }},
-             {{
-               "Criteria": {{
-                 "CriteriaType": "Measurement",
-                 "ConceptName": "hemoglobin",
-                 "Measurement": {{}},
-                 "ValueAsNumber": {{
-                   "Value": 13,
-                   "Op": "gt"
-                 }}
-               }}
-             }},
-             {{
-               "Criteria": {{
-                 "CriteriaType": "ProcedureOccurrence",
-                 "ConceptName": "kidney transplant",
-                 "ProcedureOccurrence": {{}}
-               }}
-             }},
-             {{
-               "Criteria": {{
-                 "CriteriaType": "ConditionOccurrence",
-                 "ConceptName": "sepsis",
-                 "ConditionOccurrence": {{}}
-               }}
-             }}
-           ],
-           "DemographicCriteriaList": [],
-           "Groups": []
-         }}
-       ]
-     }}
-   }}
-
-4. Important:
-   - [CRITICAL] DO NOT duplicate conditions in CriteriaList
-   - [CRITICAL] Each unique ConceptName should appear only ONCE in PrimaryCriteria
-   - [CRITICAL] Each unique ConceptName should appear only ONCE in each AdditionalCriteria group
-   - The first inclusion criteria should be used as PrimaryCriteria
-   - All inclusion criteria (except Primary) go to AdditionalCriteria Groups[0] with Type: "ALL"
-   - All exclusion criteria go to AdditionalCriteria Groups[1] with Type: "NONE"
-   - DO NOT generate concept_id - it will be retrieved separately
-   - DO NOT include any Markdown formatting
-   - DO NOT include explanations or additional text
-   - ALWAYS include ConceptName for each criteria
-   - Return only the JSON output in the correct format
-   - For age criteria:
-     * Use "ObservationPeriod" as CriteriaType
-     * Include "AgeAtStart" or "AgeAtEnd" with "Value" and "Op"
-     * Valid operators: "gt", "lt", "gte", "lte", "eq", "bt", "!bt"
-   - For other numeric criteria (lab values, etc.):
-     * Use "Measurement" as CriteriaType
-     * Include "ValueAsNumber" with "Value" and "Op"
-   
-   - [CRITICAL] Only extract criteria from sections clearly labeled as inclusion/exclusion criteria
-     * Usually found in sections labeled as "Inclusion criteria", "Exclusion criteria", "Eligibility criteria"
-     * These criteria are typically grouped together in a single section/paragraph
-     * Ignore any medical terms or conditions mentioned in other parts of the text (e.g., results, discussion)
-   
-   - [CRITICAL] Only extract criteria that are EXPLICITLY stated as inclusion/exclusion criteria
-     * Do not include conditions mentioned in other contexts
-     * Do not include conditions from case descriptions or examples
-     * Do not include conditions from background or discussion sections
-   
-   - [CRITICAL] For each criteria:
-     * Extract ONLY the core medical concept
-     * Remove patient-related phrases (e.g., "patients with", "history of")
-     * Remove temporal qualifiers unless they are critical to the criteria
-     * Remove descriptive text that isn't part of the medical concept
-
-Example of what to extract:
-Text: "The study included patients with chronic kidney disease who were receiving hemodialysis. Patients with a history of cardiovascular disease were excluded."
-✓ DO extract:
-  - Inclusion: "hemodialysis", "chronic kidney disease"
-  - Exclusion: "cardiovascular disease"
-✗ DON'T extract:
-  - Random medical terms mentioned in results
-  - Conditions discussed in background
-  - Outcomes or complications
-
-Extract the cohort selection criteria from the following text and return only a valid JSON response:
+Extract the cohort selection criteria from the following text and return ONLY the JSON response:
 {text}
 """
 
-# 코호트 검색어 수정 - system
-COHORT_JSON_SYSTEM_PROMPT = f"""
-Role:  
-Act as a **medical terminology search assistant** specialized in optimizing clinical terms for OMOP CDM database retrieval.
-
-Context:  
-You are given a medical term that failed to return a valid `concept_id` during OMOP CDM lookup. Your job is to improve the search term so it aligns better with standardized terminology used in the OMOP database.
-
-Instructions:  
-1. If the given term is an abbreviation (e.g., `"ESA"`), expand it to the full medical term (e.g., `"Erythropoiesis Stimulating Agent"`).
-2. Replace vague or overly specific phrases with broader, standardized equivalents.
-   - For example:  
-     `"Sodium bicarbonate therapy"` → `"Sodium bicarbonate"`  
-     `"Hemoglobin level over 13 g/dL"` → `"Hemoglobin"`
-
-{STRICT_REQUIREMENT}
-
-**Modified Examples**:
-- Input: `"ESA"` → Output: `Erythropoiesis Stimulating Agent`
-- Input: `"Sodium bicarbonate therapy"` → Output: `Sodium bicarbonate`
-"""
-
-# 코호트 검색어 수정 - user
-SEARCH_QUERY_REFINEMENT_PROMPT = """
-Original Term: "{term}"
-"""
-
-# 1. PDF에서 텍스트 추출
-def extract_text_from_pdf(pdf_path) -> str:
-    doc = pymupdf.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text() + "\n"
-    return text
-
-# 2. 키워드 검색어 + type 자동 추출
 def extract_terms_from_text(text: str) -> dict:
     """
-    PDF 텍스트에서 코호트 기준을 추출하여 기본 OMOP CDM JSON 형식으로 반환
+    텍스트에서 코호트 정의를 추출합니다.
     
     Args:
-        text (str): PDF에서 추출한 텍스트
+        text: 코호트 정의가 포함된 텍스트
         
     Returns:
-        dict: 기본 OMOP CDM JSON 형식
+        OMOP CDM cohort JSON
     """
     response = client.chat.completions.create(
         model=model_name,
         messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
-                  {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}]
+                 {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}],
+        temperature=0.0 
     )
-
+    llm_response = response.choices[0].message.content
+    
+    # 디버깅을 위한 출력
+    print("\n[LLM 응답 원본]:")
+    print(llm_response)
+    
     try:
-        # LLM 응답을 JSON으로 변환
-        cohort_json = json.loads(response.choices[0].message.content)
+        content = llm_response.strip()
         
-        # PrimaryCriteria의 CriteriaList 처리
-        if "PrimaryCriteria" in cohort_json and "CriteriaList" in cohort_json["PrimaryCriteria"]:
-            for criteria in cohort_json["PrimaryCriteria"]["CriteriaList"]:
-                if "CriteriaType" in criteria:
-                    criteria_info = cohort_json_schema.map_criteria_info(criteria["CriteriaType"])
-                    if criteria_info:
-                        # 기존 정보 보존하면서 새로운 정보 추가
-                        criteria.update({
-                            "CriteriaName": criteria_info["CriteriaName"],
-                            "Domain": criteria_info["Domain"],
-                            "Domain_id": criteria_info["Domain_id"]
-                        })
-
-        # AdditionalCriteria의 Groups 처리
-        if "AdditionalCriteria" in cohort_json and "Groups" in cohort_json["AdditionalCriteria"]:
-            for group in cohort_json["AdditionalCriteria"]["Groups"]:
-                if "CriteriaList" in group:
-                    for criteria in group["CriteriaList"]:
-                        if "Criteria" in criteria and "CriteriaType" in criteria["Criteria"]:
-                            criteria_info = cohort_json_schema.map_criteria_info(criteria["Criteria"]["CriteriaType"])
-                            if criteria_info:
-                                # 기존 정보 보존하면서 새로운 정보 추가
-                                criteria["Criteria"].update({
-                                    "CriteriaName": criteria_info["CriteriaName"],
-                                    "Domain": criteria_info["Domain"],
-                                    "Domain_id": criteria_info["Domain_id"]
-                                })
-                                
-                                # ObservationPeriod 타입인 경우 빈 객체 추가
-                                if criteria["Criteria"]["CriteriaType"] == "ObservationPeriod":
-                                    criteria["Criteria"]["ObservationPeriod"] = {}
+        if "```" in content:
+            content = content.split("```")[1].strip()
+        
+        cohort_json = json.loads(content)
+        
+        # conceptset_id를 순차적으로 재할당
+        conceptset_id_map = {}
+        for i, conceptset in enumerate(cohort_json.get("conceptsets", [])):
+            old_id = conceptset.get("conceptset_id")
+            new_id = str(i)
+            conceptset_id_map[old_id] = new_id
+            conceptset["conceptset_id"] = new_id
+        
+        # cohort 내의 conceptset 참조 업데이트
+        for group in cohort_json.get("cohort", []):
+            for container in group.get("containers", []):
+                for filter in container.get("filters", []):
+                    if "conceptset" in filter:
+                        filter["conceptset"] = conceptset_id_map.get(filter["conceptset"], filter["conceptset"])
+        
+        # 디버깅을 위한 출력
+        print("\n[파싱된 JSON]:")
+        print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
+        
         return cohort_json
     
-    except json.JSONDecodeError:
-        print("JSONDecodeError: 응답이 유효한 JSON 형식이 아님")
-        return None
-    
     except Exception as e:
-        print(f"Unexpected Error: {e}")
-        return None
+        print(f"\n[Unexpected Error]")
+        print(f"Error: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {"conceptsets": [], "cohort": []}
 
-# 불필요한 정보가 추가된 문구를 제거하는 함수 
-def clean_term(term):
-    return re.sub(r"\s*\(.*?\)", "", term).strip() 
-
-# 3. ClickHouse에서 `concept_id` 조회
-def get_omop_concept_id(term: str, domain_id: str) -> list:
-    cleaned_term = clean_term(term).replace('%', '%%')
+# 텍스트에서 코호트 정의를 추출하여 JSON 형식으로 변환
+def text_to_json(implementable_text: str) -> dict:
+    # 2. 텍스트에서 criteria 추출 (implementable 부분만 사용)
+    cohort_json = extract_terms_from_text(implementable_text)
+    print("\n[cohort_json]:")
+    print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
     
-    # 일반적인 검색
-    query = """
-    SELECT concept_id, concept_name 
-    FROM concept 
-    WHERE concept_name ILIKE %(term)s 
-    AND domain_id = %(domain_id)s 
-    AND invalid_reason IS NULL
-    LIMIT 3
-    """
-    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id})
-    
-    return [(r[0], r[1]) for r in results]
-
-# 4. 검색어 변경하여 재검색
-def refine_search_query(term) -> str:
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=[{"role": "system", "content": COHORT_JSON_SYSTEM_PROMPT},
-                  {"role": "user", "content": SEARCH_QUERY_REFINEMENT_PROMPT.format(term=term)}]
-    )
-
-    return response.choices[0].message.content.strip()
-
-# cohort_json의 ConceptName을 기반으로 DB에서 concept_id를 조회하여 업데이트
-def get_concept_ids(cohort_json: dict) -> dict:
-    # PrimaryCriteria 처리
-    if "PrimaryCriteria" in cohort_json and "CriteriaList" in cohort_json["PrimaryCriteria"]:
-        for criteria in cohort_json["PrimaryCriteria"]["CriteriaList"]:
-            # ObservationPeriod는 concept_id 검색 건너뛰기
-            if criteria.get("CriteriaType") == "ObservationPeriod":
-                continue
-                
-            if "ConceptName" in criteria and "Domain_id" in criteria:
-                search_term = criteria["ConceptName"]  # 원래 검색어
-                concept_results = get_omop_concept_id(search_term, criteria["Domain_id"])
-                if concept_results:
-                    criteria["CodesetId"] = [result[0] for result in concept_results]
-                    criteria["ConceptName"] = search_term
-                    # DB 결과는 나중에 ConceptSets에서 명시하기 위해 임시 저장
-                    criteria["_db_results"] = concept_results  # 임시 저장
-    
-    # AdditionalCriteria 처리
-    if "AdditionalCriteria" in cohort_json and "Groups" in cohort_json["AdditionalCriteria"]:
-        for group in cohort_json["AdditionalCriteria"]["Groups"]:
-            if "CriteriaList" in group:
-                for criteria in group["CriteriaList"]:
-                    if "Criteria" in criteria:
-                        # ObservationPeriod는 concept_id 검색 건너뛰기
-                        if criteria["Criteria"].get("CriteriaType") == "ObservationPeriod":
-                            continue
-                            
-                        if "ConceptName" in criteria["Criteria"] and "Domain_id" in criteria["Criteria"]:
-                            search_term = criteria["Criteria"]["ConceptName"]
-                            concept_results = get_omop_concept_id(search_term, criteria["Criteria"]["Domain_id"])
-                            if concept_results:
-                                criteria["Criteria"]["CodesetId"] = [result[0] for result in concept_results]
-                                criteria["Criteria"]["ConceptName"] = search_term
-                                criteria["Criteria"]["_db_results"] = concept_results
-    
-    return cohort_json
-
-# concept_id가 포함된 cohort_json을 최종 OMOP CDM JSON 형식으로 변환
-def create_omop_json(cohort_json: dict) -> dict:
-    result = {
-        "PrimaryCriteria": {
-            "CriteriaList": [],
-            "PrimaryCriteriaLimit": {"Type": 0, "Count": 1}
-        },
-        "AdditionalCriteria": {
-            "Type": "ALL",
-            "CriteriaList": [],
-            "DemographicCriteriaList": [],
-            "Groups": [
-                {"Type": "ALL", "CriteriaList": [], "DemographicCriteriaList": [], "Groups": []},
-                {"Type": "NONE", "CriteriaList": [], "DemographicCriteriaList": [], "Groups": []}
-            ]
-        },
-        "ConceptSets": [],
-        "EndStrategy": {"DateField": "EndDate", "Offset": 0},
-        "cdmVersionRange": ">=5.0.0",
-        "includeAllDescendants": True,
-        "includedCovariateConceptIds": [],
-        "CensoringCriteria": [],
-        "InclusionRules": [],
-        "CollapseSettings": {"CollapseType": "ERA", "EraPad": 0}
-    }
-    
-    # Criteria 처리 함수
-    def process_criteria(criteria):
-        result_criteria = {
-            key: value for key, value in criteria.items() 
-            if not key.startswith('_')
-        }
-        
-        # ObservationPeriod 타입인 경우 특별 처리
-        if criteria.get("CriteriaType") == "ObservationPeriod":
-            if "AgeAtStart" in criteria:
-                result_criteria["AgeAtStart"] = criteria["AgeAtStart"]
-            if "AgeAtEnd" in criteria:
-                result_criteria["AgeAtEnd"] = criteria["AgeAtEnd"]
-            result_criteria["ObservationPeriod"] = {}
-        # Measurement 타입인 경우 ValueAsNumber 처리
-        elif "ValueAsNumber" in criteria:
-            result_criteria["ValueAsNumber"] = criteria["ValueAsNumber"]
-            result_criteria["Measurement"] = {}
-        
-        # 각 CriteriaType에 맞는 빈 객체 추가
-        criteria_type = criteria.get("CriteriaType")
-        if criteria_type:
-            result_criteria[criteria_type] = {}
-        
-        return result_criteria
-    
-    # ConceptSet 추가 함수
-    def add_concept_set(concept_id: int, db_name: str, domain_id: str):
-        result["ConceptSets"].append({
-            "id": concept_id,
-            "name": db_name,
-            "expression": {
-                "items": [{
-                    "concept": {
-                        "CONCEPT_ID": concept_id,
-                        "CONCEPT_NAME": db_name,
-                        "DOMAIN_ID": domain_id
-                    }
-                }]
-            }
-        })
-    
-    # PrimaryCriteria 처리
-    if "PrimaryCriteria" in cohort_json and "CriteriaList" in cohort_json["PrimaryCriteria"]:
-        for criteria in cohort_json["PrimaryCriteria"]["CriteriaList"]:
-            # 모든 criteria 포함
-            result["PrimaryCriteria"]["CriteriaList"].append(process_criteria(criteria))
-            
-            # ConceptSets 추가
-            if "_db_results" in criteria:
-                for concept_id, db_name in criteria["_db_results"]:
-                    add_concept_set(concept_id, db_name, criteria["Domain_id"])
-    
-    # AdditionalCriteria 처리
-    if "AdditionalCriteria" in cohort_json and "Groups" in cohort_json["AdditionalCriteria"]:
-        for group in cohort_json["AdditionalCriteria"]["Groups"]:
-            if "CriteriaList" not in group:
-                continue
-                
-            # 포함/제외 그룹 결정
-            is_exclusion = group["Type"] == "NONE"
-            target_group = result["AdditionalCriteria"]["Groups"][1] if is_exclusion else result["AdditionalCriteria"]["Groups"][0]
-            
-            # Criteria 처리
-            for criteria in group["CriteriaList"]:
-                if "Criteria" not in criteria:
-                    continue
-                    
-                # Criteria 추가
-                target_group["CriteriaList"].append(process_criteria(criteria["Criteria"]))
-                
-                # ConceptSets 추가
-                if "_db_results" in criteria["Criteria"]:
-                    for concept_id, db_name in criteria["Criteria"]["_db_results"]:
-                        add_concept_set(concept_id, db_name, criteria["Criteria"]["Domain_id"])
-    
-    return result
-
-def remove_duplicates_from_json(cohort_json: dict) -> dict:
-    """
-    JSON에서 중복된 criteria 제거
-    """
-    # PrimaryCriteria에서 중복 제거
-    if "PrimaryCriteria" in cohort_json and "CriteriaList" in cohort_json["PrimaryCriteria"]:
-        seen = set()
-        unique_criteria = []
-        for criteria in cohort_json["PrimaryCriteria"]["CriteriaList"]:
-            key = (criteria.get("CriteriaType"), criteria.get("ConceptName"))
-            if key not in seen:
-                seen.add(key)
-                unique_criteria.append(criteria)
-        cohort_json["PrimaryCriteria"]["CriteriaList"] = unique_criteria
-
-    # AdditionalCriteria Groups에서 중복 제거
-    if "AdditionalCriteria" in cohort_json and "Groups" in cohort_json["AdditionalCriteria"]:
-        for group in cohort_json["AdditionalCriteria"]["Groups"]:
-            if "CriteriaList" in group:
-                seen = set()
-                unique_criteria = []
-                for criteria in group["CriteriaList"]:
-                    if "Criteria" in criteria:
-                        key = (criteria["Criteria"].get("CriteriaType"), 
-                              criteria["Criteria"].get("ConceptName"))
-                        if key not in seen:
-                            seen.add(key)
-                            unique_criteria.append(criteria)
-                    else:
-                        key = (criteria.get("CriteriaType"), 
-                              criteria.get("ConceptName"))
-                        if key not in seen:
-                            seen.add(key)
-                            unique_criteria.append(criteria)
-                group["CriteriaList"] = unique_criteria
-
-    return cohort_json
-
-def main():
-    pdf_path = "pdf/Establishment of ICU Mortality Risk Prediction Models with Machine Learning Algorithm MIMIC .pdf"
-    
-    # 1. PDF에서 텍스트 추출
-    extracted_text = extract_text_from_pdf(pdf_path)
-    
-    # 2. 텍스트에서 terms 추출
-    terms = extract_terms_from_text(extracted_text)
-
-    # 중복 제거
-    terms = remove_duplicates_from_json(terms)
-    if not terms:
-        print("Failed to extract terms")
+    if not cohort_json or (not cohort_json.get("conceptsets") and not cohort_json.get("cohort")):
+        print("Failed to extract criteria")
         return
-    # 디버깅 - 추후 삭제
-    print("extracted terms:", json.dumps(terms, indent=2, ensure_ascii=False))
     
     # 3. DB에서 concept_id 조회
-    terms_with_concepts = get_concept_ids(terms)
-    print("terms_with_concepts:", terms_with_concepts)
+    from get_omop_concept_id import get_concept_ids
+    cohort_json = get_concept_ids(cohort_json)
+    print("\n[cohort_json with concept_ids]:")
+    print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
     
-    # 4. OMOP CDM JSON 형식으로 변환
-    cohort_json = create_omop_json(terms_with_concepts)
-    print("cohort_json:", cohort_json)
+    return cohort_json
+
+
+def main():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # 5. JSON 파일로 저장
-    output_file = "cohort_criteria.json"
+    # PDF 파일 경로
+    # pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
+    # pdf_path = os.path.join(current_dir, "pdf", "NEJMoa2211868.pdf")
+    pdf_path = os.path.join(current_dir, "pdf", "jama_dulhunty_2024_oi_240070_1723741887.30473.pdf")
+    
+    # 1. PDF에서 텍스트 추출
+    implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
+    
+    print("\n[Implementable Criteria 부분만]:")
+    print(implementable_text)
+    
+    # 2. 텍스트에서 COHORT JSON 추출
+    cohort_json = text_to_json(implementable_text)
+
+    # 4. JSON 파일로 저장
+    output_file = os.path.join(current_dir, "cohort_criteria_sample.json")
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(cohort_json, f, indent=4, ensure_ascii=False)
-    print(f"Cohort definition saved to {output_file}")
+    print(f"\nCohort definition saved to: {output_file}")
+
 
 if __name__ == "__main__":
     main()
