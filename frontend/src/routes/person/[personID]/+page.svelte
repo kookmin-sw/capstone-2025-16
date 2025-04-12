@@ -399,6 +399,7 @@
                     type="half"
                     hasTableView={true}
                     isTableView={isTableView.visitTypeRatio}
+                    hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
                 >
                     <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
@@ -420,6 +421,7 @@
                     type="half"
                     hasTableView={true}
                     isTableView={isTableView.departmentVisits}
+                    hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.departmentVisits = detail}
                 >
                     <SingleDonutChartWrapper data={analysisData.statistics.departmentVisits} />
@@ -441,6 +443,7 @@
                     type="half"
                     hasTableView={true}
                     isTableView={isTableView.topTenDrugs}
+                    hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
                 >
                     <BarChartWrapper
@@ -463,6 +466,7 @@
                     type="half"
                     hasTableView={true}
                     isTableView={isTableView.topTenConditions}
+                    hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
                 >
                     <BarChartWrapper
@@ -485,6 +489,7 @@
                     type="half"
                     hasTableView={true}
                     isTableView={isTableView.topTenProcedures}
+                    hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
                 >
                     <BarChartWrapper
@@ -507,6 +512,7 @@
                     type="half"
                     hasTableView={true}
                     isTableView={isTableView.topTenMeasurements}
+                    hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
                 >
                     <BarChartWrapper
