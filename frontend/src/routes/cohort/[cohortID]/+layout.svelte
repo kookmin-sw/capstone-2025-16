@@ -1,5 +1,6 @@
 <script>
     import { page } from '$app/stores';
+    import { get } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import { filter } from 'd3';
 	import { onMount, tick } from 'svelte';
@@ -15,6 +16,7 @@
 	let paginatedData = $state([]);
 	let cohortDiv;
 	let resizeObserver;
+	let currentPersonId = $state(null);
 
 	const rowHeight = 35;
 
@@ -34,7 +36,17 @@
 		);
 	}
 
+	function selectUser(personid) {
+		currentPersonId = personid;
+	}
+
 	onMount(async () => {
+
+		const personIdFromUrl = get(page).params.person;
+		if (personIdFromUrl) {
+			currentPersonId = parseInt(personIdFromUrl);
+		}
+
 		if (data.userData.length !== 0) {
 			currentPage = 1;
 			filteredData = data.userData;
@@ -121,17 +133,21 @@
 
 	<div class="flex-1 overflow-y-auto px-2" bind:this={cohortDiv}>
 		<!-- 환자 목록 -->
-		<div class="flex flex-col rounded-lg border border-zinc-200 bg-white shadow-sm">
+		<div class="flex flex-col rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden">
 			{#each paginatedData as user}
-				<a href="/cohort/{cohortID}/{user.personid}" class="group transition-colors duration-200 hover:bg-zinc-50">
-					<div class="flex items-center justify-between px-4 py-2 border-b border-zinc-100 h-[33px]">
+				<a href="/cohort/{cohortID}/{user.personid}"
+					class="group transition-colors duration-200 hover:bg-blue-50
+					{currentPersonId === user.personid ? 'bg-blue-100': ''}"
+					onclick={()=> selectUser(user.personid)}>
+					<div class="flex items-center justify-between px-4 py-2 border-b border-zinc-100 overflow-hidden h-[33px]">
 						<div class="flex items-center w-full">
 							<span class="text-xs text-zinc-400 w-[70px]">ID {user.personid}</span>
 							<span class="text-xs text-zinc-600">{user.gender}</span>
 							<span class="text-xs text-zinc-300 mx-1">•</span>
 							<span class="text-xs text-zinc-600">{user.age}세</span>
 						</div>
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+							class={`w-3.5 h-3.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity ${currentPersonId === user.personid ? 'opacity-100': 'opacity-0'}`}>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
 						</svg>
 					</div>
