@@ -115,6 +115,43 @@
                     {analysisData.totalPatients}
                 </span>
             </div>
+
+            <div class="flex items-center gap-4">
+                <!-- 코호트 수정 버튼 -->
+                <button class="flex items-center justify-center relative group">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600 hover:text-blue-800">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232a3 3 0 00-4.464 0L3 12.5V17h4.5l7.768-7.768a3 3 0 000-4.464z" />
+                    </svg>
+                    <span class="absolute left-1/2 top-full mt-2 transform -translate-x-1/2 bg-white text-xs text-gray-700 rounded shadow-md p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Edit
+                    </span>
+                </button>
+
+                <!-- 코호트 복제 버튼 -->
+                <button class="flex items-center justify-center relative group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 hover:text-green-800">
+                        <g fill="none" fill-rule="evenodd">
+                            <path d="m16.5 10.5v-8c0-1.1045695-.8954305-2-2-2h-8c-1.1045695 0-2 .8954305-2 2v8c0 1.1045695.8954305 2 2 2h8c1.1045695 0 2-.8954305 2-2z"/>
+                            <path d="m4.5 4.50345827h-2c-1.1045695 0-2 .8954305-2 2v7.99654173c0 1.1045695.8954305 2 2 2h.00345528l8.00000002-.0138241c1.1032187-.001906 1.9965447-.8967767 1.9965447-1.9999971v-1.9827205"/>
+                            <path d="m10.5 3.5v6"/>
+                            <path d="m10.5 3.5v6" transform="matrix(0 1 -1 0 17 -4)"/>
+                        </g>
+                    </svg>
+                    <span class="absolute left-1/2 top-full mt-2 transform -translate-x-1/2 bg-white text-xs text-gray-700 rounded shadow-md p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Duplicate
+                    </span>
+                </button>
+
+                <!-- 코호트 삭제 버튼 -->
+                <button class="flex items-center justify-center relative group">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-600 hover:text-red-800">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span class="absolute left-1/2 top-full mt-2 transform -translate-x-1/2 bg-white text-xs text-gray-700 rounded shadow-md p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Delete
+                    </span>
+                </button>
+            </div>
         </div>
         
         <!-- 상세 정보 -->
