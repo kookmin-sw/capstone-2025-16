@@ -2,11 +2,11 @@
   export let specimen;
 </script>
 
-<div class="specimen-container">
+<div class="flex flex-col bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full">
   <h2 class="title">Specimen Information</h2>
 
   {#if specimen && specimen.length > 0}
-    <table class="specimen-table w-full border border-gray-200 text-sm text-left mb-6">
+    <table class="specimen-table w-full border border-gray-200 text-sm text-left">
       <thead class="bg-gray-100">
         <tr>
           <th class="px-4 py-2 border-b">Concept ID</th>
@@ -30,14 +30,6 @@
 </div>
 
 <style>
-  .specimen-container {
-    padding: 16px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    max-width: 100%;
-  }
-
   .title {
     font-size: 1.3rem;
     font-weight: bold;

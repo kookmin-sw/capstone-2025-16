@@ -2,7 +2,7 @@
   export let drugExposure;
 </script>
 
-<div class="drug-container">
+<div class="flex flex-col bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full">
   <h2 class="title">Drug Information</h2>
 
   <!-- Drug Era (약물 복용 기록) -->
@@ -59,14 +59,6 @@
 </div>
 
 <style>
-  .drug-container {
-    padding: 16px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    max-width: 100%;
-  }
-
   .title {
     font-size: 1.3rem;
     font-weight: bold;
