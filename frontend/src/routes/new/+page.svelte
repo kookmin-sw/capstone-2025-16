@@ -13,31 +13,27 @@
 	let showCohortAIModal = $state(false);
 
 	// Types TS 기반 새로운 코호트 구조 정의
-	// 코호트 정의 기본 구조
+	// 코호트 정의 기본 구조 - CohortDefinition 타입 적용
 	let cohortDefinition = $state({
 		conceptsets: [],
-		cohort: [
-			// 초기 그룹 (Initial Group)
-			{
-				containers: [
-					// 첫 번째 컨테이너 (필수)
-					{
-						name: 'Container 1',
-						filters: []
-					}
-				]
-			},
-			// 추가 그룹 (Additional Group)
-			{
-				not: false,
-				containers: [
-					{
-						name: 'Container 1',
-						filters: []
-					}
-				]
-			}
-		]
+		initialGroup: {
+			containers: [
+				// 첫 번째 컨테이너 (필수)
+				{
+					name: 'Container 1',
+					filters: []
+				}
+			]
+		},
+		// comparisonGroup은 옵션
+		comparisonGroup: {
+			containers: [
+				{
+					name: 'Container 1',
+					filters: []
+				}
+			]
+		}
 	});
 	
 	// Handle AI generated cohort
@@ -101,12 +97,8 @@
 			type: 'visit_occurrence',
 			name: 'Visit Occurrence',
 			description: 'Find patients based on hospital visits.'
-		},
-		{
-			type: 'demographic',
-			name: 'Demographic',
-			description: 'Find patients based on demographic characteristics.'
 		}
+		// Demographic filter is commented out in the types.ts file, so we'll exclude it for now
 	];
 
 	// 도메인별 속성 정의
@@ -279,21 +271,13 @@
 			{ name: 'source', label: 'Source', type: 'concept' },
 			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' },
 			{ name: 'placeOfService', label: 'Place of Service', type: 'concept' }
-		],
-		demographic: [
-			{ name: 'age', label: 'Age', type: 'numberrange' },
-			{ name: 'gender', label: 'Gender', type: 'concept' },
-			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
-			{ name: 'endDate', label: 'End Date', type: 'daterange' },
-			{ name: 'raceType', label: 'Race', type: 'concept' },
-			{ name: 'ethnicityType', label: 'Ethnicity', type: 'concept' }
 		]
 	};
 
 	// 편집 관련 상태 변수
 	let selectedDomainType = $state(null); // 선택된 도메인 타입
 	let editingFilterIndex = $state(null); // 편집할 필터 인덱스
-	let editingGroupIndex = $state(0); // 편집할 그룹 인덱스
+	let editingGroupType = $state('initialGroup'); // 편집할 그룹 타입 - 'initialGroup' 또는 'comparisonGroup'
 	let editingContainerIndex = $state(0); // 편집할 컨테이너 인덱스
 
 	// 현재 편집중인 필터 속성 값
@@ -310,7 +294,7 @@
 	// 컨테이너 드래그 앤 드롭 관련 변수
 	let draggedContainerIndex = $state(null);
 	let hoveredContainerIndex = $state(null);
-	let draggedGroupIndex = $state(null);
+	let draggedGroupType = $state(null);
 
 	// 모달 관련 상태 변수
 	let showConceptSetModal = $state(false);
@@ -324,11 +308,11 @@
 		editingFilterIndex = null;
 	}
 
-	// 필터 생성 함수
+	// 필터 생성 함수 - Filter 타입에 맞게 설정
 	function createFilter() {
 		if (!selectedDomainType) return;
 
-		// 기본 필터 객체 생성
+		// 기본 필터 객체 생성 - Filter 타입에 맞게 타입 속성 설정
 		const newFilter = {
 			type: selectedDomainType
 		};
@@ -347,12 +331,12 @@
 
 		// 현재 편집중인 필터가 있는 경우 업데이트
 		if (editingFilterIndex !== null) {
-			cohortDefinition.cohort[editingGroupIndex].containers[editingContainerIndex].filters[
+			cohortDefinition[editingGroupType].containers[editingContainerIndex].filters[
 				editingFilterIndex
 			] = newFilter;
 		} else {
 			// 새 필터 추가
-			cohortDefinition.cohort[editingGroupIndex].containers[editingContainerIndex].filters.push(
+			cohortDefinition[editingGroupType].containers[editingContainerIndex].filters.push(
 				newFilter
 			);
 		}
@@ -362,13 +346,13 @@
 	}
 
 	// 필터 수정 함수
-	function editFilter(groupIndex, containerIndex, filterIndex) {
-		editingGroupIndex = groupIndex;
+	function editFilter(groupType, containerIndex, filterIndex) {
+		editingGroupType = groupType;
 		editingContainerIndex = containerIndex;
 		editingFilterIndex = filterIndex;
 
 		const filter =
-			cohortDefinition.cohort[groupIndex].containers[containerIndex].filters[filterIndex];
+			cohortDefinition[groupType].containers[containerIndex].filters[filterIndex];
 		selectedDomainType = filter.type;
 
 		// 기존 값 로드
@@ -377,8 +361,8 @@
 	}
 
 	// 필터 삭제 함수
-	function removeFilter(groupIndex, containerIndex, filterIndex) {
-		cohortDefinition.cohort[groupIndex].containers[containerIndex].filters.splice(filterIndex, 1);
+	function removeFilter(groupType, containerIndex, filterIndex) {
+		cohortDefinition[groupType].containers[containerIndex].filters.splice(filterIndex, 1);
 	}
 
 	// 조건 타입 이름 표시 함수
@@ -392,7 +376,7 @@
 		currentFilterValues[property] = value;
 	}
 
-	// 숫자 범위 업데이트 함수
+	// 숫자 범위 업데이트 함수 - NumberWithOperator 타입 적용
 	function updateNumberRange(property, min, max) {
 		// Operator<number> 형식으로 저장
 		if (min !== null && min !== '' && max !== null && max !== '') {
@@ -413,7 +397,7 @@
 		}
 	}
 
-	// 날짜 범위 업데이트 함수
+	// 날짜 범위 업데이트 함수 - DateWithOperator 타입 적용
 	function updateDateRange(property, start, end) {
 		// Operator<string> 형식으로 저장
 		if (start && end) {
@@ -434,7 +418,7 @@
 		}
 	}
 
-	// 문자열 연산자 업데이트 함수
+	// 문자열 연산자 업데이트 함수 - StringWithOperator 타입 적용
 	function updateStringOperator(property, value, operator = 'eq') {
 		if (!value) {
 			currentFilterValues[property] = null;
@@ -447,61 +431,60 @@
 		currentFilterValues[property] = operatorObj;
 	}
 
-	// 새 컨테이너 추가 함수
-	function addContainer(groupIndex) {
+	// 새 컨테이너 추가 함수 - SubsequentContainer 타입 적용
+	function addContainer(groupType) {
+		const containers = cohortDefinition[groupType].containers;
 		const newContainer = {
-			name: `Container ${cohortDefinition.cohort[groupIndex].containers.length + 1}`,
-			operator: 'AND', // 첫 번째 컨테이너가 아닌 경우 연산자 지정
+			name: `Container ${containers.length + 1}`,
 			filters: []
 		};
 
-		// 첫 번째 컨테이너인 경우 operator 제거
-		if (cohortDefinition.cohort[groupIndex].containers.length === 0) {
-			delete newContainer.operator;
+		// 첫 번째가 아닌 컨테이너는 SubsequentContainer 타입으로 operator 필요
+		if (containers.length > 0) {
+			newContainer.operator = 'AND';
 		}
 
-		cohortDefinition.cohort[groupIndex].containers.push(newContainer);
+		cohortDefinition[groupType].containers.push(newContainer);
 	}
 
 	// 컨테이너 삭제 함수
-	function removeContainer(groupIndex, containerIndex) {
-		// 첫 번째 컨테이너는 삭제 불가
-		if (containerIndex === 0 && cohortDefinition.cohort[groupIndex].containers.length === 1) {
+	function removeContainer(groupType, containerIndex) {
+		// 첫 번째 컨테이너는 삭제 불가 (FirstContainer 타입)
+		if (containerIndex === 0 && cohortDefinition[groupType].containers.length === 1) {
 			return;
 		}
 
-		cohortDefinition.cohort[groupIndex].containers.splice(containerIndex, 1);
+		cohortDefinition[groupType].containers.splice(containerIndex, 1);
 	}
 
 	// 컨테이너 이름 변경 함수
-	function updateContainerName(groupIndex, containerIndex, name) {
-		cohortDefinition.cohort[groupIndex].containers[containerIndex].name = name;
+	function updateContainerName(groupType, containerIndex, name) {
+		cohortDefinition[groupType].containers[containerIndex].name = name;
 	}
 
-	// 컨테이너 연산자 변경 함수
-	function updateContainerOperator(groupIndex, containerIndex, operator) {
+	// 컨테이너 연산자 변경 함수 - SubsequentContainer 타입의 operator 속성 업데이트
+	function updateContainerOperator(groupType, containerIndex, operator) {
 		if (containerIndex > 0) {
-			// 첫 번째 컨테이너는 연산자가 없음
-			cohortDefinition.cohort[groupIndex].containers[containerIndex].operator = operator;
+			// 첫 번째 컨테이너는 FirstContainer 타입으로 연산자가 없음
+			cohortDefinition[groupType].containers[containerIndex].operator = operator;
 		}
 	}
 
-	// 새 그룹 추가 함수 - 사용하지 않음 (초기 그룹과 추가 그룹만 사용)
-	function addGroup() {
-		// 이제 추가 그룹은 이미 기본 구조에 포함되어 있으므로 이 함수는 사용하지 않음
-	}
-
-	// 그룹 삭제 함수 - 사용하지 않음 (두 그룹 구조로 고정)
-	function removeGroup(groupIndex) {
-		// 두 그룹 구조로 고정되어 있으므로 삭제하지 않음
-		return;
-	}
-
-	// 그룹 NOT 설정 함수
-	function toggleGroupNot(groupIndex) {
-		// 첫 번째 그룹(FirstGroup)은 not 속성이 없음
-		if (groupIndex > 0) {
-			cohortDefinition.cohort[groupIndex].not = !cohortDefinition.cohort[groupIndex].not;
+	// 비교 그룹 토글 함수
+	function toggleComparisonGroup() {
+		if (cohortDefinition.comparisonGroup) {
+			// 비교 그룹이 있으면 제거
+			delete cohortDefinition.comparisonGroup;
+		} else {
+			// 비교 그룹이 없으면 추가
+			cohortDefinition.comparisonGroup = {
+				containers: [
+					{
+						name: 'Container 1',
+						filters: []
+					}
+				]
+			};
 		}
 	}
 
@@ -563,10 +546,10 @@
 	}
 
 	// 컨테이너 순서 변경 함수
-	function handleContainerReorder(groupIndex, draggedIndex, targetIndex) {
+	function handleContainerReorder(groupType, draggedIndex, targetIndex) {
 		if (draggedIndex === targetIndex) return;
 
-		const containers = [...cohortDefinition.cohort[groupIndex].containers];
+		const containers = [...cohortDefinition[groupType].containers];
 
 		// 첫 번째 컨테이너는 operator가 없으므로 특별 처리
 		if (draggedIndex === 0 || targetIndex === 0) {
@@ -577,11 +560,11 @@
 
 			// operator 재설정
 			if (containers[0].operator) {
-				// 새 첫 번째 컨테이너에 operator가 있으면 제거
+				// 새 첫 번째 컨테이너에 operator가 있으면 제거 (FirstContainer 타입으로 변환)
 				const firstOperator = containers[0].operator;
 				delete containers[0].operator;
 
-				// 원래 첫 번째였던 컨테이너가 이동했으면 operator 추가
+				// 원래 첫 번째였던 컨테이너가 이동했으면 operator 추가 (SubsequentContainer 타입으로 변환)
 				if (draggedIndex === 0 && targetIndex > 0) {
 					containers[1].operator = containers[1].operator || firstOperator || 'AND';
 				}
@@ -605,7 +588,7 @@
 			delete containers[0].operator;
 		}
 
-		cohortDefinition.cohort[groupIndex].containers = containers;
+		cohortDefinition[groupType].containers = containers;
 	}
 </script>
 
@@ -615,10 +598,10 @@
 >
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<h3 class="mb-3 text-sm font-bold text-gray-700">Initial Group</h3>
-		{#if cohortDefinition.cohort[0].containers.length === 0}
+		{#if cohortDefinition.initialGroup.containers.length === 0}
 			<p class="mb-2 ml-2 text-xs italic text-gray-500">No initial filters defined</p>
 		{:else}
-			{#each cohortDefinition.cohort[0].containers as container}
+			{#each cohortDefinition.initialGroup.containers as container}
 				<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
 					<p class="text-xs font-medium text-blue-700">{container.name}</p>
 				</div>
@@ -626,18 +609,20 @@
 		{/if}
 	</div>
 
-	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
-		<h3 class="mb-3 text-sm font-bold text-gray-700">Additional Group</h3>
-		{#if cohortDefinition.cohort[1].containers.length === 0}
-			<p class="mb-2 ml-2 text-xs italic text-gray-500">No additional filters defined</p>
-		{:else}
-			{#each cohortDefinition.cohort[1].containers as container}
-				<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
-					<p class="text-xs font-medium text-blue-700">{container.name}</p>
-				</div>
-			{/each}
-		{/if}
-	</div>
+	{#if cohortDefinition.comparisonGroup}
+		<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
+			<h3 class="mb-3 text-sm font-bold text-gray-700">Comparison Group</h3>
+			{#if cohortDefinition.comparisonGroup.containers.length === 0}
+				<p class="mb-2 ml-2 text-xs italic text-gray-500">No comparison filters defined</p>
+			{:else}
+				{#each cohortDefinition.comparisonGroup.containers as container}
+					<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
+						<p class="text-xs font-medium text-blue-700">{container.name}</p>
+					</div>
+				{/each}
+			{/if}
+		</div>
+	{/if}
 
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<div class="mb-3 flex items-center justify-between">
@@ -669,18 +654,62 @@
 		<!-- Main Panel -->
 		<div class="flex flex-1 flex-col p-5">
 			<div class="mb-8">
-				<h1 class="mb-2 text-2xl font-bold text-gray-800">Cohort Definition</h1>
-				<p class="text-sm text-gray-600">
-					Define the characteristics of patients to include in your cohort.
-				</p>
-				<button 
-					class="mt-3 relative rounded-2xl px-4 py-2 flex items-center"
-					on:click={() => showCohortAIModal = true}
-				>
-					<span class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-gradient-rotation"></span>
-					<span class="absolute inset-[3px] rounded-xl bg-white"></span>
-					<span class="relative text-sm font-medium bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">use Cohort AI </span>
-				</button>
+				<div class="flex justify-between items-center">
+					<div>
+						<h1 class="text-2xl font-bold text-gray-800">Cohort Definition</h1>
+						<p class="text-sm text-gray-600">
+							Define the characteristics of patients to include in your cohort.
+						</p>
+					</div>
+					<button 
+						class="relative rounded-2xl px-4 py-2 flex items-center"
+						on:click={() => showCohortAIModal = true}
+					>
+						<span class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-gradient-rotation"></span>
+						<span class="absolute inset-[3px] rounded-xl bg-white"></span>
+						<span class="relative text-sm font-medium bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">use Cohort AI</span>
+					</button>
+				</div>
+			</div>
+
+			<div class="mb-6 bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+				<div class="flex items-center justify-between">
+					<h2 class="text-lg font-semibold text-gray-800">Cohort Structure</h2>
+					<div class="flex items-center gap-2">
+						{#if cohortDefinition.comparisonGroup}
+							<span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+								<svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+									<circle cx="4" cy="4" r="3" />
+								</svg>
+								Comparison Mode
+							</span>
+							<button 
+								class="rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+								on:click={toggleComparisonGroup}
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+								</svg>
+								Remove Comparison
+							</button>
+						{:else}
+							<button 
+								class="rounded-md border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
+								on:click={toggleComparisonGroup}
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+								</svg>
+								Add Comparison Group
+							</button>
+						{/if}
+					</div>
+				</div>
+				{#if cohortDefinition.comparisonGroup}
+					<div class="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
+						<p><span class="font-medium">Comparison mode:</span> The Initial Group AND Comparison Group criteria must both be satisfied. Patients must meet conditions from both groups to be included in the final cohort.</p>
+					</div>
+				{/if}
 			</div>
 
 			<!-- Initial Group Section -->
@@ -689,39 +718,39 @@
 					<h3 class="text-lg font-semibold text-gray-800">Initial Group</h3>
 					<button
 						class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-						on:click={() => addContainer(0)}
+						on:click={() => addContainer('initialGroup')}
 					>
 						Add Container
 					</button>
 				</div>
 
 				<div class="space-y-6">
-					{#each cohortDefinition.cohort[0].containers as container, containerIndex}
+					{#each cohortDefinition.initialGroup.containers as container, containerIndex}
 						<div
 							class="cursor-move rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 {draggedContainerIndex ===
-								containerIndex && draggedGroupIndex === 0
+								containerIndex && draggedGroupType === 'initialGroup'
 								? 'opacity-50'
 								: ''} {hoveredContainerIndex === containerIndex &&
 							draggedContainerIndex !== null &&
 							draggedContainerIndex !== containerIndex &&
-							draggedGroupIndex === 0
+							draggedGroupType === 'initialGroup'
 								? 'border-blue-400 bg-blue-50'
 								: ''}"
 							draggable="true"
 							on:dragstart={() => {
 								draggedContainerIndex = containerIndex;
-								draggedGroupIndex = 0;
+								draggedGroupType = 'initialGroup';
 							}}
 							on:dragover|preventDefault={() => {
 								hoveredContainerIndex = containerIndex;
 							}}
 							on:drop|preventDefault={() => {
-								if (draggedGroupIndex === 0) {
-									handleContainerReorder(0, draggedContainerIndex, hoveredContainerIndex);
+								if (draggedGroupType === 'initialGroup') {
+									handleContainerReorder('initialGroup', draggedContainerIndex, hoveredContainerIndex);
 								}
 								draggedContainerIndex = null;
 								hoveredContainerIndex = null;
-								draggedGroupIndex = null;
+								draggedGroupType = null;
 							}}
 						>
 							<div class="mb-4 flex items-center justify-between">
@@ -730,7 +759,7 @@
 										<select
 											class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
 											value={container.operator}
-											on:change={(e) => updateContainerOperator(0, containerIndex, e.target.value)}
+											on:change={(e) => updateContainerOperator('initialGroup', containerIndex, e.target.value)}
 										>
 											<option value="AND">AND</option>
 											<option value="OR">OR</option>
@@ -742,7 +771,7 @@
 											type="text"
 											class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
 											value={container.name}
-											on:change={(e) => updateContainerName(0, containerIndex, e.target.value)}
+											on:change={(e) => updateContainerName('initialGroup', containerIndex, e.target.value)}
 										/>
 									</h4>
 								</div>
@@ -750,17 +779,17 @@
 									<button
 										class="text-sm text-blue-500 hover:text-blue-700"
 										on:click={() => {
-											editingGroupIndex = 0;
+											editingGroupType = 'initialGroup';
 											editingContainerIndex = containerIndex;
 											selectedDomainType = null;
 										}}
 									>
 										Add Filter
 									</button>
-									{#if containerIndex > 0 || cohortDefinition.cohort[0].containers.length > 1}
+									{#if containerIndex > 0 || cohortDefinition.initialGroup.containers.length > 1}
 										<button
 											class="text-sm text-red-500 hover:text-red-700"
-											on:click={() => removeContainer(0, containerIndex)}
+											on:click={() => removeContainer('initialGroup', containerIndex)}
 										>
 											Remove
 										</button>
@@ -785,13 +814,13 @@
 												<div class="flex space-x-2">
 													<button
 														class="text-xs text-blue-500 hover:text-blue-700"
-														on:click={() => editFilter(0, containerIndex, filterIndex)}
+														on:click={() => editFilter('initialGroup', containerIndex, filterIndex)}
 													>
 														Edit
 													</button>
 													<button
 														class="text-xs text-red-500 hover:text-red-700"
-														on:click={() => removeFilter(0, containerIndex, filterIndex)}
+														on:click={() => removeFilter('initialGroup', containerIndex, filterIndex)}
 													>
 														Remove
 													</button>
@@ -815,175 +844,142 @@
 				</div>
 			</div>
 
-			<!-- Additional Group Section -->
-			<div class="mb-6">
-				<div class="mb-4 flex items-center justify-between">
-					<h3 class="text-lg font-semibold text-gray-800">Additional Group</h3>
-					<button
-						class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-						on:click={() => addContainer(1)}
-					>
-						Add Container
-					</button>
-				</div>
+			<!-- Comparison Group Section -->
+			{#if cohortDefinition.comparisonGroup}
+				<div class="mb-6">
+					<div class="mb-4 flex items-center justify-between">
+						<div class="flex items-center">
+							<h3 class="text-lg font-semibold text-gray-800">Comparison Group</h3>
+							<span class="ml-3 text-xs text-gray-500">Combined with Initial Group using AND logic</span>
+						</div>
+						<button
+							class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+							on:click={() => addContainer('comparisonGroup')}
+						>
+							Add Container
+						</button>
+					</div>
 
-				<div class="space-y-6">
-					{#if true}
-						{@const group = cohortDefinition.cohort[1]}
-						{@const actualGroupIndex = 1}
-						<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-							<div class="mb-4 flex items-center justify-between">
-								<div class="flex items-center">
-									<button
-										class="mr-2 rounded border border-gray-300 px-2 py-1 text-sm {group.not
-											? 'bg-red-100 text-red-700'
-											: 'bg-gray-100 text-gray-600'}"
-										on:click={() => toggleGroupNot(actualGroupIndex)}
-									>
-										{group.not ? 'NOT' : 'AND'}
-									</button>
-									<h4 class="text-lg font-medium text-blue-600">Additional Group</h4>
-								</div>
-							</div>
-
-							<div class="space-y-4">
-								{#each group.containers as container, containerIndex}
-									<div
-										class="cursor-move rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 {draggedContainerIndex ===
-											containerIndex && draggedGroupIndex === actualGroupIndex
-											? 'opacity-50'
-											: ''} {hoveredContainerIndex === containerIndex &&
-										draggedContainerIndex !== null &&
-										draggedContainerIndex !== containerIndex &&
-										draggedGroupIndex === actualGroupIndex
-											? 'border-blue-400 bg-blue-50'
-											: ''}"
-										draggable="true"
-										on:dragstart={() => {
-											draggedContainerIndex = containerIndex;
-											draggedGroupIndex = actualGroupIndex;
-										}}
-										on:dragover|preventDefault={() => {
-											hoveredContainerIndex = containerIndex;
-										}}
-										on:drop|preventDefault={() => {
-											if (draggedGroupIndex === actualGroupIndex) {
-												handleContainerReorder(
-													actualGroupIndex,
-													draggedContainerIndex,
-													hoveredContainerIndex
-												);
-											}
-											draggedContainerIndex = null;
-											hoveredContainerIndex = null;
-											draggedGroupIndex = null;
-										}}
-									>
-										<div class="mb-4 flex items-center justify-between">
-											<div class="flex items-center">
-												{#if containerIndex > 0}
-													<select
-														class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
-														value={container.operator}
-														on:change={(e) =>
-															updateContainerOperator(
-																actualGroupIndex,
-																containerIndex,
-																e.target.value
-															)}
-													>
-														<option value="AND">AND</option>
-														<option value="OR">OR</option>
-														<option value="NOT">NOT</option>
-													</select>
-												{/if}
-												<h4 class="text-lg font-medium text-blue-600">
-													<input
-														type="text"
-														class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
-														value={container.name}
-														on:change={(e) =>
-															updateContainerName(actualGroupIndex, containerIndex, e.target.value)}
-													/>
-												</h4>
-											</div>
-											<div class="flex space-x-2">
-												<button
-													class="text-sm text-blue-500 hover:text-blue-700"
-													on:click={() => {
-														editingGroupIndex = actualGroupIndex;
-														editingContainerIndex = containerIndex;
-														selectedDomainType = null;
-													}}
-												>
-													Add Filter
-												</button>
-												{#if containerIndex > 0 || group.containers.length > 1}
-													<button
-														class="text-sm text-red-500 hover:text-red-700"
-														on:click={() => removeContainer(actualGroupIndex, containerIndex)}
-													>
-														Remove
-													</button>
-												{/if}
-											</div>
-										</div>
-
-										{#if container.filters.length === 0}
-											<div
-												class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
+					<div class="space-y-6">
+						{#each cohortDefinition.comparisonGroup.containers as container, containerIndex}
+							<div
+								class="cursor-move rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 {draggedContainerIndex ===
+									containerIndex && draggedGroupType === 'comparisonGroup'
+									? 'opacity-50'
+									: ''} {hoveredContainerIndex === containerIndex &&
+								draggedContainerIndex !== null &&
+								draggedContainerIndex !== containerIndex &&
+								draggedGroupType === 'comparisonGroup'
+									? 'border-blue-400 bg-blue-50'
+									: ''}"
+								draggable="true"
+								on:dragstart={() => {
+									draggedContainerIndex = containerIndex;
+									draggedGroupType = 'comparisonGroup';
+								}}
+								on:dragover|preventDefault={() => {
+									hoveredContainerIndex = containerIndex;
+								}}
+								on:drop|preventDefault={() => {
+									if (draggedGroupType === 'comparisonGroup') {
+										handleContainerReorder('comparisonGroup', draggedContainerIndex, hoveredContainerIndex);
+									}
+									draggedContainerIndex = null;
+									hoveredContainerIndex = null;
+									draggedGroupType = null;
+								}}
+							>
+								<div class="mb-4 flex items-center justify-between">
+									<div class="flex items-center">
+										{#if containerIndex > 0}
+											<select
+												class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
+												value={container.operator}
+												on:change={(e) => updateContainerOperator('comparisonGroup', containerIndex, e.target.value)}
 											>
-												<p class="text-gray-500">
-													No filters added. Click "Add Filter" to add a filter.
-												</p>
-											</div>
-										{:else}
-											<div class="space-y-4">
-												{#each container.filters as filter, filterIndex}
-													<div class="rounded border border-gray-200 bg-gray-50 p-3">
-														<div class="mb-2 flex items-center justify-between">
-															<h5 class="text-base font-medium text-gray-700">
-																{getDomainTypeName(filter.type)}
-															</h5>
-															<div class="flex space-x-2">
-																<button
-																	class="text-xs text-blue-500 hover:text-blue-700"
-																	on:click={() =>
-																		editFilter(actualGroupIndex, containerIndex, filterIndex)}
-																>
-																	Edit
-																</button>
-																<button
-																	class="text-xs text-red-500 hover:text-red-700"
-																	on:click={() =>
-																		removeFilter(actualGroupIndex, containerIndex, filterIndex)}
-																>
-																	Remove
-																</button>
-															</div>
-														</div>
-
-														<div
-															class="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2"
-														>
-															{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
-																<div>
-																	<span class="font-medium">{property}:</span>
-																	{displayPropertyValue(value)}
-																</div>
-															{/each}
-														</div>
-													</div>
-												{/each}
-											</div>
+												<option value="AND">AND</option>
+												<option value="OR">OR</option>
+												<option value="NOT">NOT</option>
+											</select>
+										{/if}
+										<h4 class="text-lg font-medium text-blue-600">
+											<input
+												type="text"
+												class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
+												value={container.name}
+												on:change={(e) => updateContainerName('comparisonGroup', containerIndex, e.target.value)}
+											/>
+										</h4>
+									</div>
+									<div class="flex space-x-2">
+										<button
+											class="text-sm text-blue-500 hover:text-blue-700"
+											on:click={() => {
+												editingGroupType = 'comparisonGroup';
+												editingContainerIndex = containerIndex;
+												selectedDomainType = null;
+											}}
+										>
+											Add Filter
+										</button>
+										{#if containerIndex > 0 || cohortDefinition.comparisonGroup.containers.length > 1}
+											<button
+												class="text-sm text-red-500 hover:text-red-700"
+												on:click={() => removeContainer('comparisonGroup', containerIndex)}
+											>
+												Remove
+											</button>
 										{/if}
 									</div>
-								{/each}
+								</div>
+
+								{#if container.filters.length === 0}
+									<div
+										class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
+									>
+										<p class="text-gray-500">No filters added. Click "Add Filter" to add a filter.</p>
+									</div>
+								{:else}
+									<div class="space-y-4">
+										{#each container.filters as filter, filterIndex}
+											<div class="rounded border border-gray-200 bg-gray-50 p-3">
+												<div class="mb-2 flex items-center justify-between">
+													<h5 class="text-base font-medium text-gray-700">
+														{getDomainTypeName(filter.type)}
+													</h5>
+													<div class="flex space-x-2">
+														<button
+															class="text-xs text-blue-500 hover:text-blue-700"
+															on:click={() => editFilter('comparisonGroup', containerIndex, filterIndex)}
+														>
+															Edit
+														</button>
+														<button
+															class="text-xs text-red-500 hover:text-red-700"
+															on:click={() => removeFilter('comparisonGroup', containerIndex, filterIndex)}
+														>
+															Remove
+														</button>
+													</div>
+												</div>
+
+												<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2">
+													{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
+														<div>
+															<span class="font-medium">{property}:</span>
+															{displayPropertyValue(value)}
+														</div>
+													{/each}
+												</div>
+											</div>
+										{/each}
+									</div>
+								{/if}
 							</div>
-						</div>
-					{/if}
+						{/each}
+					</div>
 				</div>
-			</div>
+			{/if}
 
 			<!-- Cohort JSON display (for debugging) -->
 			<div class="mb-6 rounded-lg border border-gray-200 p-4">
@@ -1009,13 +1005,13 @@
 >
 	{#if selectedDomainType === null}
 		<div class="mb-4">
-			<!-- Display context info based on the currentGroupSection and editing indices -->
-			{#if editingGroupIndex !== null && editingContainerIndex !== null}
+			<!-- Display context info based on the current editing state -->
+			{#if editingGroupType && editingContainerIndex !== null}
 				<h3 class="mb-2 text-xl font-bold text-gray-800">
-					Add Filter to {editingGroupIndex === 0 ? 'Initial Group' : `Additional Group`}
+					Add Filter to {editingGroupType === 'initialGroup' ? 'Initial Group' : 'Comparison Group'}
 				</h3>
 				<p class="mb-4 text-sm text-gray-600">
-					Container: {cohortDefinition.cohort[editingGroupIndex].containers[editingContainerIndex]
+					Container: {cohortDefinition[editingGroupType].containers[editingContainerIndex]
 						.name}
 				</p>
 			{:else}
@@ -1099,10 +1095,44 @@
 								{/each}
 							</select>
 						{:else if property.type === 'concept'}
-							<div class="flex items-center">
-								<span class="text-sm italic text-gray-600">
-									Concept selection not implemented in this demo
-								</span>
+							<div class="flex space-x-2">
+								<select
+									class="w-full rounded-md border border-gray-300 p-2 text-sm"
+									value={currentFilterValues[property.name] || ''}
+									on:change={(e) => {
+										const value = e.target.value === '' ? null : e.target.value;
+										updateFilterValue(property.name, value);
+									}}
+								>
+									<option value="">Any</option>
+									{#if property.name === 'gender'}
+										<!-- 성별은 표준화된 값으로 고정 -->
+										<option value="8507">Male</option>
+										<option value="8532">Female</option>
+										<option value="8521">Unknown</option>
+									{:else}
+										<!-- 다른 개념 타입은 사용자가 정의한 컨셉셋에서 가져옴 -->
+										{#each cohortDefinition.conceptsets as conceptSet}
+											{#each conceptSet.expression.items as item}
+												<option value={item.concept.CONCEPT_ID}>
+													{item.concept.CONCEPT_NAME} ({conceptSet.name})
+												</option>
+											{/each}
+										{/each}
+										{#if cohortDefinition.conceptsets.length === 0 || cohortDefinition.conceptsets.every(set => set.expression.items.length === 0)}
+											<option value="" disabled>No concepts available - Define them in Concept Sets</option>
+										{/if}
+									{/if}
+								</select>
+								<button 
+									class="px-2 py-1 bg-blue-100 text-blue-700 rounded border border-blue-300 text-sm hover:bg-blue-200"
+									on:click={() => showConceptSetModal = true}
+									title="Manage Concept Sets"
+								>
+									<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+									</svg>
+								</button>
 							</div>
 						{:else if property.type === 'numberrange'}
 							<div class="flex items-center gap-2">
