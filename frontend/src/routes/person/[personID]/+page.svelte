@@ -284,17 +284,26 @@
     function moveTooltip(event, tooltip) {
         const tooltipWidth = tooltip.node().offsetWidth;
         const tooltipHeight = tooltip.node().offsetHeight;
-        const svgRect = timelineContainer.getBoundingClientRect();
-        const pageX = event.clientX - svgRect.left;
-        const pageY = event.clientY - svgRect.top;
 
-        let tooltipX = pageX + 10;
-        let tooltipY = pageY - 10;
+        let tooltipX = event.pageX - 10;
+        let tooltipY = event.pageY - 110;
 
-        if (tooltipX + tooltipWidth > svgRect.width) tooltipX = pageX - tooltipWidth - 10;
-        if (tooltipY + tooltipHeight > svgRect.height) tooltipY = pageY - tooltipHeight - 10;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-        tooltip.style("top", `${tooltipY}px`).style("left", `${tooltipX}px`);
+        // 오른쪽 벗어남 방지
+        if (tooltipX + tooltipWidth > viewportWidth) {
+            tooltipX = event.pageX - tooltipWidth - 10;
+        }
+
+        // 아래쪽 벗어남 방지
+        if (tooltipY + tooltipHeight > viewportHeight) {
+            tooltipY = event.pageY - tooltipHeight - 10;
+        }
+
+        tooltip
+            .style("top", `${tooltipY}px`)
+            .style("left", `${tooltipX}px`);
     }
 
     function setupZoom(svg, width, height) {
