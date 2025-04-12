@@ -21,25 +21,34 @@ export const getQuery = (db: Kysely<Database>, a: ObservationPeriodFilter) => {
         "observation_period.person_id",
         "observation_period.observation_period_start_date"
       ),
-    ])
-    .leftJoin("person", "observation_period.person_id", "person.person_id");
+    ]);
 
-  if (a.startAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "observation_period.observation_period_start_date",
-      "person.year_of_birth",
-      a.startAge
+  if (a.startAge || a.endAge) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "observation_period.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.endAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "observation_period.observation_period_end_date",
-      "person.year_of_birth",
-      a.endAge
-    );
+    if (a.startAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "observation_period.observation_period_start_date",
+        "person.year_of_birth",
+        a.startAge
+      );
+    }
+
+    if (a.endAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "observation_period.observation_period_end_date",
+        "person.year_of_birth",
+        a.endAge
+      );
+    }
+
+    query = joinedQuery;
   }
 
   if (a.startDate) {

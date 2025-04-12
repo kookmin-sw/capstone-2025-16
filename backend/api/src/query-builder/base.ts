@@ -6,6 +6,9 @@ import {
   SelectQueryBuilder,
   StringReference,
   expressionBuilder,
+  TableExpression,
+  JoinReferenceExpression,
+  SelectQueryBuilderWithLeftJoin,
 } from "kysely";
 import {
   IdentifierWithOperator,

@@ -21,8 +21,7 @@ export const getQuery = (db: Kysely<Database>, a: SpecimenFilter) => {
         "specimen.person_id",
         "specimen.specimen_date"
       ),
-    ])
-    .leftJoin("person", "specimen.person_id", "person.person_id");
+    ]);
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -33,21 +32,31 @@ export const getQuery = (db: Kysely<Database>, a: SpecimenFilter) => {
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "specimen.specimen_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "specimen.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "specimen.specimen_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    query = joinedQuery;
   }
 
   if (a.date) {

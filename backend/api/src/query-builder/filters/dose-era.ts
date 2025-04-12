@@ -22,8 +22,7 @@ export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
         "dose_era.person_id",
         "dose_era.dose_era_start_date"
       ),
-    ])
-    .leftJoin("person", "dose_era.person_id", "person.person_id");
+    ]);
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -34,30 +33,40 @@ export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
     );
   }
 
-  if (a.startAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "dose_era.dose_era_start_date",
-      "person.year_of_birth",
-      a.startAge
+  if (a.startAge || a.endAge || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "dose_era.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.endAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "dose_era.dose_era_end_date",
-      "person.year_of_birth",
-      a.endAge
-    );
-  }
+    if (a.startAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "dose_era.dose_era_start_date",
+        "person.year_of_birth",
+        a.startAge
+      );
+    }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.endAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "dose_era.dose_era_end_date",
+        "person.year_of_birth",
+        a.endAge
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    query = joinedQuery;
   }
 
   if (a.startDate) {

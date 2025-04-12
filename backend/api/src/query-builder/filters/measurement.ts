@@ -23,14 +23,7 @@ export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
         "measurement.person_id",
         "measurement.measurement_date"
       ),
-    ])
-    .leftJoin("person", "measurement.person_id", "person.person_id")
-    .leftJoin(
-      "visit_occurrence",
-      "measurement.visit_occurrence_id",
-      "visit_occurrence.visit_occurrence_id"
-    )
-    .leftJoin("provider", "measurement.provider_id", "provider.provider_id");
+    ]);
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -41,21 +34,32 @@ export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "measurement.measurement_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "measurement.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "measurement.measurement_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.date) {
@@ -75,11 +79,20 @@ export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
   }
 
   if (a.visitType) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "visit_occurrence",
+      "measurement.visit_occurrence_id",
+      "visit_occurrence.visit_occurrence_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "visit_occurrence.visit_concept_id",
       a.visitType
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.operatorType) {
@@ -151,11 +164,20 @@ export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
   }
 
   if (a.providerSpecialty) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "provider",
+      "measurement.provider_id",
+      "provider.provider_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "provider.specialty_concept_id",
       a.providerSpecialty
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.source) {
