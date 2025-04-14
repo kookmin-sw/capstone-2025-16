@@ -92,10 +92,7 @@ export class ClickhouseConnection implements DatabaseConnection {
       };
     }
 
-    if (
-      compiledQuery.query.kind === "UpdateQueryNode" ||
-      compiledQuery.query.kind === "SelectQueryNode"
-    ) {
+    if (compiledQuery.query.kind === "SelectQueryNode") {
       const query = this.prepareQuery(compiledQuery);
 
       const resultSet = await this.#client.query({
