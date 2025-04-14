@@ -3,7 +3,7 @@ import { getBaseDB } from "../query-builder/base";
 import { CohortDefinition } from "../types/type";
 import { uuidv7 } from "uuidv7";
 import { buildQuery } from "../query-builder";
-
+import moment from "moment";
 export const getAllCohorts = async () => {
   // TODO: pagenation?
 
@@ -17,8 +17,8 @@ export const getCohortDetailsById = async (id: string) => {
   // TODO: pagenation?
 
   let cohort = await getBaseDB()
-    .selectFrom("cohort_detail")
-    .select("person_id")
+    .selectFrom("cohort")
+    .select("cohort_id")
     .where("cohort_id", "=", id)
     .execute();
 
@@ -28,9 +28,15 @@ export const getCohortDetailsById = async (id: string) => {
     });
   }
 
+  let cohortDetail = await getBaseDB()
+    .selectFrom("cohort_detail")
+    .select("person_id")
+    .where("cohort_id", "=", id)
+    .execute();
+
   return new HttpResponse(
     200,
-    cohort.map((e) => e.person_id)
+    cohortDetail.map((e) => e.person_id)
   );
 };
 
@@ -101,22 +107,27 @@ export const updateCohort = async (
   description?: string,
   cohortDef?: CohortDefinition
 ) => {
-  let result = await getBaseDB()
-    .updateTable("cohort")
-    .set({
-      ...(name && { name }),
-      ...(description && { description }),
-      ...(cohortDef && { cohort_definition: JSON.stringify(cohortDef) }),
-      updated_at: new Date().toISOString(),
-    })
+  const cohort = await getBaseDB()
+    .selectFrom("cohort")
+    .select("cohort_id")
     .where("cohort_id", "=", cohortId)
     .execute();
-
-  if (result.length === 0 || result[0].numUpdatedRows === 0n) {
+  if (cohort.length === 0) {
     return new HttpResponse(404, {
       message: "Cohort not found",
     });
   }
+
+  await getBaseDB()
+    .updateTable("cohort")
+    .set({
+      name,
+      description,
+      cohort_definition: cohortDef && JSON.stringify(cohortDef),
+      updated_at: moment().format("YYYY-MM-DD HH:mm:ss"),
+    })
+    .where("cohort_id", "=", cohortId)
+    .execute();
 
   let arr: number[] = [];
   if (cohortDef) {
@@ -156,16 +167,23 @@ export const updateCohort = async (
 };
 
 export const deleteCohort = async (id: string) => {
-  let result = await getBaseDB()
-    .deleteFrom("cohort")
+  const cohort = await getBaseDB()
+    .selectFrom("cohort")
+    .select("cohort_id")
     .where("cohort_id", "=", id)
     .execute();
 
-  if (result.length === 0 || result[0].numDeletedRows === 0n) {
+  if (!cohort || cohort.length === 0) {
     return new HttpResponse(404, {
       message: "Cohort not found",
     });
   }
+
+  await getBaseDB().deleteFrom("cohort").where("cohort_id", "=", id).execute();
+  await getBaseDB()
+    .deleteFrom("cohort_detail")
+    .where("cohort_id", "=", id)
+    .execute();
 
   return new HttpResponse(204);
 };
