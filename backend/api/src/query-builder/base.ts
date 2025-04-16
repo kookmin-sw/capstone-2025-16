@@ -15,7 +15,6 @@ import {
   DateWithOperator,
   NumberWithOperator,
   StringWithOperator,
-  Identifier,
 } from "../types/type";
 import { PartitionByExpression } from "kysely/dist/cjs/parser/partition-by-parser";
 import { Database } from "../db/types";
@@ -36,18 +35,82 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
   db: Kysely<Database>,
   query: SelectQueryBuilder<DB, TB, O>,
   column: StringReference<DB, TB>,
-  conceptSet: Identifier
+  conceptSet: IdentifierWithOperator
 ) => {
-  // 우선 타입스크립트 오류는 ignore
-  return query.where(
-    column,
-    "in",
-    // @ts-ignore
-    db
-      .selectFrom("codesets")
-      .select("concept_id")
-      .where("codeset_id", "=", conceptSet)
-  );
+  const eb = expressionBuilder<Database, any>();
+
+  if (typeof conceptSet === "string") {
+    return query.where(
+      column,
+      "in",
+      eb
+        .selectFrom("codesets")
+        .select("concept_id")
+        .where("codeset_id", "=", conceptSet)
+    );
+  }
+
+  if (conceptSet.eq) {
+    if (Array.isArray(conceptSet.eq) && !conceptSet.eq.length) {
+      query = query.where(
+        column,
+        "in",
+        eb
+          .selectFrom("codesets")
+          .select("concept_id")
+          .where(
+            "codeset_id",
+            "in",
+            conceptSet.eq.map((e) => eb.fn<any>("_to_int64", [eb.val(e)]))
+          )
+      );
+    } else {
+      query = query.where(
+        column,
+        "=",
+        eb
+          .selectFrom("codesets")
+          .select("concept_id")
+          .where(
+            "codeset_id",
+            "=",
+            eb.fn<any>("_to_int64", [eb.val(conceptSet.eq)])
+          )
+      );
+    }
+  }
+
+  if (conceptSet.neq) {
+    if (Array.isArray(conceptSet.neq) && !conceptSet.neq.length) {
+      query = query.where(
+        column,
+        "not in",
+        eb
+          .selectFrom("codesets")
+          .select("concept_id")
+          .where(
+            "codeset_id",
+            "in",
+            conceptSet.neq.map((e) => eb.fn<any>("_to_int64", [eb.val(e)]))
+          )
+      );
+    } else {
+      query = query.where(
+        column,
+        "!=",
+        eb
+          .selectFrom("codesets")
+          .select("concept_id")
+          .where(
+            "codeset_id",
+            "=",
+            eb.fn<any>("_to_int64", [eb.val(conceptSet.neq)])
+          )
+      );
+    }
+  }
+
+  return query;
 };
 
 type OrderBy<DB, TB extends keyof DB> =

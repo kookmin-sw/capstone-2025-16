@@ -84,8 +84,8 @@ export class ConceptSetValidator {
 // Base filter class for common properties
 export class BaseFilterValidator {
   @IsOptional()
-  @IsString()
-  conceptset?: string;
+  @IsIdentifierWithOperator()
+  conceptset?: IdentifierWithOperator;
 
   @IsOptional()
   @IsBoolean()
