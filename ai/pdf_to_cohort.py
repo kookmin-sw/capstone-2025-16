@@ -1,12 +1,12 @@
-import cohort_json_schema as cohort_json_schema
+import cohort_json_schema
 from pdf_to_text import extract_cohort_definition_from_pdf
-from get_omop_concept_id import clean_term, get_omop_concept_id, get_concept_set_domain_id, update_concept_set_items, get_concept_ids, refine_search_query
+from get_omop_concept_id import get_concept_ids
 
 import os
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
-import re
+from datetime import datetime, timezone, timedelta
 
 load_dotenv()
 openai_api_key = os.environ.get('OPENROUTER_API_KEY')
@@ -17,6 +17,10 @@ client = OpenAI(
     api_key=openai_api_key,
     base_url=openai_api_base,
 )
+
+# KST 시간대 계산
+kst_offset = timedelta(hours=9)
+current_datetime = (datetime.now(timezone.utc) + kst_offset).strftime('%Y-%m-%d %H:%M')
 
 STRICT_REQUIREMENT = f"""
 Instructions
@@ -31,7 +35,7 @@ Strict requirements:
      * not: Boolean (true for exclusion criteria)
 
 2. Each filter MUST include:
-   - type: The type of criteria (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
+   - type: The type of criteria (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - first: true
    - conceptset: String (matching conceptset_id)
 
@@ -40,10 +44,18 @@ Strict requirements:
    - For any field such as "measurementType", "drugType", "conditionType", etc., 
      do NOT invent or fabricate placeholder concept_id values
    - If a concept_id is not available, explicitly set the value to null
+   - [CRITICAL] For negation criteria, use the opposite operator instead of "neq" when possible
+     * Example: "Hemoglobin > 13 g/dL를 제외" → {{ "valueAsNumber": {{ "lte": 13 }} }} (NOT {{ conceptset: {{neq: "6"}} }})
+     * Only use "neq" when the opposite operator cannot express the intended meaning
 
 4. For age criteria:
-   - Use "demographic" as type
-   - Include "age" with appropriate operator
+   - For dose_era, drug_era, condition_era types:
+     * Include "startAge" and "endAge" with appropriate values
+     * Example: "Patients aged 18-65" → {{ "startAge": 18, "endAge": 65 }}
+   - For all other types (except demographic):
+     * Include "age" with appropriate operator
+     * Example: "Age > 18" → {{ "age": {{ "gt": 18 }} }}
+   - Demographic type MUST NOT use age field
 """
 
 STRICT_REQUIREMENT_SCHEMA = f"""
@@ -94,38 +106,45 @@ Required JSON Format:
       "conceptset_id": "0",  // MUST be a string
       "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
       "items": []  // MUST be an empty array
+    }},
+    {{
+      "conceptset_id": "1",
+      "name": "hemoglobin > 13 g/dL",
+      "items": []
     }}
   ],
-  "cohort": [
-    {{
-      "containers": [
-        {{
-          "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
-          "filters": [  // MUST be an array
-            {{
-              "type": "condition_occurrence",  // MUST match the conceptset type
-              "first": true,  // MUST be true
-              "conceptset": "0"  // MUST match the conceptset_id
-            }}
-          ]
-        }}
-      ]
-    }},
-    {{// Group 2: Demographic Criteria
-      "containers": [
-        {{
-          "name": "age",
-          "filters": [
-            {{
-              "type": "demographic",
-              "first": true,
-              "age": {{ "gte": 20 }}
-            }}
-          ]
-        }}
-      ]
-    }},
-  ]
+  initialGroup: {{
+    "containers": [
+      {{
+        "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
+        "filters": [  // MUST be an array
+          {{
+            "type": "condition_occurrence",  // MUST match the conceptset type
+            "first": true,  // MUST be true
+            "conceptset": "0",  // MUST match the conceptset_id,
+            "age": {{ "gte": 20 }}
+          }}
+        ]
+      }}
+    ]
+  }},
+  comparisonGroup: {{
+    "containers": [
+      {{
+        name: "not hemoglobin > 13 g/dL",
+        filters: [
+          {{
+            type: "measurement",
+            first: true,
+            measurementType: {{ eq: "234567" }},
+            valueAsNumber: {{ lte: 13 }},
+            conceptset: "1"
+          }}
+        ]
+      }}
+    ]
+  }},
+  
 }}
 
 {STRICT_REQUIREMENT}
@@ -140,7 +159,7 @@ CRITICAL RULES:
 
 2. Each container in cohort MUST have:
    - name (ONLY the medical term, NO additional words)
-   - type (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
+   - type (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - Each filter MUST have:
      - type (one of the allowed types)
      - first: true
@@ -152,21 +171,23 @@ CRITICAL RULES:
      * MUST include valueAsNumber with operator and value
      * Example: "Hemoglobin > 13" → {{ "valueAsNumber": {{ "gt": 13 }} }}
    - [CRITICAL] For age criteria:
-     * MUST use "demographic" as type
-     * MUST include age value and operator
-     * Example: "Age > 18" → {{ "type": "demographic", "name": "Age", "age": {{ "gt": 18 }} }}
-     * demographic type can ONLY be used in the second or later group in the cohort array
+     * For dose_era, drug_era, condition_era types:
+       - MUST include startAge and endAge
+       - Example: "Patients aged 18-65" → {{ "startAge": 18, "endAge": 65 }}
+     * For all other types (except demographic):
+       - MUST include age with appropriate operator
+       - Example: "Age > 18" → {{ "age": {{ "gt": 18 }} }}
+     * [CRITICAL] Demographic type MUST NOT use age field
+     * [CRITICAL] If the cohort has an age criterion, ALL filters MUST include the appropriate age property
+       - Example: If cohort includes "Patients aged 18-65", then ALL filters must include either "age: {{ "gte": 18, "lte": 65 }}" or "startAge: 18, endAge: 65" depending on the filter type
+     * [CRITICAL] Demographic criteria MUST be placed in the second group of the cohort array
      * [CRITICAL] The first group MUST contain only medical conditions, procedures, or other non-demographic criteria
-   - For conditions:
-     * Use "condition_occurrence" as type (NOT condition_era)
-
+  
 4. NEVER include:
    - Complex logic
    - Non-implementable criteria
    - Criteria without clear OMOP CDM mappings
    - Additional words like "diagnosis", "treatment", "therapy", etc.
-   - type field in conceptset
-   - [CRITICAL] ANY explanations, comments, or text outside the JSON structure
    - [CRITICAL] ANY text that describes what you're doing or why
 
 4. ALWAYS maintain the exact structure shown above
@@ -182,16 +203,8 @@ Extract the cohort selection criteria from the following text and return ONLY th
 {text}
 """
 
+# 텍스트에서 코호트 정의를 추출
 def extract_terms_from_text(text: str) -> dict:
-    """
-    텍스트에서 코호트 정의를 추출합니다.
-    
-    Args:
-        text: 코호트 정의가 포함된 텍스트
-        
-    Returns:
-        OMOP CDM cohort JSON
-    """
     response = client.chat.completions.create(
         model=model_name,
         messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
@@ -207,8 +220,10 @@ def extract_terms_from_text(text: str) -> dict:
     try:
         content = llm_response.strip()
         
-        if "```" in content:
-            content = content.split("```")[1].strip()
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
         
         cohort_json = json.loads(content)
         
@@ -253,7 +268,6 @@ def text_to_json(implementable_text: str) -> dict:
         return
     
     # 3. DB에서 concept_id 조회
-    from get_omop_concept_id import get_concept_ids
     cohort_json = get_concept_ids(cohort_json)
     print("\n[cohort_json with concept_ids]:")
     print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
@@ -266,7 +280,7 @@ def main():
     
     # PDF 파일 경로
     # pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
-    # pdf_path = os.path.join(current_dir, "pdf", "NEJMoa2211868.pdf")
+    # pdf_path = os.path.join(current_dir, "pdf", "nejmoa2215145_appendix.pdf")
     pdf_path = os.path.join(current_dir, "pdf", "jama_dulhunty_2024_oi_240070_1723741887.30473.pdf")
     
     # 1. PDF에서 텍스트 추출

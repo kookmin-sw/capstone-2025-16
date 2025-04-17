@@ -25,111 +25,102 @@ const cohortExample: CohortDefinition = {
     }
     // 추가 conceptset 항목이 있으면 여기에 추가합니다.
   ],
-  cohort: [
-    {
-      // Group 1: Inclusion Criteria
-      containers: [
-        {
-          name: "hemodialysis",
-          filters: [
-            {
-              type: "procedure_occurrence",
-              first: true,
-              conceptset: "0",
-              age: { gte: 20 }
-            }
-          ]
-        },
-        {
-          operator: "AND",
-          name: "ESA therapy",
-          filters: [
-            {
-              type: "drug_exposure",
-              first: true,
-              conceptset: "1"
-            }
-          ]
-        },
-        {
-          operator: "AND",
-          name: "iron deficiency anemia",
-          filters: [
-            {
-              type: "condition_era",
-              first: true,
-              conceptset: "2"
-            }
-          ]
-        }
-      ]
-    },
-    {// Group 2: Demographic Criteria
-      containers: [
-        {
-          name: "age",
-          filters: [
-            {
-              type: "demographic",
-              first: true,
-              age: { gte: 20 }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      // Group 3: Exclusion Criteria
-      not: true,
-      containers: [
-        {
-          name: "intensive care unit",
-          filters: [
-            {
-              type: "observation",
-              first: true,
-              conceptset: "3"
-            }
-          ]
-        },
-        {
-          operator: "AND",
-          name: "hemoglobin > 13 g/dL",
-          filters: [
-            {
-              type: "measurement",
-              first: true,
-              measurementType: { eq: "234567" },
-              valueAsNumber: { gt: 13 },
-              conceptset: "4"
-            }
-          ]
-        },
-        {
-          operator: "AND",
-          name: "kidney transplant",
-          filters: [
-            {
-              type: "procedure_occurrence",
-              first: true,
-              conceptset: "5"
-            }
-          ]
-        },
-        {
-          operator: "AND",
-          name: "sepsis or active infections",
-          filters: [
-            {
-              type: "condition_era",
-              first: true,
-              conceptset: "6"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  initialGroup: {
+    // Group 1: Inclusion Criteria
+    containers: [
+      {
+        name: "hemodialysis",
+        filters: [
+          {
+            type: "procedure_occurrence",
+            first: true,
+            conceptset: "0",
+            age: { gt: 20 }
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "ESA therapy",
+        filters: [
+          {
+            type: "drug_exposure",
+            first: true,
+            conceptset: "1",
+            age: { gt: 20 }
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "iron deficiency anemia",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+            conceptset: "2",
+            age: { gt: 20 }
+          }
+        ]
+      }
+    ],
+  },
+  comparisonGroup: {  
+    // Group 2: Exclusion Criteria
+    containers: [
+      {
+        name: "not intensive care unit",
+        filters: [
+          {
+            type: "observation",
+            first: true,
+            conceptset: {
+              neq: "3",
+            },
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "not hemoglobin > 13 g/dL",
+        filters: [
+          {
+            type: "measurement",
+            first: true,
+            measurementType: { eq: "234567" },
+            valueAsNumber: { lte: 13 }, // hemoglobin > 13 g/dL를 제외해야하니 13 g/dL 이하로 설정.
+            conceptset: "4"
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "not kidney transplant",
+        filters: [
+          {
+            type: "procedure_occurrence",
+            first: true,
+            conceptset: {
+              neq: "5",
+            },
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "not sepsis or active infections",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+            conceptset: {
+              neq: "6",
+            },
+          }
+        ]
+      }
+    ]
+  }
 };
 
 """
@@ -216,15 +207,9 @@ export interface BaseGroup {
   containers: [FirstContainer, ...SubsequentContainer[]];
 }
 
-export interface FirstGroup extends BaseGroup {
-  mergeByPersonId?: boolean;
-}
+export interface InitialGroup extends BaseGroup {}
 
-export interface SubsequentGroup extends BaseGroup {
-  not: boolean | undefined | null;
-}
-
-export type Cohort = [FirstGroup, ...SubsequentGroup[]];
+export interface ComparisonGroup extends BaseGroup {}
 
 export type Concept = {
   concept_id: Identifier;
@@ -236,7 +221,7 @@ export type Concept = {
   concept_code: string;
   valid_start_date: string;
   valid_end_date: string;
-  invalid_reason: string;
+  invalid_reason?: string;
 
   isExcluded?: boolean;
   includeDescendants?: boolean;
@@ -244,14 +229,15 @@ export type Concept = {
 };
 
 export interface ConceptSet {
-  id: Identifier;
+  conceptset_id: Identifier;
   name: string;
   items: Concept[];
 }
 
 export interface CohortDefinition {
   conceptsets?: ConceptSet[];
-  cohort: Cohort;
+  initialGroup: InitialGroup;
+  comparisonGroup?: ComparisonGroup;
 }
 
 /**
@@ -315,7 +301,7 @@ export interface ConditionOccurrenceFilter {
   conditionType?: IdentifierWithOperator;
   visitType?: IdentifierWithOperator;
   //stopReason?: StringWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -328,7 +314,7 @@ export interface DeathFilter {
   gender?: IdentifierWithOperator;
   date?: DateWithOperator;
   deathType?: IdentifierWithOperator;
-  cause?: NumberWithOperator;
+  cause?: Identifier;
 }
 
 /**
@@ -345,7 +331,7 @@ export interface DeviceExposureFilter {
   visitType?: IdentifierWithOperator;
   uniqueDeviceId?: StringWithOperator;
   quantity?: NumberWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -400,7 +386,7 @@ export interface DrugExposureFilter {
   effectiveDose?: NumberWithOperator;
   doseUnit?: NumberWithOperator;
   lotNumber?: StringWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -425,7 +411,7 @@ export interface MeasurementFilter {
   //rangeLowRatio?: NumberWithOperator;
   //rangeHighRatio?: NumberWithOperator;
   providerSpecialty?: IdentifierWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
 }
 
 /**
@@ -444,7 +430,7 @@ export interface ObservationFilter {
   valueAsConcept?: IdentifierWithOperator;
   qualifierType?: IdentifierWithOperator;
   unitType?: IdentifierWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -474,7 +460,7 @@ export interface ProcedureOccurrenceFilter {
   visitType?: IdentifierWithOperator;
   modifierType?: IdentifierWithOperator;
   quantity?: NumberWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
 }
 
@@ -492,7 +478,7 @@ export interface SpecimenFilter {
   unitType?: IdentifierWithOperator;
   anatomicSiteType?: IdentifierWithOperator;
   diseaseStatus?: IdentifierWithOperator;
-  //source?: StringWithOperator;
+  //source?: Identifier;
 }
 
 /**
@@ -507,9 +493,9 @@ export interface VisitOccurrenceFilter {
   endDate?: DateWithOperator;
   visitType?: IdentifierWithOperator;
   length?: NumberWithOperator;
-  source?: IdentifierWithOperator;
+  source?: Identifier;
   providerSpecialty?: IdentifierWithOperator;
-  placeOfService?: NumberWithOperator;
+  placeOfService?: IdentifierWithOperator;
   //location?: NumberWithOperator;
 }
 
@@ -524,6 +510,61 @@ export interface DemographicFilter {
   raceType?: IdentifierWithOperator;
   ethnicityType?: IdentifierWithOperator;
 }
+
+/**
+ * 코호트 예시
+ *
+ * 코호트는 initialGroup, comparisonGroup으로 구성되고, AND 연산으로 결합됩니다.
+ * 각 그룹은 컨테이너 배열로 구성됩니다. 컨테이너는 AND, OR, NOT 연산을 사용할 수 있습니다. 복잡한 연산은 불가능하고, 항상 왼쪽에서 오른쪽으로 연산됩니다. 예시: (container1 AND container2) OR container3
+ * 각 컨테이너는 필터 배열로 구성됩니다. 필터는 모두 AND 연산으로 결합됩니다.
+ *
+ */
+const cohort1: CohortDefinition = {
+  conceptsets: [],
+  initialGroup: {
+    containers: [
+      {
+        name: "컨테이너 1",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+            startAge: {
+              gte: 18,
+            },
+          },
+          {
+            type: "observation",
+            first: true,
+          },
+        ],
+      },
+      {
+        operator: "OR",
+        name: "컨테이너 2",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+          },
+        ],
+      },
+    ],
+  },
+  comparisonGroup: {
+    containers: [
+      {
+        name: "컨테이너 3",
+        filters: [
+          {
+            type: "measurement",
+            first: true,
+          },
+        ],
+      },
+    ],
+  },
+};
 
 """
 
