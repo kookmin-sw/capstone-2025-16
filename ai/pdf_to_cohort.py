@@ -54,7 +54,7 @@ Strict requirements:
      * Example: "Patients aged 18-65" → {{ "startAge": 18, "endAge": 65 }}
    - For all other types (except demographic):
      * Include "age" with appropriate operator
-     * Example: "Age > 18" → {{ "age": {{ "gt": 18 }} }}
+     * Example: "Age > 18" → "age": {{ "gt": 18 }}
    - Demographic type MUST NOT use age field
 """
 
@@ -138,7 +138,17 @@ Required JSON Format:
             first: true,
             measurementType: {{ eq: "234567" }},
             valueAsNumber: {{ lte: 13 }},
-            conceptset: "1"
+            conceptset: "1"  // Use string for direct reference
+          }}
+        ]
+      }},
+      {{
+        name: "Example with neq",
+        filters: [
+          {{
+            type: "measurement",
+            first: true,
+            conceptset: {{ neq: "1" }}  // Use object with neq property (NO quotes around neq)
           }}
         ]
       }}
@@ -227,20 +237,24 @@ def extract_terms_from_text(text: str) -> dict:
         
         cohort_json = json.loads(content)
         
-        # conceptset_id를 순차적으로 재할당
-        conceptset_id_map = {}
-        for i, conceptset in enumerate(cohort_json.get("conceptsets", [])):
-            old_id = conceptset.get("conceptset_id")
-            new_id = str(i)
-            conceptset_id_map[old_id] = new_id
-            conceptset["conceptset_id"] = new_id
+        # 코호트 정의가 없을 경우 빈 배열 추가
+        if "conceptsets" not in cohort_json:
+            cohort_json["conceptsets"] = []
+
+        if "initialGroup" not in cohort_json and "comparisonGroup" not in cohort_json:
+            pass
+        else:
+            if "initialGroup" not in cohort_json:
+                cohort_json["initialGroup"] = {"containers": []}
+            
+            if "comparisonGroup" not in cohort_json:
+                cohort_json["comparisonGroup"] = {"containers": []}
         
-        # cohort 내의 conceptset 참조 업데이트
-        for group in cohort_json.get("cohort", []):
-            for container in group.get("containers", []):
-                for filter in container.get("filters", []):
-                    if "conceptset" in filter:
-                        filter["conceptset"] = conceptset_id_map.get(filter["conceptset"], filter["conceptset"])
+        # conceptset의 items 필드 확인
+        for conceptset in cohort_json.get("conceptsets", []):
+            # items 필드가 없는 경우 빈 배열 추가
+            if "items" not in conceptset:
+                conceptset["items"] = []
         
         # 디버깅을 위한 출력
         print("\n[파싱된 JSON]:")
@@ -254,7 +268,7 @@ def extract_terms_from_text(text: str) -> dict:
         print(f"Error type: {type(e)}")
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
-        return {"conceptsets": [], "cohort": []}
+        return {"conceptsets": [], "initialGroup": {"containers": []}, "comparisonGroup": {"containers": []}}
 
 # 텍스트에서 코호트 정의를 추출하여 JSON 형식으로 변환
 def text_to_json(implementable_text: str) -> dict:
@@ -263,7 +277,7 @@ def text_to_json(implementable_text: str) -> dict:
     print("\n[cohort_json]:")
     print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
     
-    if not cohort_json or (not cohort_json.get("conceptsets") and not cohort_json.get("cohort")):
+    if not cohort_json or (not cohort_json.get("conceptsets")):
         print("Failed to extract criteria")
         return
     

@@ -89,6 +89,9 @@ def refine_search_query(term) -> str:
 def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: bool = True) -> list:
     cleaned_term = clean_term(term)
     
+    # 디버깅을 위한 출력
+    print(f"\n[get_omop_concept_id] 검색 용어: '{cleaned_term}', 도메인: '{domain_id}'")
+    
     query = """
     WITH limited_concepts AS
     (
@@ -182,46 +185,109 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         }
         concepts.append(concept)
     
+    # 결과 개수 출력
+    print(f"[get_omop_concept_id] 검색 결과: {len(concepts)}개")
     return concepts
 
 # concept_set_id에 해당하는 filter의 type을 찾아 domain_id를 반환
 def get_concept_set_domain_id(cohort_json: dict, concept_set_id: str) -> str:
-    # print(f"\n[디버깅] concept_set_id '{concept_set_id}'에 대한 도메인 ID 검색:")
+    print(f"\n[get_concept_set_domain_id] concept_set_id '{concept_set_id}'에 대한 도메인 ID 검색:")
     
-    for group in cohort_json.get("cohort", []):
-        for container in group.get("containers", []):
-            for filter_obj in container.get("filters", []):
-                if filter_obj.get("conceptset") == concept_set_id:
-                    criteria_type = filter_obj["type"]
-                    # print(f"- 찾은 criteria_type: {criteria_type}")
+    # cohort 구조 처리
+    if "cohort" in cohort_json:
+        for group in cohort_json.get("cohort", []):
+            for container in group.get("containers", []):
+                for filter_obj in container.get("filters", []):
+                    # 1. conceptset이 문자열인 경우 직접 비교
+                    if isinstance(filter_obj.get("conceptset"), str) and filter_obj.get("conceptset") == concept_set_id:
+                        criteria_type = filter_obj["type"]
+                        
+                        criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
+                        if criteria_info:
+                            domain_id = criteria_info["Domain_id"]
+                            # print(f"- 매핑된 domain_id: {domain_id}")
+                            return domain_id
                     
-                    criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
-                    if criteria_info:
-                        domain_id = criteria_info["Domain_id"]
-                        # print(f"- 매핑된 domain_id: {domain_id}")
-                        return domain_id
-                    # else:
-                    #     print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+                    # 2. conceptset이 딕셔너리인 경우 (neq 등)
+                    elif isinstance(filter_obj.get("conceptset"), dict) and "neq" in filter_obj.get("conceptset") and filter_obj.get("conceptset")["neq"] == concept_set_id:
+                        criteria_type = filter_obj["type"]
+                        # print(f"- 찾은 criteria_type: {criteria_type}")
+                        
+                        criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
+                        if criteria_info:
+                            domain_id = criteria_info["Domain_id"]
+                            # print(f"- 매핑된 domain_id: {domain_id}")
+                            return domain_id
     
-    # print(f"- concept_set_id '{concept_set_id}'에 대한 도메인 ID를 찾을 수 없습니다.")
+    # initialGroup/comparisonGroup 구조 처리
+    for group_name in ["initialGroup", "comparisonGroup"]:
+        if group_name in cohort_json:
+            for container in cohort_json[group_name].get("containers", []):
+                for filter_obj in container.get("filters", []):
+                    # 1. conceptset이 문자열인 경우 직접 비교
+                    if isinstance(filter_obj.get("conceptset"), str) and filter_obj.get("conceptset") == concept_set_id:
+                        criteria_type = filter_obj["type"]
+                        print(f"- 찾은 criteria_type: {criteria_type} (in {group_name})")
+                        
+                        criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
+                        if criteria_info:
+                            domain_id = criteria_info["Domain_id"]
+                            print(f"- 매핑된 domain_id: {domain_id}")
+                            return domain_id
+                        else:
+                            print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+                    
+                    # 2. conceptset이 딕셔너리인 경우 (neq 등)
+                    elif isinstance(filter_obj.get("conceptset"), dict) and "neq" in filter_obj.get("conceptset") and filter_obj.get("conceptset")["neq"] == concept_set_id:
+                        criteria_type = filter_obj["type"]
+                        print(f"- 찾은 criteria_type: {criteria_type} (in {group_name}, neq)")
+                        
+                        criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
+                        if criteria_info:
+                            domain_id = criteria_info["Domain_id"]
+                            print(f"- 매핑된 domain_id: {domain_id}")
+                            return domain_id
+                        else:
+                            print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+    
+    print(f"- concept_set_id '{concept_set_id}'에 대한 도메인 ID를 찾을 수 없습니다.")
     return None
 
 # concept_set의 items를 DB에서 조회한 결과로 업데이트
 def update_concept_set_items(concept_set: dict, domain_id: str) -> dict:
+    print(f"\n[update_concept_set_items] 개념 이름: '{concept_set.get('name')}', domain_id: '{domain_id}'")
+    
     if not domain_id:
+        print(f"- domain_id가 없습니다. 개념 업데이트를 건너뜁니다.")
         return concept_set
         
     concept_results = get_omop_concept_id(concept_set["name"], domain_id)
+    
     if concept_results:
         concept_set["items"] = concept_results
     return concept_set
 
 # cohort_json의 conceptset에서 concept_id를 조회하여 업데이트
 def get_concept_ids(cohort_json: dict) -> dict:
+    print(f"\n[get_concept_ids] conceptsets 개수: {len(cohort_json.get('conceptsets', []))}")
+    
     for concept_set in cohort_json.get("conceptsets", []):
         if "name" in concept_set and "conceptset_id" in concept_set:
+            print(f"\n처리 중: conceptset '{concept_set['name']}' (ID: {concept_set['conceptset_id']})")
             domain_id = get_concept_set_domain_id(cohort_json, concept_set["conceptset_id"])
-            concept_set = update_concept_set_items(concept_set, domain_id)
+            
+            if domain_id:
+                concept_set = update_concept_set_items(concept_set, domain_id)
+            else:
+                print(f"- WARNING: conceptset '{concept_set['name']}'의 domain_id를 찾을 수 없습니다.")
+                # 기본값으로 Condition 도메인 사용
+                print(f"- 기본 도메인 'Condition'으로 시도합니다.")
+                concept_set = update_concept_set_items(concept_set, "Condition")
+    
+    # cohort_json 전체 출력 (items 항목 확인용)
+    print("\n[get_concept_ids] 결과 JSON의 conceptsets:")
+    for concept_set in cohort_json.get("conceptsets", []):
+        print(f"- {concept_set['name']} (ID: {concept_set['conceptset_id']}): {len(concept_set.get('items', []))}개 항목")
     
     return cohort_json
 
