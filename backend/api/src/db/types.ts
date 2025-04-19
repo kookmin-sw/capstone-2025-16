@@ -1,5 +1,5 @@
 import { Kysely, PostgresDialect } from "kysely";
-import { ClickhouseDialect } from "./dialects/clickhouse";
+import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
 
 export interface Database {
   codesets: Codesets; // temp table
