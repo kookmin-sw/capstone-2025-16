@@ -1,32 +1,47 @@
 import { Request, Response, NextFunction } from "express";
-import {
-  getAllCohorts,
-  getCohortDetailsById,
-  createCohort,
-  updateCohort,
-  deleteCohort,
-} from "../services/cohort.service";
+import * as cohortService from "../services/cohort.service";
 import {
   CreateCohortRequestDto,
   UpdateCohortRequestDto,
   CohortIdParamDto,
 } from "../dtos/cohort.dto";
+import { PaginationDto } from "../dtos/common.dto";
 
 export const getCohorts = async (
-  req: Request,
+  req: Request<{}, {}, {}, PaginationDto>,
   res: Response,
   next: NextFunction
 ) => {
-  next(await getAllCohorts());
+  const { page } = req.query;
+  next(await cohortService.getCohorts(page ?? 0));
 };
 
-export const getCohortDetails = async (
+export const getCohortStatistics = async (
   req: Request<CohortIdParamDto>,
   res: Response,
   next: NextFunction
 ) => {
   const { cohortId } = req.params;
-  next(await getCohortDetailsById(cohortId));
+  next(await cohortService.getCohortStatistics(cohortId));
+};
+
+export const getCohort = async (
+  req: Request<CohortIdParamDto>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { cohortId } = req.params;
+  next(await cohortService.getCohort(cohortId));
+};
+
+export const getCohortPersons = async (
+  req: Request<CohortIdParamDto, {}, {}, PaginationDto>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { cohortId } = req.params;
+  const { page } = req.query;
+  next(await cohortService.getCohortPersons(cohortId, page ?? 0));
 };
 
 export const createNewCohort = async (
@@ -36,7 +51,7 @@ export const createNewCohort = async (
 ) => {
   const { name, description, cohortDefinition, temporary } = req.body;
   next(
-    await createCohort(
+    await cohortService.createNewCohort(
       name,
       description,
       cohortDefinition as any, // TODO: fix type
@@ -53,7 +68,12 @@ export const updateExistingCohort = async (
   const { cohortId } = req.params;
   const { name, description, cohortDefinition } = req.body;
   next(
-    await updateCohort(cohortId, name, description, cohortDefinition as any)
+    await cohortService.updateExistingCohort(
+      cohortId,
+      name,
+      description,
+      cohortDefinition as any
+    )
   );
 };
 
@@ -63,5 +83,5 @@ export const removeExistingCohort = async (
   next: NextFunction
 ) => {
   const { cohortId } = req.params;
-  next(await deleteCohort(cohortId));
+  next(await cohortService.removeExistingCohort(cohortId));
 };
