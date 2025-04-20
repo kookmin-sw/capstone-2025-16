@@ -7,19 +7,30 @@ import {
   handleRowNumber,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
+
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
 
 export const getQuery = (
   db: Kysely<Database>,
   a: ProcedureOccurrenceFilter
 ) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("procedure_occurrence")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_procedure_occurrence").as("procedure_occurrence")
+        : "procedure_occurrence"
+    )
     .select(({ fn }) => [
       "procedure_occurrence.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "procedure_occurrence.person_id",
         "procedure_occurrence.procedure_date"
@@ -138,7 +149,7 @@ export const getQuery = (
     query = joinedQuery;
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_procedure_occurrence"))
       .where("ordinal", "=", 1)

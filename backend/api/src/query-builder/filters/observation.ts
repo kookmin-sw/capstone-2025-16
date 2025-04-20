@@ -8,16 +8,27 @@ import {
   handleStringWithOperator,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: ObservationFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("observation")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_observation").as("observation")
+        : "observation"
+    )
     .select(({ fn }) => [
       "observation.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "observation.person_id",
         "observation.observation_date"
@@ -160,7 +171,7 @@ export const getQuery = (db: Kysely<Database>, a: ObservationFilter) => {
     query = joinedQuery;
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_observation"))
       .where("ordinal", "=", 1)

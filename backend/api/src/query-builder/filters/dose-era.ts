@@ -8,16 +8,27 @@ import {
   handleYearMinusWithNumberOperator,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("dose_era")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_dose_era").as("dose_era")
+        : "dose_era"
+    )
     .select(({ fn }) => [
       "dose_era.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "dose_era.person_id",
         "dose_era.dose_era_start_date"
@@ -106,7 +117,7 @@ export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
     query = handleNumberWithOperator(query, "dose_era.dose_value", a.doseValue);
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_dose_era"))
       .where("ordinal", "=", 1)

@@ -12,13 +12,24 @@ import {
 import { Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("measurement")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_measurement").as("measurement")
+        : "measurement"
+    )
     .select(({ fn }) => [
       "measurement.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "measurement.person_id",
         "measurement.measurement_date"
@@ -189,7 +200,7 @@ export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
     );
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_measurement"))
       .where("ordinal", "=", 1)
