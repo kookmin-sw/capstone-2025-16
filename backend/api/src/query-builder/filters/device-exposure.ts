@@ -33,6 +33,9 @@ export const getQuery = (db: Kysely<Database>, a: DeviceExposureFilter) => {
         "device_exposure.device_exposure_start_date"
       ),
     ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
+  }
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -158,7 +161,8 @@ export const getQuery = (db: Kysely<Database>, a: DeviceExposureFilter) => {
     return db
       .selectFrom(query.as("filtered_device_exposure"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;

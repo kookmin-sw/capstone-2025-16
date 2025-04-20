@@ -33,6 +33,9 @@ export const getQuery = (db: Kysely<Database>, a: ObservationPeriodFilter) => {
         "observation_period.observation_period_start_date"
       ),
     ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
+  }
 
   if (a.startAge || a.endAge) {
     let joinedQuery = query.leftJoin(
@@ -91,7 +94,8 @@ export const getQuery = (db: Kysely<Database>, a: ObservationPeriodFilter) => {
     return db
       .selectFrom(query.as("filtered_observation_period"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;

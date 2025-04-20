@@ -34,6 +34,9 @@ export const getQuery = (db: Kysely<Database>, a: ObservationFilter) => {
         "observation.observation_date"
       ),
     ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
+  }
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -175,7 +178,8 @@ export const getQuery = (db: Kysely<Database>, a: ObservationFilter) => {
     return db
       .selectFrom(query.as("filtered_observation"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;
