@@ -8,16 +8,27 @@ import {
   handleStringWithOperator,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("drug_exposure")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_drug_exposure").as("drug_exposure")
+        : "drug_exposure"
+    )
     .select(({ fn }) => [
       "drug_exposure.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "drug_exposure.person_id",
         "drug_exposure.drug_exposure_start_date"
@@ -189,7 +200,7 @@ export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
     query = joinedQuery;
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_drug_exposure"))
       .where("ordinal", "=", 1)

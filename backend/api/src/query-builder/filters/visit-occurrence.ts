@@ -7,16 +7,27 @@ import {
   handleYearMinusWithNumberOperator,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: VisitOccurrenceFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("visit_occurrence")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_visit_occurrence").as("visit_occurrence")
+        : "visit_occurrence"
+    )
     .select(({ fn }) => [
       "visit_occurrence.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "visit_occurrence.person_id",
         "visit_occurrence.visit_start_date"
@@ -136,7 +147,7 @@ export const getQuery = (db: Kysely<Database>, a: VisitOccurrenceFilter) => {
     query = joinedQuery;
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_visit_occurrence"))
       .where("ordinal", "=", 1)
