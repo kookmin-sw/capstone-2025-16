@@ -1,5 +1,5 @@
 import { HttpResponse } from "../helpers/response.helper";
 
-export const getPingMessage = () => {
+export const ping = () => {
   return new HttpResponse(200, "pong");
 };
