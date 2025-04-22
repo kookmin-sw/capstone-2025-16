@@ -35,6 +35,9 @@ export const getQuery = (
         "condition_occurrence.condition_start_date"
       ),
     ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
+  }
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -152,7 +155,8 @@ export const getQuery = (
     return db
       .selectFrom(query.as("filtered_condition_occurrence"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;
