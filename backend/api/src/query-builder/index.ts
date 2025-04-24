@@ -277,16 +277,15 @@ export const buildQuery = (
     }
 
     queries.push(
-      db
-        .insertInto("temp_cohort_detail")
-        .expression(
-          db
-            .selectFrom(query.as("tmp"))
-            .select(({ eb }) => [
-              eb.fn<any>("_to_int64", [eb.val(i + 1)]).as("cohort_id"),
-              "person_id",
-            ])
-        )
+      db.insertInto("temp_cohort_detail").expression(
+        db
+          .selectFrom(query.as("tmp"))
+          .select(({ eb }) => [
+            eb.fn<any>("_to_int64", [eb.val(i + 1)]).as("cohort_id"),
+            "person_id",
+          ])
+          .distinct()
+      )
     );
   }
 
@@ -383,20 +382,19 @@ export const buildQuery = (
       }
 
       queries.push(
-        db
-          .insertInto("temp_cohort_detail")
-          .expression(
-            db
-              .selectFrom(query.as("tmp"))
-              .select(({ eb }) => [
-                eb
-                  .fn<any>("_to_int64", [
-                    eb.val(initialGroup.containers.length + i + 1),
-                  ])
-                  .as("cohort_id"),
-                "person_id",
-              ])
-          )
+        db.insertInto("temp_cohort_detail").expression(
+          db
+            .selectFrom(query.as("tmp"))
+            .select(({ eb }) => [
+              eb
+                .fn<any>("_to_int64", [
+                  eb.val(initialGroup.containers.length + i + 1),
+                ])
+                .as("cohort_id"),
+              "person_id",
+            ])
+            .distinct()
+        )
       );
     }
   }

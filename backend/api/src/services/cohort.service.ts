@@ -3,6 +3,7 @@ import { getBaseDB } from "../query-builder/base";
 import { CohortDefinition } from "../types/type";
 import { uuidv7 } from "uuidv7";
 import { buildQuery } from "../query-builder";
+import moment from "moment";
 
 export const getCohorts = async (page: number) => {
   const limit = 50;
@@ -158,8 +159,8 @@ export const createNewCohort = async (
         description: description!,
         cohort_definition: JSON.stringify(cohortDef),
         author: "00000000-0000-0000-0000-000000000000", // TODO: add author
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: moment().format("YYYY-MM-DD HH:mm:ss"),
+        updated_at: moment().format("YYYY-MM-DD HH:mm:ss"),
       })
       .execute();
   }
@@ -228,7 +229,7 @@ export const updateExistingCohort = async (
       cohort_definition: cohortDef
         ? JSON.stringify(cohortDef)
         : cohort.cohort_definition,
-      updated_at: new Date().toISOString(),
+      updated_at: moment().format("YYYY-MM-DD HH:mm:ss"),
     })
     .where("cohort_id", "=", cohortId)
     .execute();

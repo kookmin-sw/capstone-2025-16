@@ -6,6 +6,8 @@ import routes from "./routes";
 import { handleResponse } from "./helpers/response.helper";
 import addCustomAsyncErrorHandler from "./helpers/exception.helper";
 import compression from "compression";
+import swaggerUi from "swagger-ui-express";
+import specs from "./swagger";
 
 // 비동기 예외 처리 핸들러 추가
 addCustomAsyncErrorHandler();
@@ -13,6 +15,8 @@ addCustomAsyncErrorHandler();
 const app = express();
 
 app.use(compression());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // JSON 파서 미들웨어 등록
 app.use(express.json());
