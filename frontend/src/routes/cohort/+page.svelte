@@ -3,6 +3,10 @@
   import { goto } from "$app/navigation";
   import Footer from '$lib/components/Footer.svelte';
 
+  export let data;
+  
+  let { cohortList } = data;
+
   let searchQuery = "";
   let searchInput = "";
   let errorMessage = "";
@@ -12,18 +16,22 @@
   const itemsPerPage = 10;
   let totalPages = 0;
 
-  let data = [
-    {
-      id: "",
-      name: "",
-      description: "",
-      author: "",
-      createdAt: "",
-      updatedAt: "",
-    },
-  ];
+  // let data = [
+  //   {
+  //     id: "",
+  //     name: "",
+  //     description: "",
+  //     author: "",
+  //     createdAt: "",
+  //     updatedAt: "",
+  //   },
+  // ];
 
-  let filteredData = [...data];
+  let filteredData = [...cohortList];
+  console.log(filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage));
+
   let selectedItems = {};
 
   // 현재 페이지의 데이터만 반환하는 함수
@@ -31,7 +39,7 @@
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
+  
   // 전체 페이지 수 계산
   $: totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
@@ -61,23 +69,23 @@
     errorMessage = "";
   }
 
-  async function loadData() {
-    try {
-      const response = await fetch('/cohort-list-testdata.json'); // JSON 파일 경로
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      data = await response.json(); // 데이터를 배열로 변환
-      filteredData = [...data]; // 초기 데이터 설정
-    } catch (error) {
-      console.error("Error loading data:", error);
-    }
-  }
+  // async function loadData() {
+  //   try {
+  //     const response = await fetch('/cohort-list-testdata.json'); // JSON 파일 경로
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch data");
+  //     }
+  //     data = await response.json(); // 데이터를 배열로 변환
+  //     filteredData = [...data]; // 초기 데이터 설정
+  //   } catch (error) {
+  //     console.error("Error loading data:", error);
+  //   }
+  // }
 
   function filterData() {
     if (!data.length) return;
 
-    filteredData = data.filter(
+    filteredData = cohortList.filter(
       (item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -114,13 +122,13 @@
   $: {
     if (!searchInput) {
       searchQuery = "";
-      filteredData = [...data];
+      filteredData = [...cohortList];
     }
   }
 
-  onMount(() => {
-    loadData();
-  });
+  // onMount(() => {
+  //   loadData();
+  // });
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -197,28 +205,28 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            {#each paginatedData as item (item.id)}
+            {#each paginatedData as item (item.cohort_id)}
               <tr 
                 class="hover:bg-gray-50 transition-colors cursor-pointer group"
-                class:bg-blue-50={selectedItems[item.id]}
-                on:click={() => handleCheckboxChange(item.id)}
+                class:bg-blue-50={selectedItems[item.cohort_id]}
+                on:click={() => handleCheckboxChange(item.cohort_id)}
               >
                 <td class="py-3 px-4">
                   <div class="flex items-center">
                     <div class="w-4 h-4 border-2 flex items-center justify-center transition-colors"
-                      class:border-blue-600={selectedItems[item.id]}
-                      class:border-gray-300={!selectedItems[item.id]}
+                      class:border-blue-600={selectedItems[item.cohort_id]}
+                      class:border-gray-300={!selectedItems[item.cohort_id]}
                     >
-                      {#if selectedItems[item.id]}
+                      {#if selectedItems[item.cohort_id]}
                         <div class="w-2 h-2 bg-blue-600"></div>
                       {/if}
                     </div>
                   </div>
                 </td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.id}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.cohort_id}</td>
                 <td class="py-3 px-4">
                   <a 
-                    href={`/cohort/${item.id}`} 
+                    href={`/cohort/${item.cohort_id}`} 
                     class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                   >
                     {item.name}
@@ -226,8 +234,8 @@
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.createdAt}</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.updatedAt}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.created_at}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.updated_at}</td>
               </tr>
             {/each}
           </tbody>
