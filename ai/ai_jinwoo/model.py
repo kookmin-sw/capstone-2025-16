@@ -11,7 +11,6 @@ from sklearn.neighbors import NearestNeighbors
 
 from validation import cross_validate_model, evaluate_model
 
-# --- PSM 관련 함수 --- #
 
 def calculate_propensity_scores(df_target, df_comparator, feature_cols):
     df_full = pd.concat([df_target[feature_cols], df_comparator[feature_cols]]).reset_index(drop=True)
@@ -23,7 +22,6 @@ def calculate_propensity_scores(df_target, df_comparator, feature_cols):
     model.fit(df_full, y_full)
     
     propensity_scores = model.predict_proba(df_full)[:, 1]
-    # target 군과 comparator 군의 propensity score 분리
     target_scores = propensity_scores[:len(df_target)]
     comp_scores = propensity_scores[len(df_target):]
     return target_scores, comp_scores
@@ -40,7 +38,7 @@ def prepare_psm_features(df_target, df_comparator, normalize=True):
     print("start psm")
     target_scores, comp_scores = calculate_propensity_scores(df_target, df_comparator, feature_cols)
     print("match patients start")
-    matched_comparator = match_patients(df_target, df_comparator, target_scores, comp_scores, k=1)
+    matched_comparator = match_patients(df_target, df_comparator, target_scores, comp_scores, k=30)
     return matched_comparator
 
 
@@ -55,65 +53,73 @@ def process_ohe_dictvectorizer(df: pd.DataFrame, column_name: str, normalize: bo
     ohe_df = pd.DataFrame.sparse.from_spmatrix(ohe_matrix, index=df["person_id"], columns=vec.get_feature_names_out())
     return ohe_df
 
-# --- Feature 전처리 함수 --- #
-
 def prepare_features(df_target: pd.DataFrame, df_comparator: pd.DataFrame, cols_to_drop: list, normalize: bool = True) -> pd.DataFrame:
     df_full = pd.concat([df_target, df_comparator]).reset_index(drop=True)
     df_full = df_full.drop(columns=[col for col in ['age', 'gender'] if col in df_full.columns])
-    
-    # procedure_ids와 condition_ids 컬럼이 없으면 빈 리스트로 초기화
+
     if "procedure_ids" not in df_full.columns:
         df_full["procedure_ids"] = [[] for _ in range(len(df_full))]
     if "condition_ids" not in df_full.columns:
         df_full["condition_ids"] = [[] for _ in range(len(df_full))]
-    
-    # One-Hot Encoding 처리
     procedure_df = process_ohe_dictvectorizer(df_full, "procedure_ids", normalize=normalize)
     condition_df = process_ohe_dictvectorizer(df_full, "condition_ids", normalize=normalize)
 
-    # 기본 정보: person_id와 label만 남김
     df_final = df_full[['person_id', 'label']].drop_duplicates().set_index("person_id")
-    
-    print("merge")
-    df_final = df_final.merge(procedure_df, how="left", left_index=True, right_index=True)
-    df_final = df_final.merge(condition_df, how="left", left_index=True, right_index=True)
-    
-    # cols_to_drop에 명시된 컬럼 제거
+    df_final = df_final.join(procedure_df, how="left").join(condition_df, how="left").fillna(0).astype(float)
+    # df_final = df_final.astype({'age': 'int32', 'gender': 'int32'})  
+
     df_final = df_final.drop(columns=[col for col in cols_to_drop if col in df_final.columns])
-    
-    # 결측값 채우고, int 타입으로 변환c
-    df_final = df_final.fillna(0).astype(int)
+    feature_cols = df_final.drop(columns=["label"]).columns
+    if len(feature_cols) > 30000:
+        feature_counts = (df_final[feature_cols] != 0).sum()
+        sorted_features = feature_counts.sort_values(ascending=True)
+        num_to_drop = len(sorted_features) - 30000
+        features_to_drop = sorted_features.index[:num_to_drop].tolist()
+        df_final = df_final.drop(columns=features_to_drop)
+
     return df_final
 
 def prepare_two_features(df_target: pd.DataFrame, df_comparator: pd.DataFrame, cols_to_drop: list, normalize: bool = True) -> tuple:
+    common_ids = set(df_target['person_id']).intersection(set(df_comparator['person_id']))
+    if common_ids:
+        raise ValueError(f"중복 환자 발견: {list(common_ids)[:5]}... (총 {len(common_ids)}명)")
     df_full = pd.concat([df_target, df_comparator]).reset_index(drop=True)
     df_full = df_full.drop(columns=[col for col in ['age', 'gender'] if col in df_full.columns])
+
     if "procedure_ids" not in df_full.columns:
         df_full["procedure_ids"] = [[] for _ in range(len(df_full))]
     if "condition_ids" not in df_full.columns:
         df_full["condition_ids"] = [[] for _ in range(len(df_full))]
-    
+
     procedure_df = process_ohe_dictvectorizer(df_full, "procedure_ids", normalize=normalize)
     condition_df = process_ohe_dictvectorizer(df_full, "condition_ids", normalize=normalize)
-    
+
     df_final = df_full[['person_id', 'label']].drop_duplicates().set_index("person_id")
     
-    df_procedure = df_final.merge(procedure_df, how="left", left_index=True, right_index=True)
-    df_condition = df_final.merge(condition_df, how="left", left_index=True, right_index=True)
+    df_procedure = df_final.join(procedure_df, how="left").fillna(0).astype(float)
+    df_condition = df_final.join(condition_df, how="left").fillna(0).astype(float)
     
-    # 불필요한 컬럼 제거
     df_procedure = df_procedure.drop(columns=[col for col in cols_to_drop if col in df_procedure.columns])
     df_condition = df_condition.drop(columns=[col for col in cols_to_drop if col in df_condition.columns])
-    print(df_procedure.head())
-    print(df_condition.head())
-    # 결측값 채우고, int 타입으로 변환
-    df_procedure = df_procedure.fillna(0).astype(int)
-    df_condition = df_condition.fillna(0).astype(int)
+
+    feature_cols_procedure = df_procedure.drop(columns=["label"]).columns
+    feature_cols_condition = df_condition.drop(columns=["label"]).columns
     
+    if len(feature_cols_procedure) > 30000:
+        feature_counts = (df_procedure[feature_cols_procedure] == 1).sum()
+        sorted_features = feature_counts.sort_values(ascending=True)
+        num_to_drop = len(sorted_features) - 30000
+        features_to_drop = sorted_features.index[:num_to_drop].tolist()
+        df_procedure = df_procedure.drop(columns=features_to_drop)
+
+    if len(feature_cols_condition) > 30000:
+        feature_counts = (df_condition[feature_cols_condition] == 1).sum()
+        sorted_features = feature_counts.sort_values(ascending=True)
+        num_to_drop = len(sorted_features) - 30000
+        features_to_drop = sorted_features.index[:num_to_drop].tolist()
+        df_condition = df_condition.drop(columns=features_to_drop)
+
     return df_procedure, df_condition
-
-
-
 def train_model(X, y):
     model = XGBClassifier(n_estimators=100, learning_rate=0.05, max_depth=6, random_state=42)
     model.fit(X, y)
@@ -184,3 +190,6 @@ def shap_visualization(model, X_train):
 def predict_cohort_probability(model, X_new):
     probabilities = model.predict_proba(X_new)[:, 1]
     return probabilities
+
+
+
