@@ -232,7 +232,7 @@
 										<a href="/custom-chart/new" 
 											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
 											onmouseenter={() => activeMenu = 'custom'}>
-											New Chart
+											Chart Definition
 										</a>
 									</li>
 								</ul>
