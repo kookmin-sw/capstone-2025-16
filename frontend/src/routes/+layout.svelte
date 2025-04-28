@@ -107,6 +107,20 @@
 									Person
 								</a>
 							</div>
+
+							<!-- Custom 메뉴 -->
+							<div class="w-[200px]">
+								<a 
+									href="/custom-chart"
+									role="menuitem"
+									tabindex="-1"
+									onmouseenter={() => activeMenu = 'custom'}
+									class="flex items-center h-[60px] w-full px-6 text-[15px] transition-all duration-200
+										{activeMenu === 'custom' ? 'text-slate-900 font-semibold' : 'text-slate-700 font-medium'} 
+										hover:text-slate-900 hover:font-semibold">
+									Custom Chart
+								</a>
+							</div>
 						</div>
 					</div>
 					<div class="flex w-full justify-end">
@@ -199,6 +213,26 @@
 											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
 											onmouseenter={() => activeMenu = 'person'}>
 											Person Search
+										</a>
+									</li>
+								</ul>
+							</div>
+
+							<!-- Custom Chart 섹션 -->
+							<div class="w-[200px] py-4 border-r border-slate-300">
+								<ul class="space-y-3">
+									<li>
+										<a href="/custom-chart" 
+											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
+											onmouseenter={() => activeMenu = 'person'}>
+											Chart List
+										</a>
+									</li>
+									<li>
+										<a href="/custom-chart/new" 
+											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
+											onmouseenter={() => activeMenu = 'custom'}>
+											New Chart
 										</a>
 									</li>
 								</ul>
