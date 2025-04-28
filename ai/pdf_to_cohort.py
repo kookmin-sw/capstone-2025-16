@@ -7,6 +7,7 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
+import re
 
 load_dotenv()
 openai_api_key = os.environ.get('OPENROUTER_API_KEY')
@@ -17,10 +18,6 @@ client = OpenAI(
     api_key=openai_api_key,
     base_url=openai_api_base,
 )
-
-# KST 시간대 계산
-kst_offset = timedelta(hours=9)
-current_datetime = (datetime.now(timezone.utc) + kst_offset).strftime('%Y-%m-%d %H:%M')
 
 STRICT_REQUIREMENT = f"""
 Instructions
@@ -56,6 +53,39 @@ Strict requirements:
      * Include "age" with appropriate operator
      * Example: "Age > 18" → "age": {{ "gt": 18 }}
    - Demographic type MUST NOT use age field
+
+5. For time-based conditions:
+   - Use the appropriate date fields based on the domain type:
+     * drug_exposure: startDate, endDate
+     * condition_occurrence: startDate, endDate
+     * procedure_occurrence: startDate, endDate
+     * measurement: date
+     * observation: date
+   - Date format: "YYYY-MM-DD HH:MM:SS"
+   - For relative time conditions, calculate the appropriate start and end dates based on the current time:
+     * "within the previous 24 hours" → 24시간 이내
+     * "within the last 3 months" → 3개월 이내
+   - Examples:
+     1. "Treatment with piperacillin-tazobactam within the previous 24 hours":
+       {{
+         "type": "drug_exposure",
+         "first": true,
+         "conceptset": "0",
+         "startDate": {{
+           "gte": "2024-03-20 10:00:00",  // 24 hours before current time
+           "lte": "2024-03-21 10:00:00"   // current time
+         }}
+       }}
+     2. "Diagnosis of sepsis within the last 3 months":
+       {{
+         "type": "condition_occurrence",
+         "first": true,
+         "conceptset": "1",
+         "startDate": {{
+           "gte": "2023-12-21 10:00:00",  // 3 months before current time
+           "lte": "2024-03-21 10:00:00"   // current time
+         }}
+       }}
 """
 
 STRICT_REQUIREMENT_SCHEMA = f"""
@@ -209,17 +239,27 @@ You are an AI assistant specialized in processing medical cohort selection crite
 Your task is to extract medical conditions, treatments, medications, and procedures mentioned explicitly in the provided text
 and classify them into appropriate OMOP CDM domains.
 
+Current time: {current_datetime}
 Extract the cohort selection criteria from the following text and return ONLY the JSON response:
 {text}
 """
 
 # 텍스트에서 코호트 정의를 추출
 def extract_terms_from_text(text: str) -> dict:
+    # KST 시간대 계산
+    kst_offset = timedelta(hours=9)
+    current_datetime = (datetime.now(timezone.utc) + kst_offset).strftime('%Y-%m-%d %H:%M:%S')
+    
     response = client.chat.completions.create(
         model=model_name,
-        messages=[{"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
-                 {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(text=text)}],
-        temperature=0.0 
+        messages=[
+            {"role": "system", "content": COHORT_EXTRACTION_SYSTEM_PROMPT},
+            {"role": "user", "content": COHORT_EXTRACTION_PROMPT.format(
+                current_datetime=current_datetime,
+                text=text
+            )}
+        ],
+        temperature=0.0
     )
     llm_response = response.choices[0].message.content
     

@@ -47,7 +47,11 @@ const cohortExample: CohortDefinition = {
             type: "drug_exposure",
             first: true,
             conceptset: "1",
-            age: { gt: 20 }
+            age: { gt: 20 },
+            startDate: {
+              gte: "2023-01-28 10:00:00",
+              lte: "2024-04-28 10:00:00"
+            }
           }
         ]
       },
