@@ -7,8 +7,9 @@ import {
   handleRowNumber,
   handleYearMinusWithNumberOperator,
   handleConceptSet,
+  getOptimizedTable,
 } from '../base';
-import { expressionBuilder, Kysely } from 'kysely';
+import { Kysely } from 'kysely';
 import { Database } from '../../db/types';
 
 let _optimizeFirst = false;
@@ -17,13 +18,13 @@ export const optimizeFirst = () => {
 };
 
 export const getQuery = (db: Kysely<Database>, a: DrugEraFilter) => {
-  const eb = expressionBuilder<Database, any>();
-
   let query = db
     .selectFrom(
-      _optimizeFirst && a.first
-        ? eb.ref('first_drug_era').as('drug_era')
-        : 'drug_era',
+      getOptimizedTable(
+        _optimizeFirst && a.first,
+        'drug_era',
+        'first_drug_era',
+      ),
     )
     .select(({ fn }) => [
       'drug_era.person_id as person_id',

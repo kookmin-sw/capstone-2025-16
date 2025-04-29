@@ -1,4 +1,3 @@
-import { expressionBuilder } from 'kysely';
 import { MeasurementFilter } from '../../types/type';
 import {
   handleAgeWithNumberOperator,
@@ -8,6 +7,7 @@ import {
   handleRowNumber,
   handleConceptSet,
   getExpressionBuilder,
+  getOptimizedTable,
 } from '../base';
 import { Kysely } from 'kysely';
 import { Database } from '../../db/types';
@@ -18,13 +18,13 @@ export const optimizeFirst = () => {
 };
 
 export const getQuery = (db: Kysely<Database>, a: MeasurementFilter) => {
-  const eb = expressionBuilder<Database, any>();
-
   let query = db
     .selectFrom(
-      _optimizeFirst && a.first
-        ? eb.ref('first_measurement').as('measurement')
-        : 'measurement',
+      getOptimizedTable(
+        _optimizeFirst && a.first,
+        'measurement',
+        'first_measurement',
+      ),
     )
     .select(({ fn }) => [
       'measurement.person_id as person_id',

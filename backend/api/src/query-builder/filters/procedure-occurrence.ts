@@ -6,8 +6,9 @@ import {
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
+  getOptimizedTable,
 } from '../base';
-import { expressionBuilder, Kysely } from 'kysely';
+import { Kysely } from 'kysely';
 import { Database } from '../../db/types';
 
 let _optimizeFirst = false;
@@ -19,13 +20,13 @@ export const getQuery = (
   db: Kysely<Database>,
   a: ProcedureOccurrenceFilter,
 ) => {
-  const eb = expressionBuilder<Database, any>();
-
   let query = db
     .selectFrom(
-      _optimizeFirst && a.first
-        ? eb.ref('first_procedure_occurrence').as('procedure_occurrence')
-        : 'procedure_occurrence',
+      getOptimizedTable(
+        _optimizeFirst && a.first,
+        'procedure_occurrence',
+        'first_procedure_occurrence',
+      ),
     )
     .select(({ fn }) => [
       'procedure_occurrence.person_id as person_id',

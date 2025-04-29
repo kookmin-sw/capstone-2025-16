@@ -6,8 +6,9 @@ import {
   handleIdentifierWithOperator,
   handleRowNumber,
   handleYearMinusWithNumberOperator,
+  getOptimizedTable,
 } from '../base';
-import { expressionBuilder, Kysely } from 'kysely';
+import { Kysely } from 'kysely';
 import { Database } from '../../db/types';
 
 let _optimizeFirst = false;
@@ -16,13 +17,13 @@ export const optimizeFirst = () => {
 };
 
 export const getQuery = (db: Kysely<Database>, a: ObservationPeriodFilter) => {
-  const eb = expressionBuilder<Database, any>();
-
   let query = db
     .selectFrom(
-      _optimizeFirst && a.first
-        ? eb.ref('first_observation_period').as('observation_period')
-        : 'observation_period',
+      getOptimizedTable(
+        _optimizeFirst && a.first,
+        'observation_period',
+        'first_observation_period',
+      ),
     )
     .select(({ fn }) => [
       'observation_period.person_id as person_id',

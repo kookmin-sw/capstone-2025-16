@@ -1,7 +1,7 @@
 import {
   Expression,
   FunctionModule,
-  OrderByDirectionExpression,
+  OrderByModifiers,
   ReferenceExpression,
   SelectQueryBuilder,
   StringReference,
@@ -23,6 +23,18 @@ import { db } from '../db/types';
 
 export const getBaseDB = () => {
   return db;
+};
+
+export const getOptimizedTable = <T extends string>(
+  b: any,
+  original: T,
+  optimize: string,
+): T => {
+  const eb = expressionBuilder<Database, any>();
+  if (b) {
+    return eb.table(optimize).as(original) as unknown as T;
+  }
+  return original;
 };
 
 export const getExpressionBuilder = <DB, TB extends keyof DB, O>(
@@ -116,7 +128,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
 type OrderBy<DB, TB extends keyof DB> =
   | {
       column: StringReference<DB, TB>;
-      direction: OrderByDirectionExpression;
+      direction: OrderByModifiers;
     }
   | StringReference<DB, TB>;
 
