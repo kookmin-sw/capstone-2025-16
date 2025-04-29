@@ -227,13 +227,7 @@ export const buildQuery = (
                 'concept_include.concept_id',
                 'concept_exclude.concept_id',
               )
-              .where(({ eb }) =>
-                eb(
-                  'concept_exclude.concept_id',
-                  '=',
-                  eb.fn<any>('_to_int64', [eb.val('0')]),
-                ),
-              ),
+              .where(({ eb }) => eb('concept_exclude.concept_id', 'is', null)),
           ),
       );
     });
