@@ -12,7 +12,7 @@
   const itemsPerPage = 10;
   let totalPages = 0;
 
-  let data = [
+  let chartData = [
     {
       id: "",
       name: "",
@@ -22,7 +22,7 @@
     },
   ];
 
-  let filteredData = [...data];
+  let filteredData = [...chartData];
   let selectedItems = {};
 
   // 현재 페이지의 데이터만 반환하는 함수
@@ -49,17 +49,17 @@
       if (!response.ok) {
         throw new Error("Failed to fetch data");
       }
-      data = await response.json(); // 데이터를 배열로 변환
-      filteredData = [...data]; // 초기 데이터 설정
+      chartData = await response.json(); // 데이터를 배열로 변환
+      filteredData = [...chartData]; // 초기 데이터 설정
     } catch (error) {
       console.error("Error loading data:", error);
     }
   }
 
   function filterData() {
-    if (!data.length) return;
+    if (!chartData.length) return;
 
-    filteredData = data.filter(
+    filteredData = chartData.filter(
       (item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,7 +76,7 @@
   $: {
     if (!searchInput) {
       searchQuery = "";
-      filteredData = [...data];
+      filteredData = [...chartData];
     }
   }
 
