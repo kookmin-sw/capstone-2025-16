@@ -4,10 +4,17 @@ import { CohortDefinition } from '../types/type';
 import { uuidv7 } from 'uuidv7';
 import { buildQuery } from '../query-builder';
 import moment from 'moment';
+import {
+  CohortResponse,
+  CohortStatisticsResponse,
+  CreateCohortResponse,
+  UpdateCohortResponse,
+  DeleteCohortResponse,
+} from './dto/cohort.dto';
 
 @Injectable()
 export class CohortService {
-  async getCohorts(page: number = 0) {
+  async getCohorts(page: number = 0): Promise<CohortResponse[]> {
     const limit = 50;
 
     return await getBaseDB()
@@ -18,7 +25,7 @@ export class CohortService {
       .execute();
   }
 
-  async getCohortStatistics(id: string) {
+  async getCohortStatistics(id: string): Promise<CohortStatisticsResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .selectAll()
@@ -26,7 +33,7 @@ export class CohortService {
       .executeTakeFirst();
 
     if (!cohort) {
-      throw new NotFoundException('코호트를 찾을 수 없습니다.');
+      throw new NotFoundException('Cohort not found.');
     }
 
     const [gender, mortality, age] = await Promise.all([
@@ -90,13 +97,20 @@ export class CohortService {
     }
 
     return {
-      gender,
-      mortality,
-      age,
+      gender: gender.map((e) => ({
+        concept_id: e.concept_id || '',
+        concept_name: e.concept_name || '',
+        count: Number(e.count),
+      })),
+      mortality: {
+        alive: Number(mortality?.alive ?? 0),
+        deceased: Number(mortality?.deceased ?? 0),
+      },
+      age: age_range,
     };
   }
 
-  async getCohort(id: string) {
+  async getCohort(id: string): Promise<CohortResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .selectAll()
@@ -104,13 +118,13 @@ export class CohortService {
       .executeTakeFirst();
 
     if (!cohort) {
-      throw new NotFoundException('코호트를 찾을 수 없습니다.');
+      throw new NotFoundException('Cohort not found.');
     }
 
     return cohort;
   }
 
-  async getCohortPersons(id: string, page: number = 0) {
+  async getCohortPersons(id: string, page: number = 0): Promise<string[]> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .select('cohort_id')
@@ -118,7 +132,7 @@ export class CohortService {
       .executeTakeFirst();
 
     if (!cohort) {
-      throw new NotFoundException('코호트를 찾을 수 없습니다.');
+      throw new NotFoundException('Cohort not found.');
     }
 
     const limit = 50;
@@ -139,7 +153,7 @@ export class CohortService {
     description: string,
     cohortDef: CohortDefinition,
     temporary?: boolean,
-  ) {
+  ): Promise<CreateCohortResponse> {
     let cohortId: string | undefined;
     if (!temporary) {
       cohortId = uuidv7();
@@ -190,7 +204,7 @@ export class CohortService {
     }
 
     return {
-      message: '코호트가 성공적으로 생성되었습니다.',
+      message: 'Cohort successfully created.',
       cohortId,
       containerCounts,
     };
@@ -201,7 +215,7 @@ export class CohortService {
     name?: string,
     description?: string,
     cohortDef?: CohortDefinition,
-  ) {
+  ): Promise<UpdateCohortResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .selectAll()
@@ -209,7 +223,7 @@ export class CohortService {
       .executeTakeFirst();
 
     if (!cohort) {
-      throw new NotFoundException('코호트를 찾을 수 없습니다.');
+      throw new NotFoundException('Cohort not found.');
     }
 
     await getBaseDB()
@@ -226,11 +240,11 @@ export class CohortService {
       .execute();
 
     return {
-      message: '코호트가 성공적으로 업데이트되었습니다.',
+      message: 'Cohort successfully updated.',
     };
   }
 
-  async removeExistingCohort(id: string) {
+  async removeExistingCohort(id: string): Promise<DeleteCohortResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .selectAll()
@@ -238,7 +252,7 @@ export class CohortService {
       .executeTakeFirst();
 
     if (!cohort) {
-      throw new NotFoundException('코호트를 찾을 수 없습니다.');
+      throw new NotFoundException('Cohort not found.');
     }
 
     await getBaseDB()
@@ -252,7 +266,7 @@ export class CohortService {
       .execute();
 
     return {
-      message: '코호트가 성공적으로 삭제되었습니다.',
+      message: 'Cohort successfully deleted.',
     };
   }
 }

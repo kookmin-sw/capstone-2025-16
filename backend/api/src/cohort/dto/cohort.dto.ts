@@ -8,116 +8,232 @@ import {
 } from 'class-validator';
 import { CohortDefinition } from '../../types/type';
 
+const cohortDefExample = {
+  conceptsets: [],
+  initialGroup: {
+    containers: [
+      {
+        name: 'Measurement',
+        filters: [
+          {
+            type: 'condition_era',
+          },
+        ],
+      },
+    ],
+  },
+  comparisonGroup: {
+    containers: [
+      {
+        name: 'Male',
+        filters: [
+          {
+            type: 'demographic',
+            gender: '8507',
+          },
+        ],
+      },
+    ],
+  },
+};
+
 export class CreateCohortDto {
-  @ApiProperty({ description: '코호트 이름' })
+  @ApiProperty({ description: 'Cohort name', example: 'Cohort name' })
   @IsString()
   name: string;
 
-  @ApiProperty({ description: '코호트 설명' })
+  @ApiProperty({
+    description: 'Cohort description',
+    example: 'Cohort description',
+  })
   @IsString()
   description: string;
 
-  @ApiProperty({ description: '코호트 정의' })
+  @ApiProperty({
+    description: 'Cohort definition',
+    example: cohortDefExample,
+  })
   @IsObject()
   cohortDefinition: CohortDefinition;
 
-  @ApiPropertyOptional({ description: '임시 코호트 여부', default: false })
+  @ApiPropertyOptional({
+    description: 'Temporary cohort flag',
+    default: false,
+    example: false,
+  })
   @IsBoolean()
   @IsOptional()
   temporary?: boolean;
 }
 
 export class UpdateCohortDto {
-  @ApiPropertyOptional({ description: '코호트 이름' })
+  @ApiPropertyOptional({ description: 'Cohort name', example: 'Cohort name' })
   @IsString()
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({ description: '코호트 설명' })
+  @ApiPropertyOptional({
+    description: 'Cohort description',
+    example: 'Cohort description',
+  })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ description: '코호트 정의' })
+  @ApiPropertyOptional({
+    description: 'Cohort definition',
+    example: cohortDefExample,
+  })
   @IsObject()
   @IsOptional()
   cohortDefinition?: CohortDefinition;
 }
 
 export class CohortIdParam {
-  @ApiProperty({ description: '코호트 ID' })
+  @ApiProperty({
+    description: 'Cohort ID',
+    example: '00000000-0000-0000-0000-000000000000',
+  })
   @IsUUID()
   cohortId: string;
 }
 
 export class PaginationQuery {
-  @ApiPropertyOptional({ description: '페이지 번호', default: 0 })
+  @ApiPropertyOptional({ description: 'Page number', default: 0, example: 0 })
   @IsOptional()
   page?: number = 0;
 }
 
 export class CohortResponse {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Cohort ID',
+    example: '00000000-0000-0000-0000-000000000000',
+  })
   cohort_id: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Cohort name',
+    example: 'Cohort name',
+  })
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Cohort description',
+    example: 'Cohort description',
+  })
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Cohort definition',
+    example: JSON.stringify(cohortDefExample),
+  })
   cohort_definition: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Cohort author',
+    example: '00000000-0000-0000-0000-000000000000',
+  })
   author: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Cohort created datetime',
+    example: '2000-01-01 00:00:00',
+  })
   created_at: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Cohort updated datetime',
+    example: '2000-01-01 00:00:00',
+  })
   updated_at: string;
 }
 
 export class CohortStatisticsResponse {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Gender statistics',
+    example: [
+      {
+        concept_id: '8507',
+        concept_name: 'MALE',
+        count: 143623,
+      },
+      {
+        concept_id: '8532',
+        concept_name: 'FEMALE',
+        count: 170916,
+      },
+    ],
+  })
   gender: Array<{
     concept_id: string;
     concept_name: string;
-    count: string;
+    count: number;
   }>;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Morality statistics',
+    example: {
+      alive: 302758,
+      deceased: 11781,
+    },
+  })
   mortality: {
-    alive: string;
-    deceased: string;
+    alive: number;
+    deceased: number;
   };
 
-  @ApiProperty()
-  age: Array<{
-    age_start: string;
-    age_end: string;
-    count: string;
-  }>;
+  @ApiProperty({
+    description: 'Age statistics',
+    example: {
+      '80-89': 16888,
+      '90-99': 36180,
+      '100-109': 39356,
+      '110-119': 39319,
+      '120-129': 39239,
+      '130-139': 39321,
+      '140-149': 39253,
+      '150-159': 39345,
+      '160-169': 22575,
+      '170-179': 2938,
+      '180-189': 125,
+    },
+  })
+  age: { [age_range: string]: number };
 }
 
 export class CreateCohortResponse {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Success message',
+    example: 'Cohort created successfully',
+  })
   message: string;
 
-  @ApiProperty()
-  cohortId: string;
+  @ApiPropertyOptional({
+    description: 'Cohort ID',
+    example: '00000000-0000-0000-0000-000000000000',
+  })
+  cohortId?: string;
 
-  @ApiProperty({ type: [Number] })
+  @ApiProperty({
+    description: 'Person count per containers',
+    type: [Number],
+    example: [400, 200],
+  })
   containerCounts: number[];
 }
 
 export class UpdateCohortResponse {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Success message',
+    example: 'Cohort updated successfully',
+  })
   message: string;
 }
 
 export class DeleteCohortResponse {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Success message',
+    example: 'Cohort deleted successfully',
+  })
   message: string;
 }

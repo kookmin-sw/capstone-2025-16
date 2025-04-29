@@ -34,21 +34,21 @@ import {
   DeleteCohortResponse,
 } from './dto/cohort.dto';
 
-@ApiTags('코호트')
+@ApiTags('Cohort')
 @Controller('/api/cohort')
 export class CohortController {
   constructor(private readonly cohortService: CohortService) {}
 
-  @ApiOperation({ summary: '코호트 목록 조회' })
+  @ApiOperation({ summary: 'Get cohort list' })
   @ApiQuery({
     name: 'page',
     required: false,
     type: Number,
-    description: '페이지 번호',
+    description: 'Page number',
   })
   @ApiResponse({
     status: 200,
-    description: '코호트 목록',
+    description: 'Cohort list',
     type: [CohortResponse],
   })
   @Get()
@@ -56,37 +56,37 @@ export class CohortController {
     return await this.cohortService.getCohorts(page);
   }
 
-  @ApiOperation({ summary: '코호트 조회' })
-  @ApiParam({ name: 'cohortId', description: '코호트 ID' })
-  @ApiOkResponse({ description: '코호트 정보', type: CohortResponse })
-  @ApiNotFoundResponse({ description: '코호트를 찾을 수 없음' })
+  @ApiOperation({ summary: 'Get cohort details' })
+  @ApiParam({ name: 'cohortId', description: 'Cohort ID' })
+  @ApiOkResponse({ description: 'Cohort information', type: CohortResponse })
+  @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Get(':cohortId')
   async getCohort(@Param() { cohortId }: CohortIdParam) {
     return await this.cohortService.getCohort(cohortId);
   }
 
-  @ApiOperation({ summary: '코호트 통계 조회' })
-  @ApiParam({ name: 'cohortId', description: '코호트 ID' })
+  @ApiOperation({ summary: 'Get cohort statistics' })
+  @ApiParam({ name: 'cohortId', description: 'Cohort ID' })
   @ApiOkResponse({
-    description: '코호트 통계 정보',
+    description: 'Cohort statistics information',
     type: CohortStatisticsResponse,
   })
-  @ApiNotFoundResponse({ description: '코호트를 찾을 수 없음' })
+  @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Get(':cohortId/statistics')
   async getCohortStatistics(@Param() { cohortId }: CohortIdParam) {
     return await this.cohortService.getCohortStatistics(cohortId);
   }
 
-  @ApiOperation({ summary: '코호트 환자 목록 조회' })
-  @ApiParam({ name: 'cohortId', description: '코호트 ID' })
+  @ApiOperation({ summary: 'Get cohort patients list' })
+  @ApiParam({ name: 'cohortId', description: 'Cohort ID' })
   @ApiQuery({
     name: 'page',
     required: false,
     type: Number,
-    description: '페이지 번호',
+    description: 'Page number',
   })
-  @ApiOkResponse({ description: '코호트 환자 목록', type: [Number] })
-  @ApiNotFoundResponse({ description: '코호트를 찾을 수 없음' })
+  @ApiOkResponse({ description: 'Cohort patients list', type: [String] })
+  @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Get(':cohortId/persons')
   async getCohortPersons(
     @Param() { cohortId }: CohortIdParam,
@@ -95,10 +95,10 @@ export class CohortController {
     return await this.cohortService.getCohortPersons(cohortId, page);
   }
 
-  @ApiOperation({ summary: '코호트 생성' })
+  @ApiOperation({ summary: 'Create cohort' })
   @ApiBody({ type: CreateCohortDto })
   @ApiCreatedResponse({
-    description: '코호트 생성 성공',
+    description: 'Cohort created successfully',
     type: CreateCohortResponse,
   })
   @Post()
@@ -113,14 +113,14 @@ export class CohortController {
     );
   }
 
-  @ApiOperation({ summary: '코호트 수정' })
-  @ApiParam({ name: 'cohortId', description: '코호트 ID' })
+  @ApiOperation({ summary: 'Update cohort' })
+  @ApiParam({ name: 'cohortId', description: 'Cohort ID' })
   @ApiBody({ type: UpdateCohortDto })
   @ApiOkResponse({
-    description: '코호트 수정 성공',
+    description: 'Cohort updated successfully',
     type: UpdateCohortResponse,
   })
-  @ApiNotFoundResponse({ description: '코호트를 찾을 수 없음' })
+  @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Put(':cohortId')
   async updateCohort(
     @Param() { cohortId }: CohortIdParam,
@@ -135,13 +135,13 @@ export class CohortController {
     );
   }
 
-  @ApiOperation({ summary: '코호트 삭제' })
-  @ApiParam({ name: 'cohortId', description: '코호트 ID' })
+  @ApiOperation({ summary: 'Delete cohort' })
+  @ApiParam({ name: 'cohortId', description: 'Cohort ID' })
   @ApiOkResponse({
-    description: '코호트 삭제 성공',
+    description: 'Cohort deleted successfully',
     type: DeleteCohortResponse,
   })
-  @ApiNotFoundResponse({ description: '코호트를 찾을 수 없음' })
+  @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Delete(':cohortId')
   async deleteCohort(@Param() { cohortId }: CohortIdParam) {
     return await this.cohortService.removeExistingCohort(cohortId);
