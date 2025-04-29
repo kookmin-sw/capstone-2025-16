@@ -1,4 +1,4 @@
-import { DrugExposureFilter } from "../../types/type";
+import { DrugExposureFilter } from '../../types/type';
 import {
   handleAgeWithNumberOperator,
   handleDateWithOperator,
@@ -7,9 +7,10 @@ import {
   handleRowNumber,
   handleStringWithOperator,
   handleConceptSet,
-} from "../base";
-import { expressionBuilder, Kysely } from "kysely";
-import { Database } from "../../db/types";
+  getOptimizedTable,
+} from '../base';
+import { Kysely } from 'kysely';
+import { Database } from '../../db/types';
 
 let _optimizeFirst = false;
 export const optimizeFirst = () => {
@@ -17,21 +18,21 @@ export const optimizeFirst = () => {
 };
 
 export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
-  const eb = expressionBuilder<Database, any>();
-
   let query = db
     .selectFrom(
-      _optimizeFirst && a.first
-        ? eb.ref("first_drug_exposure").as("drug_exposure")
-        : "drug_exposure"
+      getOptimizedTable(
+        _optimizeFirst && a.first,
+        'drug_exposure',
+        'first_drug_exposure',
+      ),
     )
     .select(({ fn }) => [
-      "drug_exposure.person_id as person_id",
+      'drug_exposure.person_id as person_id',
       ...handleRowNumber(
         a.first && !_optimizeFirst,
         fn,
-        "drug_exposure.person_id",
-        "drug_exposure.drug_exposure_start_date"
+        'drug_exposure.person_id',
+        'drug_exposure.drug_exposure_start_date',
       ),
     ]);
   if (!a.first || _optimizeFirst) {
@@ -42,32 +43,32 @@ export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
     query = handleConceptSet(
       db,
       query,
-      "drug_exposure.drug_concept_id",
-      a.conceptset
+      'drug_exposure.drug_concept_id',
+      a.conceptset,
     );
   }
 
   if (a.age || a.gender) {
     let joinedQuery = query.leftJoin(
-      "person",
-      "drug_exposure.person_id",
-      "person.person_id"
+      'person',
+      'drug_exposure.person_id',
+      'person.person_id',
     );
 
     if (a.age) {
       joinedQuery = handleAgeWithNumberOperator(
         joinedQuery,
-        "drug_exposure.drug_exposure_start_date",
-        "person.year_of_birth",
-        a.age
+        'drug_exposure.drug_exposure_start_date',
+        'person.year_of_birth',
+        a.age,
       );
     }
 
     if (a.gender) {
       joinedQuery = handleIdentifierWithOperator(
         joinedQuery,
-        "person.gender_concept_id",
-        a.gender
+        'person.gender_concept_id',
+        a.gender,
       );
     }
 
@@ -78,38 +79,38 @@ export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
   if (a.startDate) {
     query = handleDateWithOperator(
       query,
-      "drug_exposure.drug_exposure_start_date",
-      a.startDate
+      'drug_exposure.drug_exposure_start_date',
+      a.startDate,
     );
   }
 
   if (a.endDate) {
     query = handleDateWithOperator(
       query,
-      "drug_exposure.drug_exposure_end_date",
-      a.endDate
+      'drug_exposure.drug_exposure_end_date',
+      a.endDate,
     );
   }
 
   if (a.drugType) {
     query = handleIdentifierWithOperator(
       query,
-      "drug_exposure.drug_type_concept_id",
-      a.drugType
+      'drug_exposure.drug_type_concept_id',
+      a.drugType,
     );
   }
 
   if (a.visitType) {
     let joinedQuery = query.leftJoin(
-      "visit_occurrence",
-      "drug_exposure.visit_occurrence_id",
-      "visit_occurrence.visit_occurrence_id"
+      'visit_occurrence',
+      'drug_exposure.visit_occurrence_id',
+      'visit_occurrence.visit_occurrence_id',
     );
 
     joinedQuery = handleIdentifierWithOperator(
       joinedQuery,
-      "visit_occurrence.visit_concept_id",
-      a.visitType
+      'visit_occurrence.visit_concept_id',
+      a.visitType,
     );
 
     // @ts-ignore
@@ -119,36 +120,36 @@ export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
   if (a.stopReason) {
     query = handleStringWithOperator(
       query,
-      "drug_exposure.stop_reason",
-      a.stopReason
+      'drug_exposure.stop_reason',
+      a.stopReason,
     );
   }
 
   if (a.refill) {
-    query = handleNumberWithOperator(query, "drug_exposure.refills", a.refill);
+    query = handleNumberWithOperator(query, 'drug_exposure.refills', a.refill);
   }
 
   if (a.quantity) {
     query = handleNumberWithOperator(
       query,
-      "drug_exposure.quantity",
-      a.quantity
+      'drug_exposure.quantity',
+      a.quantity,
     );
   }
 
   if (a.daysSupply) {
     query = handleNumberWithOperator(
       query,
-      "drug_exposure.days_supply",
-      a.daysSupply
+      'drug_exposure.days_supply',
+      a.daysSupply,
     );
   }
 
   if (a.routeType) {
     query = handleIdentifierWithOperator(
       query,
-      "drug_exposure.route_concept_id",
-      a.routeType
+      'drug_exposure.route_concept_id',
+      a.routeType,
     );
   }
 
@@ -172,8 +173,8 @@ export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
   if (a.lotNumber) {
     query = handleStringWithOperator(
       query,
-      "drug_exposure.lot_number",
-      a.lotNumber
+      'drug_exposure.lot_number',
+      a.lotNumber,
     );
   }
 
@@ -181,22 +182,22 @@ export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
     query = handleConceptSet(
       db,
       query,
-      "drug_exposure.drug_source_concept_id",
-      a.source
+      'drug_exposure.drug_source_concept_id',
+      a.source,
     );
   }
 
   if (a.providerSpecialty) {
     let joinedQuery = query.leftJoin(
-      "provider",
-      "drug_exposure.provider_id",
-      "provider.provider_id"
+      'provider',
+      'drug_exposure.provider_id',
+      'provider.provider_id',
     );
 
     joinedQuery = handleIdentifierWithOperator(
       joinedQuery,
-      "provider.specialty_concept_id",
-      a.providerSpecialty
+      'provider.specialty_concept_id',
+      a.providerSpecialty,
     );
 
     // @ts-ignore
@@ -205,9 +206,9 @@ export const getQuery = (db: Kysely<Database>, a: DrugExposureFilter) => {
 
   if (a.first && !_optimizeFirst) {
     return db
-      .selectFrom(query.as("filtered_drug_exposure"))
-      .where("ordinal", "=", 1)
-      .select("person_id")
+      .selectFrom(query.as('filtered_drug_exposure'))
+      .where('ordinal', '=', 1)
+      .select('person_id')
       .distinct();
   }
 

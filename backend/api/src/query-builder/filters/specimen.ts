@@ -1,4 +1,4 @@
-import { SpecimenFilter } from "../../types/type";
+import { SpecimenFilter } from '../../types/type';
 import {
   handleAgeWithNumberOperator,
   handleDateWithOperator,
@@ -6,9 +6,10 @@ import {
   handleIdentifierWithOperator,
   handleRowNumber,
   handleConceptSet,
-} from "../base";
-import { expressionBuilder, Kysely } from "kysely";
-import { Database } from "../../db/types";
+  getOptimizedTable,
+} from '../base';
+import { Kysely } from 'kysely';
+import { Database } from '../../db/types';
 
 let _optimizeFirst = false;
 export const optimizeFirst = () => {
@@ -16,21 +17,21 @@ export const optimizeFirst = () => {
 };
 
 export const getQuery = (db: Kysely<Database>, a: SpecimenFilter) => {
-  const eb = expressionBuilder<Database, any>();
-
   let query = db
     .selectFrom(
-      _optimizeFirst && a.first
-        ? eb.ref("first_specimen").as("specimen")
-        : "specimen"
+      getOptimizedTable(
+        _optimizeFirst && a.first,
+        'specimen',
+        'first_specimen',
+      ),
     )
     .select(({ fn }) => [
-      "specimen.person_id as person_id",
+      'specimen.person_id as person_id',
       ...handleRowNumber(
         a.first && !_optimizeFirst,
         fn,
-        "specimen.person_id",
-        "specimen.specimen_date"
+        'specimen.person_id',
+        'specimen.specimen_date',
       ),
     ]);
   if (!a.first || _optimizeFirst) {
@@ -41,32 +42,32 @@ export const getQuery = (db: Kysely<Database>, a: SpecimenFilter) => {
     query = handleConceptSet(
       db,
       query,
-      "specimen.specimen_concept_id",
-      a.conceptset
+      'specimen.specimen_concept_id',
+      a.conceptset,
     );
   }
 
   if (a.age || a.gender) {
     let joinedQuery = query.leftJoin(
-      "person",
-      "specimen.person_id",
-      "person.person_id"
+      'person',
+      'specimen.person_id',
+      'person.person_id',
     );
 
     if (a.age) {
       joinedQuery = handleAgeWithNumberOperator(
         joinedQuery,
-        "specimen.specimen_date",
-        "person.year_of_birth",
-        a.age
+        'specimen.specimen_date',
+        'person.year_of_birth',
+        a.age,
       );
     }
 
     if (a.gender) {
       joinedQuery = handleIdentifierWithOperator(
         joinedQuery,
-        "person.gender_concept_id",
-        a.gender
+        'person.gender_concept_id',
+        a.gender,
       );
     }
 
@@ -74,50 +75,50 @@ export const getQuery = (db: Kysely<Database>, a: SpecimenFilter) => {
   }
 
   if (a.date) {
-    query = handleDateWithOperator(query, "specimen.specimen_date", a.date);
+    query = handleDateWithOperator(query, 'specimen.specimen_date', a.date);
   }
 
   if (a.specimenType) {
     query = handleIdentifierWithOperator(
       query,
-      "specimen.specimen_type_concept_id",
-      a.specimenType
+      'specimen.specimen_type_concept_id',
+      a.specimenType,
     );
   }
 
   if (a.quantity) {
-    query = handleNumberWithOperator(query, "specimen.quantity", a.quantity);
+    query = handleNumberWithOperator(query, 'specimen.quantity', a.quantity);
   }
 
   if (a.unitType) {
     query = handleIdentifierWithOperator(
       query,
-      "specimen.unit_concept_id",
-      a.unitType
+      'specimen.unit_concept_id',
+      a.unitType,
     );
   }
 
   if (a.anatomicSiteType) {
     query = handleIdentifierWithOperator(
       query,
-      "specimen.anatomic_site_concept_id",
-      a.anatomicSiteType
+      'specimen.anatomic_site_concept_id',
+      a.anatomicSiteType,
     );
   }
 
   if (a.diseaseStatus) {
     query = handleIdentifierWithOperator(
       query,
-      "specimen.disease_status_concept_id",
-      a.diseaseStatus
+      'specimen.disease_status_concept_id',
+      a.diseaseStatus,
     );
   }
 
   if (a.first && !_optimizeFirst) {
     return db
-      .selectFrom(query.as("filtered_specimen"))
-      .where("ordinal", "=", 1)
-      .select("person_id")
+      .selectFrom(query.as('filtered_specimen'))
+      .where('ordinal', '=', 1)
+      .select('person_id')
       .distinct();
   }
 

@@ -71,7 +71,7 @@ export interface BaseContainer {
 export interface FirstContainer extends BaseContainer {}
 
 export interface SubsequentContainer extends BaseContainer {
-  operator: "AND" | "OR" | "NOT";
+  operator: 'AND' | 'OR' | 'NOT';
 }
 
 export interface BaseGroup {
@@ -395,27 +395,27 @@ const cohort1: CohortDefinition = {
   initialGroup: {
     containers: [
       {
-        name: "컨테이너 1",
+        name: '컨테이너 1',
         filters: [
           {
-            type: "condition_era",
+            type: 'condition_era',
             first: true,
             startAge: {
               gte: 18,
             },
           },
           {
-            type: "observation",
+            type: 'observation',
             first: true,
           },
         ],
       },
       {
-        operator: "OR",
-        name: "컨테이너 2",
+        operator: 'OR',
+        name: '컨테이너 2',
         filters: [
           {
-            type: "condition_era",
+            type: 'condition_era',
             first: true,
           },
         ],
@@ -425,10 +425,10 @@ const cohort1: CohortDefinition = {
   comparisonGroup: {
     containers: [
       {
-        name: "컨테이너 3",
+        name: '컨테이너 3',
         filters: [
           {
-            type: "measurement",
+            type: 'measurement',
             first: true,
           },
         ],
