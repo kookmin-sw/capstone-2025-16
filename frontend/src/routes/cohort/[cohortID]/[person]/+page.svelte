@@ -331,7 +331,6 @@
 
     onMount(() => {
         cohortIdFromUrl = get(page).params.cohortID;
-        console.log(get(page).params.cohortID);
 
         drawTimeline(); 
 
