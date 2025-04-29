@@ -35,7 +35,7 @@ import {
 } from './dto/cohort.dto';
 
 @ApiTags('코호트')
-@Controller('cohort')
+@Controller('/api/cohort')
 export class CohortController {
   constructor(private readonly cohortService: CohortService) {}
 
