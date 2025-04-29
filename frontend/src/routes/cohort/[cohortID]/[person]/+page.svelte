@@ -1,6 +1,8 @@
 <script>
     import { onMount, onDestroy, tick } from "svelte";
     import { slide } from 'svelte/transition';
+    import { get } from 'svelte/store'
+    import { page } from '$app/stores'
     import CDMInfo from "$lib/components/Table/CDMInfo.svelte";
     import Condition from "$lib/components/Table/Condition.svelte";
     import Drug from "$lib/components/Table/Drug.svelte";
@@ -26,6 +28,7 @@
     let isSelectTableOpen = false;
     let isStatisticsView = false;
     let show = false;
+    let cohortIdFromUrl;
     export let data;
 
     let isTableView = {
@@ -327,7 +330,9 @@
     }
 
     onMount(() => {
-        drawTimeline();
+        cohortIdFromUrl = get(page).params.cohortID;
+
+        drawTimeline(); 
 
         const handleResize = () => {
             // 기존 svg 강제 삭제 후 다시 그리기
@@ -355,7 +360,15 @@
 
 <header class="py-4 bg-white border-b w-full">
     <div class="flex justify-between py-2">
+        
         <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
+            <a href="/cohort/{cohortIdFromUrl}" aria-label="go back">
+                <button class="flex items-center pr-[10px]" aria-label="go back">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-gray-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            </a>
             <span class="text-sm text-gray-400">ID</span>
             <span class="text-sm font-medium text-gray-900 ml-1">{personTable.person_id}</span>
             <span class="text-gray-200 mx-3">|</span>
