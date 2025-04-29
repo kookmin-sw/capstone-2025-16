@@ -31,12 +31,14 @@ Strict requirements:
      * containers: Array of containers with filters
      * not: Boolean (true for exclusion criteria)
 
-2. Each filter MUST include:
-   - type: The type of criteria (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
-   - first: true
-   - conceptset: String (matching conceptset_id)
+2. Each container in cohort MUST have:
+   - name (ONLY the medical term, NO additional words)
+   - type (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
+   - Each filter MUST have:
+     - type (one of the allowed types)
+     - first: true
+     - conceptset (matching conceptset_id)
    
-
 3. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
    - For any field such as "measurementType", "drugType", "conditionType", etc., 
@@ -130,101 +132,9 @@ Instructions:
 2. Ignore criteria that require complex logic or cannot be directly mapped to OMOP concepts
 3. Return the criteria in the following JSON format:
 
-Required JSON Format:
-{{
-  "conceptsets": [
-    {{
-      "conceptset_id": "0",  // MUST be a string
-      "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
-      "items": []  // MUST be an empty array
-    }},
-    {{
-      "conceptset_id": "1",
-      "name": "hemoglobin > 13 g/dL",
-      "items": []
-    }}
-  ],
-  initialGroup: {{
-    "containers": [
-      {{
-        "name": "Sepsis",  // MUST be ONLY the medical term, NO additional words
-        "filters": [  // MUST be an array
-          {{
-            "type": "condition_occurrence",  // MUST match the conceptset type
-            "first": true,  // MUST be true
-            "conceptset": "0",  // MUST match the conceptset_id,
-            "age": {{ "gte": 20 }}
-          }}
-        ]
-      }}
-    ]
-  }},
-  comparisonGroup: {{
-    "containers": [
-      {{
-        name: "not hemoglobin > 13 g/dL",
-        filters: [
-          {{
-            type: "measurement",
-            first: true,
-            measurementType: {{ eq: "234567" }},
-            valueAsNumber: {{ lte: 13 }},
-            conceptset: "1"  // Use string for direct reference
-          }}
-        ]
-      }},
-      {{
-        name: "not intensive care unit",
-        filters: [
-          {{
-            type: "observation",
-            first: true,
-            conceptset: {{ neq: "3" }}  // Use object with neq property for exclusion criteria
-          }}
-        ]
-      }},
-      {{
-        name: "not kidney transplant",
-        filters: [
-          {{
-            type: "procedure_occurrence",
-            first: true,
-            conceptset: {{ neq: "5" }}  // Use object with neq property for exclusion criteria
-          }}
-        ]
-      }},
-      {{
-        name: "not sepsis or active infections",
-        filters: [
-          {{
-            type: "condition_era",
-            first: true,
-            conceptset: {{ neq: "6" }}  // Use object with neq property for exclusion criteria
-          }}
-        ]
-      }}
-    ]
-  }},
-  
-}}
-
 {STRICT_REQUIREMENT}
 {STRICT_REQUIREMENT_SCHEMA}
 
-CRITICAL RULES:
-1. Each conceptset MUST have:
-   - conceptset_id (string)
-   - name (medical term)
-   - items (empty array)
-   - DO NOT include type field in conceptset
-
-2. Each container in cohort MUST have:
-   - name (ONLY the medical term, NO additional words)
-   - type (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
-   - Each filter MUST have:
-     - type (one of the allowed types)
-     - first: true
-     - conceptset (matching conceptset_id)
 
 3. Important:
    - [CRITICAL] Each concept should appear only ONCE
@@ -250,8 +160,6 @@ CRITICAL RULES:
    - Criteria without clear OMOP CDM mappings
    - Additional words like "diagnosis", "treatment", "therapy", etc.
    - [CRITICAL] ANY text that describes what you're doing or why
-
-5. ALWAYS maintain the exact structure shown above
 """
 
 # 코호트 json 뽑기 - user

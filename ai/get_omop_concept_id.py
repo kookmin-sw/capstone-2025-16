@@ -105,7 +105,9 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             concept_code,
             valid_start_date,
             valid_end_date,
-            invalid_reason
+            invalid_reason,
+            COALESCE(c.drug_type, '') as drugType,
+            COALESCE(c.condition_type, '') as conditionType
         FROM concept
         WHERE (concept_name ILIKE %(term)s) AND (domain_id = %(domain_id)s) AND (invalid_reason IS NULL)
     )
@@ -115,11 +117,11 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         lc.domain_id,
         lc.vocabulary_id,
         lc.concept_class_id,
-        lc.standard_concept,
+        COALESCE(lc.standard_concept, '') as standard_concept,
         lc.concept_code,
         lc.valid_start_date,
         lc.valid_end_date,
-        lc.invalid_reason,
+        COALESCE(lc.invalid_reason, '') as invalid_reason,
         COALESCE(pc.parent_count, 0) AS parent_count,
         COALESCE(cc.child_count, 0) AS child_count
     FROM limited_concepts AS lc
@@ -154,7 +156,7 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
     
     # 결과가 없고 auto_refine이 True이면 용어를 수정하여 재검색
     if not results and auto_refine:
-        print(f"'{cleaned_term}' 검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
+        # print(f"'{cleaned_term}' 검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
         refined_term = refine_search_query(cleaned_term)
         if refined_term != cleaned_term:
             # 무한 재귀 방지를 위해 auto_refine=False로 설정
@@ -186,12 +188,12 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         concepts.append(concept)
     
     # 결과 개수 출력
-    print(f"[get_omop_concept_id] 검색 결과: {len(concepts)}개")
+    # print(f"[get_omop_concept_id] 검색 결과: {len(concepts)}개")
     return concepts
 
 # concept_set_id에 해당하는 filter의 type을 찾아 domain_id를 반환
 def get_concept_set_domain_id(cohort_json: dict, concept_set_id: str) -> str:
-    print(f"\n[get_concept_set_domain_id] concept_set_id '{concept_set_id}'에 대한 도메인 ID 검색:")
+    # print(f"\n[get_concept_set_domain_id] concept_set_id '{concept_set_id}'에 대한 도메인 ID 검색:")
     
     # cohort 구조 처리
     if "cohort" in cohort_json:
@@ -227,30 +229,32 @@ def get_concept_set_domain_id(cohort_json: dict, concept_set_id: str) -> str:
                     # 1. conceptset이 문자열인 경우 직접 비교
                     if isinstance(filter_obj.get("conceptset"), str) and filter_obj.get("conceptset") == concept_set_id:
                         criteria_type = filter_obj["type"]
-                        print(f"- 찾은 criteria_type: {criteria_type} (in {group_name})")
+                        # print(f"- 찾은 criteria_type: {criteria_type} (in {group_name})")
                         
                         criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
                         if criteria_info:
                             domain_id = criteria_info["Domain_id"]
-                            print(f"- 매핑된 domain_id: {domain_id}")
+                            # print(f"- 매핑된 domain_id: {domain_id}")
                             return domain_id
                         else:
-                            print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+                            # print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+                            pass
                     
                     # 2. conceptset이 딕셔너리인 경우 (neq 등)
                     elif isinstance(filter_obj.get("conceptset"), dict) and "neq" in filter_obj.get("conceptset") and filter_obj.get("conceptset")["neq"] == concept_set_id:
                         criteria_type = filter_obj["type"]
-                        print(f"- 찾은 criteria_type: {criteria_type} (in {group_name}, neq)")
+                        # print(f"- 찾은 criteria_type: {criteria_type} (in {group_name}, neq)")
                         
                         criteria_info = cohort_json_schema.map_criteria_info(criteria_type)
                         if criteria_info:
                             domain_id = criteria_info["Domain_id"]
-                            print(f"- 매핑된 domain_id: {domain_id}")
+                            # print(f"- 매핑된 domain_id: {domain_id}")
                             return domain_id
                         else:
-                            print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+                            # print(f"- criteria_type '{criteria_type}'에 대한 매핑 정보가 없습니다.")
+                            pass
     
-    print(f"- concept_set_id '{concept_set_id}'에 대한 도메인 ID를 찾을 수 없습니다.")
+    # print(f"- concept_set_id '{concept_set_id}'에 대한 도메인 ID를 찾을 수 없습니다.")
     return None
 
 # concept_set의 items를 DB에서 조회한 결과로 업데이트
