@@ -54,23 +54,25 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
   if (descendant.length) {
     query = query.unionAll(
       db
-        .selectFrom('concept')
-        .select('concept.concept_id')
+        .selectFrom('concept_ancestor')
+        .select(({ eb }) => eb.ref('descendant_concept_id').as('concept_id'))
         .leftJoin(
-          'concept_ancestor',
+          'concept',
           'concept.concept_id',
           'concept_ancestor.descendant_concept_id',
         )
         .where(({ eb, and }) =>
           and([
-            eb(
-              'concept_ancestor.ancestor_concept_id',
-              'in',
-              descendant.map((e) =>
-                eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
+            and([
+              eb(
+                'concept_ancestor.ancestor_concept_id',
+                'in',
+                descendant.map((e) =>
+                  eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
+                ),
               ),
-            ),
-            eb('concept.invalid_reason', 'is', null),
+              eb('concept.invalid_reason', 'is', null),
+            ]),
           ]),
         ),
     );
