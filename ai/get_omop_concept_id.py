@@ -105,9 +105,7 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             concept_code,
             valid_start_date,
             valid_end_date,
-            invalid_reason,
-            COALESCE(c.drug_type, '') as drugType,
-            COALESCE(c.condition_type, '') as conditionType
+            invalid_reason
         FROM concept
         WHERE (concept_name ILIKE %(term)s) AND (domain_id = %(domain_id)s) AND (invalid_reason IS NULL)
     )

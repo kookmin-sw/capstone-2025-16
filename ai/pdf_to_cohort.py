@@ -56,6 +56,7 @@ Strict requirements:
      * Include "age" with appropriate operator
      * Example: "Age > 18" → "age": {{ "gt": 18 }}
    - Demographic type MUST NOT use age field
+     * [CRITICAL] If the cohort has an age criterion, ALL filters MUST include the appropriate age property
 
 5. For time-based conditions:
    - Use the appropriate date fields based on the domain type:
@@ -89,10 +90,17 @@ Strict requirements:
            "lte": "2024-03-21 10:00:00"   // current time
          }}
        }}
+
+6. NEVER include:
+   - Complex logic
+   - Non-implementable criteria
+   - Criteria without clear OMOP CDM mappings
+   - Additional words like "diagnosis", "treatment", "therapy", etc.
+   - [CRITICAL] ANY text that describes what you're doing or why
 """
 
 STRICT_REQUIREMENT_SCHEMA = f"""
-5. The final JSON **must strictly conform** to the OMOP CDM cohort JSON schema below:
+7. The final JSON **must strictly conform** to the OMOP CDM cohort JSON schema below:
 OMOP CDM cohort JSON schema:
 {cohort_json_schema.JSON_SCHEMA}
 
@@ -107,7 +115,7 @@ Input Text Example:
 Output Example:
 {cohort_json_schema.JSON_OUTPUT_EXAMPLE}
 
-6. Output format:
+8. Output format:
     - Return only the JSON structure
     - Do not include any explanations or markdown
     - Ensure all required fields are present
@@ -134,32 +142,6 @@ Instructions:
 
 {STRICT_REQUIREMENT}
 {STRICT_REQUIREMENT_SCHEMA}
-
-
-3. Important:
-   - [CRITICAL] Each concept should appear only ONCE
-   - [CRITICAL] For Measurement type:
-     * MUST include valueAsNumber with operator and value
-     * Example: "Hemoglobin > 13" → {{ "valueAsNumber": {{ "gt": 13 }} }}
-   - [CRITICAL] For age criteria:
-     * For dose_era, drug_era, condition_era types:
-       - MUST include startAge and endAge
-       - Example: "Patients aged 18-65" → {{ "startAge": 18, "endAge": 65 }}
-     * For all other types (except demographic):
-       - MUST include age with appropriate operator
-       - Example: "Age > 18" → {{ "age": {{ "gt": 18 }} }}
-     * [CRITICAL] Demographic type MUST NOT use age field
-     * [CRITICAL] If the cohort has an age criterion, ALL filters MUST include the appropriate age property
-       - Example: If cohort includes "Patients aged 18-65", then ALL filters must include either "age: {{ "gte": 18, "lte": 65 }}" or "startAge: 18, endAge: 65" depending on the filter type
-     * [CRITICAL] Demographic criteria MUST be placed in the second group of the cohort array
-     * [CRITICAL] The first group MUST contain only medical conditions, procedures, or other non-demographic criteria
-  
-4. NEVER include:
-   - Complex logic
-   - Non-implementable criteria
-   - Criteria without clear OMOP CDM mappings
-   - Additional words like "diagnosis", "treatment", "therapy", etc.
-   - [CRITICAL] ANY text that describes what you're doing or why
 """
 
 # 코호트 json 뽑기 - user
