@@ -60,11 +60,11 @@
 	});
 
 	$effect(() => {
-		paginatedData = filteredData.slice(
+		paginatedData = filteredData?.slice(
 			(currentPage - 1) * itemsPerPage,
 			currentPage * itemsPerPage
 		);
-	})
+	});
 
 	function nextPage() {
 		if (currentPage * itemsPerPage < filteredData.length) currentPage++;
