@@ -1,5 +1,6 @@
-import { Kysely, PostgresDialect } from "kysely";
-import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
+import { Kysely, PostgresDialect } from 'kysely';
+import { ClickhouseDialect } from '@founderpath/kysely-clickhouse';
+import 'dotenv/config';
 
 export interface Database {
   codesets: Codesets; // temp table
@@ -51,7 +52,7 @@ export interface Database {
 
 export const db = new Kysely<Database>({
   dialect:
-    process.env.DB_TYPE === "clickhouse" || !process.env.DB_TYPE
+    process.env.DB_TYPE === 'clickhouse' || !process.env.DB_TYPE
       ? new ClickhouseDialect({
           options: {
             url: `http://${process.env.DB_HOST}:${process.env.DB_PORT}`,

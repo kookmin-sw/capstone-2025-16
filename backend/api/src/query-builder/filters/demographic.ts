@@ -1,10 +1,10 @@
-import { DemographicFilter } from "../../types/type";
-import { handleIdentifierWithOperator } from "../base";
-import { Kysely } from "kysely";
-import { Database } from "../../db/types";
+import { DemographicFilter } from '../../types/type';
+import { handleIdentifierWithOperator } from '../base';
+import { Kysely } from 'kysely';
+import { Database } from '../../db/types';
 
 export const getQuery = (db: Kysely<Database>, a: DemographicFilter) => {
-  let query = db.selectFrom("person").select("person_id");
+  let query = db.selectFrom('person').select('person_id');
 
   // if (a.age) {
   //   query = handleAgeWithNumberOperator(
@@ -18,8 +18,8 @@ export const getQuery = (db: Kysely<Database>, a: DemographicFilter) => {
   if (a.gender) {
     query = handleIdentifierWithOperator(
       query,
-      "person.gender_concept_id",
-      a.gender
+      'person.gender_concept_id',
+      a.gender,
     );
   }
 
@@ -42,16 +42,16 @@ export const getQuery = (db: Kysely<Database>, a: DemographicFilter) => {
   if (a.raceType) {
     query = handleIdentifierWithOperator(
       query,
-      "person.race_concept_id",
-      a.raceType
+      'person.race_concept_id',
+      a.raceType,
     );
   }
 
   if (a.ethnicityType) {
     query = handleIdentifierWithOperator(
       query,
-      "person.ethnicity_concept_id",
-      a.ethnicityType
+      'person.ethnicity_concept_id',
+      a.ethnicityType,
     );
   }
 
