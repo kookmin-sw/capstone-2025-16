@@ -19,6 +19,8 @@
       description: "",
       author: "",
       createdAt: "",
+      chartType:"",
+
     },
   ];
 
@@ -127,6 +129,7 @@
               <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
               <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Chart Type</th>
               <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
               <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
             </tr>
@@ -144,6 +147,7 @@
                   </a>
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
+                <td class="py-3 px-4 text-sm text-gray-900">{item.chartType}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.createdAt}</td>
               </tr>
