@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { getPingMessage } from "../services/ping.service";
+import * as pingService from "../services/ping.service";
 
 export const ping = async (req: Request, res: Response, next: NextFunction) => {
-  next(getPingMessage());
+  next(pingService.ping());
 };

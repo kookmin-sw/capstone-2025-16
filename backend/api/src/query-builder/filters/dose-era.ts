@@ -8,22 +8,35 @@ import {
   handleYearMinusWithNumberOperator,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("dose_era")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_dose_era").as("dose_era")
+        : "dose_era"
+    )
     .select(({ fn }) => [
       "dose_era.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "dose_era.person_id",
         "dose_era.dose_era_start_date"
       ),
-    ])
-    .leftJoin("person", "dose_era.person_id", "person.person_id");
+    ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
+  }
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -34,30 +47,40 @@ export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
     );
   }
 
-  if (a.startAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "dose_era.dose_era_start_date",
-      "person.year_of_birth",
-      a.startAge
+  if (a.startAge || a.endAge || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "dose_era.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.endAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "dose_era.dose_era_end_date",
-      "person.year_of_birth",
-      a.endAge
-    );
-  }
+    if (a.startAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "dose_era.dose_era_start_date",
+        "person.year_of_birth",
+        a.startAge
+      );
+    }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.endAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "dose_era.dose_era_end_date",
+        "person.year_of_birth",
+        a.endAge
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    query = joinedQuery;
   }
 
   if (a.startDate) {
@@ -97,11 +120,12 @@ export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
     query = handleNumberWithOperator(query, "dose_era.dose_value", a.doseValue);
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_dose_era"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;

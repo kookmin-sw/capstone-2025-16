@@ -84,8 +84,8 @@ export class ConceptSetValidator {
 // Base filter class for common properties
 export class BaseFilterValidator {
   @IsOptional()
-  @IsString()
-  conceptset?: string;
+  @IsIdentifierWithOperator()
+  conceptset?: IdentifierWithOperator;
 
   @IsOptional()
   @IsBoolean()
@@ -648,27 +648,25 @@ export class VisitOccurrenceFilterValidator extends BaseFilterValidator {
   placeOfService?: IdentifierWithOperator;
 }
 
-// Demographic filter validator - commented out as it's not in the FilterMap
-/**
 export class DemographicFilterValidator extends BaseFilterValidator {
   @IsEnum(["demographic"] as const)
   type!: "demographic";
 
-  @IsOptional()
-  @IsNumberWithOperator()
-  age?: NumberWithOperator;
+  // @IsOptional()
+  // @IsNumberWithOperator()
+  // age?: NumberWithOperator;
 
   @IsOptional()
   @IsIdentifierWithOperator()
   gender?: IdentifierWithOperator;
 
-  @IsOptional()
-  @IsDateWithOperator()
-  startDate?: DateWithOperator;
+  // @IsOptional()
+  // @IsDateWithOperator()
+  // startDate?: DateWithOperator;
 
-  @IsOptional()
-  @IsDateWithOperator()
-  endDate?: DateWithOperator;
+  // @IsOptional()
+  // @IsDateWithOperator()
+  // endDate?: DateWithOperator;
 
   @IsOptional()
   @IsIdentifierWithOperator()
@@ -678,7 +676,6 @@ export class DemographicFilterValidator extends BaseFilterValidator {
   @IsIdentifierWithOperator()
   ethnicityType?: IdentifierWithOperator;
 }
-*/
 
 // Combined filter validator that can validate any filter type
 export class FilterValidator {
@@ -716,9 +713,8 @@ export class FilterValidator {
         return SpecimenFilterValidator;
       case "visit_occurrence":
         return VisitOccurrenceFilterValidator;
-      // Remove or comment out the demographic case since it's commented out in the FilterMap
-      // case "demographic":
-      //   return DemographicFilterValidator;
+      case "demographic":
+        return DemographicFilterValidator;
       default:
         return Object;
     }
@@ -736,8 +732,8 @@ export class FilterValidator {
     | ObservationPeriodFilterValidator
     | ProcedureOccurrenceFilterValidator
     | SpecimenFilterValidator
-    | VisitOccurrenceFilterValidator;
-  // | DemographicFilterValidator; // Commented out as it's not in the FilterMap
+    | VisitOccurrenceFilterValidator
+    | DemographicFilterValidator; // Commented out as it's not in the FilterMap
 }
 
 // First container doesn't have an operator

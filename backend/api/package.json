@@ -14,18 +14,22 @@
   "description": "",
   "dependencies": {
     "@clickhouse/client": "^1.11.0",
+    "@founderpath/kysely-clickhouse": "^1.7.0",
     "@types/express": "^5.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "kysely": "^0.27.6",
+    "moment": "^2.30.1",
     "reflect-metadata": "^0.2.2",
     "sql-formatter": "^15.5.2",
     "uuidv7": "^1.0.2"
   },
   "devDependencies": {
+    "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

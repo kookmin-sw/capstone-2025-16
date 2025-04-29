@@ -13,6 +13,7 @@
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
     import Footer from '$lib/components/Footer.svelte';
     import { onMount, onDestroy } from 'svelte';
+    import { page } from '$app/stores';
 
     let activeTab = $state('definition');
     const tabs = [
@@ -37,26 +38,82 @@
     let indicatorStyle = $state('');
     let resizeObserver;
 
-    // cohort features 임시 데이터
-    const procedureData = [
-        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.687 },
-        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.687 },
-        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.687 },
-        { ID: "1000024", Name: "Hypertension", Influence: 0.512 },
-        { ID: "1000025", Name: "Diabetes", Influence: 0.478 },
-        { ID: "1000026", Name: "Asthma", Influence: 0.432 },
-        { ID: "1000027", Name: "Arthritis", Influence: 0.421 }
-    ];
+    // SHAP 분석 관련 상태 변수 추가
+    let comparisonGroupSize = $state('');
+    let isLoading = $state(false);
+    let analysisStarted = $state(false);
+    let shapFeatures = $state([]);
+    let analysisError = $state(null);
+    let cohortID = $derived($page.params.cohortID); // URL에서 cohortID 추출
 
-    const conditionData = [
-        { ID: "1000024", Name: "Delirium", Influence: 0.547 },
-        { ID: "1000123", Name: "Hyperlidemia", Influence: 0.533 },
-        { ID: "1000023", Name: "Hyperlidemia", Influence: 0.445 },
-        { ID: "1000026", Name: "Asthma", Influence: 0.432 },
-        { ID: "1000027", Name: "Arthritis", Influence: 0.421 },
-        { ID: "1000028", Name: "Depression", Influence: 0.398 },
-        { ID: "1000029", Name: "Anxiety", Influence: 0.376 }
-    ];
+    // SHAP 분석 시작 함수 (백엔드 연동 필요)
+    async function startAnalysis() {
+        analysisStarted = true;
+        isLoading = true;
+        shapFeatures = [];
+        analysisError = null;
+
+        // 입력 값 유효성 검사 (양의 정수)
+        const size = parseInt(comparisonGroupSize);
+        if (isNaN(size) || size <= 0) {
+            analysisError = "Comparison group size must be a positive integer greater than or equal to 1.";
+            isLoading = false;
+            return;
+        }
+
+        try {
+            // TODO: 실제 백엔드 API 호출 로직 구현
+            // 예시: const response = await fetch(`/api/cohort/${cohortID}/shap-analysis?comparisonSize=${size}`);
+            // if (!response.ok) throw new Error('분석 중 오류가 발생했습니다.');
+            // const data = await response.json();
+            // shapFeatures = data.features; // 백엔드 응답에 domain 필드가 포함되어야 함
+
+            // 임시 비동기 처리 및 더미 데이터 설정 (domain 추가)
+            await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 딜레이 시뮬레이션
+            // 성공 시 더미 데이터 (확장 및 influence 조정)
+            shapFeatures = [
+                // Procedure (11개) - Top 10 Sum: 78.4
+                { name: 'Coronary Angiography', influence: 40, domain: 'Procedure' },
+                { name: 'Appendectomy', influence: 20, domain: 'Procedure' },
+                { name: 'Colonoscopy', influence: 10, domain: 'Procedure' },
+                { name: 'Hip Replacement', influence: 1.5, domain: 'Procedure' },
+                { name: 'Knee Arthroscopy', influence: 1.4, domain: 'Procedure' },
+                { name: 'Cholecystectomy', influence: 1.3, domain: 'Procedure' },
+                { name: 'Cardiac Catheterization', influence: 1.2, domain: 'Procedure' },
+                { name: 'Tonsillectomy', influence: 1.1, domain: 'Procedure' },
+                { name: 'Hernia Repair', influence: 1.0, domain: 'Procedure' },
+                { name: 'Cataract Surgery', influence: 0.9, domain: 'Procedure' },
+                { name: 'Physical Therapy Session', influence: 0.08, domain: 'Procedure' }, 
+
+                // Condition (12개) - Top 10 Sum: 74.5
+                { name: 'History of Hypertension', influence: 25, domain: 'Condition' },
+                { name: 'Diabetes Mellitus Type 2', influence: 15, domain: 'Condition' },
+                { name: 'Chronic Kidney Disease Stage 3', influence: 10, domain: 'Condition' },
+                { name: 'Asthma, persistent', influence: 8, domain: 'Condition' },
+                { name: 'Atrial Fibrillation', influence: 6, domain: 'Condition' },
+                { name: 'Hyperlipidemia', influence: 4, domain: 'Condition' },
+                { name: 'Osteoarthritis of Knee', influence: 3, domain: 'Condition' },
+                { name: 'Major Depressive Disorder', influence: 2, domain: 'Condition' },
+                { name: 'Gastroesophageal Reflux Disease', influence: 1, domain: 'Condition' },
+                { name: 'Obstructive Sleep Apnea', influence: 0.5, domain: 'Condition' },
+                { name: 'Anemia, unspecified', influence: 0.20, domain: 'Condition' },
+                { name: 'Hypothyroidism', influence: 0.19, domain: 'Condition' },
+            ];
+
+            // TODO: 실제 데이터에서는 더 많은 도메인과 특성이 있을 수 있음
+            // 실제 백엔드 응답에 맞게 domain 필드를 처리해야 합니다.
+
+            // 만약 실제 API 호출에서 에러가 발생했다면 아래처럼 처리
+            // throw new Error("백엔드 처리 중 심각한 오류 발생");
+
+        } catch (error) {
+            console.error("SHAP analysis error:", error);
+            analysisError = error.message || "An unexpected error occurred while running SHAP analysis. Please try again later.";
+            shapFeatures = []; // 에러 발생 시 기존 결과 초기화
+        } finally {
+            isLoading = false;
+        }
+    }
 
     function updateIndicator() {
         if (!tabElements || tabElements.length === 0) return;
@@ -202,63 +259,129 @@
     {/if}
 
     {#if activeTab === 'features'}
-        <div class="border rounded-lg bg-white shadow-sm h-[300px] flex flex-col">
-            <div class="p-4 border-b">
-                <h2 class="text-base text-gray-700">Cohort Characteristics(Procedure, Condition)</h2>
+        <div class="p-6 space-y-6">
+            <h2 class="text-xl font-semibold text-gray-800">Cohort Feature Importance Analysis (SHAP)</h2>
+            <p class="text-sm text-gray-600">
+                Enter the size of the comparison group to analyze the top features influencing this cohort using the SHAP algorithm.
+            </p>
+
+            <div class="flex items-end space-x-4">
+                <div class="flex-grow max-w-xs">
+                    <label for="comparisonSize" class="block text-sm font-medium text-gray-700 mb-1">Comparison Group Size Multiplier:</label> 
+                    <input
+                        type="number"
+                        id="comparisonSize"
+                        bind:value={comparisonGroupSize}
+                        placeholder="e.g., 2" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        min="1"
+                        disabled={isLoading}
+                    />
+                </div>
+                <button
+                    onclick={startAnalysis}
+                    disabled={isLoading || !comparisonGroupSize || parseInt(comparisonGroupSize) <= 0}
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                    {#if isLoading}
+                        Analyzing...
+                    {:else}
+                        Start Analysis
+                    {/if}
+                </button>
             </div>
-            <div class="p-4 flex-1">
-                <div class="grid grid-cols-2 gap-4 h-full">
-                    <div class="h-full">
-                        <h3 class="text-xs text-gray-500 mb-2">Procedure</h3>
-                        <div class="overflow-y-auto h-[170px] border rounded">
-                            <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    {#each procedureData as { ID, Name, Influence }}
-                                        <tr>
-                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{ID}</td>
-                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Name}</td>
-                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Influence}</td>
-                                        </tr>
-                                    {/each}
-                                </tbody>
-                            </table>
+
+            {#if isLoading}
+                <div class="mt-6 flex justify-center items-center space-x-2 text-gray-600">
+                    <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Running SHAP analysis. Please wait...</span>
+                </div>
+            {/if}
+
+            {#if analysisError && !isLoading}
+                <div class="mt-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-md text-sm">
+                    <p><strong class="font-medium">Error:</strong> {analysisError}</p>
+                </div>
+            {/if}
+
+            {#if !isLoading && !analysisError && shapFeatures.length > 0}
+                {@const procedureFeatures = shapFeatures.filter(f => f.domain === 'Procedure').sort((a, b) => b.influence - a.influence).slice(0, 10)}
+                {@const conditionFeatures = shapFeatures.filter(f => f.domain === 'Condition').sort((a, b) => b.influence - a.influence).slice(0, 10)}
+                
+                <div class="mt-8">
+                    <!-- <h3 class="text-lg font-medium text-gray-800 mb-4">Top 10 Influential Features by Domain</h3> -->
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Procedure Column -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Procedure</h4>
+                            {#if procedureFeatures.length > 0}
+                                <div class="border rounded-lg overflow-hidden shadow-sm">
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50 sticky top-0 z-10">
+                                            <tr>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Name</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            {#each procedureFeatures as feature, index}
+                                                <tr>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{index + 1}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.name}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
+                                                </tr>
+                                            {/each}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {:else}
+                                <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
+                                    No significant procedure features found.
+                                </div>
+                            {/if}
                         </div>
-                    </div>
-                    <div class="h-full">
-                        <h3 class="text-xs text-gray-500 mb-2">Condition</h3>
-                        <div class="overflow-y-auto h-[170px] border rounded">
-                            <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    {#each conditionData as { ID, Name, Influence }}
-                                        <tr>
-                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{ID}</td>
-                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Name}</td>
-                                            <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{Influence}</td>
-                                        </tr>
-                                    {/each}
-                                </tbody>
-                            </table>
+
+                        <!-- Condition Column -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Condition</h4>
+                            {#if conditionFeatures.length > 0}
+                                <div class="border rounded-lg overflow-hidden shadow-sm">
+                                        <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                            <tr>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Name</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                {#each conditionFeatures as feature, index}
+                                                    <tr>
+                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{index + 1}</td>
+                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.name}</td>
+                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
+                                                    </tr>
+                                                {/each}
+                                            </tbody>
+                                        </table>
+                                </div>
+                            {:else}
+                                <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
+                                    No significant condition features found.
+                                </div>
+                            {/if}
                         </div>
                     </div>
                 </div>
-            </div>
+            {/if}
         </div>
     {/if}
-
 
     {#if activeTab == 'charts'}
         <div class="w-full">

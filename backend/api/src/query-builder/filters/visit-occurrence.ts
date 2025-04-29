@@ -7,32 +7,35 @@ import {
   handleYearMinusWithNumberOperator,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: VisitOccurrenceFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("visit_occurrence")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_visit_occurrence").as("visit_occurrence")
+        : "visit_occurrence"
+    )
     .select(({ fn }) => [
       "visit_occurrence.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "visit_occurrence.person_id",
         "visit_occurrence.visit_start_date"
       ),
-    ])
-    .leftJoin("person", "visit_occurrence.person_id", "person.person_id")
-    .leftJoin(
-      "provider",
-      "visit_occurrence.provider_id",
-      "provider.provider_id"
-    )
-    .leftJoin(
-      "care_site",
-      "visit_occurrence.care_site_id",
-      "care_site.care_site_id"
-    );
+    ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
+  }
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -43,21 +46,32 @@ export const getQuery = (db: Kysely<Database>, a: VisitOccurrenceFilter) => {
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "visit_occurrence.visit_start_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "visit_occurrence.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "visit_occurrence.visit_start_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.startDate) {
@@ -103,26 +117,45 @@ export const getQuery = (db: Kysely<Database>, a: VisitOccurrenceFilter) => {
   }
 
   if (a.providerSpecialty) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "provider",
+      "visit_occurrence.provider_id",
+      "provider.provider_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "provider.specialty_concept_id",
       a.providerSpecialty
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.placeOfService) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "care_site",
+      "visit_occurrence.care_site_id",
+      "care_site.care_site_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "care_site.place_of_service_concept_id",
       a.placeOfService
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_visit_occurrence"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;

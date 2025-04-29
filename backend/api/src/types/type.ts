@@ -78,7 +78,6 @@ export interface BaseGroup {
   containers: [FirstContainer, ...SubsequentContainer[]];
 }
 
-// first group 안에는 DemographicFilter가 들어갈 수 없음
 export interface InitialGroup extends BaseGroup {}
 
 export interface ComparisonGroup extends BaseGroup {}
@@ -129,7 +128,7 @@ export type FilterMap = {
   procedure_occurrence: ProcedureOccurrenceFilter;
   specimen: SpecimenFilter;
   visit_occurrence: VisitOccurrenceFilter;
-  // demographic: DemographicFilter;
+  demographic: DemographicFilter;
 };
 
 /**
@@ -148,7 +147,7 @@ export type Filter = {
  * condition_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ConditionEraFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
@@ -163,7 +162,7 @@ export interface ConditionEraFilter {
  * condition_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ConditionOccurrenceFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -181,7 +180,7 @@ export interface ConditionOccurrenceFilter {
  * death 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DeathFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
   date?: DateWithOperator;
@@ -193,7 +192,7 @@ export interface DeathFilter {
  * device_exposure 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DeviceExposureFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -211,7 +210,7 @@ export interface DeviceExposureFilter {
  * dose_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DoseEraFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
@@ -227,7 +226,7 @@ export interface DoseEraFilter {
  * drug_era 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DrugEraFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   startAge?: NumberWithOperator;
   endAge?: NumberWithOperator;
@@ -242,7 +241,7 @@ export interface DrugEraFilter {
  * drug_exposure 도메인에 대한 필터 인터페이스입니다.
  */
 export interface DrugExposureFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -266,7 +265,7 @@ export interface DrugExposureFilter {
  * measurement 도메인에 대한 필터 인터페이스입니다.
  */
 export interface MeasurementFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -290,7 +289,7 @@ export interface MeasurementFilter {
  * observation 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ObservationFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -323,7 +322,7 @@ export interface ObservationPeriodFilter {
  * procedure_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface ProcedureOccurrenceFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -340,7 +339,7 @@ export interface ProcedureOccurrenceFilter {
  * specimen 도메인에 대한 필터 인터페이스입니다.
  */
 export interface SpecimenFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -357,7 +356,7 @@ export interface SpecimenFilter {
  * visit_occurrence 도메인에 대한 필터 인터페이스입니다.
  */
 export interface VisitOccurrenceFilter {
-  conceptset?: Identifier;
+  conceptset?: IdentifierWithOperator;
   first?: boolean;
   age?: NumberWithOperator;
   gender?: IdentifierWithOperator;
@@ -374,14 +373,14 @@ export interface VisitOccurrenceFilter {
 /**
  * demographic 도메인에 대한 필터 인터페이스입니다.
  */
-// export interface DemographicFilter {
-//   age?: NumberWithOperator;
-//   gender?: IdentifierWithOperator;
-//   startDate?: DateWithOperator;
-//   endDate?: DateWithOperator;
-//   raceType?: IdentifierWithOperator;
-//   ethnicityType?: IdentifierWithOperator;
-// }
+export interface DemographicFilter {
+  // age?: NumberWithOperator;
+  gender?: IdentifierWithOperator;
+  // startDate?: DateWithOperator;
+  // endDate?: DateWithOperator;
+  raceType?: IdentifierWithOperator;
+  ethnicityType?: IdentifierWithOperator;
+}
 
 /**
  * 코호트 예시

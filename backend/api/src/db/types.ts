@@ -1,5 +1,5 @@
 import { Kysely, PostgresDialect } from "kysely";
-import { ClickhouseDialect } from "./dialects/clickhouse";
+import { ClickhouseDialect } from "@founderpath/kysely-clickhouse";
 
 export interface Database {
   codesets: Codesets; // temp table
@@ -34,6 +34,19 @@ export interface Database {
   drug_strength: DrugStrength;
   domain: Domain;
   specimen: Specimen;
+
+  first_condition_era: ConditionEra;
+  first_condition_occurrence: ConditionOccurrence;
+  first_drug_era: DrugEra;
+  first_measurement: Measurement;
+  first_observation: Observation;
+  first_procedure_occurrence: ProcedureOccurrence;
+  first_visit_occurrence: VisitOccurrence;
+  first_drug_exposure: DrugExposure;
+  first_device_exposure: DeviceExposure;
+  first_specimen: Specimen;
+  first_dose_era: DoseEra;
+  first_observation_period: ObservationPeriod;
 }
 
 export const db = new Kysely<Database>({

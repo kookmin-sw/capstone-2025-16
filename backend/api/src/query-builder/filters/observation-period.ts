@@ -7,39 +7,62 @@ import {
   handleRowNumber,
   handleYearMinusWithNumberOperator,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: ObservationPeriodFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("observation_period")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_observation_period").as("observation_period")
+        : "observation_period"
+    )
     .select(({ fn }) => [
       "observation_period.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "observation_period.person_id",
         "observation_period.observation_period_start_date"
       ),
-    ])
-    .leftJoin("person", "observation_period.person_id", "person.person_id");
-
-  if (a.startAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "observation_period.observation_period_start_date",
-      "person.year_of_birth",
-      a.startAge
-    );
+    ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
   }
 
-  if (a.endAge) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "observation_period.observation_period_end_date",
-      "person.year_of_birth",
-      a.endAge
+  if (a.startAge || a.endAge) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "observation_period.person_id",
+      "person.person_id"
     );
+
+    if (a.startAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "observation_period.observation_period_start_date",
+        "person.year_of_birth",
+        a.startAge
+      );
+    }
+
+    if (a.endAge) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "observation_period.observation_period_end_date",
+        "person.year_of_birth",
+        a.endAge
+      );
+    }
+
+    query = joinedQuery;
   }
 
   if (a.startDate) {
@@ -67,11 +90,12 @@ export const getQuery = (db: Kysely<Database>, a: ObservationPeriodFilter) => {
     );
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_observation_period"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;

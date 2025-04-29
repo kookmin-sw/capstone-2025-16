@@ -7,32 +7,35 @@ import {
   handleRowNumber,
   handleConceptSet,
 } from "../base";
-import { Kysely } from "kysely";
+import { expressionBuilder, Kysely } from "kysely";
 import { Database } from "../../db/types";
 
+let _optimizeFirst = false;
+export const optimizeFirst = () => {
+  _optimizeFirst = true;
+};
+
 export const getQuery = (db: Kysely<Database>, a: DeviceExposureFilter) => {
+  const eb = expressionBuilder<Database, any>();
+
   let query = db
-    .selectFrom("device_exposure")
+    .selectFrom(
+      _optimizeFirst && a.first
+        ? eb.ref("first_device_exposure").as("device_exposure")
+        : "device_exposure"
+    )
     .select(({ fn }) => [
       "device_exposure.person_id as person_id",
       ...handleRowNumber(
-        a.first,
+        a.first && !_optimizeFirst,
         fn,
         "device_exposure.person_id",
         "device_exposure.device_exposure_start_date"
       ),
-    ])
-    .leftJoin("person", "device_exposure.person_id", "person.person_id")
-    .leftJoin(
-      "visit_occurrence",
-      "device_exposure.visit_occurrence_id",
-      "visit_occurrence.visit_occurrence_id"
-    )
-    .leftJoin(
-      "provider",
-      "device_exposure.provider_id",
-      "provider.provider_id"
-    );
+    ]);
+  if (!a.first || _optimizeFirst) {
+    query = query.distinct();
+  }
 
   if (a.conceptset) {
     query = handleConceptSet(
@@ -43,21 +46,32 @@ export const getQuery = (db: Kysely<Database>, a: DeviceExposureFilter) => {
     );
   }
 
-  if (a.age) {
-    query = handleAgeWithNumberOperator(
-      query,
-      "device_exposure.device_exposure_start_date",
-      "person.year_of_birth",
-      a.age
+  if (a.age || a.gender) {
+    let joinedQuery = query.leftJoin(
+      "person",
+      "device_exposure.person_id",
+      "person.person_id"
     );
-  }
 
-  if (a.gender) {
-    query = handleIdentifierWithOperator(
-      query,
-      "person.gender_concept_id",
-      a.gender
-    );
+    if (a.age) {
+      joinedQuery = handleAgeWithNumberOperator(
+        joinedQuery,
+        "device_exposure.device_exposure_start_date",
+        "person.year_of_birth",
+        a.age
+      );
+    }
+
+    if (a.gender) {
+      joinedQuery = handleIdentifierWithOperator(
+        joinedQuery,
+        "person.gender_concept_id",
+        a.gender
+      );
+    }
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.startDate) {
@@ -85,11 +99,20 @@ export const getQuery = (db: Kysely<Database>, a: DeviceExposureFilter) => {
   }
 
   if (a.visitType) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "visit_occurrence",
+      "device_exposure.visit_occurrence_id",
+      "visit_occurrence.visit_occurrence_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "visit_occurrence.visit_concept_id",
       a.visitType
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
   if (a.uniqueDeviceId) {
@@ -118,18 +141,28 @@ export const getQuery = (db: Kysely<Database>, a: DeviceExposureFilter) => {
   }
 
   if (a.providerSpecialty) {
-    query = handleIdentifierWithOperator(
-      query,
+    let joinedQuery = query.leftJoin(
+      "provider",
+      "device_exposure.provider_id",
+      "provider.provider_id"
+    );
+
+    joinedQuery = handleIdentifierWithOperator(
+      joinedQuery,
       "provider.specialty_concept_id",
       a.providerSpecialty
     );
+
+    // @ts-ignore
+    query = joinedQuery;
   }
 
-  if (a.first) {
+  if (a.first && !_optimizeFirst) {
     return db
       .selectFrom(query.as("filtered_device_exposure"))
       .where("ordinal", "=", 1)
-      .select("person_id");
+      .select("person_id")
+      .distinct();
   }
 
   return query;
