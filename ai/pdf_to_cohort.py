@@ -35,6 +35,7 @@ Strict requirements:
    - type: The type of criteria (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - first: true
    - conceptset: String (matching conceptset_id)
+   
 
 3. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
@@ -173,12 +174,32 @@ Required JSON Format:
         ]
       }},
       {{
-        name: "Example with neq",
+        name: "not intensive care unit",
         filters: [
           {{
-            type: "measurement",
+            type: "observation",
             first: true,
-            conceptset: {{ neq: "1" }}  // Use object with neq property (NO quotes around neq)
+            conceptset: {{ neq: "3" }}  // Use object with neq property for exclusion criteria
+          }}
+        ]
+      }},
+      {{
+        name: "not kidney transplant",
+        filters: [
+          {{
+            type: "procedure_occurrence",
+            first: true,
+            conceptset: {{ neq: "5" }}  // Use object with neq property for exclusion criteria
+          }}
+        ]
+      }},
+      {{
+        name: "not sepsis or active infections",
+        filters: [
+          {{
+            type: "condition_era",
+            first: true,
+            conceptset: {{ neq: "6" }}  // Use object with neq property for exclusion criteria
           }}
         ]
       }}
@@ -230,7 +251,7 @@ CRITICAL RULES:
    - Additional words like "diagnosis", "treatment", "therapy", etc.
    - [CRITICAL] ANY text that describes what you're doing or why
 
-4. ALWAYS maintain the exact structure shown above
+5. ALWAYS maintain the exact structure shown above
 """
 
 # 코호트 json 뽑기 - user
