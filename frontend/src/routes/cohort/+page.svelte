@@ -16,22 +16,7 @@
   const itemsPerPage = 10;
   let totalPages = 0;
 
-  // let data = [
-  //   {
-  //     id: "",
-  //     name: "",
-  //     description: "",
-  //     author: "",
-  //     createdAt: "",
-  //     updatedAt: "",
-  //   },
-  // ];
-
   let filteredData = [...cohortList];
-  console.log(filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage));
-
   let selectedItems = {};
 
   // 현재 페이지의 데이터만 반환하는 함수
@@ -68,19 +53,6 @@
     selectedItems[id] = !selectedItems[id];
     errorMessage = "";
   }
-
-  // async function loadData() {
-  //   try {
-  //     const response = await fetch('/cohort-list-testdata.json'); // JSON 파일 경로
-  //     if (!response.ok) {
-  //       throw new Error("Failed to fetch data");
-  //     }
-  //     data = await response.json(); // 데이터를 배열로 변환
-  //     filteredData = [...data]; // 초기 데이터 설정
-  //   } catch (error) {
-  //     console.error("Error loading data:", error);
-  //   }
-  // }
 
   function filterData() {
     if (!data.length) return;
