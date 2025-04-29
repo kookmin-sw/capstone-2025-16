@@ -12,7 +12,12 @@ import * as procedureOccurrence from './filters/procedure-occurrence';
 import * as specimen from './filters/specimen';
 import * as visitOccurrence from './filters/visit-occurrence';
 import * as demographic from './filters/demographic';
-import { CohortDefinition, Concept, Filter } from '../types/type';
+import {
+  CohortDefinition,
+  Concept,
+  Filter,
+  IdentifierWithOperator,
+} from '../types/type';
 import { getBaseDB } from './base';
 import {
   CreateTableBuilder,
@@ -417,6 +422,63 @@ export const buildQuery = (
       db.deleteFrom('cohort_detail').where('cohort_id', '=', cohortId),
     );
 
+    // For AI
+    let conceptIds = new Set<string>();
+    for (let i of [
+      ...initialGroup.containers,
+      ...(comparisonGroup?.containers ?? []),
+    ]) {
+      for (let j of i.filters) {
+        for (let k of [
+          'providerSpecialty',
+          'anatomicSiteType',
+          'ethnicityType',
+          'raceType',
+          'drugType',
+          'operatorType',
+          'source',
+          'placeOfService',
+          'deathType',
+          'measurementType',
+          'specimenType',
+          'diseaseStatus',
+          'deviceType',
+          'doseUnit',
+          'conceptset',
+          'cause',
+          'visitType',
+          'observationType',
+          'gender',
+          'qualifierType',
+          'conditionStatus',
+          'procedureType',
+          'conditionType',
+          'valueAsConcept',
+          'routeType',
+          'unitType',
+          'modifierType',
+        ]) {
+          if (j[k]) {
+            let val: IdentifierWithOperator = j[k];
+            if (typeof val === 'string') {
+              conceptIds.add(val);
+            } else {
+              if (val.eq) {
+                for (let i of Array.isArray(val.eq) ? val.eq : [val.eq]) {
+                  conceptIds.add(i);
+                }
+              }
+              if (val.neq) {
+                for (let i of Array.isArray(val.neq) ? val.neq : [val.neq]) {
+                  conceptIds.add(i);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     finalQueries.push(
       db.insertInto('cohort_detail').expression(
         db
@@ -439,6 +501,26 @@ export const buildQuery = (
               .as('tmp'),
           )
           .select(({ eb }) => [eb.val(cohortId).as('cohort_id'), 'person_id']),
+      ),
+
+      // For AI
+      db
+        .insertInto('cohort_concept')
+        .expression(
+          db
+            .selectFrom(
+              db.selectFrom('codesets').select('concept_id').as('tmp'),
+            )
+            .select(({ eb }) => [
+              eb.val(cohortId).as('cohort_id'),
+              'concept_id',
+            ]),
+        ),
+      db.insertInto('cohort_concept').values(
+        [...conceptIds].map((e) => ({
+          concept_id: e,
+          cohort_id: cohortId,
+        })),
       ),
     );
   }

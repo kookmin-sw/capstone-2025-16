@@ -8,6 +8,7 @@ export interface Database {
 
   cohort: Cohort;
   cohort_detail: CohortDetail;
+  cohort_concept: CohortConcept;
 
   condition_era: ConditionEra;
   drug_era: DrugEra;
@@ -84,6 +85,11 @@ export interface Cohort {
 export interface CohortDetail {
   cohort_id: string;
   person_id: string;
+}
+
+export interface CohortConcept {
+  cohort_id: string;
+  concept_id: string;
 }
 
 export interface ConditionEra {

@@ -3,7 +3,7 @@ import { getBaseDB } from '../query-builder/base';
 import { CohortDefinition } from '../types/type';
 import { uuidv7 } from 'uuidv7';
 import { buildQuery } from '../query-builder';
-import moment from 'moment';
+import * as moment from 'moment';
 import {
   CohortResponse,
   CohortStatisticsResponse,
@@ -257,6 +257,11 @@ export class CohortService {
 
     await getBaseDB()
       .deleteFrom('cohort_detail')
+      .where('cohort_id', '=', id)
+      .execute();
+
+    await getBaseDB()
+      .deleteFrom('cohort_concept')
       .where('cohort_id', '=', id)
       .execute();
 
