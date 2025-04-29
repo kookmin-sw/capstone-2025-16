@@ -12,6 +12,10 @@
 	let pathname = $state(page.url.pathname);
 	let showCohortAIModal = $state(false);
 
+
+	let cohortName = $state('Cohort Name');
+	let cohortDescription = $state('Edit Cohort Description');
+	
 	// Types TS 기반 새로운 코호트 구조 정의
 	// 코호트 정의 기본 구조 - CohortDefinition 타입 적용
 	let cohortDefinition = $state({
@@ -35,7 +39,7 @@
 			]
 		}
 	});
-	
+
 	// Handle AI generated cohort
 	function handleCohortAISubmit(data) {
 		console.log('AI Cohort Data:', data);
@@ -336,9 +340,7 @@
 			] = newFilter;
 		} else {
 			// 새 필터 추가
-			cohortDefinition[editingGroupType].containers[editingContainerIndex].filters.push(
-				newFilter
-			);
+			cohortDefinition[editingGroupType].containers[editingContainerIndex].filters.push(newFilter);
 		}
 
 		// 상태 초기화
@@ -351,8 +353,7 @@
 		editingContainerIndex = containerIndex;
 		editingFilterIndex = filterIndex;
 
-		const filter =
-			cohortDefinition[groupType].containers[containerIndex].filters[filterIndex];
+		const filter = cohortDefinition[groupType].containers[containerIndex].filters[filterIndex];
 		selectedDomainType = filter.type;
 
 		// 기존 값 로드
@@ -524,14 +525,16 @@
 			if (value.neq !== undefined) return `≠ ${value.neq}`;
 
 			let result = '';
-			if (value.gte !== undefined) result += `≥ ${value.gte}`;
+			// if (value.gte !== undefined) result += `≥ ${value.gte}`;
+			if (value.gte !== undefined) result += `between ${value.gte}`;
 			if (value.gt !== undefined) result += `> ${value.gt}`;
 			if (
 				(value.gte !== undefined || value.gt !== undefined) &&
 				(value.lte !== undefined || value.lt !== undefined)
 			)
 				result += ' and ';
-			if (value.lte !== undefined) result += `≤ ${value.lte}`;
+			// if (value.lte !== undefined) result += `≤ ${value.lte}`;
+			if (value.lte !== undefined) result += `${value.lte}`;
 			if (value.lt !== undefined) result += `< ${value.lt}`;
 
 			// String Operator 객체인 경우
@@ -654,24 +657,42 @@
 		<!-- Main Panel -->
 		<div class="flex flex-1 flex-col p-5">
 			<div class="mb-8">
-				<div class="flex justify-between items-center">
+				<div class="flex items-center justify-between">
 					<div>
-						<h1 class="text-2xl font-bold text-gray-800">Cohort Definition</h1>
-						<p class="text-sm text-gray-600">
-							Define the characteristics of patients to include in your cohort.
-						</p>
+						<input
+							type="text"
+							class="w-full rounded border-0 bg-transparent p-0 text-2xl font-bold text-gray-800 focus:ring-0"
+							bind:value={cohortName}
+						/>
+						<textarea
+							on:input={(e) => {
+								const target = e.target;
+								cohortDescription = target.value;
+								// 텍스트 영역 높이 자동 조절
+								target.style.height = 'auto';
+								target.style.height = target.scrollHeight + 'px';
+							}}
+							class="w-full rounded border-0 bg-transparent p-0 text-sm text-gray-600 focus:ring-0 overflow-hidden"
+							bind:value={cohortDescription}
+							style="min-height: 1.5rem; height: auto; resize: none;"
+						/>
 					</div>
-					<button 
-						class="relative rounded-2xl px-4 py-2 flex items-center"
-						on:click={() => showCohortAIModal = true}
+					<button
+						class="relative flex items-center rounded-2xl px-4 py-2"
+						on:click={() => (showCohortAIModal = true)}
 					>
-						<span class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-gradient-rotation"></span>
+						<span
+							class="animate-gradient-rotation absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400"
+						></span>
 						<span class="absolute inset-[3px] rounded-xl bg-white"></span>
-						<span class="relative text-sm font-medium bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">use Cohort AI</span>
+						<span
+							class="relative bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-sm font-medium text-transparent"
+							>use Cohort AI</span
+						>
 					</button>
 				</div>
 			</div>
-
+			<!-- 
 			<div class="mb-6 bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-800">Cohort Structure</h2>
@@ -710,7 +731,7 @@
 						<p><span class="font-medium">Comparison mode:</span> The Initial Group AND Comparison Group criteria must both be satisfied. Patients must meet conditions from both groups to be included in the final cohort.</p>
 					</div>
 				{/if}
-			</div>
+			</div> -->
 
 			<!-- Initial Group Section -->
 			<div class="mb-6">
@@ -746,7 +767,11 @@
 							}}
 							on:drop|preventDefault={() => {
 								if (draggedGroupType === 'initialGroup') {
-									handleContainerReorder('initialGroup', draggedContainerIndex, hoveredContainerIndex);
+									handleContainerReorder(
+										'initialGroup',
+										draggedContainerIndex,
+										hoveredContainerIndex
+									);
 								}
 								draggedContainerIndex = null;
 								hoveredContainerIndex = null;
@@ -759,7 +784,8 @@
 										<select
 											class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
 											value={container.operator}
-											on:change={(e) => updateContainerOperator('initialGroup', containerIndex, e.target.value)}
+											on:change={(e) =>
+												updateContainerOperator('initialGroup', containerIndex, e.target.value)}
 										>
 											<option value="AND">AND</option>
 											<option value="OR">OR</option>
@@ -771,7 +797,8 @@
 											type="text"
 											class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
 											value={container.name}
-											on:change={(e) => updateContainerName('initialGroup', containerIndex, e.target.value)}
+											on:change={(e) =>
+												updateContainerName('initialGroup', containerIndex, e.target.value)}
 										/>
 									</h4>
 								</div>
@@ -820,7 +847,8 @@
 													</button>
 													<button
 														class="text-xs text-red-500 hover:text-red-700"
-														on:click={() => removeFilter('initialGroup', containerIndex, filterIndex)}
+														on:click={() =>
+															removeFilter('initialGroup', containerIndex, filterIndex)}
 													>
 														Remove
 													</button>
@@ -850,7 +878,9 @@
 					<div class="mb-4 flex items-center justify-between">
 						<div class="flex items-center">
 							<h3 class="text-lg font-semibold text-gray-800">Comparison Group</h3>
-							<span class="ml-3 text-xs text-gray-500">Combined with Initial Group using AND logic</span>
+							<span class="ml-3 text-xs text-gray-500"
+								>Combined with Initial Group using AND logic</span
+							>
 						</div>
 						<button
 							class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
@@ -882,7 +912,11 @@
 								}}
 								on:drop|preventDefault={() => {
 									if (draggedGroupType === 'comparisonGroup') {
-										handleContainerReorder('comparisonGroup', draggedContainerIndex, hoveredContainerIndex);
+										handleContainerReorder(
+											'comparisonGroup',
+											draggedContainerIndex,
+											hoveredContainerIndex
+										);
 									}
 									draggedContainerIndex = null;
 									hoveredContainerIndex = null;
@@ -895,7 +929,12 @@
 											<select
 												class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
 												value={container.operator}
-												on:change={(e) => updateContainerOperator('comparisonGroup', containerIndex, e.target.value)}
+												on:change={(e) =>
+													updateContainerOperator(
+														'comparisonGroup',
+														containerIndex,
+														e.target.value
+													)}
 											>
 												<option value="AND">AND</option>
 												<option value="OR">OR</option>
@@ -907,7 +946,8 @@
 												type="text"
 												class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
 												value={container.name}
-												on:change={(e) => updateContainerName('comparisonGroup', containerIndex, e.target.value)}
+												on:change={(e) =>
+													updateContainerName('comparisonGroup', containerIndex, e.target.value)}
 											/>
 										</h4>
 									</div>
@@ -937,7 +977,9 @@
 									<div
 										class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
 									>
-										<p class="text-gray-500">No filters added. Click "Add Filter" to add a filter.</p>
+										<p class="text-gray-500">
+											No filters added. Click "Add Filter" to add a filter.
+										</p>
 									</div>
 								{:else}
 									<div class="space-y-4">
@@ -950,13 +992,15 @@
 													<div class="flex space-x-2">
 														<button
 															class="text-xs text-blue-500 hover:text-blue-700"
-															on:click={() => editFilter('comparisonGroup', containerIndex, filterIndex)}
+															on:click={() =>
+																editFilter('comparisonGroup', containerIndex, filterIndex)}
 														>
 															Edit
 														</button>
 														<button
 															class="text-xs text-red-500 hover:text-red-700"
-															on:click={() => removeFilter('comparisonGroup', containerIndex, filterIndex)}
+															on:click={() =>
+																removeFilter('comparisonGroup', containerIndex, filterIndex)}
 														>
 															Remove
 														</button>
@@ -1011,8 +1055,7 @@
 					Add Filter to {editingGroupType === 'initialGroup' ? 'Initial Group' : 'Comparison Group'}
 				</h3>
 				<p class="mb-4 text-sm text-gray-600">
-					Container: {cohortDefinition[editingGroupType].containers[editingContainerIndex]
-						.name}
+					Container: {cohortDefinition[editingGroupType].containers[editingContainerIndex].name}
 				</p>
 			{:else}
 				<h3 class="mb-3 text-xl font-bold text-gray-800">Add Filter</h3>
@@ -1119,18 +1162,31 @@
 												</option>
 											{/each}
 										{/each}
-										{#if cohortDefinition.conceptsets.length === 0 || cohortDefinition.conceptsets.every(set => set.expression.items.length === 0)}
-											<option value="" disabled>No concepts available - Define them in Concept Sets</option>
+										{#if cohortDefinition.conceptsets.length === 0 || cohortDefinition.conceptsets.every((set) => set.expression.items.length === 0)}
+											<option value="" disabled
+												>No concepts available - Define them in Concept Sets</option
+											>
 										{/if}
 									{/if}
 								</select>
-								<button 
-									class="px-2 py-1 bg-blue-100 text-blue-700 rounded border border-blue-300 text-sm hover:bg-blue-200"
-									on:click={() => showConceptSetModal = true}
+								<button
+									class="rounded border border-blue-300 bg-blue-100 px-2 py-1 text-sm text-blue-700 hover:bg-blue-200"
+									on:click={() => (showConceptSetModal = true)}
 									title="Manage Concept Sets"
 								>
-									<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-4 w-4"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+										/>
 									</svg>
 								</button>
 							</div>
@@ -1280,6 +1336,13 @@
 	on:close={() => (showConceptSetModal = false)}
 />
 
+<!-- Cohort AI Modal -->
+<CohortAIModal
+	bind:show={showCohortAIModal}
+	onClose={() => (showCohortAIModal = false)}
+	onSubmit={handleCohortAISubmit}
+/>
+
 <style>
 	@keyframes gradient-rotate {
 		0% {
@@ -1292,16 +1355,9 @@
 			background-position: 0% 50%;
 		}
 	}
-	
+
 	:global(.animate-gradient-rotation) {
 		background-size: 200% 200%;
 		animation: gradient-rotate 3s ease infinite;
 	}
 </style>
-
-<!-- Cohort AI Modal -->
-<CohortAIModal 
-	bind:show={showCohortAIModal}
-	onClose={() => showCohortAIModal = false}
-	onSubmit={handleCohortAISubmit}
-/>
