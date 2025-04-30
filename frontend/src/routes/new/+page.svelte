@@ -12,10 +12,9 @@
 	let pathname = $state(page.url.pathname);
 	let showCohortAIModal = $state(false);
 
-
 	let cohortName = $state('Cohort Name');
 	let cohortDescription = $state('Edit Cohort Description');
-	
+
 	// Types TS 기반 새로운 코호트 구조 정의
 	// 코호트 정의 기본 구조 - CohortDefinition 타입 적용
 	let cohortDefinition = $state({
@@ -658,25 +657,76 @@
 		<div class="flex flex-1 flex-col p-5">
 			<div class="mb-8">
 				<div class="flex items-center justify-between">
-					<div>
-						<input
-							type="text"
-							class="w-full rounded border-0 bg-transparent p-0 text-2xl font-bold text-gray-800 focus:ring-0"
-							bind:value={cohortName}
-						/>
-						<textarea
-							on:input={(e) => {
-								const target = e.target;
-								cohortDescription = target.value;
-								// 텍스트 영역 높이 자동 조절
-								target.style.height = 'auto';
-								target.style.height = target.scrollHeight + 'px';
-							}}
-							class="w-full rounded border-0 bg-transparent p-0 text-sm text-gray-600 focus:ring-0 overflow-hidden"
-							bind:value={cohortDescription}
-							style="min-height: 1.5rem; height: auto; resize: none;"
-						/>
+					<div class="w-2/3">
+						<div class="group relative">
+							<label
+								for="cohortName"
+								class="mb-1 block flex px-1 text-sm font-medium text-gray-700"
+							>
+								<svg
+									class="h-5 w-5 text-gray-400"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+									/>
+								</svg>
+								Cohort Name
+							</label>
+
+							<div class="relative">
+								<input
+									type="text"
+									id="cohortName"
+									class="w-full rounded border-0 bg-transparent p-0 text-2xl font-bold text-gray-800 transition-colors duration-200 focus:ring-0 group-hover:bg-gray-50"
+									bind:value={cohortName}
+								/>
+							</div>
+						</div>
+						<div class="group relative mt-4">
+							<label
+								for="cohortDescription"
+								class="mb-1 block flex px-1 text-sm font-medium text-gray-700"
+							>
+								<svg
+									class="h-5 w-5 text-gray-400"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+									/>
+								</svg>
+								Description
+							</label>
+							<div class="relative">
+								<textarea
+									id="cohortDescription"
+									on:input={(e) => {
+										const target = e.target;
+										cohortDescription = target.value;
+										target.style.height = 'auto';
+										target.style.height = target.scrollHeight + 'px';
+									}}
+									class="w-full overflow-hidden rounded border-0 bg-transparent p-0 text-sm text-gray-600 transition-colors duration-200 focus:ring-0 group-hover:bg-gray-50"
+									bind:value={cohortDescription}
+									style="min-height: 1.5rem; height: auto; resize: none;"
+								/>
+							</div>
+						</div>
 					</div>
+
 					<button
 						class="relative flex items-center rounded-2xl px-4 py-2"
 						on:click={() => (showCohortAIModal = true)}
@@ -792,10 +842,25 @@
 											<option value="NOT">NOT</option>
 										</select>
 									{/if}
-									<h4 class="text-lg font-medium text-blue-600">
+									<h4 class="flex text-lg font-medium text-blue-600">
+										<svg
+											class="h-4 w-4 text-gray-400"
+											xmlns="http://www.w3.org/2000/svg"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+											/>
+										</svg>
 										<input
+											id="containerName"
 											type="text"
-											class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
+											class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0  hover:bg-blue-50 transition-colors duration-200"
 											value={container.name}
 											on:change={(e) =>
 												updateContainerName('initialGroup', containerIndex, e.target.value)}
@@ -941,10 +1006,24 @@
 												<option value="NOT">NOT</option>
 											</select>
 										{/if}
-										<h4 class="text-lg font-medium text-blue-600">
+										<h4 class="flex text-lg font-medium text-blue-600">
+											<svg
+												class="h-4 w-4 text-gray-400"
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+												/>
+											</svg>
 											<input
 												type="text"
-												class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0"
+												class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 focus:ring-0 hover:bg-blue-50 transition-colors duration-200"
 												value={container.name}
 												on:change={(e) =>
 													updateContainerName('comparisonGroup', containerIndex, e.target.value)}
@@ -1040,8 +1119,6 @@
 				</button>
 			</div>
 		</div>
-
-		<!-- Right Panel - Filter Add/Edit -->
 	</div>
 </div>
 <div
