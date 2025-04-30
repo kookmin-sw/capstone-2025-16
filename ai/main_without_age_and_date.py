@@ -35,16 +35,19 @@ Strict requirements:
    - type (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - Each filter MUST have:
      - type (one of the allowed types)
-     - first: true
      - conceptset (matching conceptset_id)
-   
+     - [CRITICAL] first: true is used ONLY when there is a condition about first visit/occurrence
+       * Example: "first visit" → first: true
+       * Example: "first occurrence" → first: true
+       * In all other cases, do not include the first field
+
 3. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
    - For any field such as "measurementType", "drugType", "conditionType", etc., 
      do NOT invent or fabricate placeholder concept_id values
-   - If a concept_id is not available, explicitly set the value to null
+   - [CRITICAL] Do NOT include any ~Type field if its value is null
    - [CRITICAL] For negation criteria, use the opposite operator instead of "neq" when possible
-     * Example: "Hemoglobin > 13 g/dL를 제외" → {{ "valueAsNumber": {{ "lte": 13 }} }} (NOT {{ conceptset: {{neq: "6"}} }})
+     * Example: "Exclude Hemoglobin > 13 g/dL" → {{ "valueAsNumber": {{ "lte": 13 }} }} (NOT {{ conceptset: {{neq: "6"}} }})
      * Only use "neq" when the opposite operator cannot express the intended meaning
 
 4. [CRITICAL] Exclude age and time-based conditions:
@@ -59,9 +62,12 @@ Strict requirements:
      * "for ≥ 6 h"
      * Any other time-related phrases
    - [KEEP] Medical conditions and measurements:
-     * Example: "serum creatinine ≥ 1.5" (keep)
+     * Example: "serum creatinine ≥ 1.5 mg/dL" (keep)
      * Example: "urine volume < 0.5 mL/(kg·h)" (keep)
      * Example: "increase of ≥ 0.3 mg/dL" (keep)
+     * [CRITICAL] Keep ALL medical criteria even if they appear with time conditions
+       - Example: "serum creatinine ≥ 1.5 mg/dL within 48 hours" → keep "serum creatinine ≥ 1.5 mg/dL"
+       - Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" → keep "urine volume < 0.5 mL/(kg·h)"
 
 5. [CRITICAL] Visit Type Criteria:
    - When specifying ICU or hospital-related conditions, use ONLY the following visit types:
@@ -84,14 +90,16 @@ Strict requirements:
           ]
      }}
      
-
 6. [CRITICAL] Inclusion criteria processing:
    - Split complex conditions into individual criteria
    - Each criterion should have its own conceptset_id
-   - Example: "serum creatinine ≥ 1.5 OR increase of ≥ 0.3 mg/dL" →
-     * Create separate conceptset for "serum creatinine ≥ 1.5"
+   - Example: AKI diagnostic criteria →
+     * Create separate conceptset for "serum creatinine ≥ 1.5 mg/dL"
      * Create separate conceptset for "increase of ≥ 0.3 mg/dL"
      * Create separate conceptset for "urine volume < 0.5 mL/(kg·h)"
+   - [CRITICAL] Keep ALL medical criteria even if they appear with time conditions
+     * Example: "serum creatinine ≥ 1.5 mg/dL within 48 hours" → keep "serum creatinine ≥ 1.5 mg/dL"
+     * Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" → keep "urine volume < 0.5 mL/(kg·h)"
 
 7. NEVER include:
    - Complex logic
@@ -357,14 +365,23 @@ def text_to_json(implementable_text: str) -> dict:
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # PDF 파일 경로
-    pdf_path = os.path.join(current_dir, "pdf", "Association between glycemic variability and short-term mortality in patients with acute kidney injury.pdf")
+    # # PDF 파일 경로
+    # pdf_path = os.path.join(current_dir, "pdf", "Association between glycemic variability and short-term mortality in patients with acute kidney injury.pdf")
     
-    # 1. PDF에서 텍스트 추출
-    implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
+    # # 1. PDF에서 텍스트 추출
+    # implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
     
-    print("\n[Implementable Criteria 부분만]:")
-    print(implementable_text)
+    # print("\n[Implementable Criteria 부분만]:")
+    # print(implementable_text)
+
+    implementable_text = """
+    This study selected adult septic patients who were admit-
+    ted to the ICU from the MIMIC-IV database from 2008
+    to 2019. Patients with severe chronic kidney disease
+    (CKD), defined as CKD stage ≥ 4 or estimated glomerular
+    filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
+    undergoing long-term dialysis treatment were excluded.
+    """
     
     # 2. 텍스트에서 COHORT JSON 추출
     cohort_json = text_to_json(implementable_text)

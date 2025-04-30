@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from clickhouse_driver import Client
 import cohort_json_schema
 from openai import OpenAI
+from difflib import SequenceMatcher
 
 # 환경 변수 로드
 load_dotenv()
@@ -32,32 +33,57 @@ openai_client = OpenAI(
 # 코호트 검색어 수정 - system
 COHORT_JSON_SYSTEM_PROMPT = f"""
 Role:  
-Act as a **medical terminology search assistant** specialized in optimizing clinical terms for OMOP CDM database retrieval.
+Act as a **medical terminology search assistant** specialized in OMOP CDM database retrieval.
 
 Context:  
-You are given a medical term that failed to return a valid `concept_id` during OMOP CDM lookup. Your job is to improve the search term so it aligns better with standardized terminology used in the OMOP database.
+You are given a medical term that needs to be searched in the OMOP CDM database. Your task is to generate the most effective search term that will match the standardized medical concepts in the database.
+
+Key Points:
+1. The database contains standardized medical terms in the `concept` table
+2. Your goal is to find the exact match or closest match in the database
+3. The search is case-insensitive and uses pattern matching (ILIKE)
+4. Preserve as much detail as possible while making it searchable
 
 Instructions:  
-1. If the given term is an abbreviation (e.g., `"ESA"`), expand it to the full medical term (e.g., `"Erythropoiesis Stimulating Agent"`).
-2. Replace vague or overly specific phrases with broader, standardized equivalents.
-   - For example:  
-     `"Sodium bicarbonate therapy"` → `"Sodium bicarbonate"`  
-     `"Hemoglobin level over 13 g/dL"` → `"Hemoglobin"`
+1. Expand medical abbreviations to their full forms:
+   - CKD → Chronic Kidney Disease
+   - AKI → Acute Kidney Injury
+   - T2DM → Type 2 Diabetes Mellitus
+   - ESRD → End Stage Renal Disease
+   - ICU → Intensive Care Unit
+   - ARDS → Acute Respiratory Distress Syndrome
+   - MI → Myocardial Infarction
+   - CHF → Congestive Heart Failure
+   - COPD → Chronic Obstructive Pulmonary Disease
+   - HTN → Hypertension
+
+2. Remove qualifiers and modifiers that might not exist in the database:
+   - Remove "or higher", "or more", "or greater", "or above", "or over"
+   - Remove "and above", "and over"
+   - Remove "with complications", "with symptoms"
+   - Keep only the core medical condition that likely exists in the database
+
+3. Maintain the exact medical terminology that would be stored in the database:
+   - "Chronic Kidney Disease Stage 4" (NOT "CKD Stage 4")
+   - "Acute Kidney Injury" (NOT "AKI")
+   - "Type 2 Diabetes Mellitus" (NOT "T2DM")
+   - "End Stage Renal Disease" (NOT "ESRD")
 
 **Modified Examples**:
-- Input: `"ESA"` → Output: `Erythropoiesis Stimulating Agent`
-- Input: `"Sodium bicarbonate therapy"` → Output: `Sodium bicarbonate`
-- Input: `"T2DM"` → Output: `Type 2 Diabetes Mellitus`
-- Input: `"CKD"` → Output: `Chronic Kidney Disease`
+- Input: "CKD Stage 4 or higher" → Output: "Chronic Kidney Disease Stage 4"
+- Input: "AKI based on KDIGO" → Output: "Acute Kidney Injury"
+- Input: "T2DM with complications" → Output: "Type 2 Diabetes Mellitus with complications"
+- Input: "ESRD on dialysis" → Output: "End Stage Renal Disease on dialysis"
 """
 
 # 코호트 검색어 수정 - user
 SEARCH_QUERY_REFINEMENT_PROMPT = """
 Original Term: "{term}"
 
-I need a more standardized medical term that will work better for database lookup.
-If this is an abbreviation, please expand it to the full term.
-If this is a specific treatment or condition with qualifiers, please convert it to a more general standard term.
+I need a search term that will effectively match medical concepts in the OMOP CDM database.
+1. Expand all medical abbreviations to their full forms
+2. Keep all relevant details and qualifiers that are part of standard terminology
+3. Only remove vague qualifiers that don't add specific meaning
 
 IMPORTANT: Return ONLY the modified term, with no explanations or additional text.
 """
@@ -84,8 +110,29 @@ def refine_search_query(term) -> str:
     print(f"검색어 수정: '{term}' → '{refined_term}'")
     return refined_term
 
-# ClickHouse에서 concept 정보 조회 (검색 결과가 없으면 용어 수정하여 재시도)
-# # 결과가 너무 많으면 limit만큼만 반환 -> 나중에 늘릴 예정
+# 문자열 유사도 계산 함수
+def calculate_similarity(a: str, b: str) -> float:
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+# 검색 결과 정렬 함수
+def sort_search_results(results: list, original_term: str) -> list:
+    # 각 결과에 유사도 점수 추가
+    scored_results = []
+    for result in results:
+        concept_name = result[1]  # concept_name은 두 번째 컬럼
+        similarity = calculate_similarity(original_term, concept_name)
+        scored_results.append((*result, similarity))
+    
+    # 정렬: 유사도 DESC, is_used DESC, child_count DESC, parent_count ASC
+    sorted_results = sorted(
+        scored_results,
+        key=lambda x: (-x[13], -x[12], -x[11], x[10])  # similarity, is_used, child_count, parent_count
+    )
+    
+    # 원래 형식으로 변환 (유사도 점수 제거)
+    return [result[:-1] for result in sorted_results]
+
+# ClickHouse에서 concept 정보 조회
 def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: bool = True) -> list:
     cleaned_term = clean_term(term)
     
@@ -104,12 +151,12 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             concept_code,
             valid_start_date,
             valid_end_date,
-            invalid_reason
+            invalid_reason,
+            levenshteinDistance(lower(concept_name), lower(%(term)s)) as similarity
         FROM concept
         WHERE (concept_name ILIKE %(term)s) 
           AND (domain_id = %(domain_id)s) 
           AND (invalid_reason IS NULL)
-        LIMIT 30
     )
     SELECT
         ac.concept_id,
@@ -143,7 +190,8 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
                 SELECT ethnicity_concept_id FROM person
             ) THEN 1 ELSE 0 END
             ELSE 1
-        END as is_used
+        END as is_used,
+        ac.similarity
     FROM all_concepts ac
     LEFT JOIN
     (
@@ -170,12 +218,17 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         GROUP BY ancestor_concept_id
     ) AS cc ON ac.concept_id = cc.concept_id
     ORDER BY 
-        is_used DESC,  -- 실제 사용되는 개념을 먼저 정렬
-        child_count DESC
+        similarity ASC,  # levenshteinDistance는 작을수록 유사함
+        child_count DESC,
+        parent_count ASC
     LIMIT %(limit)s
     """
     
-    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id, 'limit': limit})
+    results = clickhouse_client.execute(query, {
+        'term': f'%{cleaned_term}%',
+        'domain_id': domain_id, 
+        'limit': limit
+    })
     
     # 결과가 없고 auto_refine이 True이면 용어를 수정하여 재검색
     if not results and auto_refine:
@@ -185,15 +238,17 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             # 무한 재귀 방지를 위해 auto_refine=False로 설정
             return get_omop_concept_id(refined_term, domain_id, limit, auto_refine=False)
     
-    # 결과가 너무 많으면 limit만큼만 반환
-    if len(results) > limit:
-        results = results[:limit]
+    # 유사도 기반 정렬
+    sorted_results = sort_search_results(results, cleaned_term)
+    
+    # 최종 limit 적용
+    if len(sorted_results) > limit:
+        sorted_results = sorted_results[:limit]
     
     # Concept 객체로 변환
     concepts = []
-    for result in results:
-        # is_used가 1인 경우만 추가 -> 해당 도메인에서 사용되는 개념만 추가
-        if result[12] == 1:  # is_used가 12번째 컬럼임 
+    for result in sorted_results:
+        if result[12] == 1:  # is_used가 1인 경우만 추가
             concept = {
                 "concept_id": str(result[0]),  # Identifier는 string
                 "concept_name": result[1],

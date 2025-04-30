@@ -35,9 +35,12 @@ Strict requirements:
    - type (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - Each filter MUST have:
      - type (one of the allowed types)
-     - first: true
      - conceptset (matching conceptset_id)
-   
+     - [CRITICAL] first: true is used ONLY when there is a condition about first visit/occurrence
+       * Example: "first visit" → first: true
+       * Example: "first occurrence" → first: true
+       * In all other cases, do not include the first field
+
 3. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
    - For any field such as "measurementType", "drugType", "conditionType", etc., 
