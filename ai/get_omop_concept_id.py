@@ -93,8 +93,7 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
     print(f"\n[get_omop_concept_id] 검색 용어: '{cleaned_term}', 도메인: '{domain_id}'")
     
     query = """
-    WITH limited_concepts AS
-    (
+    WITH all_concepts AS (
         SELECT
             concept_id,
             concept_name,
@@ -107,22 +106,45 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             valid_end_date,
             invalid_reason
         FROM concept
-        WHERE (concept_name ILIKE %(term)s) AND (domain_id = %(domain_id)s) AND (invalid_reason IS NULL)
+        WHERE (concept_name ILIKE %(term)s) 
+          AND (domain_id = %(domain_id)s) 
+          AND (invalid_reason IS NULL)
+        LIMIT 30
     )
     SELECT
-        lc.concept_id,
-        lc.concept_name,
-        lc.domain_id,
-        lc.vocabulary_id,
-        lc.concept_class_id,
-        COALESCE(lc.standard_concept, '') as standard_concept,
-        lc.concept_code,
-        lc.valid_start_date,
-        lc.valid_end_date,
-        COALESCE(lc.invalid_reason, '') as invalid_reason,
+        ac.concept_id,
+        ac.concept_name,
+        ac.domain_id,
+        ac.vocabulary_id,
+        ac.concept_class_id,
+        COALESCE(ac.standard_concept, '') as standard_concept,
+        ac.concept_code,
+        ac.valid_start_date,
+        ac.valid_end_date,
+        COALESCE(ac.invalid_reason, '') as invalid_reason,
         COALESCE(pc.parent_count, 0) AS parent_count,
-        COALESCE(cc.child_count, 0) AS child_count
-    FROM limited_concepts AS lc
+        COALESCE(cc.child_count, 0) AS child_count,
+        CASE %(domain_id)s
+            WHEN 'Condition' THEN CASE WHEN ac.concept_id IN (SELECT condition_concept_id FROM condition_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Drug' THEN CASE WHEN ac.concept_id IN (SELECT drug_concept_id FROM drug_exposure) THEN 1 ELSE 0 END
+            WHEN 'Measurement' THEN CASE WHEN ac.concept_id IN (SELECT measurement_concept_id FROM measurement) THEN 1 ELSE 0 END
+            WHEN 'Observation' THEN CASE WHEN ac.concept_id IN (SELECT observation_concept_id FROM observation) THEN 1 ELSE 0 END
+            WHEN 'Procedure' THEN CASE WHEN ac.concept_id IN (SELECT procedure_concept_id FROM procedure_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Visit' THEN CASE WHEN ac.concept_id IN (SELECT visit_concept_id FROM visit_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Device' THEN CASE WHEN ac.concept_id IN (SELECT device_concept_id FROM device_exposure) THEN 1 ELSE 0 END
+            WHEN 'Death' THEN CASE WHEN ac.concept_id IN (SELECT cause_concept_id FROM death) THEN 1 ELSE 0 END
+            WHEN 'Specimen' THEN CASE WHEN ac.concept_id IN (SELECT specimen_concept_id FROM specimen) THEN 1 ELSE 0 END
+            WHEN 'Location' THEN CASE WHEN ac.concept_id IN (SELECT country_concept_id FROM location) THEN 1 ELSE 0 END
+            WHEN 'Demographic' THEN CASE WHEN ac.concept_id IN (
+                SELECT gender_concept_id FROM person
+                UNION
+                SELECT race_concept_id FROM person
+                UNION
+                SELECT ethnicity_concept_id FROM person
+            ) THEN 1 ELSE 0 END
+            ELSE 1
+        END as is_used
+    FROM all_concepts ac
     LEFT JOIN
     (
         SELECT
@@ -131,10 +153,10 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         FROM concept_ancestor
         WHERE descendant_concept_id IN (
             SELECT concept_id
-            FROM limited_concepts
+            FROM all_concepts
         )
         GROUP BY descendant_concept_id
-    ) AS pc ON lc.concept_id = pc.concept_id
+    ) AS pc ON ac.concept_id = pc.concept_id
     LEFT JOIN
     (
         SELECT
@@ -143,14 +165,17 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         FROM concept_ancestor
         WHERE ancestor_concept_id IN (
             SELECT concept_id
-            FROM limited_concepts
+            FROM all_concepts
         )
         GROUP BY ancestor_concept_id
-    ) AS cc ON lc.concept_id = cc.concept_id
-    ORDER BY child_count DESC
+    ) AS cc ON ac.concept_id = cc.concept_id
+    ORDER BY 
+        is_used DESC,  -- 실제 사용되는 개념을 먼저 정렬
+        child_count DESC
+    LIMIT %(limit)s
     """
     
-    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id})
+    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id, 'limit': limit})
     
     # 결과가 없고 auto_refine이 True이면 용어를 수정하여 재검색
     if not results and auto_refine:
@@ -167,23 +192,25 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
     # Concept 객체로 변환
     concepts = []
     for result in results:
-        concept = {
-            "concept_id": str(result[0]),  # Identifier는 string
-            "concept_name": result[1],
-            "domain_id": result[2],
-            "vocabulary_id": result[3],
-            "concept_class_id": result[4],
-            "standard_concept": result[5],
-            "concept_code": result[6],
-            "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,  # date를 문자열로 변환
-            "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,    # date를 문자열로 변환
-            "invalid_reason": result[9],
-            "parent_count": result[10],    # 부모 개념 수
-            "child_count": result[11],     # 자식 개념 수
-            "includeDescendants": True,  # 기본값 설정
-            "includeMapped": True
-        }
-        concepts.append(concept)
+        # is_used가 1인 경우만 추가 -> 해당 도메인에서 사용되는 개념만 추가
+        if result[12] == 1:  # is_used가 12번째 컬럼임 
+            concept = {
+                "concept_id": str(result[0]),  # Identifier는 string
+                "concept_name": result[1],
+                "domain_id": result[2],
+                "vocabulary_id": result[3],
+                "concept_class_id": result[4],
+                "standard_concept": result[5],
+                "concept_code": result[6],
+                "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,  # date를 문자열로 변환
+                "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,    # date를 문자열로 변환
+                "invalid_reason": result[9],
+                "parent_count": result[10],    # 부모 개념 수
+                "child_count": result[11],     # 자식 개념 수
+                "includeDescendants": True,  # 기본값 설정
+                "includeMapped": True
+            }
+            concepts.append(concept)
     
     # 결과 개수 출력
     # print(f"[get_omop_concept_id] 검색 결과: {len(concepts)}개")

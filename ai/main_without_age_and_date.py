@@ -47,31 +47,60 @@ Strict requirements:
      * Example: "Hemoglobin > 13 g/dL를 제외" → {{ "valueAsNumber": {{ "lte": 13 }} }} (NOT {{ conceptset: {{neq: "6"}} }})
      * Only use "neq" when the opposite operator cannot express the intended meaning
 
-4. [CRITICAL] Time-based conditions:
-   - DO NOT include time-related phrases like "within 48 hours", "within 6 hours", etc.
-   - BUT keep the actual medical conditions and measurements
-   - Example: "serum creatinine ≥ 1.5 within 48 hours" → 
-     * KEEP: "serum creatinine ≥ 1.5
-     * REMOVE: "within 48 hours"
-   - Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" →
-     * KEEP: "urine volume < 0.5 mL/(kg·h)"
-     * REMOVE: "for ≥ 6 h"
+4. [CRITICAL] Exclude age and time-based conditions:
+   - [MUST EXCLUDE] Age-related conditions:
+     * "Patients aged 18-65"
+     * "Age > 18 years"
+     * "Age between 18 and 65"
+     * Any other age-related criteria
+   - [MUST EXCLUDE] Time-related phrases:
+     * "within 48 hours"
+     * "within 6 hours"
+     * "for ≥ 6 h"
+     * Any other time-related phrases
+   - [KEEP] Medical conditions and measurements:
+     * Example: "serum creatinine ≥ 1.5" (keep)
+     * Example: "urine volume < 0.5 mL/(kg·h)" (keep)
+     * Example: "increase of ≥ 0.3 mg/dL" (keep)
 
-5. [CRITICAL] Inclusion criteria processing:
+5. [CRITICAL] Visit Type Criteria:
+   - When specifying ICU or hospital-related conditions, use ONLY the following visit types:
+     * Inpatient Visit
+     * Observation Room
+     * Ambulatory Clinic / Center
+     * Ambulatory Surgical Center
+     * Emergency Room - Hospital
+     * Emergency Room and Inpatient Visit
+   - [MUST USE] For ICU patients, ALWAYS use "Emergency Room and Inpatient Visit" as the visit type
+   - Example ICU condition structure:
+     {{
+       "name": "Emergency Room and Inpatient Visit",
+          "filters": [
+              {{
+                  "type": "visit_occurrence",
+                  "first": true,
+                  "conceptset": "0"
+              }}
+          ]
+     }}
+     
+
+6. [CRITICAL] Inclusion criteria processing:
    - Split complex conditions into individual criteria
    - Each criterion should have its own conceptset_id
-   - Example: "serum creatinine ≥ 1.5 times baseline OR increase of ≥ 0.3 mg/dL" →
-     * Create separate conceptset for "serum creatinine ≥ 1.5 times baseline"
+   - Example: "serum creatinine ≥ 1.5 OR increase of ≥ 0.3 mg/dL" →
+     * Create separate conceptset for "serum creatinine ≥ 1.5"
      * Create separate conceptset for "increase of ≥ 0.3 mg/dL"
      * Create separate conceptset for "urine volume < 0.5 mL/(kg·h)"
 
-6. NEVER include:
+7. NEVER include:
    - Complex logic
    - Non-implementable criteria
    - Criteria without clear OMOP CDM mappings
    - Additional words like "diagnosis", "treatment", "therapy", etc.
    - [CRITICAL] ANY text that describes what you're doing or why
-   - [CRITICAL] Time-related phrases (but keep the medical conditions)
+   - [CRITICAL] ANY age-related conditions
+   - [CRITICAL] ANY time-related phrases (but keep the medical conditions)
 """
 JSON_OUTPUT_EXAMPLE = """
 다음은 주어진 임상시험 텍스트를 바탕으로 OMOP CDM 규격에 맞게 구성된 최종 JSON 예시입니다:
