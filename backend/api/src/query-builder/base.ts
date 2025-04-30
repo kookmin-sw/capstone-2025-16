@@ -58,7 +58,11 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
       eb
         .selectFrom('codesets')
         .select('concept_id')
-        .where('codeset_id', '=', conceptSet),
+        .where(
+          'codeset_id',
+          '=',
+          eb.fn<any>('_to_int64', [eb.val(conceptSet)]),
+        ),
     );
   }
 
