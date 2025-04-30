@@ -83,7 +83,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
     } else {
       query = query.where(
         column,
-        '=',
+        'in',
         eb
           .selectFrom('codesets')
           .select('concept_id')
@@ -113,7 +113,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
     } else {
       query = query.where(
         column,
-        '!=',
+        'not in',
         eb
           .selectFrom('codesets')
           .select('concept_id')
