@@ -247,7 +247,7 @@ export const buildQuery = (
 
     if (!query) continue;
 
-    switch ('operator' in container && container.operator) {
+    switch (i && 'operator' in container && container.operator) {
       case 'AND':
         query = db
           .selectFrom('temp_cohort_detail')
@@ -307,7 +307,7 @@ export const buildQuery = (
 
       if (!query) continue;
 
-      switch ('operator' in container && container.operator) {
+      switch (i && 'operator' in container && container.operator) {
         case 'AND':
           query = db
             .selectFrom('temp_cohort_detail')
