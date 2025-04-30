@@ -16,6 +16,9 @@ clickhouse_client = Client(
 # AND invalid_reason IS NULL
 # LIMIT 20;
 # """
+
+#Myocardial Infarction
+#diabetes mellitus
 query = """
 WITH limited_concepts AS
 (
@@ -31,7 +34,7 @@ WITH limited_concepts AS
         valid_end_date,
         invalid_reason
     FROM concept
-    WHERE (concept_name ILIKE '%sepsis%') AND (domain_id = 'Condition') AND (invalid_reason IS NULL)
+    WHERE (concept_name ILIKE '%acute Myocardial Infarction%') AND (domain_id = 'Condition') AND (invalid_reason IS NULL)
 )
 SELECT
     lc.concept_id,
