@@ -29,7 +29,6 @@ Strict requirements:
      * items: Array of concept objects from database
    - cohort: Array of groups, each containing:
      * containers: Array of containers with filters
-     * not: Boolean (true for exclusion criteria)
 
 2. Each container in cohort MUST have:
    - name (ONLY the medical term, NO additional words)
@@ -154,6 +153,10 @@ Current time: {current_datetime}
 Extract the cohort selection criteria from the following text and return ONLY the JSON response:
 {text}
 """
+########################################################################################
+
+
+########################################################################################
 
 # 텍스트에서 코호트 정의를 추출
 def extract_terms_from_text(text: str) -> dict:
