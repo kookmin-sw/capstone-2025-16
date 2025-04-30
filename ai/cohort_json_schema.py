@@ -575,8 +575,8 @@ def map_criteria_info(criteria_type):
     """
     criteria_info = {
         "condition_occurrence": {
-            "Domain_id": "Condition",
-            "type": "condition_occurrence"
+            "Domain_id": "Condition",  # 도메인 이름
+            "type": "condition_occurrence"  # 테이블 이름
         },
         "death": {
             "Domain_id": "Death",
