@@ -52,7 +52,7 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
 
   let descendant = concepts.filter((e) => e.includeDescendants);
   if (descendant.length) {
-    query = query.unionAll(
+    query = query.union(
       db
         .selectFrom('concept_ancestor')
         .select(({ eb }) => eb.ref('descendant_concept_id').as('concept_id'))
@@ -80,7 +80,7 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
 
   let mapped = concepts.filter((e) => e.includeMapped);
   if (mapped.length) {
-    query = query.unionAll(
+    query = query.union(
       // @ts-ignore
       db
         .selectFrom(query.as('concept_mapped'))
@@ -91,18 +91,7 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
         )
         .select('concept_relationship.concept_id_1 as concept_id')
         .where('relationship_id', '=', 'Maps to')
-        .where('invalid_reason', 'is', null)
-        .where(({ eb, and }) =>
-          and([
-            eb(
-              'concept_mapped.concept_id',
-              'in',
-              mapped.map((e) =>
-                eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
-              ),
-            ),
-          ]),
-        ),
+        .where('invalid_reason', 'is', null),
     );
   }
 
