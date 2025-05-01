@@ -664,7 +664,7 @@
 								class="mb-1 block flex px-1 text-sm font-medium text-gray-700"
 							>
 								<svg
-									class="h-5 w-5 text-gray-400"
+									class="h-4 w-4 text-gray-400"
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 24 24"
@@ -695,7 +695,7 @@
 								class="mb-1 block flex px-1 text-sm font-medium text-gray-700"
 							>
 								<svg
-									class="h-5 w-5 text-gray-400"
+									class="h-4 w-4 text-gray-400"
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 24 24"
@@ -842,7 +842,7 @@
 											<option value="NOT">NOT</option>
 										</select>
 									{/if}
-									<h4 class="flex text-lg font-medium text-blue-600">
+									<h4 class="flex items-center text-lg font-medium text-blue-600">
 										<svg
 											class="h-4 w-4 text-gray-400"
 											xmlns="http://www.w3.org/2000/svg"
@@ -1006,7 +1006,7 @@
 												<option value="NOT">NOT</option>
 											</select>
 										{/if}
-										<h4 class="flex text-lg font-medium text-blue-600">
+										<h4 class="flex items-center text-lg font-medium text-blue-600">
 											<svg
 												class="h-4 w-4 text-gray-400"
 												xmlns="http://www.w3.org/2000/svg"
