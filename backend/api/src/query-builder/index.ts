@@ -81,16 +81,16 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
   let mapped = concepts.filter((e) => e.includeMapped);
   if (mapped.length) {
     query = query.union(
-      // @ts-ignore
       db
-        .selectFrom(query.as('concept_mapped'))
-        .leftJoin(
-          'concept_relationship',
-          'concept_mapped.concept_id',
-          'concept_relationship.concept_id_2',
-        )
-        .select('concept_relationship.concept_id_1 as concept_id')
+        .selectFrom('concept_relationship')
+        .select(({ eb }) => eb.ref('concept_id_1').as('concept_id'))
         .where('relationship_id', '=', 'Maps to')
+        .where('concept_id_2', 'in', query)
+        .leftJoin(
+          'concept',
+          'concept.concept_id',
+          'concept_relationship.concept_id_1',
+        )
         .where('invalid_reason', 'is', null),
     );
   }
@@ -196,27 +196,29 @@ export const buildQuery = (
           .expression(
             db
               .selectFrom(
-                buildConceptQuery(
-                  db,
-                  e.items.filter((e) => !e.isExcluded),
-                ).as('concept_include'),
+                db
+                  .selectFrom(
+                    buildConceptQuery(
+                      db,
+                      e.items.filter((e) => !e.isExcluded),
+                    ).as('concept_include'),
+                  )
+                  .select('concept_include.concept_id')
+                  .distinct()
+                  .except(
+                    buildConceptQuery(
+                      db,
+                      e.items.filter((e) => e.isExcluded),
+                    ),
+                  )
+                  .as('final_codesets'),
               )
               .select(({ eb }) => [
                 eb
                   .fn<any>('_to_int64', [eb.val(e.conceptset_id)])
                   .as('codeset_id'),
-                'concept_include.concept_id',
-              ])
-              .distinctOn(['concept_include.concept_id'])
-              .leftJoin(
-                buildConceptQuery(
-                  db,
-                  e.items.filter((e) => e.isExcluded),
-                ).as('concept_exclude'),
-                'concept_include.concept_id',
-                'concept_exclude.concept_id',
-              )
-              .where(({ eb }) => eb('concept_exclude.concept_id', 'is', null)),
+                'concept_id',
+              ]),
           ),
       );
     });
