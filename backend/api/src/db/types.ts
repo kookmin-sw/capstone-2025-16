@@ -1,5 +1,5 @@
 import { Kysely, PostgresDialect } from 'kysely';
-import { ClickhouseDialect } from '@founderpath/kysely-clickhouse';
+import { ClickhouseDialect } from './clickhouse';
 import 'dotenv/config';
 
 export interface Database {

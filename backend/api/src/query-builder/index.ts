@@ -52,25 +52,27 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
 
   let descendant = concepts.filter((e) => e.includeDescendants);
   if (descendant.length) {
-    query = query.unionAll(
+    query = query.union(
       db
-        .selectFrom('concept')
-        .select('concept.concept_id')
+        .selectFrom('concept_ancestor')
+        .select(({ eb }) => eb.ref('descendant_concept_id').as('concept_id'))
         .leftJoin(
-          'concept_ancestor',
+          'concept',
           'concept.concept_id',
           'concept_ancestor.descendant_concept_id',
         )
         .where(({ eb, and }) =>
           and([
-            eb(
-              'concept_ancestor.ancestor_concept_id',
-              'in',
-              descendant.map((e) =>
-                eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
+            and([
+              eb(
+                'concept_ancestor.ancestor_concept_id',
+                'in',
+                descendant.map((e) =>
+                  eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
+                ),
               ),
-            ),
-            eb('concept.invalid_reason', 'is', null),
+              eb('concept.invalid_reason', 'is', null),
+            ]),
           ]),
         ),
     );
@@ -78,7 +80,7 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
 
   let mapped = concepts.filter((e) => e.includeMapped);
   if (mapped.length) {
-    query = query.unionAll(
+    query = query.union(
       // @ts-ignore
       db
         .selectFrom(query.as('concept_mapped'))
@@ -89,18 +91,7 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
         )
         .select('concept_relationship.concept_id_1 as concept_id')
         .where('relationship_id', '=', 'Maps to')
-        .where('invalid_reason', 'is', null)
-        .where(({ eb, and }) =>
-          and([
-            eb(
-              'concept_mapped.concept_id',
-              'in',
-              mapped.map((e) =>
-                eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
-              ),
-            ),
-          ]),
-        ),
+        .where('invalid_reason', 'is', null),
     );
   }
 
@@ -225,13 +216,7 @@ export const buildQuery = (
                 'concept_include.concept_id',
                 'concept_exclude.concept_id',
               )
-              .where(({ eb }) =>
-                eb(
-                  'concept_exclude.concept_id',
-                  '=',
-                  eb.fn<any>('_to_int64', [eb.val('0')]),
-                ),
-              ),
+              .where(({ eb }) => eb('concept_exclude.concept_id', 'is', null)),
           ),
       );
     });
@@ -251,7 +236,7 @@ export const buildQuery = (
 
     if (!query) continue;
 
-    switch ('operator' in container && container.operator) {
+    switch (i && 'operator' in container && container.operator) {
       case 'AND':
         query = db
           .selectFrom('temp_cohort_detail')
@@ -311,7 +296,7 @@ export const buildQuery = (
 
       if (!query) continue;
 
-      switch ('operator' in container && container.operator) {
+      switch (i && 'operator' in container && container.operator) {
         case 'AND':
           query = db
             .selectFrom('temp_cohort_detail')

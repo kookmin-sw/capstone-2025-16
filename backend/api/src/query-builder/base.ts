@@ -58,7 +58,11 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
       eb
         .selectFrom('codesets')
         .select('concept_id')
-        .where('codeset_id', '=', conceptSet),
+        .where(
+          'codeset_id',
+          '=',
+          eb.fn<any>('_to_int64', [eb.val(conceptSet)]),
+        ),
     );
   }
 
@@ -79,7 +83,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
     } else {
       query = query.where(
         column,
-        '=',
+        'in',
         eb
           .selectFrom('codesets')
           .select('concept_id')
@@ -109,7 +113,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
     } else {
       query = query.where(
         column,
-        '!=',
+        'not in',
         eb
           .selectFrom('codesets')
           .select('concept_id')
@@ -347,33 +351,65 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
 
   if (operator.gt) {
     if (Array.isArray(operator.gt) && !operator.gt.length) {
-      query = query.where(column, '>', max(operator.gt));
+      query = query.where(
+        column,
+        '>',
+        eb.fn('_to_date', [eb.val(max(operator.gt))]),
+      );
     } else {
-      query = query.where(column, '>', operator.gt);
+      query = query.where(
+        column,
+        '>',
+        eb.fn('_to_date', [eb.val(operator.gt)]),
+      );
     }
   }
 
   if (operator.gte) {
     if (Array.isArray(operator.gte) && !operator.gte.length) {
-      query = query.where(column, '>=', max(operator.gte));
+      query = query.where(
+        column,
+        '>=',
+        eb.fn('_to_date', [eb.val(max(operator.gte))]),
+      );
     } else {
-      query = query.where(column, '>=', operator.gte);
+      query = query.where(
+        column,
+        '>=',
+        eb.fn('_to_date', [eb.val(operator.gte)]),
+      );
     }
   }
 
   if (operator.lt) {
     if (Array.isArray(operator.lt) && !operator.lt.length) {
-      query = query.where(column, '<', min(operator.lt));
+      query = query.where(
+        column,
+        '<',
+        eb.fn('_to_date', [eb.val(min(operator.lt))]),
+      );
     } else {
-      query = query.where(column, '<', operator.lt);
+      query = query.where(
+        column,
+        '<',
+        eb.fn('_to_date', [eb.val(operator.lt)]),
+      );
     }
   }
 
   if (operator.lte) {
     if (Array.isArray(operator.lte) && !operator.lte.length) {
-      query = query.where(column, '<=', min(operator.lte));
+      query = query.where(
+        column,
+        '<=',
+        eb.fn('_to_date', [eb.val(min(operator.lte))]),
+      );
     } else {
-      query = query.where(column, '<=', operator.lte);
+      query = query.where(
+        column,
+        '<=',
+        eb.fn('_to_date', [eb.val(operator.lte)]),
+      );
     }
   }
 
