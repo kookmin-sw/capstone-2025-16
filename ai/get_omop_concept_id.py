@@ -110,28 +110,6 @@ def refine_search_query(term) -> str:
     print(f"검색어 수정: '{term}' → '{refined_term}'")
     return refined_term
 
-# 문자열 유사도 계산 함수
-def calculate_similarity(a: str, b: str) -> float:
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
-
-# 검색 결과 정렬 함수
-def sort_search_results(results: list, original_term: str) -> list:
-    # 각 결과에 유사도 점수 추가
-    scored_results = []
-    for result in results:
-        concept_name = result[1]  # concept_name은 두 번째 컬럼
-        similarity = calculate_similarity(original_term, concept_name)
-        scored_results.append((*result, similarity))
-    
-    # 정렬: 유사도 DESC, is_used DESC, child_count DESC, parent_count ASC
-    sorted_results = sorted(
-        scored_results,
-        key=lambda x: (-x[13], -x[12], -x[11], x[10])  # similarity, is_used, child_count, parent_count
-    )
-    
-    # 원래 형식으로 변환 (유사도 점수 제거)
-    return [result[:-1] for result in sorted_results]
-
 # ClickHouse에서 concept 정보 조회
 def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: bool = True) -> list:
     cleaned_term = clean_term(term)
@@ -151,8 +129,7 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             concept_code,
             valid_start_date,
             valid_end_date,
-            invalid_reason,
-            levenshteinDistance(lower(concept_name), lower(%(term)s)) as similarity
+            invalid_reason
         FROM concept
         WHERE (concept_name ILIKE %(term)s) 
           AND (domain_id = %(domain_id)s) 
@@ -190,8 +167,7 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
                 SELECT ethnicity_concept_id FROM person
             ) THEN 1 ELSE 0 END
             ELSE 1
-        END as is_used,
-        ac.similarity
+        END as is_used
     FROM all_concepts ac
     LEFT JOIN
     (
@@ -218,7 +194,6 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         GROUP BY ancestor_concept_id
     ) AS cc ON ac.concept_id = cc.concept_id
     ORDER BY 
-        similarity ASC,  # levenshteinDistance는 작을수록 유사함
         child_count DESC,
         parent_count ASC
     LIMIT %(limit)s
@@ -230,24 +205,21 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         'limit': limit
     })
     
+    # 디버깅을 위한 출력
+    print(f"검색 결과 개수: {len(results)}")
+    if not results:
+        print(f"검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
+    
     # 결과가 없고 auto_refine이 True이면 용어를 수정하여 재검색
     if not results and auto_refine:
-        # print(f"'{cleaned_term}' 검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
         refined_term = refine_search_query(cleaned_term)
         if refined_term != cleaned_term:
-            # 무한 재귀 방지를 위해 auto_refine=False로 설정
+            print(f"검색어 수정: '{cleaned_term}' → '{refined_term}'")
             return get_omop_concept_id(refined_term, domain_id, limit, auto_refine=False)
-    
-    # 유사도 기반 정렬
-    sorted_results = sort_search_results(results, cleaned_term)
-    
-    # 최종 limit 적용
-    if len(sorted_results) > limit:
-        sorted_results = sorted_results[:limit]
     
     # Concept 객체로 변환
     concepts = []
-    for result in sorted_results:
+    for result in results:
         if result[12] == 1:  # is_used가 1인 경우만 추가
             concept = {
                 "concept_id": str(result[0]),  # Identifier는 string
@@ -267,8 +239,6 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             }
             concepts.append(concept)
     
-    # 결과 개수 출력
-    # print(f"[get_omop_concept_id] 검색 결과: {len(concepts)}개")
     return concepts
 
 # concept_set_id에 해당하는 filter의 type을 찾아 domain_id를 반환

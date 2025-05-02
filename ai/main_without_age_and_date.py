@@ -41,7 +41,15 @@ Strict requirements:
        * Example: "first occurrence" → first: true
        * In all other cases, do not include the first field
 
-3. For Measurement criteria:
+3. [CRITICAL] Logical Operators (AND/OR):
+   - If conditions are connected with "AND" in the text, use operator: "AND"
+   - If conditions are connected with "OR" in the text, use operator: "OR"
+   - If no operator is specified, use operator: "AND" as default
+   - Example: "Diagnosed with sepsis-3 AND ARDS" → operator: "AND"
+   - Example: "Serum creatinine ≥ 1.5 mg/dL OR increase of ≥ 0.3 mg/dL" → operator: "OR"
+   - Example: "First ICU admission" (no operator) → operator: "AND" (default)
+
+4. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
    - For any field such as "measurementType", "drugType", "conditionType", etc., 
      do NOT invent or fabricate placeholder concept_id values
@@ -50,7 +58,7 @@ Strict requirements:
      * Example: "Exclude Hemoglobin > 13 g/dL" → {{ "valueAsNumber": {{ "lte": 13 }} }} (NOT {{ conceptset: {{neq: "6"}} }})
      * Only use "neq" when the opposite operator cannot express the intended meaning
 
-4. [CRITICAL] Exclude age and time-based conditions:
+5. [CRITICAL] Exclude age and time-based conditions:
    - [MUST EXCLUDE] Age-related conditions:
      * "Patients aged 18-65"
      * "Age > 18 years"
@@ -69,7 +77,7 @@ Strict requirements:
        - Example: "serum creatinine ≥ 1.5 mg/dL within 48 hours" → keep "serum creatinine ≥ 1.5 mg/dL"
        - Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" → keep "urine volume < 0.5 mL/(kg·h)"
 
-5. [CRITICAL] Visit Type Criteria:
+6. [CRITICAL] Visit Type Criteria:
    - When specifying ICU or hospital-related conditions, use ONLY the following visit types:
      * Inpatient Visit
      * Observation Room
@@ -90,7 +98,7 @@ Strict requirements:
           ]
      }}
      
-6. [CRITICAL] Inclusion criteria processing:
+7. [CRITICAL] Inclusion criteria processing:
    - Split complex conditions into individual criteria
    - Each criterion should have its own conceptset_id
    - Example: AKI diagnostic criteria →
@@ -101,7 +109,7 @@ Strict requirements:
      * Example: "serum creatinine ≥ 1.5 mg/dL within 48 hours" → keep "serum creatinine ≥ 1.5 mg/dL"
      * Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" → keep "urine volume < 0.5 mL/(kg·h)"
 
-7. NEVER include:
+8. NEVER include:
    - Complex logic
    - Non-implementable criteria
    - Criteria without clear OMOP CDM mappings
@@ -268,6 +276,12 @@ You are an AI assistant specialized in processing medical cohort selection crite
 Your task is to extract medical conditions, treatments, medications, and procedures mentioned explicitly in the provided text
 and classify them into appropriate OMOP CDM domains.
 
+[CRITICAL] ONLY extract conditions that are explicitly mentioned in the implementable_text:
+- DO NOT include any conditions from the examples
+- DO NOT make up or assume any conditions
+- ONLY use the exact conditions found in the implementable_text
+- If a condition is not explicitly mentioned in the implementable_text, DO NOT include it
+
 Current time: {current_datetime}
 Extract the cohort selection criteria from the following text and return ONLY the JSON response:
 {text}
@@ -375,12 +389,11 @@ def main():
     # print(implementable_text)
 
     implementable_text = """
-    This study selected adult septic patients who were admit-
-    ted to the ICU from the MIMIC-IV database from 2008
-    to 2019. Patients with severe chronic kidney disease
-    (CKD), defined as CKD stage ≥ 4 or estimated glomerular
-    filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
-    undergoing long-term dialysis treatment were excluded.
+    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    stay duration of less than 24 h.
     """
     
     # 2. 텍스트에서 COHORT JSON 추출
