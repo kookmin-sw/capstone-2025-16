@@ -15,6 +15,8 @@
     import { onMount, onDestroy } from 'svelte';
     import { page } from '$app/stores';
 
+    let { data } = $props();
+
     let activeTab = $state('definition');
     const tabs = [
 		{ key: 'definition', label: 'Definition' },
@@ -46,6 +48,7 @@
     let shapFeatures = $state([]);
     let analysisError = $state(null);
     let cohortID = $derived($page.params.cohortID); // URL에서 cohortID 추출
+    let cohortInfo = $state(data.cohortinfo);
 
     // SHAP 분석 시작 함수 (백엔드 연동 필요)
     async function startAnalysis() {
@@ -166,9 +169,9 @@
             <div class="flex items-center gap-4">
                 <div class="font-medium">
                     <span class="text-sm text-gray-400">ID  </span>
-                    <span class="text-sm text-black-500">{analysisData.basicInfo.id}</span>
+                    <span class="text-sm text-black-500">{cohortInfo.cohort_id}</span>
                 </div>
-                <div class="text-blue-600 font-medium">{analysisData.basicInfo.name}</div>
+                <div class="text-blue-600 font-medium">{cohortInfo.name}</div>
                 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
                     {analysisData.totalPatients}
                 </span>
@@ -180,15 +183,15 @@
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
                     <p class="text-gray-500">Author</p>
-                    <p class="font-medium">{analysisData.basicInfo.author.name} ({analysisData.basicInfo.author.department})</p>
+                    <p class="font-medium">{cohortInfo.author} ({analysisData.basicInfo.author.department})</p>
                 </div>
                 <div>
                     <p class="text-gray-500">Created at</p>
-                    <p class="font-medium">{new Date(analysisData.basicInfo.createdAt).toLocaleString()}</p>
+                    <p class="font-medium">{new Date(cohortInfo.created_at).toLocaleString()}</p>
                 </div>
                 <div class="col-span-2">
                     <p class="text-gray-500">Description</p>
-                    <p class="font-medium">{analysisData.basicInfo.description}</p>
+                    <p class="font-medium">{cohortInfo.description}</p>
                 </div>
             </div>
         </div>
