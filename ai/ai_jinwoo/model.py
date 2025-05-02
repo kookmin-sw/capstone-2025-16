@@ -14,6 +14,8 @@ from validation import cross_validate_model, evaluate_model
 
 def calculate_propensity_scores(df_target, df_comparator, feature_cols):
     df_full = pd.concat([df_target[feature_cols], df_comparator[feature_cols]]).reset_index(drop=True)
+    df_full['age'].fillna(df_full['age'].median(), inplace=True)
+    df_full['gender'].fillna(df_full['gender'].mode()[0], inplace=True)
     y_target = np.ones(len(df_target))
     y_comparator = np.zeros(len(df_comparator))
     y_full = np.concatenate([y_target, y_comparator])
