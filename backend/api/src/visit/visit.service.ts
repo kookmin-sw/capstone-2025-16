@@ -22,7 +22,9 @@ export class VisitService {
       ? await getBaseDB()
           .selectFrom('care_site')
           .selectAll()
-          .where('care_site_id', '=', visitInfo.care_site_id)
+          .where('care_site_id', '=', ({ eb }) =>
+            eb.fn<any>('_to_int64', [eb.val(visitInfo.care_site_id)]),
+          )
           .executeTakeFirst()
       : undefined;
 
@@ -43,7 +45,9 @@ export class VisitService {
       getBaseDB()
         .selectFrom('person')
         .selectAll()
-        .where('person_id', '=', visitInfo.person_id)
+        .where('person_id', '=', ({ eb }) =>
+          eb.fn<any>('_to_int64', [eb.val(visitInfo.person_id)]),
+        )
         .executeTakeFirst(),
 
       // 제공자(의사) 정보
@@ -51,7 +55,9 @@ export class VisitService {
         ? getBaseDB()
             .selectFrom('provider')
             .selectAll()
-            .where('provider_id', '=', visitInfo.provider_id)
+            .where('provider_id', '=', ({ eb }) =>
+              eb.fn<any>('_to_int64', [eb.val(visitInfo.provider_id)]),
+            )
             .executeTakeFirst()
         : undefined,
 
@@ -60,7 +66,9 @@ export class VisitService {
         ? getBaseDB()
             .selectFrom('location')
             .selectAll()
-            .where('location_id', '=', careSite.location_id)
+            .where('location_id', '=', ({ eb }) =>
+              eb.fn<any>('_to_int64', [eb.val(careSite.location_id)]),
+            )
             .executeTakeFirst()
         : undefined,
 
@@ -80,8 +88,12 @@ export class VisitService {
         .where('person_id', '=', ({ eb }) =>
           eb.fn<any>('_to_int64', [eb.val(visitInfo.person_id)]),
         )
-        .where('condition_era_start_date', '<=', visitInfo.visit_end_date)
-        .where('condition_era_end_date', '>=', visitInfo.visit_start_date)
+        .where('condition_era_start_date', '<=', ({ eb }) =>
+          eb.fn<any>('_to_date', [eb.val(visitInfo.visit_end_date)]),
+        )
+        .where('condition_era_end_date', '>=', ({ eb }) =>
+          eb.fn<any>('_to_date', [eb.val(visitInfo.visit_start_date)]),
+        )
         .execute(),
 
       // 해당 방문에서 투약된 약물 정보
@@ -129,8 +141,12 @@ export class VisitService {
         )
         .where((eb) =>
           eb.and([
-            eb('specimen_date', '>=', visitInfo.visit_start_date),
-            eb('specimen_date', '<=', visitInfo.visit_end_date),
+            eb('specimen_date', '>=', ({ eb }) =>
+              eb.fn<any>('_to_date', [eb.val(visitInfo.visit_start_date)]),
+            ),
+            eb('specimen_date', '<=', ({ eb }) =>
+              eb.fn<any>('_to_date', [eb.val(visitInfo.visit_end_date)]),
+            ),
           ]),
         )
         .execute(),
