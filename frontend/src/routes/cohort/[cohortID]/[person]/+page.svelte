@@ -25,6 +25,7 @@
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
 
     let timelineContainer;
+    let selectedGroup = null;
     let isSelectTableOpen = false;
     let isStatisticsView = false;
     let show = false;
@@ -240,10 +241,21 @@
             .call(axis);
     }
 
+    function darkenColor(hex, amount = 0.1) {
+        const color = d3.color(hex);
+        if (!color) return hex;
+
+        const hsl = d3.hsl(color);
+        hsl.l = Math.max(0, hsl.l - amount); // lightness 낮추기 (0~1)
+        return hsl.formatHex();
+    }
+
     function drawBars(svg, tooltip) {
         const barGroup = svg.append("g")
             .attr("transform", `translate(0,${MARGIN.top})`)
             .attr("clip-path", "url(#clip-timeline)");
+
+        const grouped = groupOverlappingVisits(data.personVisits);
 
         // Death bar
         if (personTable.death) {
@@ -261,21 +273,58 @@
         }
 
         barGroup.selectAll("rect.visit-bar")
-            .data(data.personVisits)
+            .data(grouped)
             .enter()
             .append("rect")
             .attr("class", "visit-bar")
-            .attr("x", d => xScale(new Date(d.visit_start_date)))
-            .attr("y", d => visitMapping[d.visit_concept_id]?.[0] * ROW_GAP)
-            .attr("width", d => Math.max(xScale(new Date(d.visit_end_date)) - xScale(new Date(d.visit_start_date)), 5))
+            .attr("x", d => xScale(new Date(d.start))) // ← 수정
+            .attr("y", d => {
+                // 첫 번째 visit 기준으로 y 위치 설정
+                const visit = d.items[0];
+                return visitMapping[visit.visit_concept_id]?.[0] * ROW_GAP;
+            })
+            .attr("width", d => {
+                const len = d.items.length;
+                const visit = d.items[0];
+                const visit2 = d.items[len - 1];
+                return Math.max(xScale(new Date(visit2.visit_end_date)) - xScale(new Date(visit.visit_start_date)), 5);
+            }) // ← 수정
             .attr("height", BAR_HEIGHT)
-            .attr("fill", d => visitMapping[d.visit_concept_id]?.[2] || "grey")
-            .attr("stroke", "black")
-            .attr("stroke-width", 0.1)
-            .on("mouseover", (event, d) => showTooltip(event, tooltip, `Visit ID: ${d.visit_concept_id}\nStart: ${d.visit_start_date}\nEnd: ${d.visit_end_date}`))
-            .on("mousemove", (event) => moveTooltip(event, tooltip))
+            .attr("fill", d => {
+                const visit = d.items[0];
+                const baseColor = visitMapping[visit.visit_concept_id]?.[2] || "#ccc";
+                const count = d.items.length;
+
+                if (count === 1) return baseColor;
+                if (count <= 2) return darkenColor(baseColor, 0.2);
+                if (count <= 4) return darkenColor(baseColor, 0.3);
+                return darkenColor(baseColor, 0.4); // 5개 이상
+            })
+            .on("mouseover", (event, d) => {
+                const visit = d.items[0];
+                const len = d.items.length;
+                if(len == 1){
+                    showTooltip(event, tooltip, `Visit ID: ${visit.visit_concept_id}\nStart: ${visit.visit_start_date}\nEnd: ${visit.visit_end_date}\nCount: ${len}`);
+                } else{
+                    const visit2 = d.items[len-1];
+                    showTooltip(event, tooltip, `Visit ID: ${visit.visit_concept_id}\nStart: ${visit.visit_start_date}\nEnd: ${visit2.visit_end_date}\nCount: ${len}`);
+                }
+            })
+            .on("mousemove", (event, d) => {
+                const visit = d.items[0];
+                moveTooltip(event, tooltip)
+            })
             .on("mouseout", () => tooltip.style("visibility", "hidden"))
-            .on("click", (event, d) => fetchDataById(d.visit_occurrence_id));
+            .on("click", (event, d) => {
+                const len = d.items.length;
+                if(len != 1){
+                    selectedGroup = d.items; // 유지
+                } else{
+                    selectedGroup = null; // 유지
+                    fetchDataById(d.items[0].visit_occurrence_id); // 첫 visit 기준 호출
+                }
+            });
+
     }
 
     function showTooltip(event, tooltip, text) {
@@ -292,7 +341,7 @@
         const pageY = event.clientY - svgRect.top;
 
         let tooltipX = pageX + 10;
-        let tooltipY = pageY - 10;
+        let tooltipY = pageY - 30;
 
         if (tooltipX + tooltipWidth > svgRect.width) tooltipX = pageX - tooltipWidth - 10;
         if (tooltipY + tooltipHeight > svgRect.height) tooltipY = pageY - tooltipHeight - 10;
@@ -309,8 +358,8 @@
             xAxisGroup.call(d3.axisBottom(newXScale));
 
             d3.selectAll(".visit-bar")
-                .attr("x", d => newXScale(new Date(d.visit_start_date)))
-                .attr("width", d => Math.max(newXScale(new Date(d.visit_end_date)) - newXScale(new Date(d.visit_start_date)), 5));
+                .attr("x", d => newXScale(new Date(d.start)))
+                .attr("width", d => Math.max(newXScale(new Date(d.end)) - newXScale(new Date(d.start)), 5));
 
             d3.selectAll(".death-bar")
                 .attr("x", newXScale(new Date(personTable.death.death_date)))
@@ -327,6 +376,49 @@
     function handleCheckboxChange(item) { // Select Chart 드롭다운 메뉴에서 체크박스 상태 변경 함수
         item.checked = !item.checked;
         selectItems = selectItems; // Svelte 반응성을 위한 재할당
+    }
+
+    function groupOverlappingVisits(visits) {
+        const groups = [];
+
+        // Step 1: visit_concept_id로 먼저 그룹화
+        const visitsByType = d3.group(visits, d => d.visit_concept_id);
+
+        // Step 2: 각 타입별로 시간 겹침 계산
+        visitsByType.forEach((typeVisits, conceptId) => {
+            // 시간 순 정렬
+            const sorted = typeVisits.slice().sort((a, b) => new Date(a.visit_start_date) - new Date(b.visit_start_date));
+            const typeGroups = [];
+
+            for (const visit of sorted) {
+                const vStart = new Date(visit.visit_start_date);
+                const vEnd = new Date(visit.visit_end_date);
+                let placed = false;
+
+                for (const group of typeGroups) {
+                    const gEnd = new Date(group.end);
+                    if (vStart <= gEnd) {
+                        group.items.push(visit);
+                        group.end = new Date(Math.max(gEnd, vEnd)); // update end if needed
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (!placed) {
+                    typeGroups.push({
+                        start: vStart,
+                        end: vEnd,
+                        visit_concept_id: conceptId, // 유지!
+                        items: [visit]
+                    });
+                }
+            }
+
+            groups.push(...typeGroups);
+        });
+
+        return groups;
     }
 
     onMount(() => {
@@ -390,7 +482,27 @@
         </div>
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
-    <div class="w-full h-[200px] min-w-[850px]" bind:this={timelineContainer}></div>
+    <div class="flex gap-4">
+        <div class="w-4/5 h-[200px] min-w-[850px]" bind:this={timelineContainer}></div>
+        <div class="w-1/5 border rounded-lg p-4 bg-white shadow-md h-[200px] overflow-y-auto">
+            <h2 class="text-lg font-bold mb-2">Overlapping Visits</h2>
+            {#if selectedGroup}
+                <ul class="space-y-2">
+                    {#each selectedGroup as visit}
+                        <li class="block hover:bg-gray-100 text-sm border-b pb-1">
+                            <button class="w-full text-left" on:click={fetchDataById(visit.visit_occurrence_id)}>
+                                <strong>ID:</strong> {visit.visit_concept_id}<br/>
+                                <strong>Start:</strong> {visit.visit_start_date}<br/>
+                                <strong>End:</strong> {visit.visit_end_date}
+                            </button>
+                        </li>
+                    {/each}
+                </ul>
+            {:else}
+                <p class="text-sm text-gray-500">Click on a bar to view details.</p>
+            {/if}
+        </div>
+    </div>
 </header>
 <div class="pt-8 pb-[60px] flex flex-col gap-5">
     {#if !isStatisticsView}
@@ -401,6 +513,7 @@
                     description="The ratio of visits by visit type."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.visitTypeRatio}
                     on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
                 >
@@ -422,6 +535,7 @@
                     description="The ratio of visits by department."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.departmentVisits}
                     on:toggleView={({ detail }) => isTableView.departmentVisits = detail}
                 >
@@ -443,6 +557,7 @@
                     description= "The list of the top 10 most frequently prescribed medications."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenDrugs}
                     on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
                 >
@@ -465,6 +580,7 @@
                     description="The list of the top 10 most frequently diagnosed medical conditions."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenConditions}
                     on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
                 >
@@ -487,6 +603,7 @@
                     description="The list of the top 10 most frequently performed procedures and medical tests."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenProcedures}
                     on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
                 >
@@ -509,6 +626,7 @@
                     description="The list of the top 10 most frequently recorded clinical measurements."
                     type="half"
                     hasTableView={true}
+                    hasXButton={false}
                     isTableView={isTableView.topTenMeasurements}
                     on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
                 >
