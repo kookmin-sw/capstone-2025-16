@@ -414,13 +414,13 @@ CREATE TABLE `cohort_concept` (
 CREATE TABLE IF NOT EXISTS feature_extraction
 (
     cohort_id   UUID,                      
-    type        LowCardinality(String),
+    domain      LowCardinality(String),
     rank        Int64,                     
     concept_id  Int64,
     influence Int64,
-    execution_time Float64
+    execution_time Int64
 )
-ORDER BY (cohort_id, type, rank);
+ORDER BY (cohort_id, domain, rank);
 
 CREATE OR REPLACE FUNCTION _to_date AS (a) -> toDate32(a);
 
