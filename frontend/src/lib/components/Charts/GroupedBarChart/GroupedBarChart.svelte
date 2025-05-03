@@ -88,6 +88,21 @@
         .attr("preserveAspectRatio", "xMidYMid meet")
         .attr("style", "font: 10px sans-serif;");
   
+      // 툴팁 생성
+      const tooltip = d3.select(svgContainer)
+        .append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("visibility", "hidden")
+        .style("background-color", "rgba(0, 0, 0, 0.8)")
+        .style("color", "white")
+        .style("padding", "6px 10px")
+        .style("border-radius", "4px")
+        .style("font-size", "12px")
+        .style("pointer-events", "none")
+        .style("z-index", "10")
+        .style("white-space", "nowrap");
+
       // 배경 그리드
       svg.append("g")
         .attr("class", "grid")
@@ -110,6 +125,7 @@
         .selectAll("rect")
         .data(([, d]) => d)
         .join("rect")
+          .attr("class", "bar")
           .attr("x", d => x(d.target) + (x.bandwidth() - barWidth) / 2)
           .attr("y", d => y(d.value))
           .attr("width", barWidth)
@@ -118,7 +134,55 @@
           .attr("rx", 1.5)
           .attr("ry", 1.5)
           .attr("stroke", "white")
-          .attr("stroke-width", 0.5);
+          .attr("stroke-width", 0.5)
+          .style("transition", "all 0.2s ease")
+          .on("mouseover", function(event, d) {
+            // 막대 강조 효과
+            d3.select(this)
+              .attr("stroke", "#333")
+              .attr("stroke-width", 1.5)
+              .attr("fill-opacity", 0.9)
+              .attr("fill", d => d3.color(color(d.target)).brighter(0.2));
+            
+            // 툴팁 표시
+            tooltip
+              .style("visibility", "visible")
+              .html(`
+                <div>
+                  <strong>${d.group}</strong> | <span style="color: ${color(d.target)}">${d.target}</span>
+                </div>
+                <div>${d3.format(",.0f")(d.value)}</div>
+              `);
+            
+            // 툴팁 위치 조정
+            const tooltipWidth = tooltip.node().getBoundingClientRect().width;
+            const tooltipHeight = tooltip.node().getBoundingClientRect().height;
+            const svgRect = svgContainer.getBoundingClientRect();
+            const barRect = this.getBoundingClientRect();
+            
+            let xPos = barRect.left - svgRect.left + barRect.width / 2 - tooltipWidth / 2;
+            let yPos = barRect.top - svgRect.top - tooltipHeight - 10;
+            
+            // 툴팁이 차트 영역을 벗어나지 않도록 조정
+            if (xPos < 0) xPos = 0;
+            if (xPos + tooltipWidth > svgRect.width) xPos = svgRect.width - tooltipWidth;
+            if (yPos < 0) yPos = barRect.top - svgRect.top - 10;
+            
+            tooltip
+              .style("left", `${xPos}px`)
+              .style("top", `${yPos}px`);
+          })
+          .on("mouseout", function(event, d) {
+            // 원래 스타일로 복원
+            d3.select(this)
+              .attr("stroke", "white")
+              .attr("stroke-width", 0.5)
+              .attr("fill-opacity", 1)
+              .attr("fill", d => color(d.target));
+            
+            // 툴팁 숨기기
+            tooltip.style("visibility", "hidden");
+          });
   
       // X축 - 데이터가 많으면 글꼴 크기 줄이고 회전
       const xAxisG = svg.append("g")
@@ -198,5 +262,12 @@
     }
   </script>
   
-  <div class="w-full h-full flex items-center justify-center mx-5" bind:this={svgContainer}></div>
+  <div class="w-full h-full flex items-center justify-center mx-5 relative" bind:this={svgContainer}></div>
+  
+  <style>
+    :global(.bar:hover) {
+      filter: brightness(1.1);
+      cursor: pointer;
+    }
+  </style>
   
