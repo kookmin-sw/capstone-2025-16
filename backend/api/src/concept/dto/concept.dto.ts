@@ -20,6 +20,16 @@ export class SearchConceptQueryDto {
   @IsOptional()
   @Type(() => Number)
   page?: number = 0;
+
+  @ApiPropertyOptional({
+    description: 'Number of items per page',
+    default: 100,
+    example: 100,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  limit?: number = 100;
 }
 
 export class ConceptResponseDto {

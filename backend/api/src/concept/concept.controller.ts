@@ -21,7 +21,7 @@ export class ConceptController {
   async searchConcepts(
     @Query() queryParams: SearchConceptQueryDto,
   ): Promise<ConceptSearchResponseDto> {
-    const { query, page = 0 } = queryParams;
-    return this.conceptService.searchConcepts(query, page);
+    const { query, page = 0, limit = 100 } = queryParams;
+    return this.conceptService.searchConcepts(query, page, limit);
   }
 }

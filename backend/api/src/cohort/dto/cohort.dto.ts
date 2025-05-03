@@ -5,7 +5,9 @@ import {
   IsBoolean,
   IsObject,
   IsUUID,
+  IsNumber,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { CohortDefinition } from '../../types/type';
 
 const cohortDefExample = {
@@ -100,8 +102,20 @@ export class CohortIdParam {
 
 export class PaginationQuery {
   @ApiPropertyOptional({ description: 'Page number', default: 0, example: 0 })
+  @IsNumber()
   @IsOptional()
+  @Type(() => Number)
   page?: number = 0;
+
+  @ApiPropertyOptional({
+    description: 'Number of items per page',
+    default: 50,
+    example: 50,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  limit?: number = 50;
 }
 
 export class CohortResponse {
@@ -288,4 +302,56 @@ export class DeleteCohortResponse {
     example: 'Cohort deleted successfully',
   })
   message: string;
+}
+
+export class CohortListResponse {
+  @ApiProperty({
+    description: 'List of cohorts',
+    type: [CohortResponse],
+  })
+  cohorts: CohortResponse[];
+
+  @ApiProperty({
+    description: 'Total number of cohorts',
+    example: 100,
+  })
+  total: number;
+
+  @ApiProperty({
+    description: 'Current page number',
+    example: 0,
+  })
+  page: number;
+
+  @ApiProperty({
+    description: 'Number of items per page',
+    example: 50,
+  })
+  limit: number;
+}
+
+export class CohortPersonsResponse {
+  @ApiProperty({
+    description: 'List of person IDs in the cohort',
+    type: [String],
+  })
+  persons: string[];
+
+  @ApiProperty({
+    description: 'Total number of persons in the cohort',
+    example: 100,
+  })
+  total: number;
+
+  @ApiProperty({
+    description: 'Current page number',
+    example: 0,
+  })
+  page: number;
+
+  @ApiProperty({
+    description: 'Number of items per page',
+    example: 50,
+  })
+  limit: number;
 }
