@@ -32,6 +32,8 @@ import {
   CreateCohortResponse,
   UpdateCohortResponse,
   DeleteCohortResponse,
+  CohortListResponse,
+  CohortPersonsResponse,
 } from './dto/cohort.dto';
 
 @ApiTags('Cohort')
@@ -46,14 +48,20 @@ export class CohortController {
     type: Number,
     description: 'Page number',
   })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+  })
   @ApiResponse({
     status: 200,
     description: 'Cohort list',
-    type: [CohortResponse],
+    type: CohortListResponse,
   })
   @Get()
-  async getCohorts(@Query() { page }: PaginationQuery) {
-    return await this.cohortService.getCohorts(page);
+  async getCohorts(@Query() { page, limit }: PaginationQuery) {
+    return await this.cohortService.getCohorts(page, limit);
   }
 
   @ApiOperation({ summary: 'Get cohort details' })
@@ -85,14 +93,23 @@ export class CohortController {
     type: Number,
     description: 'Page number',
   })
-  @ApiOkResponse({ description: 'Cohort patients list', type: [String] })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+  })
+  @ApiOkResponse({ 
+    description: 'Cohort patients list', 
+    type: CohortPersonsResponse 
+  })
   @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Get(':cohortId/persons')
   async getCohortPersons(
     @Param() { cohortId }: CohortIdParam,
-    @Query() { page }: PaginationQuery,
+    @Query() { page, limit }: PaginationQuery,
   ) {
-    return await this.cohortService.getCohortPersons(cohortId, page);
+    return await this.cohortService.getCohortPersons(cohortId, page, limit);
   }
 
   @ApiOperation({ summary: 'Create cohort' })

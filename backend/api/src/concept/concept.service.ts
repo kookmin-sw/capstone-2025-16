@@ -10,8 +10,8 @@ export class ConceptService {
   async searchConcepts(
     query?: string,
     page: number = 0,
+    limit: number = 100,
   ): Promise<ConceptSearchResponseDto> {
-    const limit = 50;
     const offset = page * limit;
 
     let conceptQuery = getBaseDB()

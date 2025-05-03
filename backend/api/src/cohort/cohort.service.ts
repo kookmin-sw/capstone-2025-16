@@ -10,19 +10,43 @@ import {
   CreateCohortResponse,
   UpdateCohortResponse,
   DeleteCohortResponse,
+  CohortListResponse,
+  CohortPersonsResponse,
 } from './dto/cohort.dto';
 
 @Injectable()
 export class CohortService {
-  async getCohorts(page: number = 0): Promise<CohortResponse[]> {
-    const limit = 50;
+  async getCohorts(
+    page: number = 0,
+    limit: number = 50,
+  ): Promise<CohortListResponse> {
+    const offset = page * limit;
 
-    return await getBaseDB()
+    // 코호트 목록 조회 쿼리
+    const cohortsQuery = getBaseDB()
       .selectFrom('cohort')
       .selectAll()
       .limit(limit)
-      .offset(page * limit)
-      .execute();
+      .offset(offset)
+      .orderBy('updated_at', 'desc');
+
+    // 총 결과 수를 계산하기 위한 쿼리
+    const countQuery = getBaseDB()
+      .selectFrom('cohort')
+      .select(({ fn }) => [fn.count('cohort_id').as('total')]);
+
+    // 두 쿼리를 병렬로 실행
+    const [cohorts, countResult] = await Promise.all([
+      cohortsQuery.execute(),
+      countQuery.executeTakeFirst(),
+    ]);
+
+    return {
+      cohorts,
+      total: Number(countResult?.total || 0),
+      page,
+      limit,
+    };
   }
 
   async getCohortStatistics(id: string): Promise<CohortStatisticsResponse> {
@@ -264,7 +288,11 @@ export class CohortService {
     return cohort;
   }
 
-  async getCohortPersons(id: string, page: number = 0): Promise<string[]> {
+  async getCohortPersons(
+    id: string,
+    page: number = 0,
+    limit: number = 50,
+  ): Promise<CohortPersonsResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .select('cohort_id')
@@ -275,17 +303,32 @@ export class CohortService {
       throw new NotFoundException('Cohort not found.');
     }
 
-    const limit = 50;
-
-    const cohortDetail = await getBaseDB()
+    // 특정 코호트에 포함된 person_id 목록을 조회하는 쿼리
+    const personsQuery = getBaseDB()
       .selectFrom('cohort_detail')
       .select('person_id')
       .where('cohort_id', '=', id)
       .limit(limit)
-      .offset(page * limit)
-      .execute();
+      .offset(page * limit);
 
-    return cohortDetail.map((e) => e.person_id);
+    // 총 인원 수를 계산하기 위한 쿼리
+    const countQuery = getBaseDB()
+      .selectFrom('cohort_detail')
+      .select(({ fn }) => [fn.count('person_id').as('total')])
+      .where('cohort_id', '=', id);
+
+    // 두 쿼리를 병렬로 실행
+    const [persons, countResult] = await Promise.all([
+      personsQuery.execute(),
+      countQuery.executeTakeFirst(),
+    ]);
+
+    return {
+      persons: persons.map((e) => e.person_id),
+      total: Number(countResult?.total || 0),
+      page,
+      limit,
+    };
   }
 
   async createNewCohort(
