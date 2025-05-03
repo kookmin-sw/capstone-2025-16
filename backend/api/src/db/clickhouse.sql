@@ -411,6 +411,16 @@ CREATE TABLE `cohort_concept` (
     `concept_id` Int64
 ) ORDER BY `cohort_id`;
 
+CREATE TABLE IF NOT EXISTS feature_extraction
+(
+    cohort_id   UUID,                      
+    type        LowCardinality(String),
+    rank        Int64,                     
+    concept_id  Int64,
+    influence Int64
+)
+ORDER BY (cohort_id, type, rank);
+
 CREATE OR REPLACE FUNCTION _to_date AS (a) -> toDate32(a);
 
 CREATE OR REPLACE FUNCTION _get_year AS (a) -> toYear(a);
