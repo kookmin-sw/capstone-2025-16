@@ -411,7 +411,7 @@ CREATE TABLE `cohort_concept` (
     `concept_id` Int64
 ) ORDER BY `cohort_id`;
 
-CREATE TABLE IF NOT EXISTS feature_extraction
+CREATE TABLE IF NOT EXISTS `feature_extraction`
 (
     cohort_id   UUID,                      
     domain_name      LowCardinality(String),
@@ -420,7 +420,7 @@ CREATE TABLE IF NOT EXISTS feature_extraction
     influence Int64,
     execution_time Int64
 )
-ORDER BY (cohort_id, domain_name, rank);
+ORDER BY (`cohort_id`, `domain_name`, `rank`);
 
 CREATE OR REPLACE FUNCTION _to_date AS (a) -> toDate32(a);
 
