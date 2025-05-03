@@ -223,7 +223,23 @@
             </button>
           
           {#if expandedStates[index]}
-            <div class="p-2 border-t text-sm" transition:slide>
+            <div class="p-2 border-t text-sm relative" transition:slide>
+                <button 
+                    aria-label="custom chart delete button",
+                    class="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                    onclick={(e) => {
+                        e.stopPropagation();
+                        if(confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
+                        customChartData = customChartData.filter((_, i) => i !== index);
+                        }
+                    }}
+                >
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                </button>
+
                 <div class="space-y-1">
                     <div>
                         <span class="text-gray-500">Author:</span>
