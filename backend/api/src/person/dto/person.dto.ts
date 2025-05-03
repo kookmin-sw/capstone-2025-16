@@ -108,7 +108,7 @@ export class PersonResponse {
   })
   info: PersonClass;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Death information',
     example: {
       person_id: '123456',
