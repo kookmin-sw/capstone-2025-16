@@ -272,3 +272,12 @@ def insert_feature_extraction_data(cohort_id, k, final_proc_importances, final_c
         INSERT INTO feature_extraction (cohort_id, multiple, domain_name, rank, concept_id, influence, execution_time)
         VALUES
     """, rows)
+
+def db_cohort_drop(cohort_id):
+    cohort_id = f"toUUID('{cohort_id}')"
+    client = get_client()
+    client.execute(f"""
+   ALTER TABLE feature_extraction
+   DELETE WHERE cohort_id = {cohort_id}; 
+"""
+    )
