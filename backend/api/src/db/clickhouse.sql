@@ -417,7 +417,8 @@ CREATE TABLE IF NOT EXISTS feature_extraction
     type        LowCardinality(String),
     rank        Int64,                     
     concept_id  Int64,
-    influence Int64
+    influence Int64,
+    execution_time Float64
 )
 ORDER BY (cohort_id, type, rank);
 
