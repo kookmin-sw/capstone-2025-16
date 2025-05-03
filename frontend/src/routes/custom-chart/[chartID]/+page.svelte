@@ -4,7 +4,7 @@
     import { slide } from 'svelte/transition';
     import GroupedBarChart from '$lib/components/Charts/GroupedBarChart/GroupedBarChart.svelte';
     import { dndzone } from 'svelte-dnd-action';
-
+    import ChartCard from "$lib/components/ChartCard.svelte";
 
     const targetSetData = {
         id: "10001",
@@ -212,13 +212,15 @@
                     </div>
                 </div>
                 <!-- 차트 및 설명 영역 추가 -->
-                <div class="pt-4">
-                    <h3 class="text-lg font-semibold text-gray-800">Custom Chart</h3>
-                    <div class="mt-2">
-                        <div class="h-80 bg-gray-200 flex items-center justify-center">
-                            <p class="text-gray-500">Chart will be displayed here.</p>
+                <div class="pt-4 px-2">
+                    <ChartCard 
+                        title="Custom Chart"
+                        hasXButton = {false}
+                    >
+                        <div class="w-full h-full flex items-center justify-center">
+                            <GroupedBarChart data={customChartData[index].chartData} />
                         </div>
-                    </div>
+                    </ChartCard>
                 </div>
                 <div class="p-4 border-t">
                     <p class="text-gray-500">Chart Detail Information will be displayed here.</p>
