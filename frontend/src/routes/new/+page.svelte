@@ -9,6 +9,12 @@
 	import InclusionRuleModal from './components/InclusionRuleModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
 	import type { ConceptSet, Concept } from './models/ConceptSet';
+	
+	// 연산자 컴포넌트 가져오기
+	import NumberOperator from './components/operators/NumberOperator.svelte';
+	import StringOperator from './components/operators/StringOperator.svelte';
+	import DateOperator from './components/operators/DateOperator.svelte';
+	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
 
 	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
 	interface Operator<T> {
@@ -737,6 +743,65 @@
 			{ concept_id: '0', concept_name: 'Unknown' }
 		]
 	};
+
+	// 연산자 컴포넌트 테스트를 위한 상태
+	let testNumberValue: {
+		eq?: number | number[];
+		neq?: number | number[];
+		gt?: number | number[];
+		gte?: number | number[];
+		lt?: number | number[];
+		lte?: number | number[];
+	} = {};
+	
+	let testStringValue: {
+		eq?: string | string[];
+		neq?: string | string[];
+		startsWith?: string | string[];
+		endsWith?: string | string[];
+		contains?: string | string[];
+	} = { contains: "검색어" };
+	
+	let testDateValue: {
+		eq?: string | string[];
+		neq?: string | string[];
+		gt?: string | string[];
+		gte?: string | string[];
+		lt?: string | string[];
+		lte?: string | string[];
+	} = {};
+	
+	let testIdentifierValue: {
+		eq?: string | string[];
+		neq?: string | string[];
+	} = {};
+	
+	const testOptions = [
+		{ id: "1", name: "옵션 1" },
+		{ id: "2", name: "옵션 2" },
+		{ id: "3", name: "옵션 3" }
+	];
+	
+	// 연산자 값 변경 핸들러
+	function handleNumberOperatorChange(event: CustomEvent) {
+		testNumberValue = event.detail;
+		console.log("Number Operator:", testNumberValue);
+	}
+	
+	function handleStringOperatorChange(event: CustomEvent) {
+		testStringValue = event.detail;
+		console.log("String Operator:", testStringValue);
+	}
+	
+	function handleDateOperatorChange(event: CustomEvent) {
+		testDateValue = event.detail;
+		console.log("Date Operator:", testDateValue);
+	}
+	
+	function handleIdentifierOperatorChange(event: CustomEvent) {
+		testIdentifierValue = event.detail;
+		console.log("Identifier Operator:", testIdentifierValue);
+	}
 </script>
 
 <!-- Left Sidebar -->
@@ -1344,70 +1409,53 @@
 								</span>
 							</div>
 						{:else if property.type === 'conceptset'}
-							<select
-								class="w-full rounded-md border border-gray-300 p-2 text-sm"
-								value={currentFilterValues[property.name]?.toString() || ''}
-								on:change={(e) => {
-									const value = e.target?.value === '' ? undefined : e.target?.value;
-									updateFilterValue(property.name, value);
-								}}
-							>
-								<option value="">Any</option>
-								{#each cohortDefinition.conceptsets as conceptSet}
-									<option value={conceptSet.conceptset_id}
-										>{conceptSet.name || `Concept Set ${conceptSet.conceptset_id}`}</option
-									>
-								{/each}
-							</select>
+							<IdentifierOperator
+								value={currentFilterValues[property.name] || {}}
+								options={cohortDefinition.conceptsets.map(cs => ({ id: cs.conceptset_id.toString(), name: cs.name || `Concept Set ${cs.conceptset_id}` }))}
+								placeholder="컨셉셋 선택"
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{:else if property.type === 'concept'}
-							<div class="flex space-x-2">
-								<select
-									class="w-full rounded-md border border-gray-300 p-2 text-sm"
-									value={currentFilterValues[property.name] || ''}
-									on:change={(e) => {
-										const value = e.target?.value === '' ? undefined : e.target?.value;
-										updateFilterValue(property.name, value);
-									}}
-								>
-									<option value="">Any</option>
-									{#if property.name === 'gender'}
-										<!-- 성별은 표준화된 값으로 고정 -->
-										{#each standardConcepts.gender as concept}
-											<option value={concept.concept_id}>{concept.concept_name}</option>
-										{/each}
-									{:else if property.name === 'raceType'}
-										<!-- 인종은 표준화된 값으로 고정 -->
-										{#each standardConcepts.race as concept}
-											<option value={concept.concept_id}>{concept.concept_name}</option>
-										{/each}
-									{:else if property.name === 'ethnicityType'}
-										<!-- 민족성은 표준화된 값으로 고정 -->
-										{#each standardConcepts.ethnicity as concept}
-											<option value={concept.concept_id}>{concept.concept_name}</option>
-										{/each}
-									{:else}
-										<!-- 다른 개념 타입은 사용자가 정의한 컨셉셋에서 가져옴 -->
-										{#each cohortDefinition.conceptsets as conceptSet}
-											{#if conceptSet.expression?.items}
-												{#each conceptSet.expression.items as item}
-													<option value={item.concept.concept_id}>
-														{item.concept.concept_name} ({conceptSet.name})
-													</option>
-												{/each}
-											{/if}
-										{/each}
-										{#if cohortDefinition.conceptsets.length === 0 || cohortDefinition.conceptsets.every((set) => !set.expression?.items || set.expression.items.length === 0)}
-											<option value="" disabled
-												>No concepts available - Define them in Concept Sets</option
-											>
-										{/if}
-									{/if}
-								</select>
-								{#if !['gender', 'raceType', 'ethnicityType'].includes(property.name)}
+							{#if property.name === 'gender'}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={standardConcepts.gender.map(c => ({ id: c.concept_id, name: c.concept_name }))}
+									placeholder="성별 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+								/>
+							{:else if property.name === 'raceType'}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={standardConcepts.race.map(c => ({ id: c.concept_id, name: c.concept_name }))}
+									placeholder="인종 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+								/>
+							{:else if property.name === 'ethnicityType'}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={standardConcepts.ethnicity.map(c => ({ id: c.concept_id, name: c.concept_name }))}
+									placeholder="민족성 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+								/>
+							{:else}
+								<div class="flex space-x-2">
+									<IdentifierOperator
+										value={currentFilterValues[property.name] || {}}
+										options={cohortDefinition.conceptsets.flatMap(cs => 
+											cs.expression?.items 
+												? cs.expression.items.map(item => ({ 
+														id: item.concept.concept_id, 
+														name: `${item.concept.concept_name} (${cs.name})` 
+													}))
+												: []
+										)}
+										placeholder="개념 선택"
+										on:change={(e) => updateFilterValue(property.name, e.detail)}
+									/>
 									<button
 										class="rounded border border-blue-300 bg-blue-100 px-2 py-1 text-sm text-blue-700 hover:bg-blue-200"
 										on:click={() => (showConceptSetModal = true)}
-										title="Manage Concept Sets"
+										title="개념 세트 관리"
 									>
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
@@ -1424,127 +1472,25 @@
 											/>
 										</svg>
 									</button>
-								{/if}
-							</div>
+								</div>
+							{/if}
 						{:else if property.type === 'numberrange'}
-							<div class="flex items-center gap-2">
-								<input
-									type="number"
-									min="0"
-									placeholder="Min"
-									class="w-20 rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'gte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].min = e.target.value;
-										updateNumberRange(
-											property.name,
-											tempRangeValues[property.name].min,
-											tempRangeValues[property.name].max
-										);
-									}}
-								/>
-								<span class="text-gray-600">to</span>
-								<input
-									type="number"
-									min="0"
-									placeholder="Max"
-									class="w-20 rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'lte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].max = e.target.value;
-										updateNumberRange(
-											property.name,
-											tempRangeValues[property.name].min,
-											tempRangeValues[property.name].max
-										);
-									}}
-								/>
-								<span class="text-sm text-gray-600">
-									{property.name === 'age' ||
-									property.name === 'startAge' ||
-									property.name === 'endAge'
-										? 'years'
-										: property.name.includes('length')
-											? 'days'
-											: ''}
-								</span>
-							</div>
+							<NumberOperator
+								value={currentFilterValues[property.name] || {}}
+									placeholder="숫자 입력"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{:else if property.type === 'daterange'}
-							<div class="flex items-center gap-2">
-								<input
-									type="date"
-									class="rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'gte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].start = e.target.value;
-										updateDateRange(
-											property.name,
-											tempRangeValues[property.name].start,
-											tempRangeValues[property.name].end
-										);
-									}}
-								/>
-								<span class="text-gray-600">to</span>
-								<input
-									type="date"
-									class="rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'lte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].end = e.target.value;
-										updateDateRange(
-											property.name,
-											tempRangeValues[property.name].start,
-											tempRangeValues[property.name].end
-										);
-									}}
-								/>
-							</div>
+							<DateOperator
+								value={currentFilterValues[property.name] || {}}
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{:else if property.type === 'string'}
-							<div class="flex items-center gap-2">
-								<select
-									class="rounded-md border border-gray-300 p-1 text-sm"
-									on:change={(e) => {
-										const value =
-											currentFilterValues[property.name]?.eq ||
-											currentFilterValues[property.name]?.contains ||
-											currentFilterValues[property.name]?.startsWith ||
-											currentFilterValues[property.name]?.endsWith ||
-											'';
-										updateStringOperator(property.name, value, e.target.value);
-									}}
-								>
-									<option value="eq">equals</option>
-									<option value="contains">contains</option>
-									<option value="startsWith">starts with</option>
-									<option value="endsWith">ends with</option>
-								</select>
-								<input
-									type="text"
-									class="flex-1 rounded-md border border-gray-300 p-1 text-sm"
-									value={currentFilterValues[property.name]?.eq ||
-										currentFilterValues[property.name]?.contains ||
-										currentFilterValues[property.name]?.startsWith ||
-										currentFilterValues[property.name]?.endsWith ||
-										''}
-									on:change={(e) => {
-										const operator =
-											currentFilterValues[property.name]?.eq !== undefined
-												? 'eq'
-												: currentFilterValues[property.name]?.contains !== undefined
-													? 'contains'
-													: currentFilterValues[property.name]?.startsWith !== undefined
-														? 'startsWith'
-														: currentFilterValues[property.name]?.endsWith !== undefined
-															? 'endsWith'
-															: 'eq';
-										updateStringOperator(property.name, e.target.value, operator);
-									}}
-								/>
-							</div>
+							<StringOperator
+								value={currentFilterValues[property.name] || {}}
+								placeholder="텍스트 입력"
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{/if}
 					</div>
 				{/each}

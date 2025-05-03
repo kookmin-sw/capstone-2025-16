@@ -219,27 +219,27 @@
         >
           Concept Sets
         </button>
-        <button
+        <button 
           class="px-4 py-2 {activeTab === 'edit' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
           on:click={() => changeTab('edit')}
           disabled={!editingConceptSet}
         >
           Edit
         </button>
-        <button
+          <button 
           class="px-4 py-2 {activeTab === 'search' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
           on:click={() => changeTab('search')}
           disabled={!editingConceptSet}
-        >
+          >
           Search
-        </button>
-        <button
+          </button>
+          <button 
           class="px-4 py-2 {activeTab === 'import' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
           on:click={() => changeTab('import')}
-        >
+          >
           Import
-        </button>
-        <button
+          </button>
+        <button 
           class="px-4 py-2 {activeTab === 'export' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
           on:click={() => changeTab('export')}
           disabled={!editingConceptSet}
@@ -256,44 +256,44 @@
             <!-- 개념 집합 목록 헤더 -->
             <div class="mb-4 flex justify-between">
               <h3 class="text-lg font-medium text-gray-700">Available Concept Sets</h3>
-              <button
+            <button 
                 class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                on:click={createNewConceptSet}
-              >
+              on:click={createNewConceptSet}
+            >
                 New Concept Set
-              </button>
-            </div>
-            
+            </button>
+          </div>
+          
             <!-- 개념 집합 목록 -->
-            {#if conceptSets.length === 0}
+          {#if conceptSets.length === 0}
               <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
                 <p class="text-center text-sm text-gray-500">No concept sets defined yet.</p>
-              </div>
-            {:else}
-              <div class="space-y-2">
+            </div>
+          {:else}
+            <div class="space-y-2">
                 {#each conceptSets as set, i}
                   <div class="flex items-center justify-between rounded-md border border-gray-200 p-3 hover:bg-gray-50">
                     <span class="font-medium text-gray-700">{set.name}</span>
-                    <div class="flex space-x-2">
-                      <button
+                  <div class="flex space-x-2">
+                    <button 
                         class="rounded bg-blue-100 px-2 py-1 text-xs text-blue-600 hover:bg-blue-200"
                         on:click={() => editConceptSet(set)}
-                      >
-                        Edit
-                      </button>
-                      <button
+                    >
+                      Edit
+                    </button>
+                    <button 
                         class="rounded bg-red-100 px-2 py-1 text-xs text-red-600 hover:bg-red-200"
                         on:click={() => deleteConceptSet(i)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    >
+                      Delete
+                    </button>
                   </div>
-                {/each}
+                </div>
+              {/each}
               </div>
             {/if}
-          </div>
-        {/if}
+            </div>
+          {/if}
         
         <!-- 편집 모드 탭 -->
         {#if activeTab === 'edit' && editingConceptSet}
@@ -301,14 +301,14 @@
             <!-- 개념 집합 이름 입력 -->
             <div>
               <label for="conceptSetName" class="block mb-2 text-sm font-medium text-gray-700">Concept Set Name</label>
-              <input 
-                type="text"
+            <input 
+              type="text" 
                 id="conceptSetName"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 bind:value={editingConceptSet.name}
-              />
-            </div>
-            
+            />
+          </div>
+          
             <!-- 개념 목록 테이블 -->
             <div>
               <h3 class="mb-3 text-base font-medium text-gray-700">Included Concepts</h3>
@@ -316,12 +316,12 @@
               {#if editingConceptSet.expression?.items.length === 0}
                 <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
                   <p class="text-center text-sm text-gray-500">No concepts added to this set yet.</p>
-                </div>
-              {:else}
-                <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                      <tr>
+            </div>
+          {:else}
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
                         <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Concept</th>
                         <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
                         <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vocabulary</th>
@@ -329,8 +329,8 @@
                         <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Descendants</th>
                         <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Mapped</th>
                         <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
-                      </tr>
-                    </thead>
+                  </tr>
+                </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
                       {#each editingConceptSet.expression?.items || [] as item, index}
                         <tr class="hover:bg-gray-50">
@@ -341,73 +341,73 @@
                           <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.concept.domain_id || '-'}</td>
                           <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.concept.vocabulary_id || '-'}</td>
                           <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                            <input
-                              type="checkbox"
+                        <input 
+                          type="checkbox" 
                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              checked={item.isExcluded}
+                          checked={item.isExcluded}
                               on:change={(e) => updateConcept(
                                 index,
                                 e.target.checked,
                                 item.includeDescendants,
                                 item.includeMapped
                               )}
-                            />
-                          </td>
+                        />
+                      </td>
                           <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                            <input
-                              type="checkbox"
+                        <input 
+                          type="checkbox" 
                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              checked={item.includeDescendants}
+                          checked={item.includeDescendants}
                               on:change={(e) => updateConcept(
                                 index,
                                 item.isExcluded,
                                 e.target.checked,
                                 item.includeMapped
                               )}
-                            />
-                          </td>
+                        />
+                      </td>
                           <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                            <input
-                              type="checkbox"
+                        <input 
+                          type="checkbox" 
                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              checked={item.includeMapped}
+                          checked={item.includeMapped}
                               on:change={(e) => updateConcept(
                                 index,
                                 item.isExcluded,
                                 item.includeDescendants,
                                 e.target.checked
                               )}
-                            />
-                          </td>
+                        />
+                      </td>
                           <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                            <button
+                        <button 
                               class="rounded bg-red-100 px-2 py-1 text-xs text-red-600 hover:bg-red-200"
                               on:click={() => removeConcept(index)}
-                            >
+                        >
                               Remove
-                            </button>
-                          </td>
-                        </tr>
-                      {/each}
-                    </tbody>
-                  </table>
-                </div>
-              {/if}
-              
+                        </button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+          
               <!-- 개념 추가 버튼 -->
               <div class="mt-3 flex justify-end">
-                <button
+            <button 
                   class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
                   on:click={() => changeTab('search')}
-                >
+            >
                   Add Concepts
-                </button>
+            </button>
               </div>
-            </div>
-            
+          </div>
+        
             <!-- 저장 버튼 -->
             <div class="mt-4 flex justify-end">
-              <button
+              <button 
                 class="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                 on:click={saveChanges}
               >
@@ -453,18 +453,18 @@
                 </div>
               {:else}
                 <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                      <tr>
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
                         <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Concept</th>
                         <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
                         <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vocabulary</th>
                         <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Class</th>
                         <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
-                      </tr>
-                    </thead>
+                  </tr>
+                </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                      {#each searchResults as concept}
+                  {#each searchResults as concept}
                         <tr class="hover:bg-gray-50">
                           <td class="whitespace-nowrap px-2 py-2 text-sm">
                             <div class="font-medium text-gray-900">{concept.concept_name}</div>
@@ -474,18 +474,18 @@
                           <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.vocabulary_id || '-'}</td>
                           <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.concept_class_id || '-'}</td>
                           <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                            <button
+                        <button 
                               class="rounded bg-green-100 px-2 py-1 text-xs text-green-600 hover:bg-green-200"
                               on:click={() => addConcept(concept)}
-                            >
-                              Add
-                            </button>
-                          </td>
-                        </tr>
-                      {/each}
-                    </tbody>
-                  </table>
-                </div>
+                        >
+                          Add
+                        </button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
               {/if}
             </div>
             
@@ -515,8 +515,8 @@
                 on:change={importFromJson}
               />
             </div>
-          </div>
-        {/if}
+            </div>
+          {/if}
         
         <!-- 내보내기 탭 -->
         {#if activeTab === 'export' && editingConceptSet}
@@ -527,7 +527,7 @@
                 Download the current concept set as a JSON file that can be imported later.
               </p>
               
-              <button
+              <button 
                 class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                 on:click={exportToJson}
               >
