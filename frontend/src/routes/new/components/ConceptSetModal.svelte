@@ -44,7 +44,7 @@
   function createNewConceptSet() {
     const newSet = createConceptSet({
       name: `Concept Set ${conceptSets.length + 1}`,
-      expression: { items: [] }
+      items: []
     });
     
     editingConceptSet = newSet;
@@ -70,39 +70,19 @@
     if (!searchQuery.trim()) return;
     
     isSearching = true;
-    try {
       // 실제 서비스에서는 API 호출로 구현
       // 예제에서는 더미 데이터 반환
-      await new Promise(resolve => setTimeout(resolve, 500));
-      searchResults = [
-        {
-          concept_id: '1',
-          concept_name: 'Hypertension',
-          domain_id: 'Condition',
-          vocabulary_id: 'SNOMED',
-          concept_class_id: 'Clinical Finding'
-        },
-        {
-          concept_id: '2',
-          concept_name: 'Diabetes mellitus type 2',
-          domain_id: 'Condition',
-          vocabulary_id: 'SNOMED',
-          concept_class_id: 'Clinical Finding'
-        },
-        {
-          concept_id: '3',
-          concept_name: 'Asthma',
-          domain_id: 'Condition',
-          vocabulary_id: 'SNOMED',
-          concept_class_id: 'Clinical Finding'
-        }
-      ];
-    } catch (error) {
-      console.error('Error searching concepts:', error);
-      searchResults = [];
-    } finally {
-      isSearching = false;
-    }
+      await fetch(`https://bento.kookm.in/api/concept/search?query=${searchQuery}&page=0&limit=100`)
+      .then(response => response.json())
+      .then(data => {
+        searchResults = data.concepts;
+      })
+      .catch(error => {
+        console.error('Error searching concepts:', error);
+      })
+      .finally(() => {
+        isSearching = false;
+      });
   }
   
   // 개념 집합에 개념 추가
@@ -313,78 +293,106 @@
             <div>
               <h3 class="mb-3 text-base font-medium text-gray-700">Included Concepts</h3>
               
-              {#if editingConceptSet.expression?.items.length === 0}
+              {#if editingConceptSet.items.length === 0}
                 <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
                   <p class="text-center text-sm text-gray-500">No concepts added to this set yet.</p>
             </div>
           {:else}
-            <div class="overflow-x-auto">
+            <div class="mb-4 overflow-hidden rounded-lg border border-gray-200 shadow">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Concept</th>
-                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
-                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vocabulary</th>
-                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Exclude</th>
-                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Descendants</th>
-                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Mapped</th>
-                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Concept
+                    </th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Excluded
+                    </th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Descendants
+                    </th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Mapped
+                    </th>
+                    <th scope="col" class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                      {#each editingConceptSet.expression?.items || [] as item, index}
-                        <tr class="hover:bg-gray-50">
-                          <td class="whitespace-nowrap px-2 py-2 text-sm">
-                            <div class="font-medium text-gray-900">{item.concept.concept_name}</div>
-                            <div class="text-xs text-gray-500">{item.concept.concept_id}</div>
-                          </td>
-                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.concept.domain_id || '-'}</td>
-                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.concept.vocabulary_id || '-'}</td>
-                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                        <input 
-                          type="checkbox" 
-                              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          checked={item.isExcluded}
-                              on:change={(e) => updateConcept(
-                                index,
-                                e.target.checked,
-                                item.includeDescendants,
-                                item.includeMapped
-                              )}
-                        />
+                <tbody class="divide-y divide-gray-200 bg-white">
+                  {#each editingConceptSet.items || [] as item, index}
+                    <tr class="hover:bg-gray-50">
+                      <td class="whitespace-nowrap px-2 py-2 text-sm">
+                        <div class="flex items-center">
+                          <span
+                            class={item.isExcluded 
+                              ? "text-red-600 line-through" 
+                              : "text-gray-900"
+                            }
+                          >
+                            {item.concept_name}
+                          </span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                          ID: {item.concept_id} | {item.domain_id} | {item.vocabulary_id}
+                        </div>
                       </td>
-                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                        <input 
-                          type="checkbox" 
-                              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          checked={item.includeDescendants}
-                              on:change={(e) => updateConcept(
-                                index,
-                                item.isExcluded,
-                                e.target.checked,
-                                item.includeMapped
-                              )}
-                        />
+                      <td class="whitespace-nowrap px-2 py-2 text-sm">
+                        <label class="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            checked={item.isExcluded || false}
+                            on:change={(e) => updateConcept(
+                              index, 
+                              (e.target as HTMLInputElement).checked, 
+                              item.includeDescendants || false, 
+                              item.includeMapped || false
+                            )}
+                          />
+                          <span class="text-xs">Excluded</span>
+                        </label>
                       </td>
-                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                        <input 
-                          type="checkbox" 
-                              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          checked={item.includeMapped}
-                              on:change={(e) => updateConcept(
-                                index,
-                                item.isExcluded,
-                                item.includeDescendants,
-                                e.target.checked
-                              )}
-                        />
+                      <td class="whitespace-nowrap px-2 py-2 text-sm">
+                        <label class="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            checked={item.includeDescendants || false}
+                            on:change={(e) => updateConcept(
+                              index, 
+                              item.isExcluded || false, 
+                              (e.target as HTMLInputElement).checked,
+                              item.includeMapped || false
+                            )}
+                          />
+                          <span class="text-xs">Descendants</span>
+                        </label>
                       </td>
-                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
+                      <td class="whitespace-nowrap px-2 py-2 text-sm">
+                        <label class="flex items-center space-x-2">
+                          <input 
+                            type="checkbox" 
+                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            checked={item.includeMapped || false}
+                            on:change={(e) => updateConcept(
+                              index, 
+                              item.isExcluded || false, 
+                              item.includeDescendants || false, 
+                              (e.target as HTMLInputElement).checked
+                            )}
+                          />
+                          <span class="text-xs">Mapped</span>
+                        </label>
+                      </td>
+                      <td class="whitespace-nowrap px-2 py-2 text-sm">
                         <button 
-                              class="rounded bg-red-100 px-2 py-1 text-xs text-red-600 hover:bg-red-200"
-                              on:click={() => removeConcept(index)}
+                          class="text-red-600 hover:text-red-900"
+                          on:click={() => removeConcept(index)}
                         >
-                              Remove
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </td>
                     </tr>
@@ -445,47 +453,41 @@
               
               {#if isSearching}
                 <div class="flex justify-center p-4">
-                  <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                  <svg class="h-8 w-8 animate-spin text-blue-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v2a6 6 0 00-6 6h2z"></path>
+                  </svg>
                 </div>
-              {:else if searchResults.length === 0}
-                <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
-                  <p class="text-center text-sm text-gray-500">No results found. Try another search term.</p>
-                </div>
-              {:else}
-                <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Concept</th>
-                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
-                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vocabulary</th>
-                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Class</th>
-                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
-                  </tr>
-                </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                  {#each searchResults as concept}
-                        <tr class="hover:bg-gray-50">
-                          <td class="whitespace-nowrap px-2 py-2 text-sm">
-                            <div class="font-medium text-gray-900">{concept.concept_name}</div>
-                            <div class="text-xs text-gray-500">{concept.concept_id}</div>
-                          </td>
-                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.domain_id || '-'}</td>
-                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.vocabulary_id || '-'}</td>
-                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.concept_class_id || '-'}</td>
-                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
-                        <button 
-                              class="rounded bg-green-100 px-2 py-1 text-xs text-green-600 hover:bg-green-200"
+              {:else if searchResults.length > 0}
+                <div class="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow">
+                  <h3 class="mb-2 text-sm font-medium text-gray-800">Search Results</h3>
+                  <div class="max-h-60 overflow-y-auto">
+                    <ul class="divide-y divide-gray-200">
+                      {#each searchResults as concept}
+                        <li class="py-2">
+                          <div class="flex items-center justify-between">
+                            <div>
+                              <p class="text-sm font-medium text-gray-900">{concept.concept_name}</p>
+                              <p class="text-xs text-gray-500">
+                                ID: {concept.concept_id} | {concept.domain_id} | {concept.vocabulary_id} | {concept.concept_class_id}
+                              </p>
+                            </div>
+                            <button
+                              class="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
                               on:click={() => addConcept(concept)}
-                        >
-                          Add
-                        </button>
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </li>
+                      {/each}
+                    </ul>
+                  </div>
+                </div>
+              {:else if searchQuery}
+                <div class="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow">
+                  <p class="text-center text-sm text-gray-500">No results found.</p>
+                </div>
               {/if}
             </div>
             

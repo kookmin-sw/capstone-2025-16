@@ -56,30 +56,29 @@
 		containers: BaseContainer[];
 	}
 	
+	// type.ts에 맞게 수정된 Concept 인터페이스
 	interface Concept {
 		concept_id: Identifier;
 		concept_name: string;
-		domain_id?: string;
-		vocabulary_id?: string;
-		concept_class_id?: string;
-		standard_concept?: string;
-		concept_code?: string;
-		valid_start_date?: string;
-		valid_end_date?: string;
+		domain_id: string;
+		vocabulary_id: string;
+		concept_class_id: string;
+		standard_concept: string;
+		concept_code: string;
+		valid_start_date: string;
+		valid_end_date: string;
 		invalid_reason?: string;
+		
 		isExcluded?: boolean;
 		includeDescendants?: boolean;
 		includeMapped?: boolean;
 	}
 	
+	// type.ts에 맞게 수정된 ConceptSet 인터페이스
 	interface ConceptSet {
 		conceptset_id: Identifier;
 		name: string;
-		expression?: {
-			items: {
-				concept: Concept;
-			}[];
-		};
+		items: Concept[];  // expression.items.concept에서 직접 items로 변경
 	}
 	
 	interface CohortDefinition {
@@ -109,9 +108,187 @@
 	let cohortName = $state('Cohort Name');
 	let cohortDescription = $state('Edit Cohort Description');
 
-	// 코호트 정의 기본 구조 - CohortDefinition 타입 적용
+	/**
+	 * 초기 코호트 정의 구조 생성
+	 * - 기본 인구통계학적 컨셉셋(성별, 인종, 민족성)을 포함
+	 * - 각 컨셉셋은 해당 도메인의 표준 개념들을 포함
+	 */
 	let cohortDefinition = $state<CohortDefinition>({
-		conceptsets: [],
+		conceptsets: [
+			// 기본 인구통계학적 개념셋 생성
+			// {
+			// 	conceptset_id: '1',
+			// 	name: '성별',
+			// 	items: [
+			// 		{
+			// 			concept_id: '8507',
+			// 			concept_name: 'Male',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '248153007',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8532',
+			// 			concept_name: 'Female',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '248152002',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8521',
+			// 			concept_name: 'Unknown',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '1220005',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8551',
+			// 			concept_name: 'Other',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED', 
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '385435006',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		}
+			// 	]
+			// },
+			// {
+			// 	conceptset_id: '2',
+			// 	name: '인종',
+			// 	items: [
+			// 		{
+			// 			concept_id: '8515',
+			// 			concept_name: 'Asian',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280000',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8516',
+			// 			concept_name: 'Black',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280001',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8527',
+			// 			concept_name: 'White',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280002',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8552',
+			// 			concept_name: 'Hispanic',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280003',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8522',
+			// 			concept_name: 'Native Hawaiian or Other Pacific Islander',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280004',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8657',
+			// 			concept_name: 'American Indian or Alaska Native',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280005',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '0',
+			// 			concept_name: 'Unknown',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280006',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		}
+			// 	]
+			// },
+			// {
+			// 	conceptset_id: '3',
+			// 	name: '민족성',
+			// 	items: [
+			// 		{
+			// 			concept_id: '38003563',
+			// 			concept_name: 'Hispanic',
+			// 			domain_id: 'Ethnicity',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Ethnicity',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280007',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '38003564',
+			// 			concept_name: 'Not Hispanic',
+			// 			domain_id: 'Ethnicity',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Ethnicity',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280008',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '0',
+			// 			concept_name: 'Unknown',
+			// 			domain_id: 'Ethnicity',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Ethnicity',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280009',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		}
+			// 	]
+			// }
+		],
 		initialGroup: {
 			containers: [
 				// 첫 번째 컨테이너 (필수)
@@ -626,8 +803,25 @@
 
 		if (typeof value === 'object') {
 			// Operator 객체인 경우 범위 표시
-			if (value.eq !== undefined) return `= ${value.eq}`;
-			if (value.neq !== undefined) return `≠ ${value.neq}`;
+			if (value.eq !== undefined) {
+				// 개념 ID인 경우 개념 이름으로 표시
+				if (type === 'concept' || type === 'conceptset') {
+					const conceptId = value.eq;
+					const concept = findConceptById(conceptId);
+					return concept ? `= ${concept.name}` : `= ${conceptId}`;
+				}
+				return `= ${value.eq}`;
+			}
+			
+			if (value.neq !== undefined) {
+				// 개념 ID인 경우 개념 이름으로 표시
+				if (type === 'concept' || type === 'conceptset') {
+					const conceptId = value.neq;
+					const concept = findConceptById(conceptId);
+					return concept ? `≠ ${concept.name}` : `≠ ${conceptId}`;
+				}
+				return `≠ ${value.neq}`;
+			}
 
 			let result = '';
 			if (value.gte !== undefined) result += `between ${value.gte}`;
@@ -648,30 +842,28 @@
 			return result || JSON.stringify(value);
 		}
 
-		// 표준 개념 값 변환
-		if (type === 'concept') {
-			// 성별 개념
-			if (value === '8507') return 'Male';
-			if (value === '8532') return 'Female';
-			if (value === '8521') return 'Unknown Gender';
-			if (value === '8551') return 'Other Gender';
-
-			// 인종 개념
-			if (value === '8515') return 'Asian';
-			if (value === '8516') return 'Black';
-			if (value === '8527') return 'White';
-			if (value === '8552') return 'Hispanic';
-			if (value === '8522') return 'Native Hawaiian or Other Pacific Islander';
-			if (value === '8657') return 'American Indian or Alaska Native';
-
-			// 민족성 개념
-			if (value === '38003563') return 'Hispanic';
-			if (value === '38003564') return 'Not Hispanic';
-			
-			if (value === '0') return 'Unknown';
+		// 개념 ID를 개념 이름으로 변환
+		if (type === 'concept' || type === 'conceptset') {
+			const concept = findConceptById(value);
+			return concept ? concept.name : value.toString();
 		}
 
 		return value.toString();
+	}
+
+	// 개념 ID로 개념 찾기
+	function findConceptById(conceptId: string): {id: string, name: string} | undefined {
+		for (const conceptSet of cohortDefinition.conceptsets) {
+			for (const item of conceptSet.items) {
+				if (item.concept_id === conceptId) {
+					return {
+						id: item.concept_id,
+						name: item.concept_name
+					};
+				}
+			}
+		}
+		return undefined;
 	}
 
 	// 컨테이너 순서 변경 함수
@@ -720,87 +912,27 @@
 		cohortDefinition[groupType].containers = containers;
 	}
 
-	// 표준 개념 값 정의
-	const standardConcepts = {
-		gender: [
-			{ concept_id: '8507', concept_name: 'Male' },
-			{ concept_id: '8532', concept_name: 'Female' },
-			{ concept_id: '8521', concept_name: 'Unknown' },
-			{ concept_id: '8551', concept_name: 'Other' }
-		],
-		race: [
-			{ concept_id: '8515', concept_name: 'Asian' },
-			{ concept_id: '8516', concept_name: 'Black' },
-			{ concept_id: '8527', concept_name: 'White' },
-			{ concept_id: '8552', concept_name: 'Hispanic' },
-			{ concept_id: '8522', concept_name: 'Native Hawaiian or Other Pacific Islander' },
-			{ concept_id: '8657', concept_name: 'American Indian or Alaska Native' },
-			{ concept_id: '0', concept_name: 'Unknown' }
-		],
-		ethnicity: [
-			{ concept_id: '38003563', concept_name: 'Hispanic' },
-			{ concept_id: '38003564', concept_name: 'Not Hispanic' },
-			{ concept_id: '0', concept_name: 'Unknown' }
-		]
-	};
+	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
+	function getConceptsByDomain(domainId: string): {id: string, name: string}[] {
+		return cohortDefinition.conceptsets
+			.flatMap(cs => cs.items
+				.filter(item => item.domain_id === domainId)
+				.map(item => ({
+					id: item.concept_id,
+					name: item.concept_name
+				}))
+			);
+	}
 
-	// 연산자 컴포넌트 테스트를 위한 상태
-	let testNumberValue: {
-		eq?: number | number[];
-		neq?: number | number[];
-		gt?: number | number[];
-		gte?: number | number[];
-		lt?: number | number[];
-		lte?: number | number[];
-	} = {};
-	
-	let testStringValue: {
-		eq?: string | string[];
-		neq?: string | string[];
-		startsWith?: string | string[];
-		endsWith?: string | string[];
-		contains?: string | string[];
-	} = { contains: "검색어" };
-	
-	let testDateValue: {
-		eq?: string | string[];
-		neq?: string | string[];
-		gt?: string | string[];
-		gte?: string | string[];
-		lt?: string | string[];
-		lte?: string | string[];
-	} = {};
-	
-	let testIdentifierValue: {
-		eq?: string | string[];
-		neq?: string | string[];
-	} = {};
-	
-	const testOptions = [
-		{ id: "1", name: "옵션 1" },
-		{ id: "2", name: "옵션 2" },
-		{ id: "3", name: "옵션 3" }
-	];
-	
-	// 연산자 값 변경 핸들러
-	function handleNumberOperatorChange(event: CustomEvent) {
-		testNumberValue = event.detail;
-		console.log("Number Operator:", testNumberValue);
-	}
-	
-	function handleStringOperatorChange(event: CustomEvent) {
-		testStringValue = event.detail;
-		console.log("String Operator:", testStringValue);
-	}
-	
-	function handleDateOperatorChange(event: CustomEvent) {
-		testDateValue = event.detail;
-		console.log("Date Operator:", testDateValue);
-	}
-	
-	function handleIdentifierOperatorChange(event: CustomEvent) {
-		testIdentifierValue = event.detail;
-		console.log("Identifier Operator:", testIdentifierValue);
+	// 특정 컨셉셋 ID의 개념들을 가져오는 함수
+	function getConceptsBySetId(conceptsetId: string): {id: string, name: string}[] {
+		const conceptSet = cohortDefinition.conceptsets.find(cs => cs.conceptset_id === conceptsetId);
+		if (!conceptSet) return [];
+		
+		return conceptSet.items.map(item => ({
+			id: item.concept_id,
+			name: item.concept_name
+		}));
 	}
 </script>
 
@@ -1419,60 +1551,38 @@
 							{#if property.name === 'gender'}
 								<IdentifierOperator
 									value={currentFilterValues[property.name] || {}}
-									options={standardConcepts.gender.map(c => ({ id: c.concept_id, name: c.concept_name }))}
+									options={getConceptsByDomain('Gender')}
 									placeholder="성별 선택"
 									on:change={(e) => updateFilterValue(property.name, e.detail)}
-								/>
-							{:else if property.name === 'raceType'}
+									/>
+							{:else if property.name === 'race'}
 								<IdentifierOperator
 									value={currentFilterValues[property.name] || {}}
-									options={standardConcepts.race.map(c => ({ id: c.concept_id, name: c.concept_name }))}
+									options={getConceptsByDomain('Race')}
 									placeholder="인종 선택"
 									on:change={(e) => updateFilterValue(property.name, e.detail)}
-								/>
-							{:else if property.name === 'ethnicityType'}
+									/>
+							{:else if property.name === 'ethnicity'}
 								<IdentifierOperator
 									value={currentFilterValues[property.name] || {}}
-									options={standardConcepts.ethnicity.map(c => ({ id: c.concept_id, name: c.concept_name }))}
-									placeholder="민족성 선택"
+									options={getConceptsByDomain('Ethnicity')}
+									placeholder="민족 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+									/>
+							{:else}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={cohortDefinition.conceptsets.flatMap(cs => 
+										cs.items 
+											? cs.items.map(item => ({ 
+													id: item.concept_id, 
+													name: `${item.concept_name} (${cs.name})` 
+												}))
+											: []
+									)}
+									placeholder="컨셉 선택"
 									on:change={(e) => updateFilterValue(property.name, e.detail)}
 								/>
-							{:else}
-								<div class="flex space-x-2">
-									<IdentifierOperator
-										value={currentFilterValues[property.name] || {}}
-										options={cohortDefinition.conceptsets.flatMap(cs => 
-											cs.expression?.items 
-												? cs.expression.items.map(item => ({ 
-														id: item.concept.concept_id, 
-														name: `${item.concept.concept_name} (${cs.name})` 
-													}))
-												: []
-										)}
-										placeholder="개념 선택"
-										on:change={(e) => updateFilterValue(property.name, e.detail)}
-									/>
-									<button
-										class="rounded border border-blue-300 bg-blue-100 px-2 py-1 text-sm text-blue-700 hover:bg-blue-200"
-										on:click={() => (showConceptSetModal = true)}
-										title="개념 세트 관리"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="h-4 w-4"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-											/>
-										</svg>
-									</button>
-								</div>
 							{/if}
 						{:else if property.type === 'numberrange'}
 							<NumberOperator

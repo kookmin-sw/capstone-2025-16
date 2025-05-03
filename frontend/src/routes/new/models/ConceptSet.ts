@@ -5,220 +5,137 @@
  * types.ts에 정의된 ConceptSet 타입에 맞게 구현되었습니다.
  */
 
-// 인터페이스 정의
-export interface Concept {
-  concept_id: string;
-  concept_name: string;
-  domain_id?: string;
-  vocabulary_id?: string;
-  concept_class_id?: string;
-  standard_concept?: string;
-  concept_code?: string;
-  valid_start_date?: string;
-  valid_end_date?: string;
-  invalid_reason?: string;
-  isExcluded?: boolean;
-  includeDescendants?: boolean;
-  includeMapped?: boolean;
-}
+/**
+ * ConceptSet 모델 - type.ts에 맞게 구현
+ */
 
-export interface ConceptSetItem {
-  concept: Concept;
+// 타입 정의
+export type Identifier = string;
+
+export interface Concept {
+  concept_id: Identifier;
+  concept_name: string;
+  domain_id: string;
+  vocabulary_id: string;
+  concept_class_id: string;
+  standard_concept: string;
+  concept_code: string;
+  valid_start_date: string;
+  valid_end_date: string;
+  invalid_reason?: string;
+  
   isExcluded?: boolean;
   includeDescendants?: boolean;
   includeMapped?: boolean;
 }
 
 export interface ConceptSet {
-  conceptset_id: string;
+  conceptset_id: Identifier;
   name: string;
-  expression?: {
-    items: ConceptSetItem[];
-  };
+  items: Concept[];
 }
 
-export interface SearchConcept {
-  CONCEPT_ID: string | number;
-  CONCEPT_NAME: string;
-  DOMAIN_ID?: string;
-  VOCABULARY_ID?: string;
-  CONCEPT_CLASS_ID?: string;
-  STANDARD_CONCEPT?: string;
-  CONCEPT_CODE?: string;
-  INVALID_REASON?: string | null;
-}
+// 유틸리티 함수
+let nextId = 1;
 
 /**
- * 새 개념 집합 생성
- * @param data - 초기 데이터
- * @return - 새 개념 집합 객체
+ * 새 ConceptSet 생성
  */
-export function createConceptSet(data: Partial<ConceptSet> = {}): ConceptSet {
-  // types.ts의 ConceptSet 인터페이스에 맞춘 구조
+export function createConceptSet(data: Partial<ConceptSet>): ConceptSet {
   return {
-    conceptset_id: data.conceptset_id || `cs-${Date.now()}`, // 고유 ID 생성
-    name: data.name || "New Concept Set",
-    expression: {
-      items: data.expression?.items || []
-    }
+    conceptset_id: data.conceptset_id || String(nextId++),
+    name: data.name || `Concept Set ${nextId}`,
+    items: data.items || []
   };
 }
 
 /**
- * 새 개념 집합 항목 객체 생성
- * @param data - 초기화 데이터
- * @return - 개념 집합 항목 객체
+ * ConceptSet에 개념 추가
  */
-export function createConceptSetItem(data: Partial<ConceptSetItem> = {}): ConceptSetItem {
-  return {
-    concept: data.concept || {
-      concept_id: "",
-      concept_name: "",
-      domain_id: "",
-      vocabulary_id: "",
-      concept_class_id: "",
-      standard_concept: "",
-      concept_code: ""
-    },
-    isExcluded: data.isExcluded || false,
-    includeDescendants: data.includeDescendants || false,
-    includeMapped: data.includeMapped || false
-  };
-}
-
-/**
- * 개념 집합에 개념 추가
- * @param conceptSet - 개념 집합 객체
- * @param concept - 추가할 개념
- * @return - 업데이트된 개념 집합
- */
-export function addConceptToSet(conceptSet: ConceptSet, concept: SearchConcept): ConceptSet {
-  if (!conceptSet.expression) {
-    conceptSet.expression = { items: [] };
-  }
-  
+export function addConceptToSet(conceptSet: ConceptSet, concept: Concept): ConceptSet {
   // 이미 존재하는지 확인
-  const exists = conceptSet.expression.items.some(item => 
-    item.concept.concept_id === concept.CONCEPT_ID.toString()
-  );
+  const exists = conceptSet.items.some(item => item.concept_id === concept.concept_id);
   
-  if (exists) {
-    return conceptSet;
-  }
-
-  // 새 개념 아이템 생성
-  const conceptItem: ConceptSetItem = {
-    concept: {
-      concept_id: concept.CONCEPT_ID.toString(),
-      concept_name: concept.CONCEPT_NAME,
-      domain_id: concept.DOMAIN_ID,
-      vocabulary_id: concept.VOCABULARY_ID,
-      concept_class_id: concept.CONCEPT_CLASS_ID,
-      standard_concept: concept.STANDARD_CONCEPT || "",
-      concept_code: concept.CONCEPT_CODE,
-      valid_start_date: "1970-01-01",
-      valid_end_date: "2099-12-31",
-      invalid_reason: concept.INVALID_REASON || undefined
-    },
+  if (exists) return conceptSet;
+  
+  // 기본 속성 설정
+  const conceptWithProps: Concept = {
+    ...concept,
     isExcluded: false,
     includeDescendants: false,
     includeMapped: false
   };
   
-  // 아이템 추가
   return {
     ...conceptSet,
-    expression: {
-      items: [...conceptSet.expression.items, conceptItem]
-    }
+    items: [...conceptSet.items, conceptWithProps]
   };
 }
 
 /**
- * 개념 집합에서 개념 제거
- * @param conceptSet - 개념 집합 객체
- * @param conceptId - 제거할 개념 ID
- * @return - 업데이트된 개념 집합
+ * ConceptSet에서 개념 제거
  */
-export function removeConceptFromSet(conceptSet: ConceptSet, conceptId: string): ConceptSet {
-  if (!conceptSet.expression) {
-    return conceptSet;
-  }
+export function removeConceptFromSet(conceptSet: ConceptSet, index: number): ConceptSet {
+  const newItems = [...conceptSet.items];
+  newItems.splice(index, 1);
   
   return {
     ...conceptSet,
-    expression: {
-      items: conceptSet.expression.items.filter(
-        item => item.concept.concept_id !== conceptId
-      )
-    }
+    items: newItems
   };
 }
 
 /**
- * 개념 집합 내 항목 속성 업데이트
- * @param conceptSet - 개념 집합 객체
- * @param conceptId - 업데이트할 개념 ID
- * @param property - 업데이트할 속성 ('isExcluded', 'includeDescendants', 'includeMapped')
- * @param value - 새 속성 값
- * @return - 업데이트된 개념 집합
+ * ConceptSet 항목 속성 업데이트
  */
 export function updateConceptSetItem(
   conceptSet: ConceptSet, 
-  conceptId: string, 
-  property: string, 
-  value: boolean
+  index: number, 
+  isExcluded: boolean, 
+  includeDescendants: boolean, 
+  includeMapped: boolean
 ): ConceptSet {
-  if (!conceptSet.expression) {
-    return conceptSet;
-  }
+  const newItems = [...conceptSet.items];
+  
+  newItems[index] = {
+    ...newItems[index],
+    isExcluded,
+    includeDescendants,
+    includeMapped
+  };
   
   return {
     ...conceptSet,
-    expression: {
-      items: conceptSet.expression.items.map(item => {
-        if (item.concept.concept_id === conceptId) {
-          return {
-            ...item,
-            [property]: value
-          };
-        }
-        return item;
-      })
-    }
+    items: newItems
   };
 }
 
 /**
- * 개념 집합을 JSON 문자열로 내보내기
- * @param conceptSet - 개념 집합 객체
- * @return - JSON 문자열
+ * ConceptSet을 JSON으로 내보내기
  */
 export function exportConceptSetToJson(conceptSet: ConceptSet): string {
   return JSON.stringify(conceptSet, null, 2);
 }
 
 /**
- * JSON 문자열에서 개념 집합 가져오기
- * @param json - JSON 문자열
- * @return - 파싱된 개념 집합 객체
+ * JSON에서 ConceptSet 가져오기
  */
 export function importConceptSetFromJson(json: string): ConceptSet {
   try {
-    const data = JSON.parse(json) as Partial<ConceptSet>;
+    const parsed = JSON.parse(json);
     
-    // 기본값 설정
-    const result: ConceptSet = {
-      conceptset_id: data.conceptset_id || `cs-${Date.now()}`,
-      name: data.name || "Imported Concept Set",
-      expression: {
-        items: data.expression?.items || []
-      }
-    };
+    // 기본 유효성 검사
+    if (!parsed.name || !Array.isArray(parsed.items)) {
+      throw new Error('Invalid concept set format');
+    }
     
-    return result;
-  } catch (e) {
-    console.error("개념 집합 가져오기 오류:", e);
-    return createConceptSet();
+    return createConceptSet({
+      conceptset_id: parsed.conceptset_id,
+      name: parsed.name,
+      items: parsed.items
+    });
+  } catch (error) {
+    console.error('Error parsing concept set JSON:', error);
+    throw new Error('Invalid JSON format');
   }
 }
