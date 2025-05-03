@@ -2,12 +2,105 @@
 	New Cohort Builder Implementation - Based on types.ts specification
 -->
 
-<script>
+<script lang="ts">
 	import '../../app.css';
 	import { page } from '$app/state';
 	import ConceptSetModal from './components/ConceptSetModal.svelte';
 	import InclusionRuleModal from './components/InclusionRuleModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
+	import type { ConceptSet, Concept } from './models/ConceptSet';
+	
+	// 연산자 컴포넌트 가져오기
+	import NumberOperator from './components/operators/NumberOperator.svelte';
+	import StringOperator from './components/operators/StringOperator.svelte';
+	import DateOperator from './components/operators/DateOperator.svelte';
+	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
+
+	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
+	interface Operator<T> {
+		neq?: T | T[];
+		eq?: T | T[];
+		gt?: T | T[];
+		gte?: T | T[];
+		lt?: T | T[];
+		lte?: T | T[];
+	}
+	
+	interface StringOperator {
+		neq?: string | string[];
+		eq?: string | string[];
+		startsWith?: string | string[];
+		endsWith?: string | string[];
+		contains?: string | string[];
+	}
+	
+	type Identifier = string;
+	
+	interface IdentifierOperator {
+		neq?: Identifier | Identifier[];
+		eq?: Identifier | Identifier[];
+	}
+	
+	type NumberWithOperator = number | Operator<number>;
+	type IdentifierWithOperator = Identifier | IdentifierOperator;
+	type DateWithOperator = string | Operator<string>;
+	type StringWithOperator = string | StringOperator;
+	
+	interface BaseContainer {
+		name: string;
+		filters: Filter[];
+		operator?: 'AND' | 'OR' | 'NOT';
+	}
+	
+	interface BaseGroup {
+		containers: BaseContainer[];
+	}
+	
+	// type.ts에 맞게 수정된 Concept 인터페이스
+	interface Concept {
+		concept_id: Identifier;
+		concept_name: string;
+		domain_id: string;
+		vocabulary_id: string;
+		concept_class_id: string;
+		standard_concept: string;
+		concept_code: string;
+		valid_start_date: string;
+		valid_end_date: string;
+		invalid_reason?: string;
+		
+		isExcluded?: boolean;
+		includeDescendants?: boolean;
+		includeMapped?: boolean;
+	}
+	
+	// type.ts에 맞게 수정된 ConceptSet 인터페이스
+	interface ConceptSet {
+		conceptset_id: Identifier;
+		name: string;
+		items: Concept[];  // expression.items.concept에서 직접 items로 변경
+	}
+	
+	interface CohortDefinition {
+		conceptsets: ConceptSet[];
+		initialGroup: BaseGroup;
+		comparisonGroup?: BaseGroup;
+	}
+	
+	type DomainType = string;
+	
+	interface Filter {
+		type: DomainType;
+		conceptset?: IdentifierWithOperator;
+		first?: boolean;
+		[key: string]: any;
+	}
+	
+	// 현재 필터 속성 값의 타입
+	interface FilterValues {
+		[key: string]: any;
+		conceptset?: IdentifierWithOperator;
+	}
 
 	let pathname = $state(page.url.pathname);
 	let showCohortAIModal = $state(false);
@@ -15,10 +108,187 @@
 	let cohortName = $state('Cohort Name');
 	let cohortDescription = $state('Edit Cohort Description');
 
-	// Types TS 기반 새로운 코호트 구조 정의
-	// 코호트 정의 기본 구조 - CohortDefinition 타입 적용
-	let cohortDefinition = $state({
-		conceptsets: [],
+	/**
+	 * 초기 코호트 정의 구조 생성
+	 * - 기본 인구통계학적 컨셉셋(성별, 인종, 민족성)을 포함
+	 * - 각 컨셉셋은 해당 도메인의 표준 개념들을 포함
+	 */
+	let cohortDefinition = $state<CohortDefinition>({
+		conceptsets: [
+			// 기본 인구통계학적 개념셋 생성
+			// {
+			// 	conceptset_id: '1',
+			// 	name: '성별',
+			// 	items: [
+			// 		{
+			// 			concept_id: '8507',
+			// 			concept_name: 'Male',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '248153007',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8532',
+			// 			concept_name: 'Female',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '248152002',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8521',
+			// 			concept_name: 'Unknown',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '1220005',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8551',
+			// 			concept_name: 'Other',
+			// 			domain_id: 'Gender',
+			// 			vocabulary_id: 'SNOMED', 
+			// 			concept_class_id: 'Gender',
+			// 			standard_concept: 'S',
+			// 			concept_code: '385435006',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		}
+			// 	]
+			// },
+			// {
+			// 	conceptset_id: '2',
+			// 	name: '인종',
+			// 	items: [
+			// 		{
+			// 			concept_id: '8515',
+			// 			concept_name: 'Asian',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280000',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8516',
+			// 			concept_name: 'Black',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280001',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8527',
+			// 			concept_name: 'White',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280002',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8552',
+			// 			concept_name: 'Hispanic',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280003',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8522',
+			// 			concept_name: 'Native Hawaiian or Other Pacific Islander',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280004',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '8657',
+			// 			concept_name: 'American Indian or Alaska Native',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280005',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '0',
+			// 			concept_name: 'Unknown',
+			// 			domain_id: 'Race',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Race',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280006',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		}
+			// 	]
+			// },
+			// {
+			// 	conceptset_id: '3',
+			// 	name: '민족성',
+			// 	items: [
+			// 		{
+			// 			concept_id: '38003563',
+			// 			concept_name: 'Hispanic',
+			// 			domain_id: 'Ethnicity',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Ethnicity',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280007',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '38003564',
+			// 			concept_name: 'Not Hispanic',
+			// 			domain_id: 'Ethnicity',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Ethnicity',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280008',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		},
+			// 		{
+			// 			concept_id: '0',
+			// 			concept_name: 'Unknown',
+			// 			domain_id: 'Ethnicity',
+			// 			vocabulary_id: 'SNOMED',
+			// 			concept_class_id: 'Ethnicity',
+			// 			standard_concept: 'S',
+			// 			concept_code: '315280009',
+			// 			valid_start_date: '1970-01-01',
+			// 			valid_end_date: '2099-12-31'
+			// 		}
+			// 	]
+			// }
+		],
 		initialGroup: {
 			containers: [
 				// 첫 번째 컨테이너 (필수)
@@ -40,7 +310,7 @@
 	});
 
 	// Handle AI generated cohort
-	function handleCohortAISubmit(data) {
+	function handleCohortAISubmit(data: any) {
 		console.log('AI Cohort Data:', data);
 		// Here you would process the AI-generated cohort definition
 		// and update the cohortDefinition state
@@ -100,8 +370,12 @@
 			type: 'visit_occurrence',
 			name: 'Visit Occurrence',
 			description: 'Find patients based on hospital visits.'
+		},
+		{
+			type: 'demographic',
+			name: 'Demographics',
+			description: 'Find patients based on demographic information like gender, race, and ethnicity.'
 		}
-		// Demographic filter is commented out in the types.ts file, so we'll exclude it for now
 	];
 
 	// 도메인별 속성 정의
@@ -274,20 +548,25 @@
 			{ name: 'source', label: 'Source', type: 'concept' },
 			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' },
 			{ name: 'placeOfService', label: 'Place of Service', type: 'concept' }
+		],
+		demographic: [
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'raceType', label: 'Race', type: 'concept' },
+			{ name: 'ethnicityType', label: 'Ethnicity', type: 'concept' }
 		]
 	};
 
 	// 편집 관련 상태 변수
-	let selectedDomainType = $state(null); // 선택된 도메인 타입
-	let editingFilterIndex = $state(null); // 편집할 필터 인덱스
-	let editingGroupType = $state('initialGroup'); // 편집할 그룹 타입 - 'initialGroup' 또는 'comparisonGroup'
-	let editingContainerIndex = $state(0); // 편집할 컨테이너 인덱스
+	let selectedDomainType = $state<DomainType | null>(null); // 선택된 도메인 타입
+	let editingFilterIndex = $state<number | null>(null); // 편집할 필터 인덱스
+	let editingGroupType = $state<'initialGroup' | 'comparisonGroup'>('initialGroup'); // 편집할 그룹 타입
+	let editingContainerIndex = $state<number>(0); // 편집할 컨테이너 인덱스
 
 	// 현재 편집중인 필터 속성 값
-	let currentFilterValues = $state({});
+	let currentFilterValues = $state<FilterValues>({});
 
 	// 임시 값 저장 (범위 입력 등을 위한)
-	let tempRangeValues = $state({});
+	let tempRangeValues = $state<{[key: string]: {min?: string; max?: string; start?: string; end?: string}}>({});
 
 	// 드래그 앤 드롭 관련 변수
 	let draggedItem = $state(null);
@@ -347,21 +626,21 @@
 	}
 
 	// 필터 수정 함수
-	function editFilter(groupType, containerIndex, filterIndex) {
+	function editFilter(groupType: 'initialGroup' | 'comparisonGroup', containerIndex: number, filterIndex: number) {
 		editingGroupType = groupType;
 		editingContainerIndex = containerIndex;
 		editingFilterIndex = filterIndex;
 
-		const filter = cohortDefinition[groupType].containers[containerIndex].filters[filterIndex];
+		const filter = cohortDefinition[groupType].containers[containerIndex].filters[filterIndex] as Filter;
 		selectedDomainType = filter.type;
 
 		// 기존 값 로드
-		currentFilterValues = { ...filter };
+		currentFilterValues = { ...filter } as FilterValues;
 		delete currentFilterValues.type; // type 속성 제외
 	}
 
 	// 필터 삭제 함수
-	function removeFilter(groupType, containerIndex, filterIndex) {
+	function removeFilter(groupType: 'initialGroup' | 'comparisonGroup', containerIndex: number, filterIndex: number) {
 		cohortDefinition[groupType].containers[containerIndex].filters.splice(filterIndex, 1);
 	}
 
@@ -489,14 +768,18 @@
 	}
 
 	// 컨셉셋 업데이트 함수
-	function handleConceptSetUpdate(event) {
+	function handleConceptSetUpdate(event: { detail: { conceptSets: ConceptSet[] } }) {
 		const { conceptSets } = event.detail;
 		cohortDefinition.conceptsets = conceptSets;
 	}
 
 	// 컨셉셋 선택 함수
-	function selectConceptSet(id) {
-		currentFilterValues.conceptset = id;
+	function selectConceptSet(id: Identifier) {
+		if (!currentFilterValues.conceptset) {
+			currentFilterValues = { ...currentFilterValues, conceptset: id };
+		} else {
+			currentFilterValues.conceptset = id;
+		}
 	}
 
 	// 범위값 추출 함수
@@ -511,7 +794,7 @@
 	}
 
 	// 속성값 표시 함수
-	function displayPropertyValue(value, type) {
+	function displayPropertyValue(value: any, type?: string): string {
 		if (value === null || value === undefined) return 'Not specified';
 
 		if (typeof value === 'boolean') {
@@ -520,11 +803,27 @@
 
 		if (typeof value === 'object') {
 			// Operator 객체인 경우 범위 표시
-			if (value.eq !== undefined) return `= ${value.eq}`;
-			if (value.neq !== undefined) return `≠ ${value.neq}`;
+			if (value.eq !== undefined) {
+				// 개념 ID인 경우 개념 이름으로 표시
+				if (type === 'concept' || type === 'conceptset') {
+					const conceptId = value.eq;
+					const concept = findConceptById(conceptId);
+					return concept ? `= ${concept.name}` : `= ${conceptId}`;
+				}
+				return `= ${value.eq}`;
+			}
+			
+			if (value.neq !== undefined) {
+				// 개념 ID인 경우 개념 이름으로 표시
+				if (type === 'concept' || type === 'conceptset') {
+					const conceptId = value.neq;
+					const concept = findConceptById(conceptId);
+					return concept ? `≠ ${concept.name}` : `≠ ${conceptId}`;
+				}
+				return `≠ ${value.neq}`;
+			}
 
 			let result = '';
-			// if (value.gte !== undefined) result += `≥ ${value.gte}`;
 			if (value.gte !== undefined) result += `between ${value.gte}`;
 			if (value.gt !== undefined) result += `> ${value.gt}`;
 			if (
@@ -532,7 +831,6 @@
 				(value.lte !== undefined || value.lt !== undefined)
 			)
 				result += ' and ';
-			// if (value.lte !== undefined) result += `≤ ${value.lte}`;
 			if (value.lte !== undefined) result += `${value.lte}`;
 			if (value.lt !== undefined) result += `< ${value.lt}`;
 
@@ -544,7 +842,28 @@
 			return result || JSON.stringify(value);
 		}
 
+		// 개념 ID를 개념 이름으로 변환
+		if (type === 'concept' || type === 'conceptset') {
+			const concept = findConceptById(value);
+			return concept ? concept.name : value.toString();
+		}
+
 		return value.toString();
+	}
+
+	// 개념 ID로 개념 찾기
+	function findConceptById(conceptId: string): {id: string, name: string} | undefined {
+		for (const conceptSet of cohortDefinition.conceptsets) {
+			for (const item of conceptSet.items) {
+				if (item.concept_id === conceptId) {
+					return {
+						id: item.concept_id,
+						name: item.concept_name
+					};
+				}
+			}
+		}
+		return undefined;
 	}
 
 	// 컨테이너 순서 변경 함수
@@ -591,6 +910,29 @@
 		}
 
 		cohortDefinition[groupType].containers = containers;
+	}
+
+	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
+	function getConceptsByDomain(domainId: string): {id: string, name: string}[] {
+		return cohortDefinition.conceptsets
+			.flatMap(cs => cs.items
+				.filter(item => item.domain_id === domainId)
+				.map(item => ({
+					id: item.concept_id,
+					name: item.concept_name
+				}))
+			);
+	}
+
+	// 특정 컨셉셋 ID의 개념들을 가져오는 함수
+	function getConceptsBySetId(conceptsetId: string): {id: string, name: string}[] {
+		const conceptSet = cohortDefinition.conceptsets.find(cs => cs.conceptset_id === conceptsetId);
+		if (!conceptSet) return [];
+		
+		return conceptSet.items.map(item => ({
+			id: item.concept_id,
+			name: item.concept_name
+		}));
 	}
 </script>
 
@@ -924,7 +1266,7 @@
 												{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 													<div>
 														<span class="font-medium">{property}:</span>
-														{displayPropertyValue(value)}
+														{displayPropertyValue(value, property === 'gender' || property === 'raceType' || property === 'ethnicityType' ? 'concept' : undefined)}
 													</div>
 												{/each}
 											</div>
@@ -1090,7 +1432,7 @@
 													{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 														<div>
 															<span class="font-medium">{property}:</span>
-															{displayPropertyValue(value)}
+															{displayPropertyValue(value, property === 'gender' || property === 'raceType' || property === 'ethnicityType' ? 'concept' : undefined)}
 														</div>
 													{/each}
 												</div>
@@ -1199,193 +1541,66 @@
 								</span>
 							</div>
 						{:else if property.type === 'conceptset'}
-							<select
-								class="w-full rounded-md border border-gray-300 p-2 text-sm"
-								value={currentFilterValues[property.name] || ''}
-								on:change={(e) => {
-									const value = e.target.value === '' ? null : e.target.value;
-									updateFilterValue(property.name, value);
-								}}
-							>
-								<option value="">Any</option>
-								{#each cohortDefinition.conceptsets as conceptSet, i}
-									<option value={conceptSet.conceptset_id}
-										>{conceptSet.name || `Concept Set ${i + 1}`}</option
-									>
-								{/each}
-							</select>
+							<IdentifierOperator
+								value={currentFilterValues[property.name] || {}}
+								options={cohortDefinition.conceptsets.map(cs => ({ id: cs.conceptset_id.toString(), name: cs.name || `Concept Set ${cs.conceptset_id}` }))}
+								placeholder="컨셉셋 선택"
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{:else if property.type === 'concept'}
-							<div class="flex space-x-2">
-								<select
-									class="w-full rounded-md border border-gray-300 p-2 text-sm"
-									value={currentFilterValues[property.name] || ''}
-									on:change={(e) => {
-										const value = e.target.value === '' ? null : e.target.value;
-										updateFilterValue(property.name, value);
-									}}
-								>
-									<option value="">Any</option>
-									{#if property.name === 'gender'}
-										<!-- 성별은 표준화된 값으로 고정 -->
-										<option value="8507">Male</option>
-										<option value="8532">Female</option>
-										<option value="8521">Unknown</option>
-									{:else}
-										<!-- 다른 개념 타입은 사용자가 정의한 컨셉셋에서 가져옴 -->
-										{#each cohortDefinition.conceptsets as conceptSet}
-											{#each conceptSet.expression.items as item}
-												<option value={item.concept.CONCEPT_ID}>
-													{item.concept.CONCEPT_NAME} ({conceptSet.name})
-												</option>
-											{/each}
-										{/each}
-										{#if cohortDefinition.conceptsets.length === 0 || cohortDefinition.conceptsets.every((set) => set.expression.items.length === 0)}
-											<option value="" disabled
-												>No concepts available - Define them in Concept Sets</option
-											>
-										{/if}
-									{/if}
-								</select>
-								<button
-									class="rounded border border-blue-300 bg-blue-100 px-2 py-1 text-sm text-blue-700 hover:bg-blue-200"
-									on:click={() => (showConceptSetModal = true)}
-									title="Manage Concept Sets"
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-4 w-4"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-										/>
-									</svg>
-								</button>
-							</div>
+							{#if property.name === 'gender'}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={getConceptsByDomain('Gender')}
+									placeholder="성별 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+									/>
+							{:else if property.name === 'race'}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={getConceptsByDomain('Race')}
+									placeholder="인종 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+									/>
+							{:else if property.name === 'ethnicity'}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={getConceptsByDomain('Ethnicity')}
+									placeholder="민족 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+									/>
+							{:else}
+								<IdentifierOperator
+									value={currentFilterValues[property.name] || {}}
+									options={cohortDefinition.conceptsets.flatMap(cs => 
+										cs.items 
+											? cs.items.map(item => ({ 
+													id: item.concept_id, 
+													name: `${item.concept_name} (${cs.name})` 
+												}))
+											: []
+									)}
+									placeholder="컨셉 선택"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+								/>
+							{/if}
 						{:else if property.type === 'numberrange'}
-							<div class="flex items-center gap-2">
-								<input
-									type="number"
-									min="0"
-									placeholder="Min"
-									class="w-20 rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'gte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].min = e.target.value;
-										updateNumberRange(
-											property.name,
-											tempRangeValues[property.name].min,
-											tempRangeValues[property.name].max
-										);
-									}}
-								/>
-								<span class="text-gray-600">to</span>
-								<input
-									type="number"
-									min="0"
-									placeholder="Max"
-									class="w-20 rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'lte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].max = e.target.value;
-										updateNumberRange(
-											property.name,
-											tempRangeValues[property.name].min,
-											tempRangeValues[property.name].max
-										);
-									}}
-								/>
-								<span class="text-sm text-gray-600">
-									{property.name === 'age' ||
-									property.name === 'startAge' ||
-									property.name === 'endAge'
-										? 'years'
-										: property.name.includes('length')
-											? 'days'
-											: ''}
-								</span>
-							</div>
+							<NumberOperator
+								value={currentFilterValues[property.name] || {}}
+									placeholder="숫자 입력"
+									on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{:else if property.type === 'daterange'}
-							<div class="flex items-center gap-2">
-								<input
-									type="date"
-									class="rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'gte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].start = e.target.value;
-										updateDateRange(
-											property.name,
-											tempRangeValues[property.name].start,
-											tempRangeValues[property.name].end
-										);
-									}}
-								/>
-								<span class="text-gray-600">to</span>
-								<input
-									type="date"
-									class="rounded-md border border-gray-300 p-1 text-sm"
-									value={extractRangeValue(currentFilterValues[property.name], 'lte')}
-									on:change={(e) => {
-										if (!tempRangeValues[property.name]) tempRangeValues[property.name] = {};
-										tempRangeValues[property.name].end = e.target.value;
-										updateDateRange(
-											property.name,
-											tempRangeValues[property.name].start,
-											tempRangeValues[property.name].end
-										);
-									}}
-								/>
-							</div>
+							<DateOperator
+								value={currentFilterValues[property.name] || {}}
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{:else if property.type === 'string'}
-							<div class="flex items-center gap-2">
-								<select
-									class="rounded-md border border-gray-300 p-1 text-sm"
-									on:change={(e) => {
-										const value =
-											currentFilterValues[property.name]?.eq ||
-											currentFilterValues[property.name]?.contains ||
-											currentFilterValues[property.name]?.startsWith ||
-											currentFilterValues[property.name]?.endsWith ||
-											'';
-										updateStringOperator(property.name, value, e.target.value);
-									}}
-								>
-									<option value="eq">equals</option>
-									<option value="contains">contains</option>
-									<option value="startsWith">starts with</option>
-									<option value="endsWith">ends with</option>
-								</select>
-								<input
-									type="text"
-									class="flex-1 rounded-md border border-gray-300 p-1 text-sm"
-									value={currentFilterValues[property.name]?.eq ||
-										currentFilterValues[property.name]?.contains ||
-										currentFilterValues[property.name]?.startsWith ||
-										currentFilterValues[property.name]?.endsWith ||
-										''}
-									on:change={(e) => {
-										const operator =
-											currentFilterValues[property.name]?.eq !== undefined
-												? 'eq'
-												: currentFilterValues[property.name]?.contains !== undefined
-													? 'contains'
-													: currentFilterValues[property.name]?.startsWith !== undefined
-														? 'startsWith'
-														: currentFilterValues[property.name]?.endsWith !== undefined
-															? 'endsWith'
-															: 'eq';
-										updateStringOperator(property.name, e.target.value, operator);
-									}}
-								/>
-							</div>
+							<StringOperator
+								value={currentFilterValues[property.name] || {}}
+								placeholder="텍스트 입력"
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{/if}
 					</div>
 				{/each}

@@ -1,4 +1,3 @@
-
 <script>
   import { createEventDispatcher } from 'svelte';
   import { 
@@ -33,7 +32,7 @@
   import {
     createDemographicCriteria
   } from '../models/DemographicCriteria.js';
-  import { typeMapping } from '../models/index.js';
+  import { typeMapping } from '../models/index';
   
   // 이벤트 디스패처 설정
   const dispatch = createEventDispatcher();
