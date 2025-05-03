@@ -225,7 +225,7 @@
 										<a href="/custom-chart" 
 											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
 											onmouseenter={() => activeMenu = 'person'}>
-											Chart List
+											Chart Set List
 										</a>
 									</li>
 									<li>
