@@ -3,6 +3,7 @@
     import { tick } from 'svelte';
     import { slide } from 'svelte/transition';
     import GroupedBarChart from '$lib/components/Charts/GroupedBarChart/GroupedBarChart.svelte';
+    import { dndzone } from 'svelte-dnd-action';
 
 
     const targetSetData = {
@@ -18,7 +19,7 @@
         targetName: ["Cohort 1", "Cohort 2", "Cohort 3"]
     }
 
-    const customChartData = [
+    let customChartData = [
         {
             id: "20001",
             name: "Custom Target 1",
@@ -60,6 +61,10 @@
     ]
 
     let expandedStates = targetSetData.targetID.map(() => false);
+
+    function handleDnd({ detail }) {
+        customChartData = detail.items;
+    }
 
     async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
         await tick();
@@ -142,32 +147,49 @@
     </div>
 </div>
 
-<div class="space-y-2 py-4 px-10">
-    {#each customChartData as chart, index}
+<div use:dndzone={{ items: customChartData,
+                    flipDurationMs: 300,
+                    dropTargetStyle: {
+                        backgroundColor: 'transparent',
+                        border: 'none'
+                    }
+                }}
+                onconsider={handleDnd}
+                onfinalize={handleDnd}
+                class="space-y-2 py-4 px-10"
+                >
+    {#each customChartData as chart, index (chart.id)}
         <div class="border rounded-lg overflow-hidden bg-white">
-          <button 
-            class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
-            onclick={() => toggleExpand(index)}
-          >
-            <div class="flex items-start gap-2 flex-1 min-w-0">
-              <svg 
-                class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-1">
-                  <span class="text-xs font-medium text-gray-400 truncate">{chart.id}</span>
+            <button 
+                class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
+                onclick={() => toggleExpand(index)}
+            >
+                <div class="flex items-start gap-2 min-w-0">
+                    <svg 
+                        class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1">
+                        <span class="text-xs font-medium text-gray-400 truncate">{chart.id}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-1">
-                    <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+                <div class="flex items-center gap-2 flex-shrink-0 pr-2">
+                    <svg class="w-5 h-5 cursor-move text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
                 </div>
-              </div>
-            </div>
-          </button>
+            </button>
           
           {#if expandedStates[index]}
             <div class="p-2 border-t text-sm" transition:slide>
