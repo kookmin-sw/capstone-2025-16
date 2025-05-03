@@ -31,12 +31,18 @@
             createdAt: "2024/01/10 10:00",
             chartType: "Bar Chart",
             chartData : [
-                { state: 'California', age: '0-18', population: 5000000 },
-                { state: 'California', age: '19-35', population: 7000000 },
-                { state: 'California', age: '36-60', population: 6000000 },
-                { state: 'Texas', age: '0-18', population: 4000000 },
-                { state: 'Texas', age: '19-35', population: 6500000 },
-                { state: 'Texas', age: '36-60', population: 5500000 },
+                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
+                { group: 'Group 1', target: 'Cohort 4', value: 6000000 },
+                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
+                { group: 'Group 2', target: 'Cohort 4', value: 6000000 },
+                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
+                { group: 'Group 3', target: 'Cohort 4', value: 6000000 },
             ]
         },
         {
@@ -50,12 +56,37 @@
             createdAt: "2024/01/10 10:00",
             chartType: "Bar Chart",
             chartData: [
-                { target: 'Diabetes Group', age: '0-18', population: 5000000 },
-                { target: 'Diabetes Group', age: '19-35', population: 7000000 },
-                { target: 'Diabetes Group', age: '36-60', population: 6000000 },
-                { target: 'Hypertension Group', age: '0-18', population: 4000000 },
-                { target: 'Hypertension Group', age: '19-35', population: 6500000 },
-                { target: 'Hypertension Group', age: '36-60', population: 5500000 },
+                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
+                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
+                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
+            ]
+        },
+        {
+            id: "20003",
+            name: "Custom Target 3",
+            description: "Description for Custom Chart 3",
+            author : {
+                name: "Dr. Kim",
+                department: "Endocrinology"
+            },
+            createdAt: "2024/01/10 10:00",
+            chartType: "Bar Chart",
+            chartData: [
+                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
+                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
+                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
+                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
+                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
             ]
         },
     ]
