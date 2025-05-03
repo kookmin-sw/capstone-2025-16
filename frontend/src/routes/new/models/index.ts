@@ -6,24 +6,24 @@
  */
 
 // 코호트 표현식 - 최상위 객체
-export * from './CohortExpression.js';
+export * from './CohortExpression';
 
 // 개념 집합 관련
-export * from './ConceptSet.js';
+export * from './ConceptSet';
 
 // 조건 관련
-export * from './Criteria.js';
-export * from './CriteriaGroup.js';
-export * from './WindowedCriteria.js';
+export * from './Criteria';
+export * from './CriteriaGroup';
+export * from './WindowedCriteria';
 
 // 인구통계학 관련
-export * from './DemographicCriteria.js';
+export * from './DemographicCriteria';
 
 // 포함 규칙 관련
-export * from './InclusionRule.js';
+export * from './InclusionRule';
 
 // 종료 전략 관련
-export * from './EndStrategy.js';
+export * from './EndStrategy';
 
 /**
  * 새로운 빈 코호트 정의 생성

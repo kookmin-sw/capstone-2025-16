@@ -5,11 +5,11 @@
  * 코호트 표현식은 코호트 정의의 모든 요소를 포함하는 최상위 객체입니다.
  */
 
-import { createConceptSet } from './ConceptSet.js';
-import { createInclusionRule } from './InclusionRule.js';
-import { getStrategyFromObject } from './EndStrategy.js';
-import { createCriteria } from './Criteria.js';
-import { createCriteriaGroup } from './CriteriaGroup.js';
+import { createConceptSet } from './ConceptSet';
+import { createInclusionRule } from './InclusionRule';
+import { getStrategyFromObject } from './EndStrategy';
+import { createCriteria } from './Criteria';
+import { createCriteriaGroup } from './CriteriaGroup';
 
 /**
  * 새 코호트 표현식 객체 생성

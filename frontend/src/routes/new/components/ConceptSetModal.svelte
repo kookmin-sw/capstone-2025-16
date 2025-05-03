@@ -6,7 +6,7 @@
   - Search and add concepts
   - Edit concept properties (include/exclude, include descendants, include mapped concepts) 
 -->
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { 
     createConceptSet, 
@@ -14,519 +14,528 @@
     removeConceptFromSet, 
     updateConceptSetItem,
     exportConceptSetToJson,
-    importConceptSetFromJson
-  } from '../models/ConceptSet.js';
+    importConceptSetFromJson,
+    type ConceptSet,
+    type Concept
+  } from '../models/ConceptSet';
   
-  // Event dispatcher setup
+  // 인터페이스 정의
+  export let show = false;
+  export let conceptSets: ConceptSet[] = [];
+  
+  // 이벤트 디스패처
   const dispatch = createEventDispatcher();
   
-  // Modal visibility
-  export let show = false;
+  // 현재 편집 중인 개념 집합
+  let editingConceptSet: ConceptSet | null = null;
+  let activeTab = 'list'; // list, edit, search, import, export
   
-  // Concept set list (from cohort expression)
-  export let conceptSets = [];
+  // 개념 검색 상태
+  let searchQuery = '';
+  let searchResults: Concept[] = [];
+  let isSearching = false;
   
-  // Currently active tab
-  let activeTab = 'list'; // 'list', 'edit', 'search', 'import'
+  // 탭 변경 함수
+  function changeTab(tab: string) {
+    activeTab = tab;
+  }
   
-  // Currently selected concept set index
-  let selectedConceptSetIndex = -1;
-  
-  // Temporary object for editing concept set
-  let editingConceptSet = null;
-  
-  // Create new concept set
+  // 새 개념 집합 생성
   function createNewConceptSet() {
-    const newConceptSet = createConceptSet({
+    const newSet = createConceptSet({
       name: `Concept Set ${conceptSets.length + 1}`,
+      expression: { items: [] }
     });
     
-    // Create data copy
-    const updatedConceptSets = [...conceptSets, newConceptSet];
-    
-    // Notify parent component of update
-    dispatch('update', { conceptSets: updatedConceptSets });
-    
-    // Switch to edit mode
-    selectedConceptSetIndex = updatedConceptSets.length - 1;
-    editConceptSet(selectedConceptSetIndex);
-  }
-  
-  // Delete concept set
-  function deleteConceptSet(index) {
-    if (confirm("Are you sure you want to delete this concept set?")) {
-      const updatedConceptSets = [...conceptSets];
-      updatedConceptSets.splice(index, 1);
-      
-      // Notify parent component of update
-      dispatch('update', { conceptSets: updatedConceptSets });
-      
-      // Reset current selected concept set
-      if (selectedConceptSetIndex === index) {
-        selectedConceptSetIndex = -1;
-        editingConceptSet = null;
-      } else if (selectedConceptSetIndex > index) {
-        selectedConceptSetIndex--;
-      }
-    }
-  }
-  
-  // Start editing concept set
-  function editConceptSet(index) {
-    selectedConceptSetIndex = index;
-    editingConceptSet = JSON.parse(JSON.stringify(conceptSets[index])); // Deep copy
+    editingConceptSet = newSet;
     activeTab = 'edit';
   }
   
-  // Change concept set name
-  function updateConceptSetName(name) {
-    if (editingConceptSet) {
-      editingConceptSet.name = name;
+  // 개념 집합 편집
+  function editConceptSet(set: ConceptSet) {
+    editingConceptSet = { ...set };
+    activeTab = 'edit';
+  }
+  
+  // 개념 집합 삭제
+  function deleteConceptSet(index: number) {
+    if (confirm('Are you sure you want to delete this concept set?')) {
+      conceptSets.splice(index, 1);
+      dispatch('update', { conceptSets });
     }
   }
   
-  // Save editing concept set
-  function saveConceptSet() {
-    if (editingConceptSet && selectedConceptSetIndex >= 0) {
-      const updatedConceptSets = [...conceptSets];
-      updatedConceptSets[selectedConceptSetIndex] = editingConceptSet;
-      
-      // Notify parent component of update
-      dispatch('update', { conceptSets: updatedConceptSets });
-      
-      // Return to list view
-      activeTab = 'list';
-    }
-  }
-  
-  // Update concept set item property
-  function updateItemProperty(conceptId, property, value) {
-    if (editingConceptSet) {
-      const updatedSet = updateConceptSetItem(
-        editingConceptSet, 
-        conceptId, 
-        property, 
-        value
-      );
-      editingConceptSet = updatedSet;
-    }
-  }
-  
-  // Remove item from concept set
-  function removeItem(conceptId) {
-    if (editingConceptSet) {
-      const updatedSet = removeConceptFromSet(editingConceptSet, conceptId);
-      editingConceptSet = updatedSet;
-    }
-  }
-  
-  // Search results (demo virtual data)
-  let searchResults = [];
-  let searchTerm = '';
-  
-  // Search function (API call needed in production)
-  function searchConcepts() {
-    // Demo virtual data - API call needed in production
-    if (searchTerm.trim() === '') {
-      searchResults = [];
-      return;
-    }
+  // 개념 검색
+  async function searchConcepts() {
+    if (!searchQuery.trim()) return;
     
-    // Demo virtual search results
-    searchResults = [
-      {
-        CONCEPT_ID: 1,
-        CONCEPT_NAME: "Type 2 diabetes mellitus",
-        STANDARD_CONCEPT: "S",
-        STANDARD_CONCEPT_CAPTION: "Standard",
-        INVALID_REASON: null,
-        INVALID_REASON_CAPTION: null,
-        CONCEPT_CODE: "44054006",
-        DOMAIN_ID: "Condition",
-        VOCABULARY_ID: "SNOMED",
-        CONCEPT_CLASS_ID: "Clinical Finding"
-      },
-      {
-        CONCEPT_ID: 2,
-        CONCEPT_NAME: "Hypertension",
-        STANDARD_CONCEPT: "S",
-        STANDARD_CONCEPT_CAPTION: "Standard",
-        INVALID_REASON: null,
-        INVALID_REASON_CAPTION: null,
-        CONCEPT_CODE: "38341003",
-        DOMAIN_ID: "Condition",
-        VOCABULARY_ID: "SNOMED",
-        CONCEPT_CLASS_ID: "Clinical Finding"
-      },
-      {
-        CONCEPT_ID: 3,
-        CONCEPT_NAME: "Myocardial infarction",
-        STANDARD_CONCEPT: "S",
-        STANDARD_CONCEPT_CAPTION: "Standard",
-        INVALID_REASON: null,
-        INVALID_REASON_CAPTION: null,
-        CONCEPT_CODE: "22298006",
-        DOMAIN_ID: "Condition",
-        VOCABULARY_ID: "SNOMED",
-        CONCEPT_CLASS_ID: "Clinical Finding"
-      }
-    ].filter(concept => 
-      concept.CONCEPT_NAME.toLowerCase().includes(searchTerm.toLowerCase())
+    isSearching = true;
+    try {
+      // 실제 서비스에서는 API 호출로 구현
+      // 예제에서는 더미 데이터 반환
+      await new Promise(resolve => setTimeout(resolve, 500));
+      searchResults = [
+        {
+          concept_id: '1',
+          concept_name: 'Hypertension',
+          domain_id: 'Condition',
+          vocabulary_id: 'SNOMED',
+          concept_class_id: 'Clinical Finding'
+        },
+        {
+          concept_id: '2',
+          concept_name: 'Diabetes mellitus type 2',
+          domain_id: 'Condition',
+          vocabulary_id: 'SNOMED',
+          concept_class_id: 'Clinical Finding'
+        },
+        {
+          concept_id: '3',
+          concept_name: 'Asthma',
+          domain_id: 'Condition',
+          vocabulary_id: 'SNOMED',
+          concept_class_id: 'Clinical Finding'
+        }
+      ];
+    } catch (error) {
+      console.error('Error searching concepts:', error);
+      searchResults = [];
+    } finally {
+      isSearching = false;
+    }
+  }
+  
+  // 개념 집합에 개념 추가
+  function addConcept(concept: Concept) {
+    if (!editingConceptSet) return;
+    
+    editingConceptSet = addConceptToSet(editingConceptSet, concept);
+  }
+  
+  // 개념 집합에서 개념 제거
+  function removeConcept(index: number) {
+    if (!editingConceptSet) return;
+    
+    editingConceptSet = removeConceptFromSet(editingConceptSet, index);
+  }
+  
+  // 개념 속성 업데이트
+  function updateConcept(index: number, isExcluded: boolean, includeDescendants: boolean, includeMapped: boolean) {
+    if (!editingConceptSet) return;
+    
+    editingConceptSet = updateConceptSetItem(
+      editingConceptSet,
+      index,
+      isExcluded,
+      includeDescendants,
+      includeMapped
     );
   }
   
-  // Add concept from search results
-  function addConceptFromSearch(concept) {
-    if (editingConceptSet) {
-      const updatedSet = addConceptToSet(editingConceptSet, concept);
-      editingConceptSet = updatedSet;
+  // 변경사항 저장
+  function saveChanges() {
+    if (!editingConceptSet) return;
+    
+    const index = conceptSets.findIndex(set => set.conceptset_id === editingConceptSet?.conceptset_id);
+    
+    if (index === -1) {
+      // 새 개념 집합 추가
+      conceptSets = [...conceptSets, editingConceptSet];
+    } else {
+      // 기존 개념 집합 업데이트
+      conceptSets[index] = editingConceptSet;
     }
+    
+    dispatch('update', { conceptSets });
+    activeTab = 'list';
   }
   
-  // JSON import/export
-  let importJson = '';
-  
+  // JSON 내보내기
   function exportToJson() {
-    if (editingConceptSet) {
-      return exportConceptSetToJson(editingConceptSet);
-    }
-    return '';
+    if (!editingConceptSet) return;
+    
+    const json = exportConceptSetToJson(editingConceptSet);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${editingConceptSet.name.replace(/\s+/g, '_')}.json`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
   }
   
-  function importFromJson() {
-    try {
-      const imported = importConceptSetFromJson(importJson);
-      
-      // Validation (at least name exists)
-      if (!imported.name) {
-        alert('Invalid concept set JSON.');
-        return;
+  // JSON 가져오기
+  async function importFromJson(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (!target.files?.length) return;
+    
+    const file = target.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const json = e.target?.result as string;
+        const importedSet = importConceptSetFromJson(json);
+        
+        editingConceptSet = importedSet;
+        activeTab = 'edit';
+      } catch (error) {
+        console.error('Error importing concept set:', error);
+        alert('Failed to import concept set. Invalid format.');
       }
-      
-      const updatedConceptSets = [...conceptSets, imported];
-      
-      // Notify parent component of update
-      dispatch('update', { conceptSets: updatedConceptSets });
-      
-      // Switch to edit mode
-      selectedConceptSetIndex = updatedConceptSets.length - 1;
-      editConceptSet(selectedConceptSetIndex);
-      
-      // Reset input
-      importJson = '';
-      
-      // Success message
-      alert('Concept set imported successfully.');
-    } catch (e) {
-      alert('JSON parsing error: ' + e.message);
-    }
+    };
+    
+    reader.readAsText(file);
   }
   
-  // Close modal
+  // 모달 닫기
   function closeModal() {
     show = false;
     dispatch('close');
   }
 </script>
 
+<!-- 모달 컨테이너 -->
 {#if show}
-  <!-- Modal overlay -->
-  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <!-- Modal container -->
-    <div class="bg-white rounded-lg shadow-xl w-[800px] max-h-[90vh] flex flex-col">
-      <!-- Modal header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b">
-        <h2 class="text-xl font-bold text-gray-800">Concept Set Management</h2>
-        <button 
-          class="text-gray-400 hover:text-gray-600"
-          on:click={closeModal}
-        >
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
+      <!-- 모달 헤더 -->
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-xl font-bold text-gray-900">Concept Set Manager</h2>
+        <button class="text-gray-600 hover:text-gray-900" on:click={closeModal}>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
       
-      <!-- Modal tabs -->
-      <div class="flex border-b">
-        <button 
-          class="px-4 py-2 text-sm font-medium {activeTab === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
-          on:click={() => activeTab = 'list'}
+      <!-- 탭 메뉴 -->
+      <div class="mb-6 flex border-b border-gray-200">
+        <button
+          class="px-4 py-2 {activeTab === 'list' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
+          on:click={() => changeTab('list')}
         >
-          Concept Set List
+          Concept Sets
         </button>
-        {#if editingConceptSet}
-          <button 
-            class="px-4 py-2 text-sm font-medium {activeTab === 'edit' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
-            on:click={() => activeTab = 'edit'}
-          >
-            Edit {editingConceptSet.name}
-          </button>
-          <button 
-            class="px-4 py-2 text-sm font-medium {activeTab === 'search' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
-            on:click={() => activeTab = 'search'}
-          >
-            Search Concepts
-          </button>
-        {/if}
-        <button 
-          class="px-4 py-2 text-sm font-medium {activeTab === 'import' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}"
-          on:click={() => activeTab = 'import'}
+        <button
+          class="px-4 py-2 {activeTab === 'edit' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
+          on:click={() => changeTab('edit')}
+          disabled={!editingConceptSet}
         >
-          Import/Export
+          Edit
+        </button>
+        <button
+          class="px-4 py-2 {activeTab === 'search' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
+          on:click={() => changeTab('search')}
+          disabled={!editingConceptSet}
+        >
+          Search
+        </button>
+        <button
+          class="px-4 py-2 {activeTab === 'import' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
+          on:click={() => changeTab('import')}
+        >
+          Import
+        </button>
+        <button
+          class="px-4 py-2 {activeTab === 'export' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}"
+          on:click={() => changeTab('export')}
+          disabled={!editingConceptSet}
+        >
+          Export
         </button>
       </div>
       
-      <!-- Modal content -->
-      <div class="flex-1 p-6 overflow-auto">
-        <!-- Concept set list tab -->
+      <!-- 탭 컨텐츠 -->
+      <div class="max-h-96 overflow-y-auto">
+        <!-- 목록 탭 -->
         {#if activeTab === 'list'}
-          <div class="flex justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-800">Concept Set List</h3>
-            <button 
-              class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-              on:click={createNewConceptSet}
-            >
-              + New Concept Set
-            </button>
-          </div>
-          
-          {#if conceptSets.length === 0}
-            <div class="text-center py-10 text-gray-500">
-              No concept sets. Create a new concept set.
-            </div>
-          {:else}
-            <div class="space-y-2">
-              {#each conceptSets as conceptSet, index}
-                <div class="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
-                  <div>
-                    <p class="font-medium text-gray-800">{conceptSet.name}</p>
-                    <p class="text-sm text-gray-500">{conceptSet.expression.items.length} concepts</p>
-                  </div>
-                  <div class="flex space-x-2">
-                    <button 
-                      class="px-2 py-1 text-sm text-blue-600 hover:text-blue-800"
-                      on:click={() => editConceptSet(index)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      class="px-2 py-1 text-sm text-red-600 hover:text-red-800"
-                      on:click={() => deleteConceptSet(index)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        
-        <!-- Concept set edit tab -->
-        {:else if activeTab === 'edit' && editingConceptSet}
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Concept Set Name</label>
-            <input 
-              type="text" 
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-              value={editingConceptSet.name}
-              on:input={(e) => updateConceptSetName(e.target.value)}
-            />
-          </div>
-          
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-800">Included Concepts</h3>
-            <button 
-              class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-              on:click={() => activeTab = 'search'}
-            >
-              + Add Concept
-            </button>
-          </div>
-          
-          {#if editingConceptSet.expression.items.length === 0}
-            <div class="text-center py-10 text-gray-500">
-              No concepts. Add concepts from the search tab.
-            </div>
-          {:else}
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exclude</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Include Descendants</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Include Mapped</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  {#each editingConceptSet.expression.items as item}
-                    <tr>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.concept.CONCEPT_ID}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.concept.CONCEPT_NAME}</td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <input 
-                          type="checkbox" 
-                          class="h-4 w-4 text-blue-600 rounded border-gray-300"
-                          checked={item.isExcluded}
-                          on:change={(e) => updateItemProperty(item.concept.CONCEPT_ID, 'isExcluded', e.target.checked)}
-                        />
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <input 
-                          type="checkbox" 
-                          class="h-4 w-4 text-blue-600 rounded border-gray-300"
-                          checked={item.includeDescendants}
-                          on:change={(e) => updateItemProperty(item.concept.CONCEPT_ID, 'includeDescendants', e.target.checked)}
-                        />
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <input 
-                          type="checkbox" 
-                          class="h-4 w-4 text-blue-600 rounded border-gray-300"
-                          checked={item.includeMapped}
-                          on:change={(e) => updateItemProperty(item.concept.CONCEPT_ID, 'includeMapped', e.target.checked)}
-                        />
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button 
-                          class="text-red-600 hover:text-red-900"
-                          on:click={() => removeItem(item.concept.CONCEPT_ID)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
-          {/if}
-          
-          <div class="mt-6 flex justify-end">
-            <button 
-              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              on:click={saveConceptSet}
-            >
-              Save
-            </button>
-          </div>
-        
-        <!-- Concept search tab -->
-        {:else if activeTab === 'search' && editingConceptSet}
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Search Concepts</label>
-            <div class="mt-1 flex rounded-md shadow-sm">
-              <input 
-                type="text" 
-                class="flex-1 min-w-0 block w-full px-3 py-2 rounded-l-md border border-gray-300"
-                placeholder="Search by concept name (e.g., diabetes, hypertension)"
-                bind:value={searchTerm}
-              />
-              <button 
-                class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100"
-                on:click={searchConcepts}
+          <div class="flex flex-col">
+            <!-- 개념 집합 목록 헤더 -->
+            <div class="mb-4 flex justify-between">
+              <h3 class="text-lg font-medium text-gray-700">Available Concept Sets</h3>
+              <button
+                class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                on:click={createNewConceptSet}
               >
-                Search
-              </button>
-            </div>
-            <p class="mt-1 text-xs text-gray-500">* In this demo, try searching with keywords like Type 2 diabetes, Hypertension, Myocardial infarction.</p>
-          </div>
-          
-          {#if searchResults.length > 0}
-            <div class="overflow-x-auto border rounded-md">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vocabulary</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  {#each searchResults as concept}
-                    <tr>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{concept.CONCEPT_ID}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{concept.CONCEPT_NAME}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{concept.DOMAIN_ID}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{concept.VOCABULARY_ID}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{concept.CONCEPT_CLASS_ID}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button 
-                          class="text-blue-600 hover:text-blue-900"
-                          on:click={() => addConceptFromSearch(concept)}
-                        >
-                          Add
-                        </button>
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
-          {:else if searchTerm}
-            <div class="text-center py-10 text-gray-500">
-              No search results. Try a different keyword.
-            </div>
-          {/if}
-        
-        <!-- Import/Export tab -->
-        {:else if activeTab === 'import'}
-          <div class="space-y-6">
-            <div>
-              <h3 class="text-lg font-medium text-gray-800 mb-2">Import Concept Set</h3>
-              <textarea 
-                class="w-full h-40 p-3 border rounded-md"
-                placeholder="Paste concept set JSON here"
-                bind:value={importJson}
-              ></textarea>
-              <button 
-                class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                disabled={!importJson.trim()}
-                on:click={importFromJson}
-              >
-                Import
+                New Concept Set
               </button>
             </div>
             
-            {#if editingConceptSet}
-              <div>
-                <h3 class="text-lg font-medium text-gray-800 mb-2">Export Concept Set</h3>
-                <textarea 
-                  class="w-full h-40 p-3 border rounded-md"
-                  readonly
-                  value={exportToJson()}
-                ></textarea>
-                <button 
-                  class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                  on:click={() => {
-                    // Copy to clipboard
-                    navigator.clipboard.writeText(exportToJson())
-                      .then(() => alert('Copied to clipboard!'))
-                      .catch(err => alert('Failed to copy to clipboard: ' + err));
-                  }}
-                >
-                  Copy to Clipboard
-                </button>
+            <!-- 개념 집합 목록 -->
+            {#if conceptSets.length === 0}
+              <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
+                <p class="text-center text-sm text-gray-500">No concept sets defined yet.</p>
+              </div>
+            {:else}
+              <div class="space-y-2">
+                {#each conceptSets as set, i}
+                  <div class="flex items-center justify-between rounded-md border border-gray-200 p-3 hover:bg-gray-50">
+                    <span class="font-medium text-gray-700">{set.name}</span>
+                    <div class="flex space-x-2">
+                      <button
+                        class="rounded bg-blue-100 px-2 py-1 text-xs text-blue-600 hover:bg-blue-200"
+                        on:click={() => editConceptSet(set)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        class="rounded bg-red-100 px-2 py-1 text-xs text-red-600 hover:bg-red-200"
+                        on:click={() => deleteConceptSet(i)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                {/each}
               </div>
             {/if}
           </div>
         {/if}
-      </div>
-      
-      <!-- Modal footer -->
-      <div class="px-6 py-4 border-t flex justify-end">
-        <button 
-          class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-          on:click={closeModal}
-        >
-          Close
-        </button>
+        
+        <!-- 편집 모드 탭 -->
+        {#if activeTab === 'edit' && editingConceptSet}
+          <div class="grid grid-cols-1 gap-6">
+            <!-- 개념 집합 이름 입력 -->
+            <div>
+              <label for="conceptSetName" class="block mb-2 text-sm font-medium text-gray-700">Concept Set Name</label>
+              <input 
+                type="text"
+                id="conceptSetName"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                bind:value={editingConceptSet.name}
+              />
+            </div>
+            
+            <!-- 개념 목록 테이블 -->
+            <div>
+              <h3 class="mb-3 text-base font-medium text-gray-700">Included Concepts</h3>
+              
+              {#if editingConceptSet.expression?.items.length === 0}
+                <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
+                  <p class="text-center text-sm text-gray-500">No concepts added to this set yet.</p>
+                </div>
+              {:else}
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Concept</th>
+                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
+                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vocabulary</th>
+                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Exclude</th>
+                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Descendants</th>
+                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Mapped</th>
+                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                      {#each editingConceptSet.expression?.items || [] as item, index}
+                        <tr class="hover:bg-gray-50">
+                          <td class="whitespace-nowrap px-2 py-2 text-sm">
+                            <div class="font-medium text-gray-900">{item.concept.concept_name}</div>
+                            <div class="text-xs text-gray-500">{item.concept.concept_id}</div>
+                          </td>
+                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.concept.domain_id || '-'}</td>
+                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{item.concept.vocabulary_id || '-'}</td>
+                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
+                            <input
+                              type="checkbox"
+                              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              checked={item.isExcluded}
+                              on:change={(e) => updateConcept(
+                                index,
+                                e.target.checked,
+                                item.includeDescendants,
+                                item.includeMapped
+                              )}
+                            />
+                          </td>
+                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
+                            <input
+                              type="checkbox"
+                              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              checked={item.includeDescendants}
+                              on:change={(e) => updateConcept(
+                                index,
+                                item.isExcluded,
+                                e.target.checked,
+                                item.includeMapped
+                              )}
+                            />
+                          </td>
+                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
+                            <input
+                              type="checkbox"
+                              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              checked={item.includeMapped}
+                              on:change={(e) => updateConcept(
+                                index,
+                                item.isExcluded,
+                                item.includeDescendants,
+                                e.target.checked
+                              )}
+                            />
+                          </td>
+                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
+                            <button
+                              class="rounded bg-red-100 px-2 py-1 text-xs text-red-600 hover:bg-red-200"
+                              on:click={() => removeConcept(index)}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      {/each}
+                    </tbody>
+                  </table>
+                </div>
+              {/if}
+              
+              <!-- 개념 추가 버튼 -->
+              <div class="mt-3 flex justify-end">
+                <button
+                  class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                  on:click={() => changeTab('search')}
+                >
+                  Add Concepts
+                </button>
+              </div>
+            </div>
+            
+            <!-- 저장 버튼 -->
+            <div class="mt-4 flex justify-end">
+              <button
+                class="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                on:click={saveChanges}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        {/if}
+        
+        <!-- 검색 탭 -->
+        {#if activeTab === 'search' && editingConceptSet}
+          <div class="grid grid-cols-1 gap-6">
+            <div>
+              <h3 class="mb-3 text-base font-medium text-gray-700">Search Concepts</h3>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="Search by concept name, code, etc."
+                  class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  bind:value={searchQuery}
+                />
+                <button
+                  class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  on:click={searchConcepts}
+                  disabled={isSearching}
+                >
+                  {isSearching ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            </div>
+            
+            <!-- 검색 결과 -->
+            <div>
+              <h3 class="mb-3 text-base font-medium text-gray-700">Results</h3>
+              
+              {#if isSearching}
+                <div class="flex justify-center p-4">
+                  <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                </div>
+              {:else if searchResults.length === 0}
+                <div class="rounded-md border border-gray-200 bg-gray-50 p-4">
+                  <p class="text-center text-sm text-gray-500">No results found. Try another search term.</p>
+                </div>
+              {:else}
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Concept</th>
+                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Domain</th>
+                        <th class="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vocabulary</th>
+                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Class</th>
+                        <th class="px-2 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                      {#each searchResults as concept}
+                        <tr class="hover:bg-gray-50">
+                          <td class="whitespace-nowrap px-2 py-2 text-sm">
+                            <div class="font-medium text-gray-900">{concept.concept_name}</div>
+                            <div class="text-xs text-gray-500">{concept.concept_id}</div>
+                          </td>
+                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.domain_id || '-'}</td>
+                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.vocabulary_id || '-'}</td>
+                          <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{concept.concept_class_id || '-'}</td>
+                          <td class="whitespace-nowrap px-2 py-2 text-center text-sm">
+                            <button
+                              class="rounded bg-green-100 px-2 py-1 text-xs text-green-600 hover:bg-green-200"
+                              on:click={() => addConcept(concept)}
+                            >
+                              Add
+                            </button>
+                          </td>
+                        </tr>
+                      {/each}
+                    </tbody>
+                  </table>
+                </div>
+              {/if}
+            </div>
+            
+            <!-- 뒤로 가기 버튼 -->
+            <div class="mt-4 flex justify-end">
+              <button
+                class="rounded bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                on:click={() => changeTab('edit')}
+              >
+                Back to Edit
+              </button>
+            </div>
+          </div>
+        {/if}
+        
+        <!-- 가져오기 탭 -->
+        {#if activeTab === 'import'}
+          <div class="grid grid-cols-1 gap-6">
+            <div>
+              <h3 class="mb-3 text-base font-medium text-gray-700">Import Concept Set from JSON</h3>
+              <p class="mb-4 text-sm text-gray-600">Upload a JSON file containing a concept set definition.</p>
+              
+              <input
+                type="file"
+                accept=".json"
+                class="block w-full text-sm text-gray-500 file:mr-4 file:rounded file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+                on:change={importFromJson}
+              />
+            </div>
+          </div>
+        {/if}
+        
+        <!-- 내보내기 탭 -->
+        {#if activeTab === 'export' && editingConceptSet}
+          <div class="grid grid-cols-1 gap-6">
+            <div>
+              <h3 class="mb-3 text-base font-medium text-gray-700">Export Concept Set as JSON</h3>
+              <p class="mb-4 text-sm text-gray-600">
+                Download the current concept set as a JSON file that can be imported later.
+              </p>
+              
+              <button
+                class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                on:click={exportToJson}
+              >
+                Download JSON
+              </button>
+            </div>
+          </div>
+        {/if}
       </div>
     </div>
   </div>
