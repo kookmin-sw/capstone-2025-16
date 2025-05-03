@@ -199,6 +199,58 @@ export class CohortStatisticsResponse {
     },
   })
   age: { [age_range: string]: number };
+
+  @ApiProperty({
+    description: 'Visit type statistics',
+    example: {
+      'Ambulatory Surgical Center': 100,
+      'Emergency Room - Hospital': 300,
+      'Unknown Visit Type': 200,
+    },
+  })
+  visitType: { [concept_name: string]: number };
+
+  @ApiProperty({
+    description: 'Visit count statistics',
+    example: {
+      '1': 100,
+      '2': 200,
+      '3': 300,
+    },
+  })
+  visitCount: { [count: string]: number };
+
+  @ApiProperty({
+    description: 'Top 10 Drug',
+    example: {
+      Metformin: 450,
+    },
+  })
+  topTenDrug: { [concept_name: string]: number };
+
+  @ApiProperty({
+    description: 'Top 10 Condition',
+    example: {
+      Hypertension: 450,
+    },
+  })
+  topTenCondition: { [concept_name: string]: number };
+
+  @ApiProperty({
+    description: 'Top 10 Procedure',
+    example: {
+      Appendectomy: 450,
+    },
+  })
+  topTenProcedure: { [concept_name: string]: number };
+
+  @ApiProperty({
+    description: 'Top 10 Measurement',
+    example: {
+      'Blood Pressure': 450,
+    },
+  })
+  topTenMeasurement: { [concept_name: string]: number };
 }
 
 export class CreateCohortResponse {

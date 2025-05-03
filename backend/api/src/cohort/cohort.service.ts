@@ -36,7 +36,17 @@ export class CohortService {
       throw new NotFoundException('Cohort not found.');
     }
 
-    const [gender, mortality, age] = await Promise.all([
+    const [
+      gender,
+      mortality,
+      age,
+      visitTypes,
+      visitCounts,
+      topTenDrugs,
+      topTenConditions,
+      topTenProcedures,
+      topTenMeasurements,
+    ] = await Promise.all([
       getBaseDB() // gender
         .selectFrom('cohort_detail')
         .where('cohort_id', '=', id)
@@ -88,12 +98,136 @@ export class CohortService {
           fn.count('age').as('count'),
         ])
         .execute(),
+      getBaseDB()
+        .selectFrom('visit_occurrence')
+        .where('person_id', 'in', (eb) =>
+          eb
+            .selectFrom('cohort_detail')
+            .where('cohort_id', '=', id)
+            .select('person_id'),
+        )
+        .leftJoin('concept', 'visit_concept_id', 'concept_id')
+        .groupBy('concept_name')
+        .select(({ fn }) => [
+          'concept_name',
+          fn.count('concept_name').as('count'),
+        ])
+        .execute(),
+      getBaseDB()
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('visit_occurrence')
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .where('cohort_id', '=', id)
+                .select('person_id'),
+            )
+            .groupBy('person_id')
+            .select(({ fn }) => fn.count('person_id').as('cnt'))
+            .as('tmp'),
+        )
+        .groupBy('cnt')
+        .select(({ fn }) => ['cnt', fn.count('cnt').as('cnt_cnt')])
+        .execute(),
+      getBaseDB()
+        .selectFrom('drug_exposure')
+        .where('person_id', 'in', (eb) =>
+          eb
+            .selectFrom('cohort_detail')
+            .where('cohort_id', '=', id)
+            .select('person_id'),
+        )
+        .leftJoin('concept', 'drug_concept_id', 'concept_id')
+        .groupBy('concept_name')
+        .select(({ fn }) => [
+          'concept_name',
+          fn.count('concept_name').as('count'),
+        ])
+        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
+        .limit(10)
+        .execute(),
+      getBaseDB()
+        .selectFrom('condition_occurrence')
+        .where('person_id', 'in', (eb) =>
+          eb
+            .selectFrom('cohort_detail')
+            .where('cohort_id', '=', id)
+            .select('person_id'),
+        )
+        .leftJoin('concept', 'condition_concept_id', 'concept_id')
+        .groupBy('concept_name')
+        .select(({ fn }) => [
+          'concept_name',
+          fn.count('concept_name').as('count'),
+        ])
+        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
+        .limit(10)
+        .execute(),
+      getBaseDB()
+        .selectFrom('procedure_occurrence')
+        .where('person_id', 'in', (eb) =>
+          eb
+            .selectFrom('cohort_detail')
+            .where('cohort_id', '=', id)
+            .select('person_id'),
+        )
+        .leftJoin('concept', 'procedure_concept_id', 'concept_id')
+        .groupBy('concept_name')
+        .select(({ fn }) => [
+          'concept_name',
+          fn.count('concept_name').as('count'),
+        ])
+        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
+        .limit(10)
+        .execute(),
+      getBaseDB()
+        .selectFrom('measurement')
+        .where('person_id', 'in', (eb) =>
+          eb
+            .selectFrom('cohort_detail')
+            .where('cohort_id', '=', id)
+            .select('person_id'),
+        )
+        .leftJoin('concept', 'measurement_concept_id', 'concept_id')
+        .groupBy('concept_name')
+        .select(({ fn }) => [
+          'concept_name',
+          fn.count('concept_name').as('count'),
+        ])
+        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
+        .limit(10)
+        .execute(),
     ]);
 
     age.sort((a, b) => Number(a.age_start) - Number(b.age_start));
-    const age_range: { [key: string]: number } = {};
+    const age_range: { [age_range: string]: number } = {};
     for (const { age_start, age_end, count } of age) {
       age_range[`${age_start}-${age_end}`] = Number(count);
+    }
+    const visitType: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of visitTypes) {
+      visitType[concept_name ?? 'Unknown Visit Type'] = Number(count);
+    }
+    const visitCount: { [count: string]: number } = {};
+    for (const { cnt, cnt_cnt } of visitCounts) {
+      visitCount[cnt.toString()] = Number(cnt_cnt);
+    }
+    const topTenDrug: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of topTenDrugs) {
+      topTenDrug[concept_name ?? 'Unknown Drug'] = Number(count);
+    }
+    const topTenCondition: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of topTenConditions) {
+      topTenCondition[concept_name ?? 'Unknown Condition'] = Number(count);
+    }
+    const topTenProcedure: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of topTenProcedures) {
+      topTenProcedure[concept_name ?? 'Unknown Procedure'] = Number(count);
+    }
+    const topTenMeasurement: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of topTenMeasurements) {
+      topTenMeasurement[concept_name ?? 'Unknown Measurement'] = Number(count);
     }
 
     return {
@@ -107,6 +241,12 @@ export class CohortService {
         deceased: Number(mortality?.deceased ?? 0),
       },
       age: age_range,
+      visitType,
+      visitCount,
+      topTenDrug,
+      topTenCondition,
+      topTenProcedure,
+      topTenMeasurement,
     };
   }
 
