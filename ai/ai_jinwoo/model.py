@@ -35,12 +35,12 @@ def match_patients(df_target, df_comparator, target_scores, comp_scores, k=1):
     matched_comparator = df_comparator.iloc[indices.flatten()]
     return matched_comparator
 
-def prepare_psm_features(df_target, df_comparator, normalize=True):
+def prepare_psm_features(df_target, df_comparator,k=30, normalize=True):
     feature_cols = ['age', 'gender']
     print("start psm")
     target_scores, comp_scores = calculate_propensity_scores(df_target, df_comparator, feature_cols)
     print("match patients start")
-    matched_comparator = match_patients(df_target, df_comparator, target_scores, comp_scores, k=30)
+    matched_comparator = match_patients(df_target, df_comparator, target_scores, comp_scores, k=k)
     return matched_comparator
 
 
@@ -128,51 +128,61 @@ def train_model(X, y):
     return model
 
 def iterative_shap_train(model, X_train, y_train, X_val, y_val,
-                           initial_ratio=0.1, ratio_increment=0.2, improvement_threshold=0.01, max_iter=3):
-    best_results = evaluate_model(model, X_val, y_val)
+                         initial_ratio=0.1, ratio_increment=0.2,
+                         improvement_threshold=0.01, max_iter=3):
+
+    best_results  = evaluate_model(model, X_val, y_val)
     best_features = X_train.columns.tolist()
-    best_model = model
-    iteration = 0
+    best_model    = model
+    iteration     = 0
     current_ratio = initial_ratio
     print("Initial f1:", best_results["f1"])
-    
+
     while iteration < max_iter:
         print(f"\n--- SHAP Iteration {iteration+1} ---")
         print(f"Using top {current_ratio*100:.0f}% features")
+
         explainer = shap.TreeExplainer(best_model)
-        shap_values = explainer.shap_values(X_train)
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]
-        mean_shap = np.abs(shap_values).mean(axis=0)
-        feature_importance = pd.DataFrame({
-            'feature': X_train.columns,
-            'mean_shap': mean_shap
-        }).sort_values(by='mean_shap', ascending=False)
-        
+        shap_vals   = explainer.shap_values(X_train)
+        if isinstance(shap_vals, list):        
+            shap_vals = shap_vals[1]
+
+        abs_vals       = np.abs(shap_vals)      
+        sum_abs        = abs_vals.sum(axis=1, keepdims=True) 
+        sum_abs[sum_abs == 0] = 1                            
+        rel_pct_vals   = abs_vals / sum_abs * 100            
+        mean_rel_pct   = rel_pct_vals.mean(axis=0)           
+
+        feature_importance = (
+            pd.DataFrame({"feature": X_train.columns,
+                          "mean_pct": mean_rel_pct})         
+              .sort_values("mean_pct", ascending=False)
+        )
+
         num_top_features = int(len(feature_importance) * current_ratio)
-        top_features = feature_importance['feature'].iloc[:num_top_features].tolist()
+        top_features     = feature_importance["feature"].iloc[:num_top_features].tolist()
         print(f"Selected top {num_top_features} features")
-        
-        model_top = XGBClassifier(n_estimators=100, learning_rate=0.05, max_depth=6, random_state=42)
+
+        model_top = XGBClassifier(
+            n_estimators=100, learning_rate=0.05,
+            max_depth=6, random_state=42
+        )
         model_top.fit(X_train[top_features], y_train)
         new_results = evaluate_model(model_top, X_val[top_features], y_val)
         print("New model f1:", new_results["f1"])
-        
-        if new_results["f1"] - best_results["f1"] >= improvement_threshold:
-            print(f"f1 improved by {new_results['f1'] - best_results['f1']:.4f}, updating model and features.")
-            best_results = new_results
-            best_features = top_features
-            best_model = model_top
-            X_train = X_train[top_features]
-            X_val = X_val[top_features]
-        else:
-            print(f"No significant f1 improvement ({new_results['f1'] - best_results['f1']:.4f}). Stopping SHAP iterations.")
-            break
-        
-        current_ratio = min(current_ratio + ratio_increment, 1.0)
-        iteration += 1
 
+        if new_results["f1"] - best_results["f1"] >= improvement_threshold:
+            print(f"f1 improved by {new_results['f1'] - best_results['f1']:.4f} → update.")
+            best_results, best_features, best_model = new_results, top_features, model_top
+            X_train, X_val = X_train[top_features], X_val[top_features]
+        else:
+            print("No significant improvement → stop.")
+            break
+
+        current_ratio = min(current_ratio + ratio_increment, 1.0)
+        iteration    += 1
     return best_model, best_features, best_results, feature_importance
+
 
 def shap_visualization(model, X_train):
     explainer = shap.TreeExplainer(model)
@@ -187,7 +197,6 @@ def shap_visualization(model, X_train):
     
     print("SHAP 기반 Feature Importance:")
     print(feature_importance)
-    shap.summary_plot(shap_values, X_train)
 
 def predict_cohort_probability(model, X_new):
     probabilities = model.predict_proba(X_new)[:, 1]

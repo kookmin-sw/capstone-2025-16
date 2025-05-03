@@ -246,3 +246,29 @@ def get_comparator_cohort(cohort_id: str) -> pd.DataFrame:
     4: "gender"}, inplace=True)
     df['label'] = 0
     return df
+
+def insert_feature_extraction_data(cohort_id, k, final_proc_importances, final_cond_importances, execution_time):
+    client = get_client()
+
+    top_proc_importances = final_proc_importances.head(10)
+    top_cond_importances = final_cond_importances.head(10)
+
+    rows = []
+    for i in range(10):
+        proc_row = top_proc_importances.iloc[i]
+        rank_proc = i + 1  
+        concept_id_proc = int(proc_row['feature'])
+        influence_proc = proc_row['importance']
+        
+        cond_row = top_cond_importances.iloc[i]
+        rank_cond = i + 1  
+        concept_id_cond = int(cond_row['feature'])
+        influence_cond = cond_row['importance']
+
+        rows.append((cohort_id, k, 'procedure', rank_proc, concept_id_proc, influence_proc, int(execution_time)))
+        rows.append((cohort_id, k, 'condition', rank_cond, concept_id_cond, influence_cond, int(execution_time)))
+    
+    client.execute("""
+        INSERT INTO feature_extraction (cohort_id, multiple, domain_name, rank, concept_id, influence, execution_time)
+        VALUES
+    """, rows)
