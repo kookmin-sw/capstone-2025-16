@@ -1,77 +1,60 @@
 <script>
-  export let bioSignal;
+	import { xmlParseToJson } from '$lib/ecgparse.js';
+  import ECGViewer from '$lib/components/ECGViewer.svelte';
 
-  // 이미지 파일 여부 확인 함수
-  function isImage(filePath) {
-    return /\.(jpg|jpeg|png|gif|bmp|svg)$/i.test(filePath);
-  }
+	export let bioSignal;
 </script>
 
 <div class="bio-signal-container">
-  <h2 class="title">Bio Signal Information</h2>
+	<h2 class="title">Bio Signal Information</h2>
 
-  {#each bioSignal as signal}
-    <div class="bio-signal-row">
-      <span class="info"><strong>Date:</strong> {signal.bio_signal_date}</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Concept ID:</strong> {signal.bio_signal_concept_id}</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Source Value:</strong> {signal.bio_signal_source_value}</span>
-    </div>
-    <div class="mt-[16px]">
-      {#if isImage(signal.file_path)}
-        <img class="image-preview" src={signal.file_path} alt="Bio Signal" />
-      {:else}
-        <span class="highlight-blue">{signal.file_path}</span>
-      {/if}
-    </div>
-  {/each}
+	{#each bioSignal as signal, i}
+		<div class="bio-signal-row">
+			<span class="info"><strong>Date:</strong> {signal.bio_signal_date}</span>
+			<span class="divider">|</span>
+			<span class="info"><strong>Concept ID:</strong> {signal.bio_signal_concept_id}</span>
+			<span class="divider">|</span>
+			<span class="info"><strong>Source Value:</strong> {signal.bio_signal_source_value}</span>
+		</div>
+		<ECGViewer filePath="/140474_20160807_0830.xml"/>
+	{/each}
 </div>
 
 <style>
-  .bio-signal-container {
-    padding: 16px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    max-width: 100%;
-  }
+	.bio-signal-container {
+		padding: 16px;
+		background: #f9f9f9;
+		border-radius: 8px;
+		border: 1px solid #ddd;
+		max-width: 100%;
+	}
 
-  .title {
-    font-size: 1.3rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
+	.title {
+		font-size: 1.3rem;
+		font-weight: bold;
+		margin-bottom: 10px;
+	}
 
-  .bio-signal-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    padding: 8px 0;
-    font-size: 1rem;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    white-space: nowrap;
-  }
+	.bio-signal-row {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		padding: 8px 0;
+		font-size: 1rem;
+		background: #fff;
+		border-bottom: 1px solid #ddd;
+		white-space: nowrap;
+	}
 
-  .info {
-    font-weight: normal;
-    font-size: 1.1rem;
-    margin-right: 10px;
-  }
+	.info {
+		font-weight: normal;
+		font-size: 1.1rem;
+		margin-right: 10px;
+	}
 
-  .divider {
-    color: #888;
-    font-weight: bold;
-    margin: 0 10px;
-  }
-  
-  /* 이미지 미리보기 스타일 */
-  .image-preview {
-    max-width: 100px;
-    max-height: 100px;
-    border-radius: 4px;
-    margin-left: 10px;
-    border: 1px solid #ddd;
-  }
+	.divider {
+		color: #888;
+		font-weight: bold;
+		margin: 0 10px;
+	}
 </style>
