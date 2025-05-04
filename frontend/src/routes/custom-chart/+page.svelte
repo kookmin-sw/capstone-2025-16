@@ -90,7 +90,7 @@
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Custom Chart List</h1>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Custom Chart Set List</h1>
       <p class="text-gray-600">Manage your custom charts or create new ones.</p>
     </div>
 
@@ -118,7 +118,7 @@
           href="/custom-chart/new"
           class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 transition-colors"
         >
-          New Chart
+          + New Chart Page
         </a>
       </div>
       
@@ -126,12 +126,11 @@
         <table class="min-w-full">
           <thead>
             <tr class="bg-gray-50 text-left">
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Chart Type</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -147,7 +146,6 @@
                   </a>
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
-                <td class="py-3 px-4 text-sm text-gray-900">{item.chartType}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.createdAt}</td>
               </tr>
