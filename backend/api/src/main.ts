@@ -4,6 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
+  if (process.env.npm_lifecycle_event?.includes('debug')) {
+    process.env.DEBUG = '1';
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // 유효성 검사 파이프 설정
