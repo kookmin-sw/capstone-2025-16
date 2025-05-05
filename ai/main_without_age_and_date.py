@@ -41,64 +41,189 @@ Strict requirements:
        * Example: "first occurrence" → first: true
        * In all other cases, do not include the first field
 
-3. For Measurement criteria:
+3. [CRITICAL] Logical Operators (AND/OR):
+   - If conditions are connected with "AND" in the text, use operator: "AND"
+   - If conditions are connected with "OR" in the text, use operator: "OR"
+   - If no operator is specified, use operator: "AND" as default
+   - Example: "Diagnosed with sepsis-3 AND ARDS" → operator: "AND"
+   - Example: "Serum creatinine ≥ 1.5 mg/dL OR increase of ≥ 0.3 mg/dL" → operator: "OR"
+   - Example: "First ICU admission" (no operator) → operator: "AND" (default)
+
+4. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
    - For any field such as "measurementType", "drugType", "conditionType", etc., 
      do NOT invent or fabricate placeholder concept_id values
-   - If a concept_id is not available, explicitly set the value to null
+   - [CRITICAL] Do NOT include any ~Type field if its value is null
    - [CRITICAL] For negation criteria, use the opposite operator instead of "neq" when possible
-     * Example: "Hemoglobin > 13 g/dL를 제외" → {{ "valueAsNumber": {{ "lte": 13 }} }} (NOT {{ conceptset: {{neq: "6"}} }})
+     * Example: "Exclude Hemoglobin > 13 g/dL" → {{ "valueAsNumber": {{ "lte": 13 }} }} (NOT {{ conceptset: {{neq: "6"}} }})
      * Only use "neq" when the opposite operator cannot express the intended meaning
 
-4. For age criteria:
-   - For dose_era, drug_era, condition_era types:
-     * Include "startAge" and "endAge" with appropriate values
-     * Example: "Patients aged 18-65" → {{ "startAge": 18, "endAge": 65 }}
-   - For all other types (except demographic):
-     * Include "age" with appropriate operator
-     * Example: "Age > 18" → "age": {{ "gt": 18 }}
-   - Demographic type MUST NOT use age field
-     * [CRITICAL] If the cohort has an age criterion, ALL filters MUST include the appropriate age property
+5. [CRITICAL] Exclude age and time-based conditions:
+   - [MUST EXCLUDE] Age-related conditions:
+     * "Patients aged 18-65"
+     * "Age > 18 years"
+     * "Age between 18 and 65"
+     * Any other age-related criteria
+   - [MUST EXCLUDE] Time-related phrases:
+     * "within 48 hours"
+     * "within 6 hours"
+     * "for ≥ 6 h"
+     * Any other time-related phrases
+   - [KEEP] Medical conditions and measurements:
+     * Example: "serum creatinine ≥ 1.5 mg/dL" (keep)
+     * Example: "urine volume < 0.5 mL/(kg·h)" (keep)
+     * Example: "increase of ≥ 0.3 mg/dL" (keep)
+     * [CRITICAL] Keep ALL medical criteria even if they appear with time conditions
+       - Example: "serum creatinine ≥ 1.5 mg/dL within 48 hours" → keep "serum creatinine ≥ 1.5 mg/dL"
+       - Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" → keep "urine volume < 0.5 mL/(kg·h)"
 
-5. For time-based conditions:
-   - Use the appropriate date fields based on the domain type:
-     * drug_exposure: startDate, endDate
-     * condition_occurrence: startDate, endDate
-     * procedure_occurrence: startDate, endDate
-     * measurement: date
-     * observation: date
-   - Date format: "YYYY-MM-DD HH:MM:SS"
-   - For relative time conditions, calculate the appropriate start and end dates based on the current time:
-     * "within the previous 24 hours" → 24시간 이내
-     * "within the last 3 months" → 3개월 이내
-   - Examples:
-     1. "Treatment with piperacillin-tazobactam within the previous 24 hours":
-       {{
-         "type": "drug_exposure",
-         "first": true,
-         "conceptset": "0",
-         "startDate": {{
-           "gte": "2024-03-20 10:00:00",  // 24 hours before current time
-           "lte": "2024-03-21 10:00:00"   // current time
-         }}
-       }}
-     2. "Diagnosis of sepsis within the last 3 months":
-       {{
-         "type": "condition_occurrence",
-         "first": true,
-         "conceptset": "1",
-         "startDate": {{
-           "gte": "2023-12-21 10:00:00",  // 3 months before current time
-           "lte": "2024-03-21 10:00:00"   // current time
-         }}
-       }}
+6. [CRITICAL] Visit Type Criteria:
+   - When specifying ICU or hospital-related conditions, use ONLY the following visit types:
+     * Inpatient Visit
+     * Observation Room
+     * Ambulatory Clinic / Center
+     * Ambulatory Surgical Center
+     * Emergency Room - Hospital
+     * Emergency Room and Inpatient Visit
+   - [MUST USE] For ICU patients, ALWAYS use "Emergency Room and Inpatient Visit" as the visit type
+   - Example ICU condition structure:
+     {{
+       "name": "Emergency Room and Inpatient Visit",
+          "filters": [
+              {{
+                  "type": "visit_occurrence",
+                  "first": true,
+                  "conceptset": "0"
+              }}
+          ]
+     }}
+     
+7. [CRITICAL] Inclusion criteria processing:
+   - Split complex conditions into individual criteria
+   - Each criterion should have its own conceptset_id
+   - Example: AKI diagnostic criteria →
+     * Create separate conceptset for "serum creatinine ≥ 1.5 mg/dL"
+     * Create separate conceptset for "increase of ≥ 0.3 mg/dL"
+     * Create separate conceptset for "urine volume < 0.5 mL/(kg·h)"
+   - [CRITICAL] Keep ALL medical criteria even if they appear with time conditions
+     * Example: "serum creatinine ≥ 1.5 mg/dL within 48 hours" → keep "serum creatinine ≥ 1.5 mg/dL"
+     * Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" → keep "urine volume < 0.5 mL/(kg·h)"
 
-6. NEVER include:
+8. NEVER include:
    - Complex logic
    - Non-implementable criteria
    - Criteria without clear OMOP CDM mappings
    - Additional words like "diagnosis", "treatment", "therapy", etc.
    - [CRITICAL] ANY text that describes what you're doing or why
+   - [CRITICAL] ANY age-related conditions
+   - [CRITICAL] ANY time-related phrases (but keep the medical conditions)
+"""
+JSON_OUTPUT_EXAMPLE = """
+다음은 주어진 임상시험 텍스트를 바탕으로 OMOP CDM 규격에 맞게 구성된 최종 JSON 예시입니다:
+
+const cohortExample: CohortDefinition = {
+  conceptsets: [
+    {
+      conceptset_id: "0",
+      name: "Hemodialysis",
+      items: []
+    }
+    // 추가 conceptset 항목이 있으면 여기에 추가합니다.
+  ],
+  initialGroup: {
+    // Group 1: Inclusion Criteria
+    containers: [
+      {
+        name: "hemodialysis",
+        filters: [
+          {
+            type: "procedure_occurrence",
+            first: true,
+            conceptset: "0",
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "ESA therapy",
+        filters: [
+          {
+            type: "drug_exposure",
+            first: true,
+            conceptset: "1",
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "iron deficiency anemia",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+            conceptset: "2",
+          }
+        ]
+      }
+    ],
+  },
+  comparisonGroup: {  
+    // Group 2: Exclusion Criteria
+    containers: [
+      {
+        name: "not intensive care unit",
+        filters: [
+          {
+            type: "observation",
+            first: true,
+            conceptset: {
+              neq: "3",
+            },
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "not hemoglobin > 13 g/dL",
+        filters: [
+          {
+            type: "measurement",
+            first: true,
+            measurementType: { eq: "234567" },
+            valueAsNumber: { lte: 13 }, // hemoglobin > 13 g/dL를 제외해야하니 13 g/dL 이하로 설정.
+            conceptset: "4"
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "not kidney transplant",
+        filters: [
+          {
+            type: "procedure_occurrence",
+            first: true,
+            conceptset: {
+              neq: "5",
+            },
+          }
+        ]
+      },
+      {
+        operator: "AND",
+        name: "not sepsis or active infections",
+        filters: [
+          {
+            type: "condition_era",
+            first: true,
+            conceptset: {
+              neq: "6",
+            },
+          }
+        ]
+      }
+    ]
+  }
+};
 """
 
 STRICT_REQUIREMENT_SCHEMA = f"""
@@ -115,7 +240,7 @@ Input Text Example:
 {cohort_json_schema.JSON_INPUT_EXAMPLE}
 
 Output Example:
-{cohort_json_schema.JSON_OUTPUT_EXAMPLE}
+{JSON_OUTPUT_EXAMPLE}
 
 8. Output format:
     - Return only the JSON structure
@@ -126,7 +251,6 @@ Output Example:
     - DO NOT include any Markdown formatting or explanations
     - Any usage of Markdown formatting like ```json or ``` → strictly forbidden
     - Use valueAsNumber only for measurable criteria
-    - Ensure that each domain has the correct key: drugType, procedureType, observationType, etc.
 """
 
 # 코호트 json 뽑기 - system
@@ -151,6 +275,12 @@ COHORT_EXTRACTION_PROMPT = """
 You are an AI assistant specialized in processing medical cohort selection criteria.
 Your task is to extract medical conditions, treatments, medications, and procedures mentioned explicitly in the provided text
 and classify them into appropriate OMOP CDM domains.
+
+[CRITICAL] ONLY extract conditions that are explicitly mentioned in the implementable_text:
+- DO NOT include any conditions from the examples
+- DO NOT make up or assume any conditions
+- ONLY use the exact conditions found in the implementable_text
+- If a condition is not explicitly mentioned in the implementable_text, DO NOT include it
 
 Current time: {current_datetime}
 Extract the cohort selection criteria from the following text and return ONLY the JSON response:
@@ -249,16 +379,22 @@ def text_to_json(implementable_text: str) -> dict:
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # PDF 파일 경로
-    # pdf_path = os.path.join(current_dir, "pdf", "A novel clinical prediction model for in-hospital mortality in sepsis patients complicated by ARDS- A MIMIC IV database and external validation study.pdf")
-    # pdf_path = os.path.join(current_dir, "pdf", "nejmoa2215145_appendix.pdf")
-    pdf_path = os.path.join(current_dir, "pdf", "jama_dulhunty_2024_oi_240070_1723741887.30473.pdf")
+    # # PDF 파일 경로
+    # pdf_path = os.path.join(current_dir, "pdf", "Association between glycemic variability and short-term mortality in patients with acute kidney injury.pdf")
     
-    # 1. PDF에서 텍스트 추출
-    implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
+    # # 1. PDF에서 텍스트 추출
+    # implementable_text, non_implementable_text = extract_cohort_definition_from_pdf(pdf_path)
     
-    print("\n[Implementable Criteria 부분만]:")
-    print(implementable_text)
+    # print("\n[Implementable Criteria 부분만]:")
+    # print(implementable_text)
+
+    implementable_text = """
+    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    stay duration of less than 24 h.
+    """
     
     # 2. 텍스트에서 COHORT JSON 추출
     cohort_json = text_to_json(implementable_text)

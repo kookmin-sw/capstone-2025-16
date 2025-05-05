@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from clickhouse_driver import Client
 import cohort_json_schema
 from openai import OpenAI
+from difflib import SequenceMatcher
 
 # 환경 변수 로드
 load_dotenv()
@@ -32,32 +33,57 @@ openai_client = OpenAI(
 # 코호트 검색어 수정 - system
 COHORT_JSON_SYSTEM_PROMPT = f"""
 Role:  
-Act as a **medical terminology search assistant** specialized in optimizing clinical terms for OMOP CDM database retrieval.
+Act as a **medical terminology search assistant** specialized in OMOP CDM database retrieval.
 
 Context:  
-You are given a medical term that failed to return a valid `concept_id` during OMOP CDM lookup. Your job is to improve the search term so it aligns better with standardized terminology used in the OMOP database.
+You are given a medical term that needs to be searched in the OMOP CDM database. Your task is to generate the most effective search term that will match the standardized medical concepts in the database.
+
+Key Points:
+1. The database contains standardized medical terms in the `concept` table
+2. Your goal is to find the exact match or closest match in the database
+3. The search is case-insensitive and uses pattern matching (ILIKE)
+4. Preserve as much detail as possible while making it searchable
 
 Instructions:  
-1. If the given term is an abbreviation (e.g., `"ESA"`), expand it to the full medical term (e.g., `"Erythropoiesis Stimulating Agent"`).
-2. Replace vague or overly specific phrases with broader, standardized equivalents.
-   - For example:  
-     `"Sodium bicarbonate therapy"` → `"Sodium bicarbonate"`  
-     `"Hemoglobin level over 13 g/dL"` → `"Hemoglobin"`
+1. Expand medical abbreviations to their full forms:
+   - CKD → Chronic Kidney Disease
+   - AKI → Acute Kidney Injury
+   - T2DM → Type 2 Diabetes Mellitus
+   - ESRD → End Stage Renal Disease
+   - ICU → Intensive Care Unit
+   - ARDS → Acute Respiratory Distress Syndrome
+   - MI → Myocardial Infarction
+   - CHF → Congestive Heart Failure
+   - COPD → Chronic Obstructive Pulmonary Disease
+   - HTN → Hypertension
+
+2. Remove qualifiers and modifiers that might not exist in the database:
+   - Remove "or higher", "or more", "or greater", "or above", "or over"
+   - Remove "and above", "and over"
+   - Remove "with complications", "with symptoms"
+   - Keep only the core medical condition that likely exists in the database
+
+3. Maintain the exact medical terminology that would be stored in the database:
+   - "Chronic Kidney Disease Stage 4" (NOT "CKD Stage 4")
+   - "Acute Kidney Injury" (NOT "AKI")
+   - "Type 2 Diabetes Mellitus" (NOT "T2DM")
+   - "End Stage Renal Disease" (NOT "ESRD")
 
 **Modified Examples**:
-- Input: `"ESA"` → Output: `Erythropoiesis Stimulating Agent`
-- Input: `"Sodium bicarbonate therapy"` → Output: `Sodium bicarbonate`
-- Input: `"T2DM"` → Output: `Type 2 Diabetes Mellitus`
-- Input: `"CKD"` → Output: `Chronic Kidney Disease`
+- Input: "CKD Stage 4 or higher" → Output: "Chronic Kidney Disease Stage 4"
+- Input: "AKI based on KDIGO" → Output: "Acute Kidney Injury"
+- Input: "T2DM with complications" → Output: "Type 2 Diabetes Mellitus with complications"
+- Input: "ESRD on dialysis" → Output: "End Stage Renal Disease on dialysis"
 """
 
 # 코호트 검색어 수정 - user
 SEARCH_QUERY_REFINEMENT_PROMPT = """
 Original Term: "{term}"
 
-I need a more standardized medical term that will work better for database lookup.
-If this is an abbreviation, please expand it to the full term.
-If this is a specific treatment or condition with qualifiers, please convert it to a more general standard term.
+I need a search term that will effectively match medical concepts in the OMOP CDM database.
+1. Expand all medical abbreviations to their full forms
+2. Keep all relevant details and qualifiers that are part of standard terminology
+3. Only remove vague qualifiers that don't add specific meaning
 
 IMPORTANT: Return ONLY the modified term, with no explanations or additional text.
 """
@@ -84,8 +110,7 @@ def refine_search_query(term) -> str:
     print(f"검색어 수정: '{term}' → '{refined_term}'")
     return refined_term
 
-# ClickHouse에서 concept 정보 조회 (검색 결과가 없으면 용어 수정하여 재시도)
-# # 결과가 너무 많으면 limit만큼만 반환 -> 나중에 늘릴 예정
+# ClickHouse에서 concept 정보 조회
 def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: bool = True) -> list:
     cleaned_term = clean_term(term)
     
@@ -93,8 +118,7 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
     print(f"\n[get_omop_concept_id] 검색 용어: '{cleaned_term}', 도메인: '{domain_id}'")
     
     query = """
-    WITH limited_concepts AS
-    (
+    WITH all_concepts AS (
         SELECT
             concept_id,
             concept_name,
@@ -107,22 +131,44 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             valid_end_date,
             invalid_reason
         FROM concept
-        WHERE (concept_name ILIKE %(term)s) AND (domain_id = %(domain_id)s) AND (invalid_reason IS NULL)
+        WHERE (concept_name ILIKE %(term)s) 
+          AND (domain_id = %(domain_id)s) 
+          AND (invalid_reason IS NULL)
     )
     SELECT
-        lc.concept_id,
-        lc.concept_name,
-        lc.domain_id,
-        lc.vocabulary_id,
-        lc.concept_class_id,
-        COALESCE(lc.standard_concept, '') as standard_concept,
-        lc.concept_code,
-        lc.valid_start_date,
-        lc.valid_end_date,
-        COALESCE(lc.invalid_reason, '') as invalid_reason,
+        ac.concept_id,
+        ac.concept_name,
+        ac.domain_id,
+        ac.vocabulary_id,
+        ac.concept_class_id,
+        COALESCE(ac.standard_concept, '') as standard_concept,
+        ac.concept_code,
+        ac.valid_start_date,
+        ac.valid_end_date,
+        COALESCE(ac.invalid_reason, '') as invalid_reason,
         COALESCE(pc.parent_count, 0) AS parent_count,
-        COALESCE(cc.child_count, 0) AS child_count
-    FROM limited_concepts AS lc
+        COALESCE(cc.child_count, 0) AS child_count,
+        CASE %(domain_id)s
+            WHEN 'Condition' THEN CASE WHEN ac.concept_id IN (SELECT condition_concept_id FROM condition_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Drug' THEN CASE WHEN ac.concept_id IN (SELECT drug_concept_id FROM drug_exposure) THEN 1 ELSE 0 END
+            WHEN 'Measurement' THEN CASE WHEN ac.concept_id IN (SELECT measurement_concept_id FROM measurement) THEN 1 ELSE 0 END
+            WHEN 'Observation' THEN CASE WHEN ac.concept_id IN (SELECT observation_concept_id FROM observation) THEN 1 ELSE 0 END
+            WHEN 'Procedure' THEN CASE WHEN ac.concept_id IN (SELECT procedure_concept_id FROM procedure_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Visit' THEN CASE WHEN ac.concept_id IN (SELECT visit_concept_id FROM visit_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Device' THEN CASE WHEN ac.concept_id IN (SELECT device_concept_id FROM device_exposure) THEN 1 ELSE 0 END
+            WHEN 'Death' THEN CASE WHEN ac.concept_id IN (SELECT cause_concept_id FROM death) THEN 1 ELSE 0 END
+            WHEN 'Specimen' THEN CASE WHEN ac.concept_id IN (SELECT specimen_concept_id FROM specimen) THEN 1 ELSE 0 END
+            WHEN 'Location' THEN CASE WHEN ac.concept_id IN (SELECT country_concept_id FROM location) THEN 1 ELSE 0 END
+            WHEN 'Demographic' THEN CASE WHEN ac.concept_id IN (
+                SELECT gender_concept_id FROM person
+                UNION
+                SELECT race_concept_id FROM person
+                UNION
+                SELECT ethnicity_concept_id FROM person
+            ) THEN 1 ELSE 0 END
+            ELSE 1
+        END as is_used
+    FROM all_concepts ac
     LEFT JOIN
     (
         SELECT
@@ -131,10 +177,10 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         FROM concept_ancestor
         WHERE descendant_concept_id IN (
             SELECT concept_id
-            FROM limited_concepts
+            FROM all_concepts
         )
         GROUP BY descendant_concept_id
-    ) AS pc ON lc.concept_id = pc.concept_id
+    ) AS pc ON ac.concept_id = pc.concept_id
     LEFT JOIN
     (
         SELECT
@@ -143,50 +189,56 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         FROM concept_ancestor
         WHERE ancestor_concept_id IN (
             SELECT concept_id
-            FROM limited_concepts
+            FROM all_concepts
         )
         GROUP BY ancestor_concept_id
-    ) AS cc ON lc.concept_id = cc.concept_id
-    ORDER BY child_count DESC
+    ) AS cc ON ac.concept_id = cc.concept_id
+    ORDER BY 
+        child_count DESC,
+        parent_count ASC
+    LIMIT %(limit)s
     """
     
-    results = clickhouse_client.execute(query, {'term': f'%{cleaned_term}%', 'domain_id': domain_id})
+    results = clickhouse_client.execute(query, {
+        'term': f'%{cleaned_term}%',
+        'domain_id': domain_id, 
+        'limit': limit
+    })
+    
+    # 디버깅을 위한 출력
+    print(f"검색 결과 개수: {len(results)}")
+    if not results:
+        print(f"검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
     
     # 결과가 없고 auto_refine이 True이면 용어를 수정하여 재검색
     if not results and auto_refine:
-        # print(f"'{cleaned_term}' 검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
         refined_term = refine_search_query(cleaned_term)
         if refined_term != cleaned_term:
-            # 무한 재귀 방지를 위해 auto_refine=False로 설정
+            print(f"검색어 수정: '{cleaned_term}' → '{refined_term}'")
             return get_omop_concept_id(refined_term, domain_id, limit, auto_refine=False)
-    
-    # 결과가 너무 많으면 limit만큼만 반환
-    if len(results) > limit:
-        results = results[:limit]
     
     # Concept 객체로 변환
     concepts = []
     for result in results:
-        concept = {
-            "concept_id": str(result[0]),  # Identifier는 string
-            "concept_name": result[1],
-            "domain_id": result[2],
-            "vocabulary_id": result[3],
-            "concept_class_id": result[4],
-            "standard_concept": result[5],
-            "concept_code": result[6],
-            "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,  # date를 문자열로 변환
-            "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,    # date를 문자열로 변환
-            "invalid_reason": result[9],
-            "parent_count": result[10],    # 부모 개념 수
-            "child_count": result[11],     # 자식 개념 수
-            "includeDescendants": True,  # 기본값 설정
-            "includeMapped": True
-        }
-        concepts.append(concept)
+        if result[12] == 1:  # is_used가 1인 경우만 추가
+            concept = {
+                "concept_id": str(result[0]),  # Identifier는 string
+                "concept_name": result[1],
+                "domain_id": result[2],
+                "vocabulary_id": result[3],
+                "concept_class_id": result[4],
+                "standard_concept": result[5],
+                "concept_code": result[6],
+                "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,  # date를 문자열로 변환
+                "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,    # date를 문자열로 변환
+                "invalid_reason": result[9],
+                "parent_count": result[10],    # 부모 개념 수
+                "child_count": result[11],     # 자식 개념 수
+                "includeDescendants": True,  # 기본값 설정
+                "includeMapped": True
+            }
+            concepts.append(concept)
     
-    # 결과 개수 출력
-    # print(f"[get_omop_concept_id] 검색 결과: {len(concepts)}개")
     return concepts
 
 # concept_set_id에 해당하는 filter의 type을 찾아 domain_id를 반환
