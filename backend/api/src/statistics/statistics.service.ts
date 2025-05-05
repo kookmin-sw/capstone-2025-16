@@ -224,7 +224,7 @@ export class StatisticsService {
         result = await this.processBarChart({
           cohortIds,
           personId,
-          chartCohortDefs: groups,
+          chartCohortDefs: groups.map((e) => e.definition),
         });
         break;
       case 'boxplot':
@@ -237,7 +237,7 @@ export class StatisticsService {
         result = await this.processBoxPlotChart({
           cohortIds,
           personId,
-          chartCohortDefs: groups,
+          chartCohortDefs: groups.map((e) => e.definition),
           countBy,
         });
         break;
