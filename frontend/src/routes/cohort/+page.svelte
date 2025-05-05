@@ -16,7 +16,7 @@
   const itemsPerPage = 10;
   let totalPages = 0;
 
-  let filteredData = [...cohortList];
+  let filteredData = [...cohortList.cohorts];
   let selectedItems = {};
 
   // 현재 페이지의 데이터만 반환하는 함수
@@ -94,13 +94,10 @@
   $: {
     if (!searchInput) {
       searchQuery = "";
-      filteredData = [...cohortList];
+      filteredData = [...cohortList.cohorts];
     }
   }
 
-  // onMount(() => {
-  //   loadData();
-  // });
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
