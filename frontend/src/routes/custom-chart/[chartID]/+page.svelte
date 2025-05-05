@@ -5,6 +5,7 @@
     import GroupedBarChart from '$lib/components/Charts/GroupedBarChart/GroupedBarChart.svelte';
     import { dndzone } from 'svelte-dnd-action';
     import ChartCard from "$lib/components/ChartCard.svelte";
+    import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
 
     const targetSetData = {
         id: "10001",
@@ -54,17 +55,18 @@
                 department: "Endocrinology"
             },
             createdAt: "2024/01/10 10:00",
-            chartType: "Bar Chart",
-            chartData: [
-                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
+            chartType: "Box Plot",
+            boxPlotData: [
+                { group: "Group 1", target: "Cohort 1", values: [5000, 7500, 10000, 12500, 15000, 16000, 18000] },
+                { group: "Group 1", target: "Cohort 2", values: [6000, 8000, 11000, 15000, 17000, 19000, 21000] },
+                { group: "Group 1", target: "Cohort 3", values: [4000, 5500, 7000, 9000, 11000, 14000, 16000] },
+                { group: "Group 1", target: "Cohort 4", values: [5000, 7500, 10000, 12500, 15000, 16000, 18000] },
+                { group: "Group 1", target: "Cohort 5", values: [6000, 8000, 11000, 15000, 17000, 19000, 21000] },
+                { group: "Group 2", target: "Cohort 1", values: [7000, 9500, 12000, 14500, 17000, 18000, 20000] },
+                { group: "Group 2", target: "Cohort 2", values: [8000, 10000, 13000, 17000, 19000, 21000, 23000] },
+                { group: "Group 2", target: "Cohort 3", values: [6000, 7500, 9000, 11000, 13000, 16000, 18000] },
+                { group: "Group 2", target: "Cohort 4", values: [7000, 9500, 12000, 14500, 17000, 18000, 20000] },
+                { group: "Group 2", target: "Cohort 5", values: [8000, 10000, 13000, 17000, 19000, 21000, 23000] },
             ]
         },
         {
@@ -263,9 +265,14 @@
                     <ChartCard 
                         title="Custom Chart"
                         hasXButton = {false}
+                        height="400px"
                     >
                         <div class="w-full h-full flex items-center justify-center">
-                            <GroupedBarChart data={customChartData[index].chartData} />
+                            {#if chart.chartType === "Box Plot"}
+                                <BoxPlot data={chart.boxPlotData} />
+                            {:else}
+                                <GroupedBarChart data={chart.chartData} />
+                            {/if}
                         </div>
                     </ChartCard>
                 </div>
