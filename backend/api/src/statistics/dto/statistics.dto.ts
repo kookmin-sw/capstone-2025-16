@@ -62,24 +62,30 @@ export class CreateStatisticsDto {
     description: 'Custom groups',
     example: [
       {
-        conceptsets: [],
-        initialGroup: {
-          containers: [
-            {
-              name: 'Measurement',
-              filters: [
-                {
-                  type: 'condition_era',
-                },
-              ],
-            },
-          ],
+        name: 'Group 1',
+        definition: {
+          conceptsets: [],
+          initialGroup: {
+            containers: [
+              {
+                name: 'Measurement',
+                filters: [
+                  {
+                    type: 'condition_era',
+                  },
+                ],
+              },
+            ],
+          },
         },
       },
     ],
   })
   @IsArray()
-  groups: (BarChartCohortDefinition | CohortDefinition)[];
+  groups: {
+    name: string;
+    definition: BarChartCohortDefinition | CohortDefinition;
+  }[];
 
   @ApiPropertyOptional({
     description: 'Statistics count by',
