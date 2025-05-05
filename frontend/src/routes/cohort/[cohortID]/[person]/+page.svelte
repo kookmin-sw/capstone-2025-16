@@ -27,7 +27,7 @@
     let isStatisticsView = false;
     let show = false;
     export let data;
-
+    
     let isTableView = {
         visitTypeRatio: false,
         departmentVisits: false,
@@ -93,7 +93,7 @@
         9202: [1, "Outpatient", "#4ECDC4"],
         9203: [2, "Emergency Room Visit", "#FFB236"],
         581477: [3, "Home Visit", "#95A5A6"],
-        44818517: [4, "Other Visit Type", "#BDC3C7"]
+        44818517: [4, "Other Visit Type", "#BDC3C7"],
     };
 
     async function fetchDataById(id) {
@@ -126,7 +126,7 @@
 
     async function drawTimeline() {
         await tick();
-        if (!timelineContainer || !data?.personVisits) return;
+        if (!timelineContainer || !data?.visitData) return;
 
         const width = timelineContainer.clientWidth;
         const height = timelineContainer.clientHeight;
@@ -159,8 +159,8 @@
     }
 
     function setupScales(width) {
-        let minStart = new Date(Math.min(...data.personVisits.map(d => new Date(d.visit_start_date))));
-        let maxEnd = new Date(Math.max(...data.personVisits.map(d => new Date(d.visit_end_date))));
+        let minStart = new Date(Math.min(...data.visitData.map(d => new Date(d.visit_start_date))));
+        let maxEnd = new Date(Math.max(...data.visitData.map(d => new Date(d.visit_end_date))));
         minStart.setDate(minStart.getDate() - 360);
         minStart.setHours(0, 0, 0, 0);
         maxEnd.setHours(23, 59, 59, 999);
@@ -243,22 +243,22 @@
             .attr("clip-path", "url(#clip-timeline)");
 
         // Death bar
-        if (personTable.death) {
+        if (data.personInfo.death) {
             barGroup.append("rect")
             .attr("class", "death-bar")
-            .attr("x", xScale(new Date(personTable.death.death_date)))
+            .attr("x", xScale(new Date(data.personInfo.death.death_date)))
             .attr("y", 0)
             .attr("width", DEATH_BAR_WIDTH)
             .attr("height", innerHeight - 20)
             .attr("fill", "black")
             .attr("opacity", 1)
-            .on("mouseover", (event) => showTooltip(event, tooltip, `death_concept : ${personTable.death.cause_concept_id}\ndeath_date : ${personTable.death.death_date}`))
+            .on("mouseover", (event) => showTooltip(event, tooltip, `death_concept : ${data.personInfo.death.cause_concept_id}\ndeath_date : ${data.personInfo.death.death_date}`))
             .on("mousemove", (event) => moveTooltip(event, tooltip))
             .on("mouseout", () => tooltip.style("visibility", "hidden"));
         }
 
         barGroup.selectAll("rect.visit-bar")
-            .data(data.personVisits)
+            .data(data.visitData)
             .enter()
             .append("rect")
             .attr("class", "visit-bar")
@@ -339,9 +339,9 @@
         window.addEventListener("resize", handleResize);
         onDestroy(() => window.removeEventListener("resize", handleResize));
     });
-
+    
     // ✅ 데이터 변경 시마다 실행
-    $: if (data) {
+    $: if (data.visitData) {
         tick().then(() => drawTimeline());
         tableProps = {};
     }
