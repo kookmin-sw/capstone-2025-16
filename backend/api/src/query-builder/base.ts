@@ -933,20 +933,8 @@ export const buildBaseQuery = (
     }
   }
 
-  const finalQueries: ExecutableBuilder[] = [
-    db
-      .selectFrom('temp_cohort_detail')
-      .groupBy('cohort_id')
-      .orderBy('cohort_id', 'asc')
-      .select(({ fn }) => [
-        'cohort_id as container_id',
-        fn.count('person_id').as('count'),
-      ]),
-  ];
-
   return {
     queries,
-    finalQueries,
     cleanupQueries,
     containerCount:
       initialGroup.containers.length +

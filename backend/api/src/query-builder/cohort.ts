@@ -73,13 +73,16 @@ export const handleAI = (
           .selectFrom(db.selectFrom('codesets').select('concept_id').as('tmp'))
           .select(({ eb }) => [eb.val(cohortId).as('cohort_id'), 'concept_id']),
       ),
-    db.insertInto('cohort_concept').values(
-      [...conceptIds].map((e) => ({
-        concept_id: e,
-        cohort_id: cohortId,
-      })),
-    ),
   );
+  conceptIds.size &&
+    finalQueries.push(
+      db.insertInto('cohort_concept').values(
+        [...conceptIds].map((e) => ({
+          concept_id: e,
+          cohort_id: cohortId,
+        })),
+      ),
+    );
 };
 
 export const buildCreateCohortQuery = (
@@ -93,8 +96,23 @@ export const buildCreateCohortQuery = (
   let { cohortId, cohortDef, database } = options;
   database = database || 'clickhouse';
 
-  const { queries, finalQueries, cleanupQueries, containerCount } =
-    buildBaseQuery(db, database, cohortDef, true);
+  const { queries, cleanupQueries, containerCount } = buildBaseQuery(
+    db,
+    database,
+    cohortDef,
+    true,
+  );
+
+  const finalQueries: ExecutableBuilder[] = [
+    db
+      .selectFrom('temp_cohort_detail')
+      .groupBy('cohort_id')
+      .orderBy('cohort_id', 'asc')
+      .select(({ fn }) => [
+        'cohort_id as container_id',
+        fn.count('person_id').as('count'),
+      ]),
+  ];
 
   if (cohortId) {
     queries.push(

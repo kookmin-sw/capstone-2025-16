@@ -111,6 +111,10 @@ export interface CohortDefinition {
   comparisonGroup?: ComparisonGroup;
 }
 
+export interface ChartCohortDefinition extends CohortDefinition {
+  data?: Filter;
+}
+
 /**
  * 도메인 타입에 따른 필터 맵핑입니다.
  */
