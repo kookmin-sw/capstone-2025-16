@@ -111,6 +111,17 @@ export interface CohortDefinition {
   comparisonGroup?: ComparisonGroup;
 }
 
+export interface BarChartCohortDefinition extends CohortDefinition {
+  data?: Filter;
+}
+
+export interface BoxPlotCountBy {
+  concept?: Identifier;
+  age?: NumberWithOperator;
+  date?: DateWithOperator;
+  value?: NumberWithOperator;
+}
+
 /**
  * 도메인 타입에 따른 필터 맵핑입니다.
  */

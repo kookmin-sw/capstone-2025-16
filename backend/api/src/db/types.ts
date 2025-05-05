@@ -9,6 +9,7 @@ export interface Database {
   cohort: Cohort;
   cohort_detail: CohortDetail;
   cohort_concept: CohortConcept;
+  statistics: Statistics;
 
   condition_era: ConditionEra;
   drug_era: DrugEra;
@@ -90,6 +91,18 @@ export interface CohortDetail {
 export interface CohortConcept {
   cohort_id: string;
   concept_id: string;
+}
+
+export interface Statistics {
+  statistics_id: string;
+  name: string;
+  description: string;
+  type: string; // 'bar' | 'boxplot'
+  definition: string; // JSON string: { cohortIds, personId, groups }
+  result: string; // JSON string for chart result
+  author: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ConditionEra {

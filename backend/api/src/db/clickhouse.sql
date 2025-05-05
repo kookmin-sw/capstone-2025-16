@@ -370,7 +370,7 @@ CREATE TABLE IF NOT EXISTS `domain` (
 )
 ORDER BY `domain_id`;
 
-CREATE TABLE `specimen` (
+CREATE TABLE IF NOT EXISTS `specimen` (
     `specimen_id` Int64,
     `person_id` Int64,
     `specimen_concept_id` Int64,
@@ -389,7 +389,7 @@ CREATE TABLE `specimen` (
 )
 ORDER BY (`specimen_date`, `specimen_id`);
 
-CREATE TABLE `cohort` (
+CREATE TABLE IF NOT EXISTS `cohort` (
     `cohort_id` UUID DEFAULT generateUUIDv7(),
     `name` String,
     `description` String,
@@ -400,16 +400,28 @@ CREATE TABLE `cohort` (
 )
 ORDER BY `cohort_id`;
 
-CREATE TABLE `cohort_detail` (
+CREATE TABLE IF NOT EXISTS `cohort_detail` (
     `cohort_id` UUID,
     `person_id` Int64
 )
 ORDER BY `cohort_id`;
 
-CREATE TABLE `cohort_concept` (
+CREATE TABLE IF NOT EXISTS `cohort_concept` (
     `cohort_id` UUID,
     `concept_id` Int64
 ) ORDER BY `cohort_id`;
+
+CREATE TABLE IF NOT EXISTS `statistics` (
+    `statistics_id` UUID DEFAULT generateUUIDv7(),
+    `name` String,
+    `description` String,
+    `type` String,
+    `definition` String,
+    `result` String,
+    `author` UUID,
+    `created_at` DateTime64 DEFAULT now(),
+    `updated_at` DateTime64 DEFAULT now()
+) ORDER BY `statistics_id`;
 
 CREATE TABLE IF NOT EXISTS `feature_extraction`
 (
@@ -433,6 +445,15 @@ CREATE OR REPLACE FUNCTION _ifnull AS (a, b) -> ifNull(a, b);
 
 CREATE OR REPLACE FUNCTION _to_int64 AS (a) -> toInt64(a);
 
+CREATE OR REPLACE FUNCTION _upper_quartile AS (a) -> quantile(0.75)(a);
+
+CREATE OR REPLACE FUNCTION _median AS (a) -> quantile(0.5)(a);
+
+CREATE OR REPLACE FUNCTION _lower_quartile AS (a) -> quantile(0.25)(a);
+
+CREATE OR REPLACE FUNCTION _maximum AS (a) -> least(_upper_quartile(a) + 1.5 * (_upper_quartile(a) - _lower_quartile(a)), max(a));
+
+CREATE OR REPLACE FUNCTION _minimum AS (a) -> greatest(_lower_quartile(a) - 1.5 * (_upper_quartile(a) - _lower_quartile(a)), min(a));
 
 /* Create first_condition_era */
 CREATE TABLE IF NOT EXISTS first_condition_era AS condition_era;

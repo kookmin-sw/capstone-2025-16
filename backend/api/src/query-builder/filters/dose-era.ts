@@ -17,7 +17,11 @@ export const optimizeFirst = () => {
   _optimizeFirst = true;
 };
 
-export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
+export const getQuery = (
+  db: Kysely<Database>,
+  a: DoseEraFilter,
+  distinct: boolean,
+) => {
   let query = db
     .selectFrom(
       getOptimizedTable(
@@ -35,7 +39,7 @@ export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
         'dose_era.dose_era_start_date',
       ),
     ]);
-  if (!a.first || _optimizeFirst) {
+  if ((!a.first || _optimizeFirst) && distinct) {
     query = query.distinct();
   }
 
@@ -122,11 +126,14 @@ export const getQuery = (db: Kysely<Database>, a: DoseEraFilter) => {
   }
 
   if (a.first && !_optimizeFirst) {
-    return db
+    let finalQuery = db
       .selectFrom(query.as('filtered_dose_era'))
       .where('ordinal', '=', 1)
-      .select('person_id')
-      .distinct();
+      .select('person_id');
+    if (distinct) {
+      finalQuery = finalQuery.distinct();
+    }
+    return finalQuery;
   }
 
   return query;

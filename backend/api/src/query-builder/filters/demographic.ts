@@ -3,8 +3,16 @@ import { handleIdentifierWithOperator } from '../base';
 import { Kysely } from 'kysely';
 import { Database } from '../../db/types';
 
-export const getQuery = (db: Kysely<Database>, a: DemographicFilter) => {
+export const getQuery = (
+  db: Kysely<Database>,
+  a: DemographicFilter,
+  distinct: boolean,
+) => {
   let query = db.selectFrom('person').select('person_id');
+
+  if (distinct) {
+    query = query.distinct();
+  }
 
   // if (a.age) {
   //   query = handleAgeWithNumberOperator(

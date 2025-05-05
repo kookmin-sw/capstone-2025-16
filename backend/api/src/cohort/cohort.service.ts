@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { getBaseDB } from '../query-builder/base';
 import { CohortDefinition } from '../types/type';
 import { uuidv7 } from 'uuidv7';
-import { buildQuery } from '../query-builder';
+import { buildCreateCohortQuery } from '../query-builder';
 import * as moment from 'moment';
 import {
   CohortResponse,
@@ -359,13 +359,24 @@ export class CohortService {
       await getBaseDB()
         .connection()
         .execute(async (db) => {
-          const queries = buildQuery(db, {
+          const queries = buildCreateCohortQuery(db, {
             cohortId,
             cohortDef,
             database: process.env.DB_TYPE,
           });
 
           for (const query of queries.flat()) {
+            if (process.env.DEBUG) {
+              let { parameters, sql } = query.compile();
+              for (let i of parameters) {
+                sql = sql.replace(
+                  '?',
+                  typeof i === 'string' ? `'${i}'` : `${i}`,
+                );
+              }
+              console.log(sql);
+            }
+
             const result = await query.execute();
             if ('select' in query) {
               // container person counts

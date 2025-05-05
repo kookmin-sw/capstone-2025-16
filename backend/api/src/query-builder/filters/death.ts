@@ -8,8 +8,16 @@ import {
 import { Kysely } from 'kysely';
 import { Database } from '../../db/types';
 
-export const getQuery = (db: Kysely<Database>, a: DeathFilter) => {
+export const getQuery = (
+  db: Kysely<Database>,
+  a: DeathFilter,
+  distinct: boolean,
+) => {
   let query = db.selectFrom('death').select('death.person_id as person_id');
+
+  if (distinct) {
+    query = query.distinct();
+  }
 
   if (a.conceptset) {
     query = handleConceptSet(
