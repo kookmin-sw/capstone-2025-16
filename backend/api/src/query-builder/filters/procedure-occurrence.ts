@@ -19,6 +19,7 @@ export const optimizeFirst = () => {
 export const getQuery = (
   db: Kysely<Database>,
   a: ProcedureOccurrenceFilter,
+  distinct: boolean,
 ) => {
   let query = db
     .selectFrom(
@@ -37,7 +38,7 @@ export const getQuery = (
         'procedure_occurrence.procedure_date',
       ),
     ]);
-  if (!a.first || _optimizeFirst) {
+  if ((!a.first || _optimizeFirst) && distinct) {
     query = query.distinct();
   }
 
@@ -154,11 +155,14 @@ export const getQuery = (
   }
 
   if (a.first && !_optimizeFirst) {
-    return db
+    let finalQuery = db
       .selectFrom(query.as('filtered_procedure_occurrence'))
       .where('ordinal', '=', 1)
-      .select('person_id')
-      .distinct();
+      .select('person_id');
+    if (distinct) {
+      finalQuery = finalQuery.distinct();
+    }
+    return finalQuery;
   }
 
   return query;

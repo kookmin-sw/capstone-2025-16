@@ -98,36 +98,40 @@ const buildConceptQuery = (db: Kysely<Database>, concepts: Concept[]) => {
   return query;
 };
 
-const handleFilter = (db: Kysely<Database>, filter: Filter) => {
+const handleFilter = (
+  db: Kysely<Database>,
+  filter: Filter,
+  distinct: boolean,
+) => {
   switch (filter.type) {
     case 'condition_era':
-      return conditionEra.getQuery(db, filter);
+      return conditionEra.getQuery(db, filter, distinct);
     case 'condition_occurrence':
-      return conditionOccurrence.getQuery(db, filter);
+      return conditionOccurrence.getQuery(db, filter, distinct);
     case 'death':
-      return death.getQuery(db, filter);
+      return death.getQuery(db, filter, distinct);
     case 'device_exposure':
-      return deviceExposure.getQuery(db, filter);
+      return deviceExposure.getQuery(db, filter, distinct);
     case 'dose_era':
-      return doseEra.getQuery(db, filter);
+      return doseEra.getQuery(db, filter, distinct);
     case 'drug_era':
-      return drugEra.getQuery(db, filter);
+      return drugEra.getQuery(db, filter, distinct);
     case 'drug_exposure':
-      return drugExposure.getQuery(db, filter);
+      return drugExposure.getQuery(db, filter, distinct);
     case 'measurement':
-      return measurement.getQuery(db, filter);
+      return measurement.getQuery(db, filter, distinct);
     case 'observation':
-      return observation.getQuery(db, filter);
+      return observation.getQuery(db, filter, distinct);
     case 'observation_period':
-      return observationPeriod.getQuery(db, filter);
+      return observationPeriod.getQuery(db, filter, distinct);
     case 'procedure_occurrence':
-      return procedureOccurrence.getQuery(db, filter);
+      return procedureOccurrence.getQuery(db, filter, distinct);
     case 'specimen':
-      return specimen.getQuery(db, filter);
+      return specimen.getQuery(db, filter, distinct);
     case 'visit_occurrence':
-      return visitOccurrence.getQuery(db, filter);
+      return visitOccurrence.getQuery(db, filter, distinct);
     case 'demographic':
-      return demographic.getQuery(db, filter);
+      return demographic.getQuery(db, filter, distinct);
     default:
       throw new Error(`Unknown filter type: ${filter}`);
   }
@@ -140,17 +144,13 @@ type ExecutableBuilder =
   | DropTableBuilder
   | SelectQueryBuilder<any, any, any>;
 
-export const buildQuery = (
+const buildBaseQuery = (
   db: Kysely<Database>,
-  options: {
-    cohortId?: string;
-    cohortDef: CohortDefinition;
-    database?: 'clickhouse' | 'postgres' | string;
-  },
+  database: 'clickhouse' | 'postgres' | string,
+  cohortDef: CohortDefinition,
+  distinct: boolean,
+  baseCohortId?: string, // 코호드 아이디가 없으면 전체 환자에서 코호트 생성, 있다면 해당 코호트를 기반으로 다른 코호트 생성
 ) => {
-  let { cohortId, cohortDef, database } = options;
-  database = database || 'clickhouse';
-
   const queries: (ExecutableBuilder | ExecutableBuilder[])[] = [
     [
       db.schema
@@ -229,10 +229,23 @@ export const buildQuery = (
     let container = initialGroup.containers[i];
     let query: SelectQueryBuilder<Database, any, any> | undefined;
     for (let filter of container.filters) {
+      let filterQuery: SelectQueryBuilder<Database, any, any> = handleFilter(
+        db,
+        filter,
+        distinct,
+      );
+      if (baseCohortId) {
+        filterQuery = filterQuery.intersect(({ eb }) =>
+          eb
+            .selectFrom('cohort_detail')
+            .select('person_id')
+            .where('cohort_id', '=', baseCohortId),
+        );
+      }
       if (!query) {
-        query = handleFilter(db, filter);
+        query = filterQuery;
       } else {
-        query = query.intersect(handleFilter(db, filter));
+        query = query.intersect(filterQuery);
       }
     }
 
@@ -289,10 +302,23 @@ export const buildQuery = (
       let container = comparisonGroup.containers[i];
       let query: SelectQueryBuilder<Database, any, any> | undefined;
       for (let filter of container.filters) {
+        let filterQuery: SelectQueryBuilder<Database, any, any> = handleFilter(
+          db,
+          filter,
+          distinct,
+        );
+        if (baseCohortId) {
+          filterQuery = filterQuery.intersect(({ eb }) =>
+            eb
+              .selectFrom('cohort_detail')
+              .select('person_id')
+              .where('cohort_id', '=', baseCohortId),
+          );
+        }
         if (!query) {
-          query = handleFilter(db, filter);
+          query = filterQuery;
         } else {
-          query = query.intersect(handleFilter(db, filter));
+          query = query.intersect(filterQuery);
         }
       }
 
@@ -404,67 +430,113 @@ export const buildQuery = (
       ]),
   ];
 
-  if (cohortId) {
-    queries.push(
-      db.deleteFrom('cohort_detail').where('cohort_id', '=', cohortId),
-    );
+  return {
+    queries,
+    finalQueries,
+    cleanupQueries,
+    containerCount:
+      initialGroup.containers.length +
+      (comparisonGroup?.containers.length ?? 0),
+  };
+};
 
-    // For AI
-    let conceptIds = new Set<string>();
-    for (let i of [
-      ...initialGroup.containers,
-      ...(comparisonGroup?.containers ?? []),
-    ]) {
-      for (let j of i.filters) {
-        for (let k of [
-          'providerSpecialty',
-          'anatomicSiteType',
-          'ethnicityType',
-          'raceType',
-          'drugType',
-          'operatorType',
-          'source',
-          'placeOfService',
-          'deathType',
-          'measurementType',
-          'specimenType',
-          'diseaseStatus',
-          'deviceType',
-          'doseUnit',
-          'conceptset',
-          'cause',
-          'visitType',
-          'observationType',
-          'gender',
-          'qualifierType',
-          'conditionStatus',
-          'procedureType',
-          'conditionType',
-          'valueAsConcept',
-          'routeType',
-          'unitType',
-          'modifierType',
-        ]) {
-          if (j[k]) {
-            let val: IdentifierWithOperator = j[k];
-            if (typeof val === 'string') {
-              conceptIds.add(val);
-            } else {
-              if (val.eq) {
-                for (let i of Array.isArray(val.eq) ? val.eq : [val.eq]) {
-                  conceptIds.add(i);
-                }
+export const handleAI = (
+  db: Kysely<Database>,
+  cohortId: string,
+  cohortDef: CohortDefinition,
+  finalQueries: ExecutableBuilder[],
+) => {
+  const { initialGroup, comparisonGroup } = cohortDef;
+  let conceptIds = new Set<string>();
+  for (let i of [
+    ...initialGroup.containers,
+    ...(comparisonGroup?.containers ?? []),
+  ]) {
+    for (let j of i.filters) {
+      for (let k of [
+        'providerSpecialty',
+        'anatomicSiteType',
+        'ethnicityType',
+        'raceType',
+        'drugType',
+        'operatorType',
+        'source',
+        'placeOfService',
+        'deathType',
+        'measurementType',
+        'specimenType',
+        'diseaseStatus',
+        'deviceType',
+        'doseUnit',
+        'conceptset',
+        'cause',
+        'visitType',
+        'observationType',
+        'gender',
+        'qualifierType',
+        'conditionStatus',
+        'procedureType',
+        'conditionType',
+        'valueAsConcept',
+        'routeType',
+        'unitType',
+        'modifierType',
+      ]) {
+        if (j[k]) {
+          let val: IdentifierWithOperator = j[k];
+          if (typeof val === 'string') {
+            conceptIds.add(val);
+          } else {
+            if (val.eq) {
+              for (let i of Array.isArray(val.eq) ? val.eq : [val.eq]) {
+                conceptIds.add(i);
               }
-              if (val.neq) {
-                for (let i of Array.isArray(val.neq) ? val.neq : [val.neq]) {
-                  conceptIds.add(i);
-                }
+            }
+            if (val.neq) {
+              for (let i of Array.isArray(val.neq) ? val.neq : [val.neq]) {
+                conceptIds.add(i);
               }
             }
           }
         }
       }
     }
+  }
+  finalQueries.push(
+    db
+      .insertInto('cohort_concept')
+      .expression(
+        db
+          .selectFrom(db.selectFrom('codesets').select('concept_id').as('tmp'))
+          .select(({ eb }) => [eb.val(cohortId).as('cohort_id'), 'concept_id']),
+      ),
+    db.insertInto('cohort_concept').values(
+      [...conceptIds].map((e) => ({
+        concept_id: e,
+        cohort_id: cohortId,
+      })),
+    ),
+  );
+};
+
+export const buildCreateCohortQuery = (
+  db: Kysely<Database>,
+  options: {
+    cohortId?: string;
+    cohortDef: CohortDefinition;
+    database?: 'clickhouse' | 'postgres' | string;
+  },
+): (ExecutableBuilder | ExecutableBuilder[])[] => {
+  let { cohortId, cohortDef, database } = options;
+  database = database || 'clickhouse';
+
+  const { queries, finalQueries, cleanupQueries, containerCount } =
+    buildBaseQuery(db, database, cohortDef, true);
+
+  if (cohortId) {
+    queries.push(
+      db.deleteFrom('cohort_detail').where('cohort_id', '=', cohortId),
+    );
 
     finalQueries.push(
       db.insertInto('cohort_detail').expression(
@@ -477,39 +549,17 @@ export const buildQuery = (
                 eb(
                   'cohort_id',
                   '=',
-                  eb.fn<any>('_to_int64', [
-                    eb.val(
-                      initialGroup.containers.length +
-                        (comparisonGroup?.containers.length ?? 0),
-                    ),
-                  ]),
+                  eb.fn<any>('_to_int64', [eb.val(containerCount)]),
                 ),
               )
               .as('tmp'),
           )
           .select(({ eb }) => [eb.val(cohortId).as('cohort_id'), 'person_id']),
       ),
-
-      // For AI
-      db
-        .insertInto('cohort_concept')
-        .expression(
-          db
-            .selectFrom(
-              db.selectFrom('codesets').select('concept_id').as('tmp'),
-            )
-            .select(({ eb }) => [
-              eb.val(cohortId).as('cohort_id'),
-              'concept_id',
-            ]),
-        ),
-      db.insertInto('cohort_concept').values(
-        [...conceptIds].map((e) => ({
-          concept_id: e,
-          cohort_id: cohortId,
-        })),
-      ),
     );
+
+    // AI 핸들링..
+    handleAI(db, cohortId, cohortDef, finalQueries);
   }
 
   queries.push(finalQueries);
