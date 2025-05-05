@@ -1,25 +1,22 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, tick } from 'svelte';
+	import { slide } from 'svelte/transition';
 	import { xmlParseToJson } from '$lib/ecgparse.js';
 	import * as d3 from 'd3';
 
 	export let filePath;
 	let container;
+	let showCharts = false;
+	let xml;
 
     onMount(async () => {
-		const xml = await xmlParseToJson(filePath);
-		renderAllECGWaveforms(container, xml);
+		xml = await xmlParseToJson(filePath);
 	});
-
-	async function loadAndRenderWaveform(signal) {
-		try {
-			xml = await xmlParseToJson(`/your/path/${signal.fileName}`); // bioSignal에 파일명이 있다면
-			renderAllECGWaveforms(waveformContainer, xml);
-		} catch (error) {
-			console.error("Waveform 처리 중 오류 발생:", error);
-		}
+	
+	$: if (showCharts) {
+		renderAllECGWaveforms(container, xml);
 	}
-    
+
 	function decodeBase64ToInt16Array(base64, unitsPerBit = 1) {
 		const binary = atob(base64);
 		const len = binary.length / 2;
@@ -33,6 +30,34 @@
 		}
 
 		return Array.from(int16).map((v) => v * unitsPerBit); // 단위 보정
+	}
+
+	async function renderAllECGWaveforms(container, waveformList) {
+		await tick();
+		if (!container) return;
+		d3.select(container).selectAll("*").remove(); // 기존 SVG 제거
+
+		waveformList.forEach((waveform) => {
+			const SampleBase = waveform.SampleBase;
+			const waveformContainer = document.createElement('div');
+			waveformContainer.className = 'waveformContainer';
+			waveformContainer.style.display = 'flex';
+			waveformContainer.style.overflowX = "auto";
+				waveform.LeadData.forEach((lead) => {
+					const { LeadID, LeadSampleCountTotal, LeadAmplitudeUnitsPerBit, WaveFormData } = lead;
+			
+					const duration = LeadSampleCountTotal / SampleBase;
+					const decoded = decodeBase64ToInt16Array(WaveFormData, LeadAmplitudeUnitsPerBit);
+					const leadContainer = document.createElement('div');
+					leadContainer.className = 'leadContainer'
+					leadContainer.style.marginBottom = '24px';
+
+					waveformContainer.appendChild(leadContainer);
+
+					drawLeadChart(leadContainer, decoded, duration, LeadID);
+				});
+			container.appendChild(waveformContainer);
+		});
 	}
 
 	function drawLeadChart(container, values, duration, leadId) {
@@ -62,36 +87,79 @@
 
 		svg.append('text').attr('x', margin.left).attr('y', 15).attr('fill', '#333').text(`${leadId}`);
 
-		svg
-			.append('path')
-			.datum(values)
+		svg.append('path').datum(values).attr('fill', 'none').attr('stroke', '#007acc').attr('stroke-width', 1).attr('d', line);
+
+		// 1. circle + tooltip 요소 생성
+		const focusCircle = svg.append('circle')
+			.attr('r', 3)
+			.attr('fill', 'red')
+			.style('display', 'none');
+
+		const tooltip = d3.select('body')
+			.append('div')
+			.style('position', 'absolute')
+			.style('background', 'white')
+			.style('border', '1px solid #ccc')
+			.style('padding', '4px 8px')
+			.style('font-size', '12px')
+			.style('pointer-events', 'none')
+			.style('display', 'none');
+
+		// 2. 마우스 이벤트를 위한 overlay
+		svg.append('rect')
+			.attr('width', width)
+			.attr('height', height)
 			.attr('fill', 'none')
-			.attr('stroke', '#007acc')
-			.attr('stroke-width', 1)
-			.attr('d', line);
-	}
+			.attr('pointer-events', 'all')
+			.on('mousemove', (event) => {
+				const [mx] = d3.pointer(event);
+				const t = (mx - margin.left) / (width - margin.left - margin.right); // 비율
+				const i = Math.floor(t * values.length);
+				if (i < 0 || i >= values.length) return;
 
-	function renderAllECGWaveforms(container, waveformList) {
-		d3.select(container).selectAll("*").remove(); // 기존 SVG 제거
+				const x = xScale(i * (duration / values.length));
+				const y = yScale(values[i]);
 
-		waveformList.forEach((waveform) => {
-			const SampleBase = waveform.SampleBase;
-      const waveformContainer = document.createElement('div');
-      waveformContainer.style.display = 'flex';
-			waveform.LeadData.forEach((lead) => {
-				const { LeadID, LeadSampleCountTotal, LeadAmplitudeUnitsPerBit, WaveFormData } = lead;
-        
-				const duration = LeadSampleCountTotal / SampleBase;
-				const decoded = decodeBase64ToInt16Array(WaveFormData, LeadAmplitudeUnitsPerBit);
-				const leadContainer = document.createElement('div');
-				leadContainer.style.marginBottom = '24px';
-				waveformContainer.appendChild(leadContainer);
+				focusCircle
+					.attr('cx', x)
+					.attr('cy', y)
+					.style('display', 'block');
+				
+				const tooltipWidth = tooltip.node().offsetWidth;
+				const tooltipHeight = tooltip.node().offsetHeight;
 
-				drawLeadChart(leadContainer, decoded, duration, LeadID);
-			});
-      container.appendChild(waveformContainer);
-		});
+				let left = event.pageX + 10;
+				let top = event.pageY + 10;
+
+				// 화면 밖 방지
+				if (left + tooltipWidth > window.innerWidth) {
+					left = event.pageX - tooltipWidth - 10;
+				}
+				if (top + tooltipHeight > window.innerHeight) {
+					top = event.pageY - tooltipHeight - 10;
+				}
+
+				tooltip
+					.style('left', `${left}px`)
+					.style('top', `${top}px`)
+					.style('display', 'block')
+					.html(`Value: ${values[i].toFixed(2)}<br/>Index: ${i}`);
+
+				})
+				.on('mouseout', () => {
+					focusCircle.style('display', 'none');
+					tooltip.style('display', 'none');
+				});
 	}
 </script>
 
-<div bind:this={container} class="overflow-x-auto max-h-[1000px]"></div>
+<button
+	class="px-3 py-1 mb-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+	on:click={() => showCharts = !showCharts}
+>
+	{showCharts ? 'Hide ECG Graphs' : 'Show ECG Graphs'}
+</button>
+
+{#if showCharts}
+	<div bind:this={container} class="max-h-[1000px] overflow-hidden" transition:slide></div>
+{/if}
