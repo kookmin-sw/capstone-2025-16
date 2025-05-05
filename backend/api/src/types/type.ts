@@ -111,8 +111,15 @@ export interface CohortDefinition {
   comparisonGroup?: ComparisonGroup;
 }
 
-export interface ChartCohortDefinition extends CohortDefinition {
+export interface BarChartCohortDefinition extends CohortDefinition {
   data?: Filter;
+}
+
+export interface BoxPlotCountBy {
+  concept?: Identifier;
+  age?: NumberWithOperator;
+  date?: DateWithOperator;
+  value?: NumberWithOperator;
 }
 
 /**

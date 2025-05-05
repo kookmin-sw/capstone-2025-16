@@ -433,6 +433,15 @@ CREATE OR REPLACE FUNCTION _ifnull AS (a, b) -> ifNull(a, b);
 
 CREATE OR REPLACE FUNCTION _to_int64 AS (a) -> toInt64(a);
 
+CREATE OR REPLACE FUNCTION _upper_quartile AS (a) -> quantile(0.75)(a);
+
+CREATE OR REPLACE FUNCTION _median AS (a) -> quantile(0.5)(a);
+
+CREATE OR REPLACE FUNCTION _lower_quartile AS (a) -> quantile(0.25)(a);
+
+CREATE OR REPLACE FUNCTION _maximum AS (a) -> least(_upper_quartile(a) + 1.5 * (_upper_quartile(a) - _lower_quartile(a)), max(a));
+
+CREATE OR REPLACE FUNCTION _minimum AS (a) -> greatest(_lower_quartile(a) - 1.5 * (_upper_quartile(a) - _lower_quartile(a)), min(a));
 
 /* Create first_condition_era */
 CREATE TABLE IF NOT EXISTS first_condition_era AS condition_era;
