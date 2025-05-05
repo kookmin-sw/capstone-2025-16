@@ -6,20 +6,40 @@ import {
   SelectQueryBuilder,
   StringReference,
   expressionBuilder,
-  TableExpression,
-  JoinReferenceExpression,
-  SelectQueryBuilderWithLeftJoin,
+  CreateTableBuilder,
+  DeleteQueryBuilder,
+  DropTableBuilder,
+  InsertQueryBuilder,
+  sql,
 } from 'kysely';
 import {
   IdentifierWithOperator,
   DateWithOperator,
   NumberWithOperator,
   StringWithOperator,
+  Concept,
+  CohortDefinition,
+  Filter,
 } from '../types/type';
 import { PartitionByExpression } from 'kysely/dist/cjs/parser/partition-by-parser';
 import { Database } from '../db/types';
 import { Kysely } from 'kysely';
 import { db } from '../db/types';
+
+import * as conditionEra from './filters/condition-era';
+import * as conditionOccurrence from './filters/condition-occurrence';
+import * as death from './filters/death';
+import * as deviceExposure from './filters/device-exposure';
+import * as doseEra from './filters/dose-era';
+import * as drugEra from './filters/drug-era';
+import * as drugExposure from './filters/drug-exposure';
+import * as measurement from './filters/measurement';
+import * as observation from './filters/observation';
+import * as observationPeriod from './filters/observation-period';
+import * as procedureOccurrence from './filters/procedure-occurrence';
+import * as specimen from './filters/specimen';
+import * as visitOccurrence from './filters/visit-occurrence';
+import * as demographic from './filters/demographic';
 
 export const getBaseDB = () => {
   return db;
@@ -520,4 +540,416 @@ export const handleIdentifierWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   return query;
+};
+
+export const buildConceptQuery = (
+  db: Kysely<Database>,
+  concepts: Concept[],
+) => {
+  if (!concepts.length) {
+    return db
+      .selectFrom('concept')
+      .select('concept.concept_id')
+      .where(({ eb }) => eb(eb.val(1), '=', eb.val(0)));
+  }
+
+  let query = db
+    .selectFrom('concept')
+    .select('concept.concept_id')
+    .where(({ eb }) =>
+      eb(
+        'concept.concept_id',
+        'in',
+        concepts.map((e) => eb.fn<any>('_to_int64', [eb.val(e.concept_id)])),
+      ),
+    );
+
+  let descendant = concepts.filter((e) => e.includeDescendants);
+  if (descendant.length) {
+    query = query.union(
+      db
+        .selectFrom('concept_ancestor')
+        .select(({ eb }) => eb.ref('descendant_concept_id').as('concept_id'))
+        .leftJoin(
+          'concept',
+          'concept.concept_id',
+          'concept_ancestor.descendant_concept_id',
+        )
+        .where(({ eb, and }) =>
+          and([
+            and([
+              eb(
+                'concept_ancestor.ancestor_concept_id',
+                'in',
+                descendant.map((e) =>
+                  eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
+                ),
+              ),
+              eb('concept.invalid_reason', 'is', null),
+            ]),
+          ]),
+        ),
+    );
+  }
+
+  let mapped = concepts.filter((e) => e.includeMapped);
+  if (mapped.length) {
+    query = query.union(
+      db
+        .selectFrom('concept_relationship')
+        .select(({ eb }) => eb.ref('concept_id_1').as('concept_id'))
+        .where('relationship_id', '=', 'Maps to')
+        .where('concept_id_2', 'in', query)
+        .leftJoin(
+          'concept',
+          'concept.concept_id',
+          'concept_relationship.concept_id_1',
+        )
+        .where('invalid_reason', 'is', null),
+    );
+  }
+
+  return query;
+};
+
+export const handleFilter = (
+  db: Kysely<Database>,
+  filter: Filter,
+  distinct: boolean,
+) => {
+  switch (filter.type) {
+    case 'condition_era':
+      return conditionEra.getQuery(db, filter, distinct);
+    case 'condition_occurrence':
+      return conditionOccurrence.getQuery(db, filter, distinct);
+    case 'death':
+      return death.getQuery(db, filter, distinct);
+    case 'device_exposure':
+      return deviceExposure.getQuery(db, filter, distinct);
+    case 'dose_era':
+      return doseEra.getQuery(db, filter, distinct);
+    case 'drug_era':
+      return drugEra.getQuery(db, filter, distinct);
+    case 'drug_exposure':
+      return drugExposure.getQuery(db, filter, distinct);
+    case 'measurement':
+      return measurement.getQuery(db, filter, distinct);
+    case 'observation':
+      return observation.getQuery(db, filter, distinct);
+    case 'observation_period':
+      return observationPeriod.getQuery(db, filter, distinct);
+    case 'procedure_occurrence':
+      return procedureOccurrence.getQuery(db, filter, distinct);
+    case 'specimen':
+      return specimen.getQuery(db, filter, distinct);
+    case 'visit_occurrence':
+      return visitOccurrence.getQuery(db, filter, distinct);
+    case 'demographic':
+      return demographic.getQuery(db, filter, distinct);
+    default:
+      throw new Error(`Unknown filter type: ${filter}`);
+  }
+};
+
+export type ExecutableBuilder =
+  | CreateTableBuilder<any, any>
+  | InsertQueryBuilder<any, any, any>
+  | DeleteQueryBuilder<any, any, any>
+  | DropTableBuilder
+  | SelectQueryBuilder<any, any, any>;
+
+export const buildBaseQuery = (
+  db: Kysely<Database>,
+  database: 'clickhouse' | 'postgres' | string,
+  cohortDef: CohortDefinition,
+  distinct: boolean,
+  baseCohortId?: string, // 코호드 아이디가 없으면 전체 환자에서 코호트 생성, 있다면 해당 코호트를 기반으로 다른 코호트 생성
+) => {
+  const queries: (ExecutableBuilder | ExecutableBuilder[])[] = [
+    [
+      db.schema
+        .createTable('codesets')
+        .temporary()
+        .addColumn(
+          'codeset_id',
+          database === 'clickhouse' ? sql`Int64` : 'bigint',
+        )
+        .addColumn(
+          'concept_id',
+          database === 'clickhouse' ? sql`Int64` : 'bigint',
+        ),
+      db.schema
+        .createTable('temp_cohort_detail')
+        .temporary()
+        .addColumn(
+          'cohort_id',
+          database === 'clickhouse' ? sql`Int64` : 'bigint',
+        )
+        .addColumn(
+          'person_id',
+          database === 'clickhouse' ? sql`Int64` : 'bigint',
+        ),
+    ],
+  ];
+
+  const cleanupQueries: (ExecutableBuilder | ExecutableBuilder[])[] = [
+    [
+      db.schema.dropTable('codesets'),
+      db.schema.dropTable('temp_cohort_detail'),
+    ],
+  ];
+
+  const { conceptsets, initialGroup, comparisonGroup } = cohortDef;
+
+  if (conceptsets && conceptsets.length) {
+    conceptsets.map((e) => {
+      queries.push(
+        db
+          .insertInto('codesets')
+          .columns(['codeset_id', 'concept_id'])
+          .expression(
+            db
+              .selectFrom(
+                db
+                  .selectFrom(
+                    buildConceptQuery(
+                      db,
+                      e.items.filter((e) => !e.isExcluded),
+                    ).as('concept_include'),
+                  )
+                  .select('concept_include.concept_id')
+                  .distinct()
+                  .except(
+                    buildConceptQuery(
+                      db,
+                      e.items.filter((e) => e.isExcluded),
+                    ),
+                  )
+                  .as('final_codesets'),
+              )
+              .select(({ eb }) => [
+                eb
+                  .fn<any>('_to_int64', [eb.val(e.conceptset_id)])
+                  .as('codeset_id'),
+                'concept_id',
+              ]),
+          ),
+      );
+    });
+  }
+
+  // handle initial group
+  for (let i = 0; i < initialGroup.containers.length; i++) {
+    let container = initialGroup.containers[i];
+    let query: SelectQueryBuilder<Database, any, any> | undefined;
+    for (let filter of container.filters) {
+      let filterQuery: SelectQueryBuilder<Database, any, any> = handleFilter(
+        db,
+        filter,
+        distinct,
+      );
+      if (baseCohortId) {
+        filterQuery = filterQuery.intersect(({ eb }) =>
+          eb
+            .selectFrom('cohort_detail')
+            .select('person_id')
+            .where('cohort_id', '=', baseCohortId),
+        );
+      }
+      if (!query) {
+        query = filterQuery;
+      } else {
+        query = query.intersect(filterQuery);
+      }
+    }
+
+    if (!query) continue;
+
+    switch (i && 'operator' in container && container.operator) {
+      case 'AND':
+        query = db
+          .selectFrom('temp_cohort_detail')
+          .select('person_id')
+          .where(({ eb }) =>
+            eb('cohort_id', '=', eb.fn<any>('_to_int64', [eb.val(i)])),
+          )
+          .where('person_id', 'in', query);
+        break;
+      case 'OR':
+        query = db
+          .selectFrom('temp_cohort_detail')
+          .select('person_id')
+          .where(({ eb }) =>
+            eb('cohort_id', '=', eb.fn<any>('_to_int64', [eb.val(i)])),
+          )
+          .union(query);
+        break;
+      case 'NOT':
+        query = db
+          .selectFrom('temp_cohort_detail')
+          .select('person_id')
+          .where(({ eb }) =>
+            eb('cohort_id', '=', eb.fn<any>('_to_int64', [eb.val(i)])),
+          )
+          .except(query);
+        break;
+      default:
+        break;
+    }
+
+    queries.push(
+      db.insertInto('temp_cohort_detail').expression(
+        db
+          .selectFrom(query.as('tmp'))
+          .select(({ eb }) => [
+            eb.fn<any>('_to_int64', [eb.val(i + 1)]).as('cohort_id'),
+            'person_id',
+          ])
+          .distinct(),
+      ),
+    );
+  }
+
+  // handle comparison group
+  if (comparisonGroup) {
+    for (let i = 0; i < comparisonGroup.containers.length; i++) {
+      let container = comparisonGroup.containers[i];
+      let query: SelectQueryBuilder<Database, any, any> | undefined;
+      for (let filter of container.filters) {
+        let filterQuery: SelectQueryBuilder<Database, any, any> = handleFilter(
+          db,
+          filter,
+          distinct,
+        );
+        if (baseCohortId) {
+          filterQuery = filterQuery.intersect(({ eb }) =>
+            eb
+              .selectFrom('cohort_detail')
+              .select('person_id')
+              .where('cohort_id', '=', baseCohortId),
+          );
+        }
+        if (!query) {
+          query = filterQuery;
+        } else {
+          query = query.intersect(filterQuery);
+        }
+      }
+
+      if (!query) continue;
+
+      switch (i && 'operator' in container && container.operator) {
+        case 'AND':
+          query = db
+            .selectFrom('temp_cohort_detail')
+            .select('person_id')
+            .where(({ eb }) =>
+              eb(
+                'cohort_id',
+                '=',
+                eb.fn<any>('_to_int64', [
+                  eb.val(initialGroup.containers.length + i),
+                ]),
+              ),
+            )
+            .where('person_id', 'in', query);
+          break;
+        case 'OR':
+          query = db
+            .selectFrom('temp_cohort_detail')
+            .select('person_id')
+            .where(({ eb }) =>
+              eb(
+                'cohort_id',
+                '=',
+                eb.fn<any>('_to_int64', [
+                  eb.val(initialGroup.containers.length + i),
+                ]),
+              ),
+            )
+            .union(
+              db
+                .selectFrom('temp_cohort_detail')
+                .select('person_id')
+                .where(({ eb }) =>
+                  eb(
+                    'cohort_id',
+                    '=',
+                    eb.fn<any>('_to_int64', [
+                      eb.val(initialGroup.containers.length),
+                    ]),
+                  ),
+                )
+                .where('person_id', 'in', query),
+            );
+          break;
+        case 'NOT':
+          query = db
+            .selectFrom('temp_cohort_detail')
+            .select('person_id')
+            .where(({ eb }) =>
+              eb(
+                'cohort_id',
+                '=',
+                eb.fn<any>('_to_int64', [
+                  eb.val(initialGroup.containers.length + i),
+                ]),
+              ),
+            )
+            .except(query);
+          break;
+        default:
+          query = db
+            .selectFrom('temp_cohort_detail')
+            .select('person_id')
+            .where(({ eb }) =>
+              eb(
+                'cohort_id',
+                '=',
+                eb.fn<any>('_to_int64', [
+                  eb.val(initialGroup.containers.length),
+                ]),
+              ),
+            )
+            .where('person_id', 'in', query);
+          break;
+      }
+
+      queries.push(
+        db.insertInto('temp_cohort_detail').expression(
+          db
+            .selectFrom(query.as('tmp'))
+            .select(({ eb }) => [
+              eb
+                .fn<any>('_to_int64', [
+                  eb.val(initialGroup.containers.length + i + 1),
+                ])
+                .as('cohort_id'),
+              'person_id',
+            ])
+            .distinct(),
+        ),
+      );
+    }
+  }
+
+  const finalQueries: ExecutableBuilder[] = [
+    db
+      .selectFrom('temp_cohort_detail')
+      .groupBy('cohort_id')
+      .orderBy('cohort_id', 'asc')
+      .select(({ fn }) => [
+        'cohort_id as container_id',
+        fn.count('person_id').as('count'),
+      ]),
+  ];
+
+  return {
+    queries,
+    finalQueries,
+    cleanupQueries,
+    containerCount:
+      initialGroup.containers.length +
+      (comparisonGroup?.containers.length ?? 0),
+  };
 };
