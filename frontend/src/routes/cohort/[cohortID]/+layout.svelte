@@ -27,11 +27,11 @@
 	// 검색어에 따라 데이터를 필터링
 	function filterData() {
 		if(searchQuery.length === 0){
-			filteredData = data.userData;
+			filteredData = data.userData.persons;
 			return;	
 		}
 
-		filteredData = data.userData.filter((item) =>
+		filteredData = data.userData.persons.filter((item) =>
 			item.personid === parseInt(searchQuery)
 		);
 	}
@@ -46,9 +46,9 @@
 			currentPersonId = parseInt(personIdFromUrl);
 		}
 
-		if (data.userData.length !== 0) {
+		if (data.userData.persons.length !== 0) {
 			currentPage = 1;
-			filteredData = data.userData;
+			filteredData = data.userData.persons;
 		}
 
 		await tick();
