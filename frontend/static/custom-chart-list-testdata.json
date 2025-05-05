@@ -1,0 +1,37 @@
+[
+  {
+    "id": "200001",
+    "name": "Metformin Usage in Diabetes Cohort",
+    "description": "Bar chart displaying the number of patients in the diabetes cohort based on Metformin usage.",
+    "author": "Dr. Kim",
+    "createdAt": "2024/01/10 10:00"
+  },
+  {
+    "id": "200002",
+    "name": "Metformin Usage in Diabetes Cohort",
+    "description": "Bar chart displaying the number of patients in the diabetes cohort based on Metformin usage.",
+    "author": "Dr. Lee",
+    "createdAt": "2024/01/10 10:00"
+  },
+  {
+    "id": "200003",
+    "name": "Metformin Usage in Diabetes Cohort",
+    "description": "Bar chart displaying the number of patients in the diabetes cohort based on Metformin usage.",
+    "author": "Dr. Park",
+    "createdAt": "2024/01/10 10:00"
+  },
+  {
+    "id": "200004",
+    "name": "Metformin Usage in Diabetes Cohort",
+    "description": "Bar chart displaying the number of patients in the diabetes cohort based on Metformin usage.",
+    "author": "Dr. Choi",
+    "createdAt": "2024/01/10 10:00"
+  },
+  {
+    "id": "200005",
+    "name": "Metformin Usage in Diabetes Cohort",
+    "description": "Bar chart displaying the number of patients in the diabetes cohort based on Metformin usage.",
+    "author": "Dr. Yoon",
+    "createdAt": "2024/01/10 10:00"
+  }
+]
