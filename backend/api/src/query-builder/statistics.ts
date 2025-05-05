@@ -253,13 +253,5 @@ export const buildBoxPlotQuery = (
 
   queries.push(finalQueries);
 
-  for (const query of [...queries, ...cleanupQueries].flat()) {
-    let { parameters, sql } = query.compile();
-    for (let i of parameters) {
-      sql = sql.replace('?', typeof i === 'string' ? `'${i}'` : `${i}`);
-    }
-    console.log(sql + ';');
-  }
-
   return [...queries, ...cleanupQueries];
 };
