@@ -2,8 +2,32 @@
   import * as d3 from 'd3';
   import { onMount, onDestroy } from 'svelte';
 
-  // 데이터 형식: [{ group: "그룹명", target: "타겟명", values: [5, 10, 15, ...] }, ...]
-  export let data = [];
+  // 새 데이터 형식: 
+  // {
+  //   "statistics_id": "...",
+  //   "name": "...",
+  //   "description": "...",
+  //   "type": "boxplot",
+  //   "definition": {
+  //     "cohortIds": [...],
+  //     "groups": [...]
+  //   },
+  //   "result": [
+  //     {
+  //       "cohortId": "...",
+  //       "values": [
+  //         [
+  //           { "type": "minimum", "value": 1 },
+  //           { "type": "maximum", "value": 10 },
+  //           ...
+  //         ],
+  //         ...
+  //       ]
+  //     },
+  //     ...
+  //   ]
+  // }
+  export let data = {};
   export let colors = ["#4595EC", "#FF6B6B", "#FFD166", "#06D6A0", "#9D8DF1"];
 
   let svgContainer;
@@ -30,7 +54,7 @@
   });
 
   function drawChart() {
-    if (!data || data.length === 0 || !svgContainer) return;
+    if (!data || !data.result || data.result.length === 0 || !svgContainer) return;
 
     // 컨테이너 크기에 맞게 조정
     const containerRect = svgContainer.getBoundingClientRect();
@@ -64,11 +88,44 @@
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // 그룹과 타겟 정보 추출
-    const groups = Array.from(new Set(data.map(d => d.group)));
-    const targets = Array.from(new Set(data.map(d => d.target)));
+    // 데이터 변환 - 그룹별로 데이터 재구성
+    const boxplotData = [];
+    
+    // 그룹 이름 가져오기
+    const groupNames = data.definition.groups.map(g => g.name);
+    
+    // 각 코호트의 데이터 처리
+    data.result.forEach(cohort => {
+      cohort.values.forEach((groupValues, groupIndex) => {
+        // 각 그룹별 데이터 객체 생성
+        const groupData = {
+          group: groupNames[groupIndex],
+          target: cohort.cohortId,
+          color: colors[data.result.findIndex(d => d.cohortId === cohort.cohortId) % colors.length],
+          outliers: []
+        };
+        
+        // 각 유형별 값 매핑
+        groupValues.forEach(item => {
+          if (item.type === "minimum") groupData.min = item.value;
+          else if (item.type === "maximum") groupData.max = item.value;
+          else if (item.type === "median") groupData.median = item.value;
+          else if (item.type === "lower") groupData.q1 = item.value;
+          else if (item.type === "upper") groupData.q3 = item.value;
+          else if (item.type === "outlier") groupData.outliers.push(item.value);
+        });
+        
+        boxplotData.push(groupData);
+      });
+    });
 
-    // 색상 스케일 (타겟 기준)
+    // 타겟(코호트) 목록 추출
+    const targets = Array.from(new Set(boxplotData.map(d => d.target)));
+    
+    // 그룹 목록 추출
+    const groups = Array.from(new Set(boxplotData.map(d => d.group)));
+
+    // 색상 스케일 (타겟/코호트 기준)
     const color = d3.scaleOrdinal()
       .domain(targets)
       .range(colors)
@@ -78,20 +135,28 @@
     const xGroupScale = d3.scaleBand()
       .domain(groups)
       .range([0, innerWidth])
-      .paddingInner(0.3)
+      .paddingInner(0.6)
       .paddingOuter(0.2);
 
     // 그룹 내 타겟별 X축 스케일
     const xTargetScale = d3.scaleBand()
       .domain(targets)
       .range([0, xGroupScale.bandwidth()])
-      .padding(0.2);
+      .padding(0);
 
     // 박스 너비
     const boxWidth = Math.min(40, xTargetScale.bandwidth() * 0.9);
 
-    // 모든 값을 하나의 배열로 합치기
-    const allValues = data.flatMap(d => d.values);
+    // Y 스케일 계산을 위한 모든 값 수집
+    const allValues = [];
+    
+    // 박스플롯의 모든 값(최소, 최대, 사분위값, 이상치 등) 수집
+    boxplotData.forEach(d => {
+      allValues.push(d.min, d.max, d.q1, d.q3, d.median);
+      if (d.outliers && d.outliers.length) {
+        allValues.push(...d.outliers);
+      }
+    });
 
     // Y 스케일 (값)
     const y = d3.scaleLinear()
@@ -135,49 +200,6 @@
         .style("font-size", "10px")
         .style("font-weight", "400")
         .attr("fill", "#444");
-
-    // 각 데이터 포인트별 통계 계산
-    const boxplotData = [];
-    
-    // 각 그룹-타겟 조합에 대한 박스플롯 데이터 계산
-    groups.forEach(group => {
-      targets.forEach(target => {
-        // 해당 그룹과 타겟에 맞는 데이터 찾기
-        const filteredData = data.filter(d => d.group === group && d.target === target);
-        
-        // 데이터가 없으면 건너뛰기
-        if (filteredData.length === 0) return;
-        
-        // 모든 값 합치기
-        const allValues = filteredData.flatMap(d => d.values);
-        
-        // 값이 없으면 건너뛰기
-        if (allValues.length === 0) return;
-        
-        const sortedValues = [...allValues].sort(d3.ascending);
-        const q1 = d3.quantile(sortedValues, 0.25);
-        const median = d3.quantile(sortedValues, 0.5);
-        const q3 = d3.quantile(sortedValues, 0.75);
-        const iqr = q3 - q1; // 사분위범위
-        const min = Math.max(d3.min(sortedValues), q1 - 1.5 * iqr); // 아래쪽 울타리 또는 최소값
-        const max = Math.min(d3.max(sortedValues), q3 + 1.5 * iqr); // 위쪽 울타리 또는 최대값
-        
-        // 이상치 (울타리 밖의 값들)
-        const outliers = sortedValues.filter(v => v < min || v > max);
-        
-        boxplotData.push({
-          group,
-          target,
-          min,
-          q1,
-          median,
-          q3,
-          max,
-          outliers,
-          color: color(target)
-        });
-      });
-    });
 
     // 범례 추가
     const legendItemSize = 10;
@@ -262,7 +284,7 @@
         .attr("y2", y(d.median))
         .attr("x1", 0)
         .attr("x2", boxWidth)
-        .attr("stroke", "#fff")
+        .attr("stroke", d.color)
         .attr("stroke-width", 2);
       
       // 박스 (q1에서 q3까지)
@@ -317,11 +339,14 @@
         });
       
       // 위쪽, 아래쪽 가로선 (min, max)
-      ["min", "max"].forEach(type => {
+      [
+        { type: "min", value: d.min },
+        { type: "max", value: d.max }
+      ].forEach(item => {
         boxGroup.append("line")
-          .attr("class", `${type}-line`)
-          .attr("y1", y(d[type]))
-          .attr("y2", y(d[type]))
+          .attr("class", `${item.type}-line`)
+          .attr("y1", y(item.value))
+          .attr("y2", y(item.value))
           .attr("x1", boxWidth / 2 - 10)
           .attr("x2", boxWidth / 2 + 10)
           .attr("stroke", d.color)
@@ -329,45 +354,47 @@
       });
       
       // 이상치 (outliers)
-      d.outliers.forEach(value => {
-        boxGroup.append("circle")
-          .attr("class", "outlier hover:r-[5px] hover:stroke-2 cursor-pointer transition-all duration-200")
-          .attr("cx", boxWidth / 2)
-          .attr("cy", y(value))
-          .attr("r", 3)
-          .attr("fill", "#fff")
-          .attr("stroke", d.color)
-          .attr("stroke-width", 1)
-          .on("mouseover", function(event) {
-            d3.select(this)
-              .attr("r", 5)
-              .attr("stroke-width", 2);
-            
-            tooltip
-              .classed("hidden", false)
-              .html(`
-                <div class="text-center mb-1">
-                  <strong>${d.group}</strong> | <span style="color: ${d.color}">${d.target}</span>
-                </div>
-                <div>Outlier: ${value.toFixed(2)}</div>
-              `);
-            
-            // 툴팁 위치 - 이상치 점 위에 고정
-            const circleRect = this.getBoundingClientRect();
-            const tooltipRect = tooltip.node().getBoundingClientRect();
-            
-            tooltip
-              .style("left", `${circleRect.left + circleRect.width/2 - tooltipRect.width/2}px`)
-              .style("top", `${circleRect.top - tooltipRect.height - 10}px`);
-          })
-          .on("mouseout", function() {
-            d3.select(this)
-              .attr("r", 3)
-              .attr("stroke-width", 1);
-            
-            tooltip.classed("hidden", true);
-          });
-      });
+      if (d.outliers && d.outliers.length > 0) {
+        d.outliers.forEach(value => {
+          boxGroup.append("circle")
+            .attr("class", "outlier hover:r-[5px] hover:stroke-2 cursor-pointer transition-all duration-200")
+            .attr("cx", boxWidth / 2)
+            .attr("cy", y(value))
+            .attr("r", 3)
+            .attr("fill", "#fff")
+            .attr("stroke", d.color)
+            .attr("stroke-width", 1)
+            .on("mouseover", function(event) {
+              d3.select(this)
+                .attr("r", 5)
+                .attr("stroke-width", 2);
+              
+              tooltip
+                .classed("hidden", false)
+                .html(`
+                  <div class="text-center mb-1">
+                    <strong>${d.group}</strong> | <span style="color: ${d.color}">${d.target}</span>
+                  </div>
+                  <div>Outlier: ${value.toFixed(2)}</div>
+                `);
+              
+              // 툴팁 위치 - 이상치 점 위에 고정
+              const circleRect = this.getBoundingClientRect();
+              const tooltipRect = tooltip.node().getBoundingClientRect();
+              
+              tooltip
+                .style("left", `${circleRect.left + circleRect.width/2 - tooltipRect.width/2}px`)
+                .style("top", `${circleRect.top - tooltipRect.height - 10}px`);
+            })
+            .on("mouseout", function() {
+              d3.select(this)
+                .attr("r", 3)
+                .attr("stroke-width", 1);
+              
+              tooltip.classed("hidden", true);
+            });
+        });
+      }
     });
 
     // 차트 제거 시 툴팁도 제거
@@ -385,7 +412,6 @@
 <div class="w-full h-full flex items-center justify-center relative" bind:this={svgContainer}></div>
 
 <style>
-  /* 호버 효과를 위한 CSS */
   :global(.box:hover) {
     filter: brightness(1.1);
     cursor: pointer;
