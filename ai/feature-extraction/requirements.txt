@@ -7,3 +7,4 @@ scikit-learn==1.6.1
 xgboost==3.0.0
 shap==0.47.2
 kafka-python==2.2.4
+torch==2.7.0
