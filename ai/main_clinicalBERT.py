@@ -1,3 +1,7 @@
+from transformers import AutoTokenizer, AutoModel
+tokenizer = AutoTokenizer.from_pretrained("medicalai/ClinicalBERT")
+model = AutoModel.from_pretrained("medicalai/ClinicalBERT")
+
 import cohort_json_schema
 from pdf_to_text import extract_cohort_definition_from_pdf
 from get_omop_concept_id import get_concept_ids
@@ -397,28 +401,11 @@ def main():
     # """
     
     implementable_text = """
-    Patients became eligible when they were first docu-
-    mented to be receiving oxygen with inspired oxygen
-    fraction (FiO2) of 0.4 or more via non-rebreather mask,
-    noninvasive positive pressure ventilation (NIV), or high-
-    flow nasal cannula (HFNC), within 24 h of ICU admis-
-    sion. We excluded patients with prior invasive ventilation
-    during the same ICU admission, goals of care precluding
-    invasive ventilation, ICU admission from the operating
-    room, or a tracheostomy. Patients were also excluded
-    when equipoise was less certain at the moment of eli-
-    gibility, defined as a Glasgow Coma Scale (GCS) motor
-    component of less than 4, or a partial pressure of carbon
-    dioxide (pCO2) of 60 or more with pH of 7.20 or less [33].
-    Patients were not excluded if these characteristics devel-
-    oped during the follow-up period, after initial inclusion.
-    Wherever oxygen flow was available but FiO2 was not
-    (for example, non-rebreather masks), FiO2 was estimated
-    using the validated equation: FiO2
-    =
-    0.21 + (oxygen flow
-    in liters per minute)*0.03 [34]. Further details are avail-
-    able in Additional file 1: (§4, Table e2).
+    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    stay duration of less than 24 h.
     """
     
     # 2. 텍스트에서 COHORT JSON 추출
