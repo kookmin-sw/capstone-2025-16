@@ -56,13 +56,13 @@
 			bind:value={operator}
 			class="w-fit rounded-md rounded-none border border-zinc-200 px-0 px-2 py-0 text-xs"
 		>
-			<option value="lt">더 작은</option>
-			<option value="lte">작거나 같음</option>
-			<option value="eq">같음</option>
-			<option value="gt">더 큰</option>
-			<option value="gte">크거나 같음</option>
-			<option value="bt">사이에</option>
-			<option value="!bt">사이에 없는</option>
+			<option value="lt">Less than</option>
+			<option value="lte">Less than or equal to</option>
+			<option value="eq">Equal to</option>
+			<option value="gt">Greater than</option>
+			<option value="gte">Greater than or equal to</option>
+			<option value="bt">Between</option>
+			<option value="!bt">Not between</option>
 		</select>
 		{#if operator === '!bt' || operator === 'bt'}
 			<input
