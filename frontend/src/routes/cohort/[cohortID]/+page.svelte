@@ -163,31 +163,31 @@
             // 테스트 데이터 설정
             featureData = {
                 condition: [
-                    { rank: 1, concept_id: 316866, concept_name: "Essential hypertension", influence: 62 },
-                    { rank: 2, concept_id: 201820, concept_name: "Type 2 diabetes mellitus", influence: 48 },
-                    { rank: 3, concept_id: 320128, concept_name: "Hyperlipidemia", influence: 35 },
-                    { rank: 4, concept_id: 312327, concept_name: "Osteoarthritis", influence: 28 },
-                    { rank: 5, concept_id: 134057, concept_name: "Atrial fibrillation", influence: 24 },
-                    { rank: 6, concept_id: 255573, concept_name: "Chronic kidney disease", influence: 20 },
-                    { rank: 7, concept_id: 317009, concept_name: "Asthma", influence: 15 },
-                    { rank: 8, concept_id: 319835, concept_name: "GERD", influence: 12 },
-                    { rank: 9, concept_id: 254761, concept_name: "Major depressive disorder", influence: 10 },
-                    { rank: 10, concept_id: 317576, concept_name: "Obstructive sleep apnea", influence: 8 }
+                    { rank: 1,  concept_id: 197320,  concept_name: "Kidney injury", influence: 59.25 },
+                    { rank: 2,  concept_id: 433753,  concept_name: "Arteriosclerosis", influence: 18.26 },
+                    { rank: 3,  concept_id: 432867,  concept_name: "Hypertension", influence: 5.91 },
+                    { rank: 4,  concept_id: 317576,  concept_name: "Hyperlipidemia", influence: 4.72 },
+                    { rank: 5,  concept_id: 442588,  concept_name: "Alcohol abuse", influence: 3.42 },
+                    { rank: 6,  concept_id: 439727,  concept_name: "Anemia (post-hemorrhage)", influence: 2.44 },
+                    { rank: 7,  concept_id: 320128,  concept_name: "Opioid abuse", influence: 1.13 },
+                    { rank: 8,  concept_id: 438130,  concept_name: "HIV", influence: 0.85 },
+                    { rank: 9,  concept_id: 434894,  concept_name: "Sleep apnea", influence: 0.74 },
+                    { rank: 10, concept_id: 4113821, concept_name: "Anxiety", influence: 0.56 }
                 ],
                 procedure: [
-                    { rank: 1, concept_id: 4324693, concept_name: "Coronary angiography", influence: 55 },
-                    { rank: 2, concept_id: 2008272, concept_name: "Insertion of cardiac pacemaker", influence: 42 },
-                    { rank: 3, concept_id: 4278515, concept_name: "Complete blood count", influence: 38 },
-                    { rank: 4, concept_id: 2101938, concept_name: "Colonoscopy", influence: 32 },
-                    { rank: 5, concept_id: 2110725, concept_name: "Hip replacement", influence: 28 },
-                    { rank: 6, concept_id: 2003999, concept_name: "Echocardiography", influence: 24 },
-                    { rank: 7, concept_id: 2107223, concept_name: "Percutaneous coronary intervention", influence: 20 },
-                    { rank: 8, concept_id: 2211067, concept_name: "Cataract surgery", influence: 16 },
-                    { rank: 9, concept_id: 4149898, concept_name: "Physical therapy evaluation", influence: 12 },
-                    { rank: 10, concept_id: 2108680, concept_name: "Cholecystectomy", influence: 10 }
+                    { rank: 1,  concept_id: 4021323,  concept_name: "Observation std A", influence: 56.74 },  // standard, A코드
+                    { rank: 2,  concept_id: 2514402,  concept_name: "Observation std B", influence: 22.34 },  // standard, B코드
+                    { rank: 3,  concept_id: 40756852, concept_name: "Non-coronary angioplasty", influence: 10.96 },
+                    { rank: 4,  concept_id: 2514401,  concept_name: "Facial fracture repair", influence: 9.35 },
+                    { rank: 5,  concept_id: 2767062,  concept_name: "Respiratory measurement", influence: 0.18 },
+                    { rank: 6,  concept_id: 2514403,  concept_name: "Coronary catheter", influence: 0.18 },
+                    { rank: 7,  concept_id: 2007052,  concept_name: "Observation high", influence: 0.15 },    // high complexity
+                    { rank: 8,  concept_id: 2004952,  concept_name: "Cervical fusion (anterior)", influence: 0.05 },
+                    { rank: 9,  concept_id: 4163971,  concept_name: "Pain check", influence: 0.01 },
+                    { rank: 10, concept_id: 2002222,  concept_name: "Lap cholecystectomy", influence: 0.01 }
                 ],
-                execution_time: 7433, // 실행 시간 (초 단위)
-                multiple: 2
+                execution_time: 559,
+                multiple: 30
             };
             
             // 분석 결과 저장
@@ -431,8 +431,8 @@
                                         <thead class="bg-gray-50 sticky top-0 z-10">
                                             <tr>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Id</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Name</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
                                             </tr>
                                         </thead>
@@ -464,8 +464,8 @@
                                             <thead class="bg-gray-50 sticky top-0 z-10">
                                             <tr>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Id</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Name</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
                                             </tr>
                                             </thead>
