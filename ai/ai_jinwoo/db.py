@@ -1,14 +1,13 @@
-# db.py
 from clickhouse_driver import Client
 import pandas as pd
 
 def get_client():
     client = Client(
         host='localhost',
-        user='clickhouse',
-        password='clickhouse',
-        database='default',
-        port=9000
+        user='#######',
+        password='#######',
+        database='#######',
+        port=111111
     )
     return client
 
