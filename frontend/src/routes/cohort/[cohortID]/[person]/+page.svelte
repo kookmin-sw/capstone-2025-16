@@ -462,13 +462,13 @@
                 </button>
             </a>
             <span class="text-sm text-gray-400">ID</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.person_id}</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{data.personInfo.info.person_id}</span>
             <span class="text-gray-200 mx-3">|</span>
             <span class="text-sm text-gray-400">Gender</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[personTable.gender_concept_id]}</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[data.personInfo.info.gender_concept_id]}</span>
             <span class="text-gray-200 mx-3">|</span>
             <span class="text-sm text-gray-400">Birth</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.year_of_birth}.{personTable.month_of_birth}.{personTable.day_of_birth}</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{data.personInfo.info.year_of_birth}.{data.personInfo.info.person_id?.month_of_birth}.{data.personInfo.info.person_id?.day_of_birth}</span>
         </div>
         <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
             <button 
@@ -517,13 +517,13 @@
                     isTableView={isTableView.visitTypeRatio}
                     on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
                 >
-                    <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
+                    <SingleDonutChartWrapper data={data.personStatistics.visitType} />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <DataTable
                                 data={transformDonutChartToTableData({
-                                    data: analysisData.statistics.visitType,
+                                    data: data.personStatistics.visitType,
                                 })}
                             />
                         </div>
@@ -537,15 +537,15 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.departmentVisits}
-                    on:toggleView={({ detail }) => isTableView.departmentVisits = detail}
+                    on:toggleView={({ detail }) => isTableView.departmentVisit = detail}
                 >
-                    <SingleDonutChartWrapper data={analysisData.statistics.departmentVisits} />
+                    <SingleDonutChartWrapper data={data.personStatistics.departmentVisit} />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <DataTable
                                 data={transformDonutChartToTableData({
-                                    data: analysisData.statistics.departmentVisits,
+                                    data: data.personStatistics.departmentVisit,
                                 })}
                             />
                         </div>
@@ -559,16 +559,16 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenDrugs}
-                    on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
+                    on:toggleView={({ detail }) => isTableView.topTenDrug = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(data.personStatistics.topTenDrug).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(data.personStatistics.topTenDrug)?.map(([name, count]) => ({ name, count }))}
                                 domainKey="drug"
                             />
                         </div>
@@ -582,16 +582,16 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenConditions}
-                    on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
+                    on:toggleView={({ detail }) => isTableView.topTenCondition = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(data.personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
                     />
                 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(data.personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
                                 domainKey="condition"
                             />
                         </div>
@@ -605,16 +605,16 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenProcedures}
-                    on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
+                    on:toggleView={({ detail }) => isTableView.topTenProcedure = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(data.personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(data.personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
                                 domainKey="procedure"
                             />
                         </div>
@@ -628,16 +628,16 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenMeasurements}
-                    on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
+                    on:toggleView={({ detail }) => isTableView.topTenMeasurement = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(data.personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(data.personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
                                 domainKey="measurement"
                             />
                         </div>
