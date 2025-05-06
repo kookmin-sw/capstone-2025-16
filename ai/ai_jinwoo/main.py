@@ -1,15 +1,10 @@
-# run.py
-
-import sys
 import pandas as pd
 from db import get_target_cohort, get_comparator_cohort, get_drop_id, insert_feature_extraction_data, db_cohort_drop
-from model import prepare_features, prepare_two_features, train_model, iterative_shap_train, shap_visualization, predict_cohort_probability, prepare_psm_features
-from validation import cross_validate_model, evaluate_model
-from sklearn.model_selection import train_test_split, StratifiedKFold
-import numpy as np
-import matplotlib.pyplot as plt
-import shap
+from model import prepare_two_features, train_model, iterative_shap_train, prepare_psm_features
+from validation import evaluate_model
+from sklearn.model_selection import train_test_split
 import time
+
 def main(cohort_id = "0196815f-1e2d-7db9-b630-a747f8393a2d", k = 30):
     db_cohort_drop(cohort_id)
     start_time = time.time()
@@ -33,12 +28,8 @@ def main(cohort_id = "0196815f-1e2d-7db9-b630-a747f8393a2d", k = 30):
         X_procedure = df_procedure.drop(columns=["label"])
         y_proc = df_procedure["label"]
         X_train, X_test, y_train, y_test = train_test_split(X_procedure, y_proc, test_size=0.3, stratify=y_proc)
-        print("Model start (Procedure features)")
         model_procedure = train_model(X_train, y_train)
-        print("Model Done (Procedure features)!")
-        test_results_proc = evaluate_model(model_procedure, X_test, y_test)
-        print(f"Iteration {i} - Test Results (Procedure features):", test_results_proc)
-        
+        test_results_proc = evaluate_model(model_procedure, X_test, y_test)        
         model_top, top_features, best_results, feature_importance = iterative_shap_train(
             model_procedure, X_train, y_train, X_test, y_test, 
             initial_ratio=0.1, improvement_threshold=0.01, max_iter=3
@@ -49,11 +40,8 @@ def main(cohort_id = "0196815f-1e2d-7db9-b630-a747f8393a2d", k = 30):
         X_condition = df_condition.drop(columns=["label"])
         y_cond = df_condition["label"]
         X_train, X_test, y_train, y_test = train_test_split(X_condition, y_cond, test_size=0.3, random_state=i, stratify=y_cond)
-        print("Model start (Condition features)")
         model_condition = train_model(X_train, y_train)
-        print("Model Done (Condition features)!")
         test_results_cond = evaluate_model(model_condition, X_test, y_test)
-        print(f"Iteration {i} - Test Results (Condition features):", test_results_cond)
         
         model_top, top_features, best_results, feature_importance = iterative_shap_train(
             model_condition, X_train, y_train, X_test, y_test,
@@ -69,10 +57,6 @@ def main(cohort_id = "0196815f-1e2d-7db9-b630-a747f8393a2d", k = 30):
     all_cond_importances = pd.concat(condition_importances_list, ignore_index=True)
     avg_cond_importances = all_cond_importances.groupby('feature')['importance'].mean().reset_index()
     avg_cond_importances = avg_cond_importances.sort_values(by='importance', ascending=False)
-    print("Top 5 Averaged SHAP Feature Importances (Procedure):")
-    print(avg_proc_importances.head(5))
-    print("Top 5 Averaged SHAP Feature Importances (Condition):")
-    print(avg_cond_importances.head(5))
 
     procedure_importances_all_runs.append(avg_proc_importances)
     condition_importances_all_runs.append(avg_cond_importances)
