@@ -1,41 +1,48 @@
+import asyncio
 import json
 import os
 from dotenv import load_dotenv
-from kafka import KafkaConsumer
 import time
 from sklearn.model_selection import train_test_split
 from validation import evaluate_model
 from model import prepare_two_features, train_model, iterative_shap_train, prepare_psm_features
 from db import get_target_cohort, get_comparator_cohort, get_drop_id, insert_feature_extraction_data, db_cohort_drop
 import pandas as pd
+import nats
 
 
 load_dotenv()
 
 
-def main():
-    consumer = KafkaConsumer(
-        "feature-extraction",
-        bootstrap_servers=os.getenv("KAFKA_HOST").split(","),
-        security_protocol="SASL_PLAINTEXT",
-        sasl_mechanism="PLAIN",
-        sasl_plain_username=os.getenv("KAFKA_USER"),
-        sasl_plain_password=os.getenv("KAFKA_PASS"),
-        enable_auto_commit=True,
-        auto_offset_reset="latest",
-        group_id="feature-extraction",
-    )
-    print(consumer.topics())
+async def main():
+    nc = await nats.connect(os.getenv("NATS_URL"))
+    stream_name = os.getenv("NATS_STREAM_NAME")
+    subject = os.getenv("NATS_SUBJECT")
+    durable_name = os.getenv("NATS_DURABLE_NAME")
 
-    for msg in consumer:
+    js = nc.jetstream()
+
+    try:
+        await js.stream_info(stream_name)
+    except nats.js.errors.NotFoundError:
+        await js.add_stream(name=stream_name, subjects=[subject])
+
+    # ack_wait과 ack_timeout을 늘려 확인 정보가 제대로 전송될 수 있도록 함
+    sub = await js.pull_subscribe(subject, durable_name)
+
+    while True:
         try:
-            data = json.loads(msg.value)
+            [msg] = await sub.fetch(1, timeout=5)
+            data = json.loads(msg.data)
+
+            await msg.ack_sync()  # sync 방식으로 확인 정보가 서버에 전달될 때까지 대기
+
             print("Received message:", data)
             run(data["cohort_id"], data["k"])
+        except nats.errors.TimeoutError:
+            pass
         except Exception as e:
-            print("Error processing message:", e)
-
-    consumer.close()
+            print("Error:", e)
 
 
 def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
@@ -118,4 +125,5 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
 
 
 if __name__ == "__main__":
-    main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
