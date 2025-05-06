@@ -8,95 +8,223 @@
     import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
 
     const targetSetData = {
-        id: "10001",
+        statistics_id: "10001",
         name: "Custom Target Set 1",
         description: "Description for Custom Chart Set",
-        author : {
-            name: "Dr. Kim",
-            department: "Lab 1"
-        },
+        cohort_ids: "100001,100002,100003",
+        person_id: null,
+        author : "Dr. Kim",
         createdAt: "2024/01/10 10:00",
-        targetID: ["100001", "100002", "100003"],
-        targetName: ["Cohort 1", "Cohort 2", "Cohort 3"]
+        updatedAt: "2024/01/10 10:00",
     }
 
-    let customChartData = [
-        {
-            id: "20001",
-            name: "Custom Target 1",
-            description: "Description for Custom Chart 1",
-            author : {
-                name: "Dr. Kim",
-                department: "Lab 2"
-            },
-            createdAt: "2024/01/10 10:00",
-            chartType: "Bar Chart",
-            chartData : [
-                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 1', target: 'Cohort 4', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 4', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 4', value: 6000000 },
-            ]
-        },
-        {
-            id: "20002",
-            name: "Custom Target 2",
-            description: "Description for Custom Chart 2",
-            author : {
-                name: "Dr. Kim",
-                department: "Endocrinology"
-            },
-            createdAt: "2024/01/10 10:00",
-            chartType: "Box Plot",
-            boxPlotData: [
-                { group: "Group 1", target: "Cohort 1", values: [5000, 7500, 10000, 12500, 15000, 16000, 18000] },
-                { group: "Group 1", target: "Cohort 2", values: [6000, 8000, 11000, 15000, 17000, 19000, 21000] },
-                { group: "Group 1", target: "Cohort 3", values: [4000, 5500, 7000, 9000, 11000, 14000, 16000] },
-                { group: "Group 1", target: "Cohort 4", values: [5000, 7500, 10000, 12500, 15000, 16000, 18000] },
-                { group: "Group 1", target: "Cohort 5", values: [6000, 8000, 11000, 15000, 17000, 19000, 21000] },
-                { group: "Group 2", target: "Cohort 1", values: [7000, 9500, 12000, 14500, 17000, 18000, 20000] },
-                { group: "Group 2", target: "Cohort 2", values: [8000, 10000, 13000, 17000, 19000, 21000, 23000] },
-                { group: "Group 2", target: "Cohort 3", values: [6000, 7500, 9000, 11000, 13000, 16000, 18000] },
-                { group: "Group 2", target: "Cohort 4", values: [7000, 9500, 12000, 14500, 17000, 18000, 20000] },
-                { group: "Group 2", target: "Cohort 5", values: [8000, 10000, 13000, 17000, 19000, 21000, 23000] },
-            ]
-        },
-        {
-            id: "20003",
-            name: "Custom Target 3",
-            description: "Description for Custom Chart 3",
-            author : {
-                name: "Dr. Kim",
-                department: "Endocrinology"
-            },
-            createdAt: "2024/01/10 10:00",
-            chartType: "Bar Chart",
-            chartData: [
-                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
-            ]
-        },
-    ]
+    // cohort_ids 문자열을 배열로 변환
+    const cohortIds = targetSetData.cohort_ids.split(',');
+    const cohortNames = ["Cohort 1", "Cohort 2", "Cohort 3"]; // API 연동 시 코호트 이름 받아와야 함
 
-    let expandedStates = targetSetData.targetID.map(() => false);
+    let chartData = {
+        "charts": [
+            {
+                "chart_id": "20002",
+                "statistics_id": "10001",
+                "name": "Custom Chart 2",
+                "description": "Description for Custom Chart 2",
+                "type": "bar",
+                "definition": {
+                    "groups": [
+                        {
+                            "name": "Group 1",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "name": "Group 2",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "result": [
+                    {
+                        "cohortId": "100001",
+                        "values": [10,20]
+                    },
+                    {
+                        "cohortId": "100002",
+                        "values": [30,40]
+                    },
+                    {
+                        "cohortId": "100003",
+                        "values": [50,60]
+                    }
+                ],
+                "author": "Dr. Kim",
+                "created_at": "2024-01-10 10:00:00.000",
+                "updated_at": "2024-01-10 10:00:00.000"
+            },
+            {
+                "chart_id": "20003",
+                "statistics_id": "10001",
+                "name": "Custom Chart 3",
+                "description": "Description for Custom Chart 3",
+                "type": "boxplot",
+                "definition": {
+                    "groups": [
+                        {
+                            "name": "Group 1",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "name": "Group 2",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "countBy": {
+                        "concept": "21490888"
+                    }
+                },
+                "result": [
+                    {
+                        "cohortId": "100001",
+                        "values": [
+                            [
+                                { "type": "minimum", "value": 1 },
+                                { "type": "maximum", "value": 10 },
+                                { "type": "median", "value": 5 },
+                                { "type": "lower", "value": 3 },
+                                { "type": "upper", "value": 7 },
+                                { "type": "outlier", "value": 0.5 },
+                                { "type": "outlier", "value": 12 }
+                            ],
+                            [
+                                { "type": "minimum", "value": 2 },
+                                { "type": "maximum", "value": 20 },
+                                { "type": "median", "value": 10 },
+                                { "type": "lower", "value": 5 },
+                                { "type": "upper", "value": 15 },
+                                { "type": "outlier", "value": 1 },
+                                { "type": "outlier", "value": 25 }
+                            ],
+                        ]
+                    },
+                    {
+                        "cohortId": "100002",
+                        "values": [
+                            [
+                                { "type": "minimum", "value": 0 },
+                                { "type": "maximum", "value": 5 },
+                                { "type": "median", "value": 2.5 },
+                                { "type": "lower", "value": 1 },
+                                { "type": "upper", "value": 4 },
+                                { "type": "outlier", "value": -1 },
+                                { "type": "outlier", "value": 6 }
+                            ],
+                            [
+                                { "type": "minimum", "value": 3 },
+                                { "type": "maximum", "value": 15 },
+                                { "type": "median", "value": 8 },
+                                { "type": "lower", "value": 5 },
+                                { "type": "upper", "value": 12 },
+                                { "type": "outlier", "value": 2 },
+                                { "type": "outlier", "value": 18 }
+                            ],
+                        ]
+                    },
+                    {
+                        "cohortId": "100003",
+                        "values": [
+                            [
+                                { "type": "minimum", "value": 1 },
+                                { "type": "maximum", "value": 10 },
+                                { "type": "median", "value": 5 },
+                                { "type": "lower", "value": 3 },
+                                { "type": "upper", "value": 7 },
+                                { "type": "outlier", "value": 0.5 },
+                                { "type": "outlier", "value": 12 }
+                            ],
+                            [
+                                { "type": "minimum", "value": 0 },
+                                { "type": "maximum", "value": 5 },
+                                { "type": "median", "value": 2.5 },
+                                { "type": "lower", "value": 1 },
+                                { "type": "upper", "value": 4 },
+                                { "type": "outlier", "value": -1 },
+                                { "type": "outlier", "value": 6 }
+                            ],
+                        ]
+                    }
+                ],
+            }
+        ],
+        "total": 2,
+        "page": 0,
+        "limit": 50
+    }
+    
+    let expandedStates = cohortIds.map(() => false);
 
     function handleDnd({ detail }) {
-        customChartData = detail.items;
+        chartData.charts = detail.items.map(item => {
+        const { id, ...rest } = item;
+        return {
+                ...rest,
+                chart_id: id  // id → chart_id로 복원
+            };
+        });
     }
 
     async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
@@ -115,7 +243,7 @@
             </div>
             
             <div class="p-4 overflow-y-auto flex flex-col gap-2">
-                {#each targetSetData.targetID as id, index}
+                {#each cohortIds as id, index}
                     <button 
                         class="w-full flex items-center justify-between px-3 py-2 bg-white rounded-lg border hover:bg-blue-50 transition-colors group"
                         onclick={() => goto(`/cohort/${id}`)}
@@ -125,7 +253,7 @@
                                 <span class="text-[10px] font-medium text-gray-400 truncate">{id}</span>
                             </div>
                             <div class="flex items-center gap-1">
-                                <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{targetSetData.targetName[index]}</div>
+                                <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohortNames[index]}</div>
                             </div>
                         </div>
                         <div class="flex items-center text-gray-400 group-hover:text-blue-600">
@@ -142,7 +270,7 @@
                 <div class="flex items-center gap-4">
                     <div class="font-medium">
                         <span class="text-sm text-gray-400">ID</span>
-                        <span class="text-sm text-black-500">{targetSetData.id}</span>
+                        <span class="text-sm text-black-500">{targetSetData.statistics_id}</span>
                     </div>
                     <div class="text-blue-600 font-medium">Custom Target Set 1</div>
                 </div>
@@ -152,7 +280,7 @@
                 <div class="grid grid-cols-3 gap-4 text-sm">
                     <div>
                         <p class="text-gray-500">Author</p>
-                        <p class="font-medium">{targetSetData.author.name}</p>
+                        <p class="font-medium">{targetSetData.author}</p>
                     </div>
                     <div>
                         <p class="text-gray-500">Created at</p>
@@ -180,18 +308,21 @@
     </div>
 </div>
 
-<div use:dndzone={{ items: customChartData,
+<div use:dndzone={{ items: chartData.charts.map(chart => ({
+                        ...chart,
+                        id: chart.chart_id  // chart_id를 id로 복사
+                    })),
                     flipDurationMs: 300,
                     dropTargetStyle: {
                         backgroundColor: 'transparent',
                         border: 'none'
-                    }
+                    },
                 }}
                 onconsider={handleDnd}
                 onfinalize={handleDnd}
                 class="space-y-2 py-4 px-10"
                 >
-    {#each customChartData as chart, index (chart.id)}
+    {#each chartData.charts as chart, index (chart.chart_id)}
         <div class="border rounded-lg overflow-hidden bg-white">
             <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
@@ -208,7 +339,7 @@
                     </svg>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-1">
-                        <span class="text-xs font-medium text-gray-400 truncate">{chart.id}</span>
+                        <span class="text-xs font-medium text-gray-400 truncate">{chart.chart_id}</span>
                         </div>
                         <div class="flex items-center gap-1">
                             <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
@@ -232,7 +363,7 @@
                     onclick={(e) => {
                         e.stopPropagation();
                         if(confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
-                        customChartData = customChartData.filter((_, i) => i !== index);
+                            chartData.charts = chartData.charts.filter((_, i) => i !== index);
                         }
                     }}
                 >
@@ -245,11 +376,11 @@
                 <div class="space-y-1">
                     <div>
                         <span class="text-gray-500">Author:</span>
-                        <span class="font-regular">{chart.author.name} ({chart.author.department})</span>
+                        <span class="font-regular">{chart.author}</span>
                     </div>
                     <div>
                         <span class="text-gray-500">Created at:</span>
-                        <span class="font-regular">{chart.createdAt}</span>
+                        <span class="font-regular">{chart.created_at}</span>
                     </div>
                     <div>
                         <span class="text-gray-500">Description:</span>
@@ -257,7 +388,7 @@
                     </div>
                     <div>
                         <span class="text-gray-500">Chart Type:</span>
-                        <span class="font-regular">{chart.chartType}</span>
+                        <span class="font-regular">{chart.type}</span>
                     </div>
                 </div>
                 <!-- 차트 및 설명 영역 추가 -->
@@ -268,10 +399,10 @@
                         height="400px"
                     >
                         <div class="w-full h-full flex items-center justify-center">
-                            {#if chart.chartType === "Box Plot"}
-                                <BoxPlot data={chart.boxPlotData} />
+                            {#if chart.type === "boxplot"}
+                                <BoxPlot data={chart.result} />
                             {:else}
-                                <GroupedBarChart data={chart.chartData} />
+                                <GroupedBarChart data={chart.result} />
                             {/if}
                         </div>
                     </ChartCard>
