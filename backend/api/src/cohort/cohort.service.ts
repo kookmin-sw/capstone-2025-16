@@ -122,7 +122,7 @@ export class CohortService {
           fn.count('age').as('count'),
         ])
         .execute(),
-      getBaseDB()
+      getBaseDB() // visit type
         .selectFrom('visit_occurrence')
         .where('person_id', 'in', (eb) =>
           eb
@@ -137,7 +137,7 @@ export class CohortService {
           fn.count('concept_name').as('count'),
         ])
         .execute(),
-      getBaseDB()
+      getBaseDB() // visit count
         .selectFrom(
           getBaseDB()
             .selectFrom('visit_occurrence')
@@ -154,73 +154,93 @@ export class CohortService {
         .groupBy('cnt')
         .select(({ fn }) => ['cnt', fn.count('cnt').as('cnt_cnt')])
         .execute(),
-      getBaseDB()
-        .selectFrom('drug_exposure')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 drug
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('drug_exposure')
+            .select(({ eb }) => [
+              eb.ref('drug_concept_id').as('concept_id'),
+              eb.fn.count('drug_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('drug_concept_id')
+            .orderBy(({ fn }) => fn.count('drug_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'drug_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
-      getBaseDB()
-        .selectFrom('condition_occurrence')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 condition
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('condition_occurrence')
+            .select(({ eb }) => [
+              eb.ref('condition_concept_id').as('concept_id'),
+              eb.fn.count('condition_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('condition_concept_id')
+            .orderBy(({ fn }) => fn.count('condition_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'condition_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
-      getBaseDB()
-        .selectFrom('procedure_occurrence')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 procedure
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('procedure_occurrence')
+            .select(({ eb }) => [
+              eb.ref('procedure_concept_id').as('concept_id'),
+              eb.fn.count('procedure_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('procedure_concept_id')
+            .orderBy(({ fn }) => fn.count('procedure_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'procedure_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
-      getBaseDB()
-        .selectFrom('measurement')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 measurement
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('measurement')
+            .select(({ eb }) => [
+              eb.ref('measurement_concept_id').as('concept_id'),
+              eb.fn.count('measurement_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('measurement_concept_id')
+            .orderBy(({ fn }) => fn.count('measurement_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'measurement_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
     ]);
 
