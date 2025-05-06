@@ -1,0 +1,18 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+      - "9004:9004"
+      - "9005:9005"
+    volumes:
+      - ./data:/var/lib/clickhouse
+      - ./config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./users.xml:/etc/clickhouse-server/users.d/users.xml
