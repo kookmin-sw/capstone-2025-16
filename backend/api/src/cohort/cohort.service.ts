@@ -12,6 +12,7 @@ import {
   DeleteCohortResponse,
   CohortListResponse,
   CohortPersonsResponse,
+  CohortDetailResponse,
 } from './dto/cohort.dto';
 
 @Injectable()
@@ -61,7 +62,7 @@ export class CohortService {
     }
 
     const [
-      gender,
+      genders,
       mortality,
       age,
       visitTypes,
@@ -78,7 +79,6 @@ export class CohortService {
         .leftJoin('concept', 'concept.concept_id', 'person.gender_concept_id')
         .groupBy(['concept.concept_id', 'concept.concept_name'])
         .select(({ fn }) => [
-          'concept.concept_id',
           'concept.concept_name',
           fn.count('person.person_id').as('count'),
         ])
@@ -224,6 +224,10 @@ export class CohortService {
         .execute(),
     ]);
 
+    const gender: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of genders) {
+      gender[concept_name ?? 'Unknown'] = Number(count);
+    }
     age.sort((a, b) => Number(a.age_start) - Number(b.age_start));
     const age_range: { [age_range: string]: number } = {};
     for (const { age_start, age_end, count } of age) {
@@ -255,11 +259,7 @@ export class CohortService {
     }
 
     return {
-      gender: gender.map((e) => ({
-        concept_id: e.concept_id || '',
-        concept_name: e.concept_name || '',
-        count: Number(e.count),
-      })),
+      gender,
       mortality: {
         alive: Number(mortality?.alive ?? 0),
         deceased: Number(mortality?.deceased ?? 0),
@@ -274,7 +274,7 @@ export class CohortService {
     };
   }
 
-  async getCohort(id: string): Promise<CohortResponse> {
+  async getCohort(id: string): Promise<CohortDetailResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .selectAll()
@@ -285,7 +285,13 @@ export class CohortService {
       throw new NotFoundException('Cohort not found.');
     }
 
-    return cohort;
+    const count = await getBaseDB()
+      .selectFrom('cohort_detail')
+      .select(({ fn }) => [fn.count('person_id').as('count')])
+      .where('cohort_id', '=', id)
+      .executeTakeFirst();
+
+    return { ...cohort, count: Number(count?.count || 0) };
   }
 
   async getCohortPersons(
@@ -366,17 +372,6 @@ export class CohortService {
           });
 
           for (const query of queries.flat()) {
-            if (process.env.DEBUG) {
-              let { parameters, sql } = query.compile();
-              for (let i of parameters) {
-                sql = sql.replace(
-                  '?',
-                  typeof i === 'string' ? `'${i}'` : `${i}`,
-                );
-              }
-              console.log(sql);
-            }
-
             const result = await query.execute();
             if ('select' in query) {
               // container person counts

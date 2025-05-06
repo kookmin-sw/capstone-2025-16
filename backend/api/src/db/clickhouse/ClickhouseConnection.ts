@@ -47,6 +47,10 @@ export class ClickhouseConnection implements DatabaseConnection {
   }
 
   async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
+    if (process.env.DEBUG) {
+      console.log(this.prepareQuery(compiledQuery));
+    }
+
     if (compiledQuery.query.kind === 'InsertQueryNode') {
       // @ts-expect-error: fix types
       if (!compiledQuery.query.values?.values) {

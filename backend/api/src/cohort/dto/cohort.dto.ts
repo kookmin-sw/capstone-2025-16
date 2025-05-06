@@ -162,27 +162,23 @@ export class CohortResponse {
   updated_at: string;
 }
 
+export class CohortDetailResponse extends CohortResponse {
+  @ApiProperty({
+    description: 'Number of persons in the cohort',
+    example: 100,
+  })
+  count: number;
+}
+
 export class CohortStatisticsResponse {
   @ApiProperty({
     description: 'Gender statistics',
-    example: [
-      {
-        concept_id: '8507',
-        concept_name: 'MALE',
-        count: 143623,
-      },
-      {
-        concept_id: '8532',
-        concept_name: 'FEMALE',
-        count: 170916,
-      },
-    ],
+    example: {
+      MALE: 302758,
+      FEMALE: 11781,
+    },
   })
-  gender: Array<{
-    concept_id: string;
-    concept_name: string;
-    count: number;
-  }>;
+  gender: { [concept_name: string]: number };
 
   @ApiProperty({
     description: 'Morality statistics',

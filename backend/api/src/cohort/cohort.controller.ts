@@ -34,6 +34,7 @@ import {
   DeleteCohortResponse,
   CohortListResponse,
   CohortPersonsResponse,
+  CohortDetailResponse,
 } from './dto/cohort.dto';
 
 @ApiTags('Cohort')
@@ -66,7 +67,10 @@ export class CohortController {
 
   @ApiOperation({ summary: 'Get cohort details' })
   @ApiParam({ name: 'cohortId', description: 'Cohort ID' })
-  @ApiOkResponse({ description: 'Cohort information', type: CohortResponse })
+  @ApiOkResponse({
+    description: 'Cohort information',
+    type: CohortDetailResponse,
+  })
   @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Get(':cohortId')
   async getCohort(@Param() { cohortId }: CohortIdParam) {
@@ -99,9 +103,9 @@ export class CohortController {
     type: Number,
     description: 'Number of items per page',
   })
-  @ApiOkResponse({ 
-    description: 'Cohort patients list', 
-    type: CohortPersonsResponse 
+  @ApiOkResponse({
+    description: 'Cohort patients list',
+    type: CohortPersonsResponse,
   })
   @ApiNotFoundResponse({ description: 'Cohort not found' })
   @Get(':cohortId/persons')
