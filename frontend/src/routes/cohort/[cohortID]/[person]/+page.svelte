@@ -31,7 +31,7 @@
     let show = false;
     let cohortIdFromUrl;
     export let data;
-    
+
     let isTableView = {
         visitTypeRatio: false,
         departmentVisits: false,
@@ -159,7 +159,7 @@
             .append("clipPath")
             .attr("id", "clip-timeline")
             .append("rect")
-            .attr("x", MARGIN.left)
+            .attr("x", MARGIN.left + 50)
             .attr("y", 0)
             .attr("width", innerWidth)
             .attr("height", innerHeight);
@@ -283,10 +283,10 @@
                 const visit = d.items[0];
                 const len = d.items.length;
                 if(len == 1){
-                    showTooltip(event, tooltip, `Visit ID: ${visit.visit_concept_id}\nStart: ${visit.visit_start_date}\nEnd: ${visit.visit_end_date}\nCount: ${len}`);
+                    showTooltip(event, tooltip, `Start: ${visit.visit_start_date}\nEnd: ${visit.visit_end_date}\nCount: ${len}`);
                 } else{
                     const visit2 = d.items[len-1];
-                    showTooltip(event, tooltip, `Visit ID: ${visit.visit_concept_id}\nStart: ${visit.visit_start_date}\nEnd: ${visit2.visit_end_date}\nCount: ${len}`);
+                    showTooltip(event, tooltip, `Start: ${visit.visit_start_date}\nEnd: ${visit2.visit_end_date}\nCount: ${len}`);
                 }
             })
             .on("mousemove", (event, d) => {
@@ -341,7 +341,7 @@
                 .attr("width", d => Math.max(newXScale(new Date(d.end)) - newXScale(new Date(d.start)), 5));
 
             d3.selectAll(".death-bar")
-                .attr("x", newXScale(new Date(data.personInfo.death.death_date)))
+                .attr("x", newXScale(new Date(data.personInfo.death?.death_date)))
                 .attr("width", DEATH_BAR_WIDTH);
             });
 
@@ -538,7 +538,7 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenDrugs}
-                    on:toggleView={({ detail }) => isTableView.topTenDrug = detail}
+                    on:toggleView={({ detail }) => {isTableView.topTenDrugs = detail}}
                 >
                     <BarChartWrapper
                         data={Object.entries(data.personStatistics.topTenDrug).map(([name, count]) => ({ name, count }))}
@@ -561,7 +561,7 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenConditions}
-                    on:toggleView={({ detail }) => isTableView.topTenCondition = detail}
+                    on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
                 >
                     <BarChartWrapper
                         data={Object.entries(data.personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
@@ -584,7 +584,7 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenProcedures}
-                    on:toggleView={({ detail }) => isTableView.topTenProcedure = detail}
+                    on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
                 >
                     <BarChartWrapper
                         data={Object.entries(data.personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
@@ -607,7 +607,7 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenMeasurements}
-                    on:toggleView={({ detail }) => isTableView.topTenMeasurement = detail}
+                    on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
                 >
                     <BarChartWrapper
                         data={Object.entries(data.personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
