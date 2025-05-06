@@ -42,15 +42,110 @@
     let comparisonGroupSize = $state('');
     let isLoading = $state(false);
     let analysisStarted = $state(false);
-    let shapFeatures = $state([]);
+    let featureData = $state({
+        condition: [],
+        procedure: [],
+        execution_time: 0,
+        multiple: 0
+    });
     let analysisError = $state(null);
     let cohortID = $derived($page.params.cohortID); // URL에서 cohortID 추출
+    
+    // 로컬 스토리지 키
+    const STORAGE_KEY = `cohort-${cohortID}-feature-analysis`;
+    
+    // 이전 분석 결과 로드
+    let hasPreviousAnalysis = $state(false);
+    let previousAnalysisTime = $state('');
+
+    // 초 단위 시간을 시간, 분, 초 형식으로 변환
+    function formatExecutionTime(seconds) {
+        if (!seconds) return '0s';
+        
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        
+        const hDisplay = h > 0 ? h + 'h ' : '';
+        const mDisplay = m > 0 ? m + 'm ' : '';
+        const sDisplay = s > 0 ? s + 's' : '';
+        
+        return hDisplay + mDisplay + sDisplay;
+    }
+    
+    // 날짜와 시간을 포맷팅하는 함수
+    function formatDateTime(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+    }
+    
+    // 이전 분석 결과 저장 함수
+    function saveAnalysisResult(data) {
+        try {
+            const storageData = {
+                data: data,
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
+        } catch (e) {
+            console.error("Failed to save analysis result to local storage:", e);
+        }
+    }
+    
+    // 이전 분석 결과 불러오기 함수
+    function loadPreviousAnalysis() {
+        try {
+            const storedData = localStorage.getItem(STORAGE_KEY);
+            if (storedData) {
+                const parsedData = JSON.parse(storedData);
+                featureData = parsedData.data;
+                previousAnalysisTime = formatDateTime(parsedData.timestamp);
+                hasPreviousAnalysis = true;
+                analysisStarted = true;
+                analysisError = null;
+            }
+        } catch (e) {
+            console.error("Failed to load previous analysis from local storage:", e);
+            hasPreviousAnalysis = false;
+        }
+    }
+    
+    // 페이지 로드 시 이전 분석 결과 확인
+    onMount(() => {
+        updateIndicator();
+        
+        resizeObserver = new ResizeObserver(() => {
+            updateIndicator();
+        });
+
+        const tabContainer = tabElements[0]?.parentElement;
+        if (tabContainer) {
+            resizeObserver.observe(tabContainer);
+        }
+        
+        // 이전 분석 결과 확인
+        try {
+            const storedData = localStorage.getItem(STORAGE_KEY);
+            if (storedData) {
+                const parsedData = JSON.parse(storedData);
+                previousAnalysisTime = formatDateTime(parsedData.timestamp);
+                hasPreviousAnalysis = true;
+            }
+        } catch (e) {
+            console.error("Failed to check previous analysis:", e);
+        }
+    });
 
     // SHAP 분석 시작 함수 (백엔드 연동 필요)
     async function startAnalysis() {
         analysisStarted = true;
         isLoading = true;
-        shapFeatures = [];
+        featureData = {
+            condition: [],
+            procedure: [],
+            execution_time: 0,
+            multiple: 0
+        };
         analysisError = null;
 
         // 입력 값 유효성 검사 (양의 정수)
@@ -62,54 +157,53 @@
         }
 
         try {
-            // TODO: 실제 백엔드 API 호출 로직 구현
-            // 예시: const response = await fetch(`/api/cohort/${cohortID}/shap-analysis?comparisonSize=${size}`);
-            // if (!response.ok) throw new Error('분석 중 오류가 발생했습니다.');
-            // const data = await response.json();
-            // shapFeatures = data.features; // 백엔드 응답에 domain 필드가 포함되어야 함
-
-            // 임시 비동기 처리 및 더미 데이터 설정 (domain 추가)
+            // 임시 비동기 처리 및 더미 데이터 설정
             await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 딜레이 시뮬레이션
-            // 성공 시 더미 데이터 (확장 및 influence 조정)
-            shapFeatures = [
-                // Procedure (11개) - Top 10 Sum: 78.4
-                { name: 'Coronary Angiography', influence: 40, domain: 'Procedure' },
-                { name: 'Appendectomy', influence: 20, domain: 'Procedure' },
-                { name: 'Colonoscopy', influence: 10, domain: 'Procedure' },
-                { name: 'Hip Replacement', influence: 1.5, domain: 'Procedure' },
-                { name: 'Knee Arthroscopy', influence: 1.4, domain: 'Procedure' },
-                { name: 'Cholecystectomy', influence: 1.3, domain: 'Procedure' },
-                { name: 'Cardiac Catheterization', influence: 1.2, domain: 'Procedure' },
-                { name: 'Tonsillectomy', influence: 1.1, domain: 'Procedure' },
-                { name: 'Hernia Repair', influence: 1.0, domain: 'Procedure' },
-                { name: 'Cataract Surgery', influence: 0.9, domain: 'Procedure' },
-                { name: 'Physical Therapy Session', influence: 0.08, domain: 'Procedure' }, 
-
-                // Condition (12개) - Top 10 Sum: 74.5
-                { name: 'History of Hypertension', influence: 25, domain: 'Condition' },
-                { name: 'Diabetes Mellitus Type 2', influence: 15, domain: 'Condition' },
-                { name: 'Chronic Kidney Disease Stage 3', influence: 10, domain: 'Condition' },
-                { name: 'Asthma, persistent', influence: 8, domain: 'Condition' },
-                { name: 'Atrial Fibrillation', influence: 6, domain: 'Condition' },
-                { name: 'Hyperlipidemia', influence: 4, domain: 'Condition' },
-                { name: 'Osteoarthritis of Knee', influence: 3, domain: 'Condition' },
-                { name: 'Major Depressive Disorder', influence: 2, domain: 'Condition' },
-                { name: 'Gastroesophageal Reflux Disease', influence: 1, domain: 'Condition' },
-                { name: 'Obstructive Sleep Apnea', influence: 0.5, domain: 'Condition' },
-                { name: 'Anemia, unspecified', influence: 0.20, domain: 'Condition' },
-                { name: 'Hypothyroidism', influence: 0.19, domain: 'Condition' },
-            ];
-
-            // TODO: 실제 데이터에서는 더 많은 도메인과 특성이 있을 수 있음
-            // 실제 백엔드 응답에 맞게 domain 필드를 처리해야 합니다.
-
-            // 만약 실제 API 호출에서 에러가 발생했다면 아래처럼 처리
-            // throw new Error("백엔드 처리 중 심각한 오류 발생");
+            
+            // 테스트 데이터 설정
+            featureData = {
+                condition: [
+                    { rank: 1, concept_id: 316866, concept_name: "Essential hypertension", influence: 62 },
+                    { rank: 2, concept_id: 201820, concept_name: "Type 2 diabetes mellitus", influence: 48 },
+                    { rank: 3, concept_id: 320128, concept_name: "Hyperlipidemia", influence: 35 },
+                    { rank: 4, concept_id: 312327, concept_name: "Osteoarthritis", influence: 28 },
+                    { rank: 5, concept_id: 134057, concept_name: "Atrial fibrillation", influence: 24 },
+                    { rank: 6, concept_id: 255573, concept_name: "Chronic kidney disease", influence: 20 },
+                    { rank: 7, concept_id: 317009, concept_name: "Asthma", influence: 15 },
+                    { rank: 8, concept_id: 319835, concept_name: "GERD", influence: 12 },
+                    { rank: 9, concept_id: 254761, concept_name: "Major depressive disorder", influence: 10 },
+                    { rank: 10, concept_id: 317576, concept_name: "Obstructive sleep apnea", influence: 8 }
+                ],
+                procedure: [
+                    { rank: 1, concept_id: 4324693, concept_name: "Coronary angiography", influence: 55 },
+                    { rank: 2, concept_id: 2008272, concept_name: "Insertion of cardiac pacemaker", influence: 42 },
+                    { rank: 3, concept_id: 4278515, concept_name: "Complete blood count", influence: 38 },
+                    { rank: 4, concept_id: 2101938, concept_name: "Colonoscopy", influence: 32 },
+                    { rank: 5, concept_id: 2110725, concept_name: "Hip replacement", influence: 28 },
+                    { rank: 6, concept_id: 2003999, concept_name: "Echocardiography", influence: 24 },
+                    { rank: 7, concept_id: 2107223, concept_name: "Percutaneous coronary intervention", influence: 20 },
+                    { rank: 8, concept_id: 2211067, concept_name: "Cataract surgery", influence: 16 },
+                    { rank: 9, concept_id: 4149898, concept_name: "Physical therapy evaluation", influence: 12 },
+                    { rank: 10, concept_id: 2108680, concept_name: "Cholecystectomy", influence: 10 }
+                ],
+                execution_time: 7433, // 실행 시간 (초 단위)
+                multiple: 2
+            };
+            
+            // 분석 결과 저장
+            saveAnalysisResult(featureData);
+            hasPreviousAnalysis = true;
+            previousAnalysisTime = formatDateTime(new Date().getTime());
 
         } catch (error) {
             console.error("SHAP analysis error:", error);
             analysisError = error.message || "An unexpected error occurred while running SHAP analysis. Please try again later.";
-            shapFeatures = []; // 에러 발생 시 기존 결과 초기화
+            featureData = {
+                condition: [],
+                procedure: [],
+                execution_time: 0,
+                multiple: 0
+            }; // 에러 발생 시 기존 결과 초기화
         } finally {
             isLoading = false;
         }
@@ -131,19 +225,6 @@
         activeTab = tab;
         updateIndicator();
     }
-
-    onMount(() => {
-        updateIndicator();
-        
-        resizeObserver = new ResizeObserver(() => {
-            updateIndicator();
-        });
-
-        const tabContainer = tabElements[0]?.parentElement;
-        if (tabContainer) {
-            resizeObserver.observe(tabContainer);
-        }
-    });
 
     onDestroy(() => {
         if (resizeObserver) {
@@ -289,7 +370,25 @@
                         Start Analysis
                     {/if}
                 </button>
+                
+                {#if hasPreviousAnalysis && !analysisStarted}
+                    <button
+                        onclick={loadPreviousAnalysis}
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 text-sm flex items-center"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Load Previous Analysis
+                    </button>
+                {/if}
             </div>
+            
+            {#if hasPreviousAnalysis && !analysisStarted}
+                <div class="mt-2">
+                    <p class="text-xs text-gray-500">Previous analysis available from {previousAnalysisTime}</p>
+                </div>
+            {/if}
 
             {#if isLoading}
                 <div class="mt-6 flex justify-center items-center space-x-2 text-gray-600">
@@ -307,33 +406,42 @@
                 </div>
             {/if}
 
-            {#if !isLoading && !analysisError && shapFeatures.length > 0}
-                {@const procedureFeatures = shapFeatures.filter(f => f.domain === 'Procedure').sort((a, b) => b.influence - a.influence).slice(0, 10)}
-                {@const conditionFeatures = shapFeatures.filter(f => f.domain === 'Condition').sort((a, b) => b.influence - a.influence).slice(0, 10)}
-                
+            {#if !isLoading && !analysisError && (featureData.condition.length > 0 || featureData.procedure.length > 0)}
                 <div class="mt-8">
-                    <!-- <h3 class="text-lg font-medium text-gray-800 mb-4">Top 10 Influential Features by Domain</h3> -->
+                    <div class="flex justify-between items-center mb-2">
+                        {#if featureData.multiple > 0}
+                            <span class="text-sm text-gray-600">Comparison Size Multiplier: {featureData.multiple}x</span>
+                        {:else}
+                            <span></span>
+                        {/if}
+                        
+                        {#if featureData.execution_time > 0}
+                            <span class="text-xs text-gray-500">Execution Time: {formatExecutionTime(featureData.execution_time)}</span>
+                        {/if}
+                    </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         <!-- Procedure Column -->
                         <div>
                             <h4 class="text-sm font-semibold text-gray-700 mb-2">Procedure</h4>
-                            {#if procedureFeatures.length > 0}
+                            {#if featureData.procedure.length > 0}
                                 <div class="border rounded-lg overflow-hidden shadow-sm">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                                         <thead class="bg-gray-50 sticky top-0 z-10">
                                             <tr>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Id</th>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Name</th>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
-                                            {#each procedureFeatures as feature, index}
+                                            {#each featureData.procedure as feature}
                                                 <tr>
-                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{index + 1}</td>
-                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.name}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.concept_name}</td>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
                                                 </tr>
                                             {/each}
@@ -350,21 +458,23 @@
                         <!-- Condition Column -->
                         <div>
                             <h4 class="text-sm font-semibold text-gray-700 mb-2">Condition</h4>
-                            {#if conditionFeatures.length > 0}
+                            {#if featureData.condition.length > 0}
                                 <div class="border rounded-lg overflow-hidden shadow-sm">
                                         <table class="min-w-full divide-y divide-gray-200 text-xs">
                                             <thead class="bg-gray-50 sticky top-0 z-10">
                                             <tr>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Id</th>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Feature Name</th>
                                                 <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
                                             </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-gray-200">
-                                                {#each conditionFeatures as feature, index}
+                                                {#each featureData.condition as feature}
                                                     <tr>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{index + 1}</td>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.name}</td>
+                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
+                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
+                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.concept_name}</td>
                                                         <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
                                                     </tr>
                                                 {/each}
