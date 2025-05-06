@@ -162,6 +162,14 @@ export class CohortResponse {
   updated_at: string;
 }
 
+export class CohortDetailResponse extends CohortResponse {
+  @ApiProperty({
+    description: 'Number of persons in the cohort',
+    example: 100,
+  })
+  count: number;
+}
+
 export class CohortStatisticsResponse {
   @ApiProperty({
     description: 'Gender statistics',

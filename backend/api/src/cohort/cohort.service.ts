@@ -12,6 +12,7 @@ import {
   DeleteCohortResponse,
   CohortListResponse,
   CohortPersonsResponse,
+  CohortDetailResponse,
 } from './dto/cohort.dto';
 
 @Injectable()
@@ -274,7 +275,7 @@ export class CohortService {
     };
   }
 
-  async getCohort(id: string): Promise<CohortResponse> {
+  async getCohort(id: string): Promise<CohortDetailResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .selectAll()
@@ -285,7 +286,13 @@ export class CohortService {
       throw new NotFoundException('Cohort not found.');
     }
 
-    return cohort;
+    const count = await getBaseDB()
+      .selectFrom('cohort_detail')
+      .select(({ fn }) => [fn.count('person_id').as('count')])
+      .where('cohort_id', '=', id)
+      .executeTakeFirst();
+
+    return { ...cohort, count: Number(count?.count || 0) };
   }
 
   async getCohortPersons(
