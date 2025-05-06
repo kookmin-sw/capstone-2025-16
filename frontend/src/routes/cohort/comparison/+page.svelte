@@ -6,7 +6,6 @@
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
-  import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
   import LineChart from "$lib/components/Charts/LineChart/LineChart.svelte";
   import { transformLineChartToTableData } from "$lib/components/Charts/LineChart/lineChartTransformer.js";
@@ -16,7 +15,10 @@
   import StackedBarChartTableView from "$lib/components/Charts/StackedBarChart/StackedBarChartTableView.svelte";
   import Footer from '$lib/components/Footer.svelte';
 
+  export let data;
+
   // 코호트 데이터
+  const cohortStats = data.cohortList;
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
   let expandedStates = []; // 코호트 목록 toggle 펼치거나 접기 위한 상태 배열
@@ -80,7 +82,7 @@
 
   $: cohortTotalCounts = Object.fromEntries(
     selectedCohorts.map(cohortId => [
-      cohortStats[cohortId].basicInfo.name,
+      cohortStats[cohortId].name,
       cohortStats[cohortId].totalPatients
     ])
   );
@@ -130,10 +132,10 @@
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
     expandedStates = new Array(cohortIds.length).fill(false);
-
+    console.log("Debug----");
     try {
       cohortData = loadCohortListData(cohortStats, cohortIds);
-
+      console.log(cohortData);
       if (selectedCohorts.length > 0) {
         // 코호트별 색상 매핑 초기화
         cohortColorMap = Object.fromEntries(
@@ -177,10 +179,10 @@
       id: id,
       name: cohortStats[id].basicInfo.name,
       description: cohortStats[id].basicInfo.description,
-      author: cohortStats[id].basicInfo.author.name,
-      createdAt: cohortStats[id].basicInfo.createdAt,
-      updatedAt: cohortStats[id].basicInfo.updatedAt,
-      totalPatients: cohortStats[id].totalPatients
+      author: cohortStats[id].basicInfo.author,
+      createdAt: cohortStats[id].basicInfo.created_at,
+      updatedAt: cohortStats[id].basicInfo.updated_at,
+      totalPatients: cohortStats[id].basicInfo.count
     }))
   }
 
@@ -230,7 +232,7 @@
       const data = selectedCohorts.map((cohortId) => ({
             data: cohortStats[cohortId].statistics.gender,
             cohortName: cohortStats[cohortId].basicInfo.name,
-            totalPatients: cohortStats[cohortId].totalPatients
+            totalPatients: cohortStats[cohortId].basicInfo.count
         }));
         return data;
     } catch (error) {
@@ -244,7 +246,7 @@
     const mortalityData = selectedCohorts.map((cohortId) => ({
       data: cohortStats[cohortId].statistics.mortality,
       cohortName: cohortStats[cohortId].basicInfo.name,
-      totalPatients: cohortStats[cohortId].totalPatients
+      totalPatients: cohortStats[cohortId].basicInfo.count
     }));
     return mortalityData;
   } catch (error) {
@@ -258,7 +260,7 @@
     const visitData = selectedCohorts.map((cohortId) => ({
       data: cohortStats[cohortId].statistics.visitType,
       cohortName: cohortStats[cohortId].basicInfo.name,
-      totalPatients: cohortStats[cohortId].totalPatients
+      totalPatients: cohortStats[cohortId].basicInfo.count
     }));
     return visitData;
   } catch (error) {
