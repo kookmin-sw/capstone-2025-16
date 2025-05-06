@@ -281,8 +281,12 @@
 
 <div class="pb-10">
     {#if activeTab === 'definition'}
-        <div class="p-6">
-            코호트 구성 탭 화면
+        <div class="p-3">
+            <!-- Cohort JSON display (for debugging) -->
+			<div class="rounded-lg border border-gray-200 p-4">
+				<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON</h3>
+				<pre class="rounded-md bg-gray-100 p-2 text-xs">{JSON.stringify(JSON.parse(data.cohortinfo.cohort_definition), null, 2)}</pre>
+			</div>
         </div>
     {/if}
 
