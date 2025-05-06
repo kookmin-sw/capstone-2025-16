@@ -62,7 +62,7 @@ export class CohortService {
     }
 
     const [
-      gender,
+      genders,
       mortality,
       age,
       visitTypes,
@@ -79,7 +79,6 @@ export class CohortService {
         .leftJoin('concept', 'concept.concept_id', 'person.gender_concept_id')
         .groupBy(['concept.concept_id', 'concept.concept_name'])
         .select(({ fn }) => [
-          'concept.concept_id',
           'concept.concept_name',
           fn.count('person.person_id').as('count'),
         ])
@@ -225,6 +224,10 @@ export class CohortService {
         .execute(),
     ]);
 
+    const gender: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of genders) {
+      gender[concept_name ?? 'Unknown'] = Number(count);
+    }
     age.sort((a, b) => Number(a.age_start) - Number(b.age_start));
     const age_range: { [age_range: string]: number } = {};
     for (const { age_start, age_end, count } of age) {
@@ -256,11 +259,7 @@ export class CohortService {
     }
 
     return {
-      gender: gender.map((e) => ({
-        concept_id: e.concept_id || '',
-        concept_name: e.concept_name || '',
-        count: Number(e.count),
-      })),
+      gender,
       mortality: {
         alive: Number(mortality?.alive ?? 0),
         deceased: Number(mortality?.deceased ?? 0),
