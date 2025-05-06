@@ -70,51 +70,30 @@
 
     //   데이터 매칭 (각 테이블에 해당하는 props 설정)
     let tableProps = {};
-    let personTable = {
-        "person_id": 1,
-        "gender_concept_id": 8507,
-        "year_of_birth": 1985,
-        "month_of_birth": 6,
-        "day_of_birth": 15,
-        "race_concept_id": 8527,
-        "ethnicity_concept_id": 38003563,
-        "location_id": 101,
-        "provider_id": 201,
-        "care_site_id": 301,
-        "death": {
-            "person_id": 1,
-            "death_date": "2030-07-15",
-            "death_datetime": "2030-07-15T08:42:00",
-            "death_type_concept_id": 38003569,
-            "cause_concept_id": 321042,
-            "cause_source_value": "I21.9",
-            "cause_source_concept_id": 44814645
-        },
-    };
 
     const visitMapping = {
-        9201: [0, "Inpatient", "#FF6B6B"],
-        9202: [1, "Outpatient", "#4ECDC4"],
-        9203: [2, "Emergency Room Visit", "#FFB236"],
-        581477: [3, "Home Visit", "#95A5A6"],
-        44818517: [4, "Other Visit Type", "#BDC3C7"],
+        262: [0, "Emergency Room - Inpatient Visit", "#FF6B6B"],
+        8870: [1, "Emergency Room - Hospital", "#4ECDC4"],
+        8883: [2, "Ambulatory Surgical Center", "#FFB236"],
+        9201: [3, "Inpatient Visit", "#95A5A6"],
+        581385: [4, "Observation Room", "#BDC3C7"],
+        38004207: [5, "Ambulatory Clinic / Center", "#BD12C7"],
     };
 
     async function fetchDataById(id) {
         isStatisticsView = true;
         try {
-            const res = await fetch("/cdm_sample_data.json");
+            const res = await fetch(`/api/persontable/${id}`);
             const fullData = await res.json();
-            const visitOccurrenceIdData = fullData[id];
             tableProps = {
-                cdm_info: { careSite: visitOccurrenceIdData.care_site, location: visitOccurrenceIdData.location, visitOccurrence: visitOccurrenceIdData.visit_occurrence },
-                condition: { conditionEra: visitOccurrenceIdData.condition_era, conditionOccurrence: visitOccurrenceIdData.condition_occurrence },
-                drug: { drugExposure: visitOccurrenceIdData.drug_exposure },
-                measurement: { measurement: visitOccurrenceIdData.measurement },
-                observation: { observation: visitOccurrenceIdData.observation },
-                procedure_occurrence: { procedureOccurrence: visitOccurrenceIdData.procedure_occurrence },
-                specimen: { specimen: visitOccurrenceIdData.specimen },
-                bio_signal: { bioSignal: visitOccurrenceIdData.bio_signal }
+                cdm_info: { careSite: fullData?.care_site, location: fullData?.location, visitOccurrence: fullData?.visitInfo },
+                condition: { conditionEra: fullData?.conditionEras, conditionOccurrence: fullData?.conditions },
+                drug: { drugExposure: fullData?.drugs },
+                measurement: { measurement: fullData?.measurements },
+                observation: { observation: fullData?.observations },
+                procedure_occurrence: { procedureOccurrence: fullData?.procedures },
+                specimen: { specimen: fullData?.specimens },
+                bio_signal: { bioSignal: fullData?.bio_signal }
             };
         } catch (error) {
             console.error("데이터 로드 실패:", error);
@@ -177,14 +156,14 @@
 
     function setupClipPath(svg) {
         svg.append("defs")
-                .append("clipPath")
-                .attr("id", "clip-timeline")
-                .append("rect")
-                .attr("x", MARGIN.left)
-                .attr("y", 0)
-                .attr("width", innerWidth)
-                .attr("height", innerHeight);
-    }
+            .append("clipPath")
+            .attr("id", "clip-timeline")
+            .append("rect")
+            .attr("x", MARGIN.left)
+            .attr("y", 0)
+            .attr("width", innerWidth)
+            .attr("height", innerHeight);
+}
 
     function setupTooltip() {
         let tooltip = d3.select(timelineContainer).select(".tooltip");
@@ -206,7 +185,7 @@
     function drawYAxis(svg) {
         const entries = Object.entries(visitMapping);
         const labelGroup = svg.append("g")
-            .attr("transform", `translate(${MARGIN.left - 10}, ${MARGIN.top})`);
+            .attr("transform", `translate(${MARGIN.left-40}, ${MARGIN.top})`);
 
         labelGroup.selectAll("text")
             .data(entries)
@@ -214,7 +193,7 @@
             .append("text")
             .attr("x", 0)
             .attr("y", ([id]) => visitMapping[id][0] * ROW_GAP + 10)
-            .attr("text-anchor", "end")
+            .attr("text-anchor", "middle")
             .attr("font-size", "11px")
             .attr("alignment-baseline", "middle")
             .text(([_, [, label]]) => label);
@@ -226,7 +205,7 @@
             .data(entries)
             .enter()
             .append("line")
-            .attr("x1", MARGIN.left)
+            .attr("x1", MARGIN.left + 50)
             .attr("x2", innerWidth + MARGIN.left)
             .attr("y1", ([id]) => visitMapping[id][0] * ROW_GAP - 2.5)
             .attr("y2", ([id]) => visitMapping[id][0] * ROW_GAP - 2.5)
@@ -237,7 +216,7 @@
     function drawXAxis(svg) {
         const axis = d3.axisBottom(xScale).ticks(10);
         xAxisGroup = svg.append("g")
-            .attr("transform", `translate(0,${innerHeight})`)
+            .attr("transform", `translate(50,${innerHeight})`)
             .call(axis);
     }
 
@@ -362,7 +341,7 @@
                 .attr("width", d => Math.max(newXScale(new Date(d.end)) - newXScale(new Date(d.start)), 5));
 
             d3.selectAll(".death-bar")
-                .attr("x", newXScale(new Date(personTable.death.death_date)))
+                .attr("x", newXScale(new Date(data.personInfo.death.death_date)))
                 .attr("width", DEATH_BAR_WIDTH);
             });
 
@@ -483,7 +462,7 @@
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
     <div class="flex gap-4">
-        <div class="w-4/5 h-[200px] min-w-[850px]" bind:this={timelineContainer}></div>
+        <div class="w-4/5 h-[220px] min-w-[850px]" bind:this={timelineContainer}></div>
         <div class="w-1/5 border rounded-lg p-4 bg-white shadow-md h-[200px] overflow-y-auto">
             <h2 class="text-lg font-bold mb-2">Overlapping Visits</h2>
             {#if selectedGroup}
