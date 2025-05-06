@@ -105,7 +105,7 @@ export class PaginationQuery {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  page?: number = 0;
+  page?: number;
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
@@ -115,7 +115,7 @@ export class PaginationQuery {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  limit?: number = 50;
+  limit?: number;
 }
 
 export class CohortResponse {

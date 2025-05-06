@@ -41,6 +41,8 @@ class PersonClass implements Person {
 
   @ApiPropertyOptional({ description: 'Care site ID' })
   care_site_id?: string;
+
+  @ApiPropertyOptional({ description: 'Person source value' })
   person_source_value?: string;
 
   @ApiPropertyOptional({ description: 'Gender source value' })
@@ -147,19 +149,19 @@ export class VisitOccurrenceClass {
   @ApiProperty({ description: 'Visit type concept ID' })
   visit_type_concept_id: string;
 
-  @ApiPropertyOptional({ description: 'Visit type source value' })
+  @ApiPropertyOptional({ description: 'Provider ID' })
   provider_id?: string;
 
-  @ApiPropertyOptional({ description: 'Visit type source value' })
+  @ApiPropertyOptional({ description: 'Care site ID' })
   care_site_id?: string;
 
-  @ApiPropertyOptional({ description: 'Visit type source value' })
+  @ApiPropertyOptional({ description: 'Visit source value' })
   visit_source_value?: string;
 
   @ApiPropertyOptional({ description: 'Visit source concept ID' })
   visit_source_concept_id?: string;
 
-  @ApiPropertyOptional({ description: 'Visit source value' })
+  @ApiPropertyOptional({ description: 'Admitted from concept ID' })
   admitted_from_concept_id?: string;
 
   @ApiPropertyOptional({ description: 'Admitted from source value' })
