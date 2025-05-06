@@ -1,5 +1,4 @@
 <script>
-    // import analysisData from '$lib/data/singleCohortAnalysisTest.json';
     import ChartCard from "$lib/components/ChartCard.svelte";
     import DataTable from "$lib/components/DataTable.svelte";
     import { AGE_GROUPS, SINGLE_DATA_COLOR } from '$lib/constants.js';
@@ -16,7 +15,7 @@
     import { page } from '$app/stores';
 
     let { data } = $props();
-    console.log(data);
+
     let activeTab = $state('definition');
     const tabs = [
 		{ key: 'definition', label: 'Definition' },
