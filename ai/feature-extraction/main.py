@@ -1,12 +1,44 @@
-import pandas as pd
-from db import get_target_cohort, get_comparator_cohort, get_drop_id, insert_feature_extraction_data, db_cohort_drop
-from model import prepare_two_features, train_model, iterative_shap_train, prepare_psm_features
-from validation import evaluate_model
-from sklearn.model_selection import train_test_split
+import json
+import os
+from dotenv import load_dotenv
+from kafka import KafkaConsumer
 import time
+from sklearn.model_selection import train_test_split
+from validation import evaluate_model
+from model import prepare_two_features, train_model, iterative_shap_train, prepare_psm_features
+from db import get_target_cohort, get_comparator_cohort, get_drop_id, insert_feature_extraction_data, db_cohort_drop
+import pandas as pd
 
 
-def main(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
+load_dotenv()
+
+
+def main():
+    consumer = KafkaConsumer(
+        "feature-extraction",
+        bootstrap_servers=os.getenv("KAFKA_HOST").split(","),
+        security_protocol="SASL_PLAINTEXT",
+        sasl_mechanism="PLAIN",
+        sasl_plain_username=os.getenv("KAFKA_USER"),
+        sasl_plain_password=os.getenv("KAFKA_PASS"),
+        enable_auto_commit=True,
+        auto_offset_reset="latest",
+        group_id="feature-extraction",
+    )
+    print(consumer.topics())
+
+    for msg in consumer:
+        try:
+            data = json.loads(msg.value)
+            print("Received message:", data)
+            run(data["cohort_id"], data["k"])
+        except Exception as e:
+            print("Error processing message:", e)
+
+    consumer.close()
+
+
+def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
     db_cohort_drop(cohort_id)
     start_time = time.time()
     df_target = get_target_cohort(cohort_id)
