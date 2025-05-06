@@ -8,7 +8,5 @@ export async function load({fetch, params}) {
     const res3 = await fetch(`/api/personstatistics/${params.person}`)
     const personStatistics = await res3.json();
 
-    console.log(personInfo);
-
     return { personInfo, visitData, personStatistics };
 }
