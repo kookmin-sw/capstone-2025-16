@@ -9,14 +9,14 @@
 	let showCharts = false;
 	let xml;
 
-    onMount(async () => {
+
+	// 그래프는 mount 될 때 미리 렌더링
+	onMount(async () => {
 		xml = await xmlParseToJson(filePath);
+		await tick();
+		renderAllECGWaveforms(container, xml);
 	});
 	
-	$: if (showCharts) {
-		renderAllECGWaveforms(container, xml);
-	}
-
 	function decodeBase64ToInt16Array(base64, unitsPerBit = 1) {
 		const binary = atob(base64);
 		const len = binary.length / 2;
@@ -160,6 +160,12 @@
 	{showCharts ? 'Hide ECG Graphs' : 'Show ECG Graphs'}
 </button>
 
-{#if showCharts}
-	<div bind:this={container} class="max-h-[1000px] overflow-hidden" transition:slide></div>
-{/if}
+<div
+	bind:this={container}
+	class="max-h-[1000px] overflow-hidden transition-all duration-500"
+	style="
+		opacity: {showCharts ? 1 : 0};
+		height: {showCharts ? 'auto' : '0'};
+		pointer-events: {showCharts ? 'auto' : 'none'};
+	"
+></div>
