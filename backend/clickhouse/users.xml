@@ -1,0 +1,10 @@
+<clickhouse>
+        <profiles>
+                <default>
+                        <union_default_mode>DISTINCT</union_default_mode>
+                        <join_use_nulls>1</join_use_nulls>
+                        <cast_keep_nullable>1</cast_keep_nullable>
+                        <group_by_use_nulls>1</group_by_use_nulls>
+                </default>
+        </profiles>
+</clickhouse>

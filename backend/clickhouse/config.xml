@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<clickhouse>
+        <logger>
+                <level>debug</level>
+                <console>true</console>
+        </logger>
+        <default_profile>default</default_profile>
+</clickhouse>
