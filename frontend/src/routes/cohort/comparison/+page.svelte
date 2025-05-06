@@ -16,7 +16,7 @@
   import Footer from '$lib/components/Footer.svelte';
 
   export let data;
-
+  console.log(data);
   // 코호트 데이터
   const cohortStats = data.cohortList;
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
@@ -132,10 +132,9 @@
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
     expandedStates = new Array(cohortIds.length).fill(false);
-    console.log("Debug----");
+
     try {
       cohortData = loadCohortListData(cohortStats, cohortIds);
-      console.log(cohortData);
       if (selectedCohorts.length > 0) {
         // 코호트별 색상 매핑 초기화
         cohortColorMap = Object.fromEntries(
@@ -161,7 +160,7 @@
         // 각 차트별 데이터 초기화
         chartData.drugs = selectedCohorts.map(cohortId => ({
           cohortName: cohortStats[cohortId].basicInfo.name,
-          drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
+          drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrug)
             .map(([name, count], index) => ({
               rank: index + 1,
               name,
@@ -242,87 +241,82 @@
   }
 
   async function loadMortalityData() {
-  try {
-    const mortalityData = selectedCohorts.map((cohortId) => ({
-      data: cohortStats[cohortId].statistics.mortality,
-      cohortName: cohortStats[cohortId].basicInfo.name,
-      totalPatients: cohortStats[cohortId].basicInfo.count
-    }));
-    return mortalityData;
-  } catch (error) {
-      console.error('Error loading mortality data:', error);
-      return [];
+    try {
+      const mortalityData = selectedCohorts.map((cohortId) => ({
+        data: cohortStats[cohortId].statistics.mortality,
+        cohortName: cohortStats[cohortId].basicInfo.name,
+        totalPatients: cohortStats[cohortId].basicInfo.count
+      }));
+      return mortalityData;
+    } catch (error) {
+        console.error('Error loading mortality data:', error);
+        return [];
     }
   }
 
   async function loadVisitTypeData() {
-  try {
-    const visitData = selectedCohorts.map((cohortId) => ({
-      data: cohortStats[cohortId].statistics.visitType,
-      cohortName: cohortStats[cohortId].basicInfo.name,
-      totalPatients: cohortStats[cohortId].basicInfo.count
-    }));
-    return visitData;
-  } catch (error) {
-      console.error('Error loading visit type data:', error);
-      return [];
+    try {
+      const visitData = selectedCohorts.map((cohortId) => ({
+        data: cohortStats[cohortId].statistics.visitType,
+        cohortName: cohortStats[cohortId].basicInfo.name,
+        totalPatients: cohortStats[cohortId].basicInfo.count
+      }));
+      return visitData;
+    } catch (error) {
+        console.error('Error loading visit type data:', error);
+        return [];
     }
   }
 
   async function loadAgeDistributionData() {
-  try {
-    const ageData = [];
-    const ageGroups = [
-      "0-9", "10-19", "20-29", "30-39", "40-49", 
-      "50-59", "60-69", "70-79", "80-89", "90-99",
-      "100-109", "110-119", "120+"
-    ];
-    
-    selectedCohorts.forEach((cohortId) => {
-      const cohortName = cohortStats[cohortId].basicInfo.name;
-      for(const [key, value] of Object.entries(cohortStats[cohortId].statistics.age)){
-        ageData.push({
-          label: key,
-          value: value,
-          series: cohortName
-        });
-      }
-    });
-    console.log(ageData);
-    return ageData;
-  } catch (error) {
-      console.error('Error loading age distribution data:', error);
-      return [];
+    try {
+      const ageData = [];
+      
+      selectedCohorts.forEach((cohortId) => {
+        const cohortName = cohortStats[cohortId].basicInfo.name;
+        for(const [key, value] of Object.entries(cohortStats[cohortId].statistics.age)){
+          ageData.push({
+            label: key,
+            value: value,
+            series: cohortName
+          });
+        }
+      });
+
+      return ageData;
+    } catch (error) {
+        console.error('Error loading age distribution data:', error);
+        return [];
     }
   }
 
   async function loadVisitCountData() {
-  try {
-    const visitData = [];
-    selectedCohorts.forEach((cohortId) => {
-      const cohortName = cohortStats[cohortId].basicInfo.name;
-      Object.entries(cohortStats[cohortId].statistics.visitCount).forEach(([count, value]) => {
-        visitData.push({
-          label: count,
-          value: value,
-          series: cohortName
+    try {
+      const visitData = [];
+      selectedCohorts.forEach((cohortId) => {
+        const cohortName = cohortStats[cohortId].basicInfo.name;
+        Object.entries(cohortStats[cohortId].statistics.visitCount).forEach(([count, value]) => {
+          visitData.push({
+            label: count,
+            value: value,
+            series: cohortName
+          });
         });
       });
-    });
-    return visitData;
-  } catch (error) {
-      console.error('Error loading visit count data:', error);
-      return [];
+      return visitData;
+    } catch (error) {
+        console.error('Error loading visit count data:', error);
+        return [];
     }
   }
 
   function prepareStackedDomainData(domainKey) {
     const result = [];
     const statsFieldMap = {
-      'condition': 'topTenConditions',
-      'drug': 'topTenDrugs',
-      'procedure': 'topTenProcedures',
-      'measurement': 'topTenMeasurements'
+      'condition': 'topTenCondition',
+      'drug': 'topTenDrug',
+      'procedure': 'topTenProcedure',
+      'measurement': 'topTenMeasurement'
     };
     const statsField = statsFieldMap[domainKey];
 
