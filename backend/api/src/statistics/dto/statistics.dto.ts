@@ -334,13 +334,15 @@ export class ChartResponse {
 
   @ApiProperty({
     description: 'Chart definition (JSON string)',
-    example: '{"groups":[{"name":"Group 1","definition":{}}],"countBy":{"concept":"123123"}}',
+    example:
+      '{"groups":[{"name":"Group 1","definition":{}}],"countBy":{"concept":"123123"}}',
   })
   definition: string;
 
   @ApiProperty({
     description: 'Chart Result (JSON string)',
-    example: '[{"cohortId":"00000000-0000-0000-0000-000000000000","values":[10,20,30]}]',
+    example:
+      '[{"cohortId":"00000000-0000-0000-0000-000000000000","values":[10,20,30]}]',
   })
   result: string;
 

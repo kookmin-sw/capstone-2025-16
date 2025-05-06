@@ -19,7 +19,7 @@ export class SearchConceptQueryDto {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  page?: number = 0;
+  page?: number;
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
@@ -29,7 +29,7 @@ export class SearchConceptQueryDto {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  limit?: number = 100;
+  limit?: number;
 }
 
 export class ConceptResponseDto {
