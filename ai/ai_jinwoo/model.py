@@ -1,5 +1,3 @@
-# model.py
-
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
@@ -8,8 +6,7 @@ from xgboost import XGBClassifier
 import shap
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import NearestNeighbors
-
-from validation import cross_validate_model, evaluate_model
+from validation import evaluate_model
 
 
 def calculate_propensity_scores(df_target, df_comparator, feature_cols):
@@ -68,7 +65,6 @@ def prepare_features(df_target: pd.DataFrame, df_comparator: pd.DataFrame, cols_
 
     df_final = df_full[['person_id', 'label']].drop_duplicates().set_index("person_id")
     df_final = df_final.join(procedure_df, how="left").join(condition_df, how="left").fillna(0).astype(float)
-    # df_final = df_final.astype({'age': 'int32', 'gender': 'int32'})  
 
     df_final = df_final.drop(columns=[col for col in cols_to_drop if col in df_final.columns])
     feature_cols = df_final.drop(columns=["label"]).columns
@@ -83,8 +79,6 @@ def prepare_features(df_target: pd.DataFrame, df_comparator: pd.DataFrame, cols_
 
 def prepare_two_features(df_target: pd.DataFrame, df_comparator: pd.DataFrame, cols_to_drop: list, normalize: bool = True) -> tuple:
     common_ids = set(df_target['person_id']).intersection(set(df_comparator['person_id']))
-    if common_ids:
-        raise ValueError(f"중복 환자 발견: {list(common_ids)[:5]}... (총 {len(common_ids)}명)")
     df_full = pd.concat([df_target, df_comparator]).reset_index(drop=True)
     df_full = df_full.drop(columns=[col for col in ['age', 'gender'] if col in df_full.columns])
 
@@ -136,12 +130,8 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
     best_model    = model
     iteration     = 0
     current_ratio = initial_ratio
-    print("Initial f1:", best_results["f1"])
 
     while iteration < max_iter:
-        print(f"\n--- SHAP Iteration {iteration+1} ---")
-        print(f"Using top {current_ratio*100:.0f}% features")
-
         explainer = shap.TreeExplainer(best_model)
         shap_vals   = explainer.shap_values(X_train)
         if isinstance(shap_vals, list):        
@@ -161,7 +151,6 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
 
         num_top_features = int(len(feature_importance) * current_ratio)
         top_features     = feature_importance["feature"].iloc[:num_top_features].tolist()
-        print(f"Selected top {num_top_features} features")
 
         model_top = XGBClassifier(
             n_estimators=100, learning_rate=0.05,
@@ -169,14 +158,11 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
         )
         model_top.fit(X_train[top_features], y_train)
         new_results = evaluate_model(model_top, X_val[top_features], y_val)
-        print("New model f1:", new_results["f1"])
 
         if new_results["f1"] - best_results["f1"] >= improvement_threshold:
-            print(f"f1 improved by {new_results['f1'] - best_results['f1']:.4f} → update.")
             best_results, best_features, best_model = new_results, top_features, model_top
             X_train, X_val = X_train[top_features], X_val[top_features]
         else:
-            print("No significant improvement → stop.")
             break
 
         current_ratio = min(current_ratio + ratio_increment, 1.0)
@@ -184,23 +170,12 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
     return best_model, best_features, best_results, feature_importance
 
 
-def shap_visualization(model, X_train):
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_train)
-    if isinstance(shap_values, list):
-        shap_values = shap_values[1]
-    mean_shap = np.abs(shap_values).mean(axis=0)
-    feature_importance = pd.DataFrame({
-        'feature': X_train.columns,
-        'mean_shap': mean_shap
-    }).sort_values(by='mean_shap', ascending=False)
-    
-    print("SHAP 기반 Feature Importance:")
-    print(feature_importance)
-
 def predict_cohort_probability(model, X_new):
     probabilities = model.predict_proba(X_new)[:, 1]
     return probabilities
+
+
+
 
 
 
