@@ -8,6 +8,20 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import NearestNeighbors
 from validation import evaluate_model
 
+try:
+    import torch
+    USE_GPU = torch.cuda.is_available()
+except ImportError:
+    USE_GPU = False
+
+XGB_COMMON_PARAMS = {
+    "n_estimators": 100,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "random_state": 42,
+    "tree_method": "gpu_hist" if USE_GPU else "hist",
+    "predictor":  "gpu_predictor" if USE_GPU else "cpu_predictor",
+}
 
 def calculate_propensity_scores(df_target, df_comparator, feature_cols):
     df_full = pd.concat([df_target[feature_cols], df_comparator[feature_cols]]).reset_index(drop=True)
@@ -21,25 +35,20 @@ def calculate_propensity_scores(df_target, df_comparator, feature_cols):
     model.fit(df_full, y_full)
     
     propensity_scores = model.predict_proba(df_full)[:, 1]
-    target_scores = propensity_scores[:len(df_target)]
-    comp_scores = propensity_scores[len(df_target):]
-    return target_scores, comp_scores
+    return propensity_scores[:len(df_target)], propensity_scores[len(df_target):]
 
 def match_patients(df_target, df_comparator, target_scores, comp_scores, k=1):
     nn = NearestNeighbors(n_neighbors=k, algorithm='ball_tree')
     nn.fit(comp_scores.reshape(-1, 1))
     distances, indices = nn.kneighbors(target_scores.reshape(-1, 1))
-    matched_comparator = df_comparator.iloc[indices.flatten()]
-    return matched_comparator
+    return df_comparator.iloc[indices.flatten()]
 
-def prepare_psm_features(df_target, df_comparator,k=30, normalize=True):
+def prepare_psm_features(df_target, df_comparator, k=30, normalize=True):
     feature_cols = ['age', 'gender']
     print("start psm")
     target_scores, comp_scores = calculate_propensity_scores(df_target, df_comparator, feature_cols)
     print("match patients start")
-    matched_comparator = match_patients(df_target, df_comparator, target_scores, comp_scores, k=k)
-    return matched_comparator
-
+    return match_patients(df_target, df_comparator, target_scores, comp_scores, k=k)
 
 def process_ohe_dictvectorizer(df: pd.DataFrame, column_name: str, normalize: bool = False) -> pd.DataFrame:
     vec = DictVectorizer(sparse=True)
@@ -47,77 +56,71 @@ def process_ohe_dictvectorizer(df: pd.DataFrame, column_name: str, normalize: bo
         df[column_name].apply(lambda x: {val: x.count(val) for val in set(x)} if isinstance(x, list) else {})
     )
     if normalize:
-        normalizer = Normalizer(norm='l2')
-        ohe_matrix = normalizer.fit_transform(ohe_matrix)
-    ohe_df = pd.DataFrame.sparse.from_spmatrix(ohe_matrix, index=df["person_id"], columns=vec.get_feature_names_out())
-    return ohe_df
+        ohe_matrix = Normalizer(norm='l2').fit_transform(ohe_matrix)
+    return pd.DataFrame.sparse.from_spmatrix(
+        ohe_matrix, index=df["person_id"], columns=vec.get_feature_names_out()
+    )
 
 def prepare_features(df_target: pd.DataFrame, df_comparator: pd.DataFrame, cols_to_drop: list, normalize: bool = True) -> pd.DataFrame:
     df_full = pd.concat([df_target, df_comparator]).reset_index(drop=True)
-    df_full = df_full.drop(columns=[col for col in ['age', 'gender'] if col in df_full.columns])
+    df_full = df_full.drop(columns=[c for c in ['age', 'gender'] if c in df_full.columns])
 
-    if "procedure_ids" not in df_full.columns:
-        df_full["procedure_ids"] = [[] for _ in range(len(df_full))]
-    if "condition_ids" not in df_full.columns:
-        df_full["condition_ids"] = [[] for _ in range(len(df_full))]
-    procedure_df = process_ohe_dictvectorizer(df_full, "procedure_ids", normalize=normalize)
-    condition_df = process_ohe_dictvectorizer(df_full, "condition_ids", normalize=normalize)
+    for col in ("procedure_ids", "condition_ids"):
+        if col not in df_full.columns:
+            df_full[col] = [[] for _ in range(len(df_full))]
 
-    df_final = df_full[['person_id', 'label']].drop_duplicates().set_index("person_id")
-    df_final = df_final.join(procedure_df, how="left").join(condition_df, how="left").fillna(0).astype(float)
+    proc_df = process_ohe_dictvectorizer(df_full, "procedure_ids", normalize)
+    cond_df = process_ohe_dictvectorizer(df_full, "condition_ids", normalize)
 
-    df_final = df_final.drop(columns=[col for col in cols_to_drop if col in df_final.columns])
-    feature_cols = df_final.drop(columns=["label"]).columns
+    df_final = (
+        df_full[['person_id', 'label']]
+        .drop_duplicates()
+        .set_index("person_id")
+        .join(proc_df,   how="left")
+        .join(cond_df,   how="left")
+        .fillna(0)
+        .astype(float)
+    ).drop(columns=[c for c in cols_to_drop if c in df_final.columns])
+
+    feature_cols = df_final.columns.drop("label")
     if len(feature_cols) > 30000:
-        feature_counts = (df_final[feature_cols] != 0).sum()
-        sorted_features = feature_counts.sort_values(ascending=True)
-        num_to_drop = len(sorted_features) - 30000
-        features_to_drop = sorted_features.index[:num_to_drop].tolist()
-        df_final = df_final.drop(columns=features_to_drop)
+        counts = (df_final[feature_cols] != 0).sum()
+        to_drop = counts.sort_values().index[: len(counts) - 30000]
+        df_final = df_final.drop(columns=to_drop)
 
     return df_final
 
 def prepare_two_features(df_target: pd.DataFrame, df_comparator: pd.DataFrame, cols_to_drop: list, normalize: bool = True) -> tuple:
-    common_ids = set(df_target['person_id']).intersection(set(df_comparator['person_id']))
+    common = set(df_target['person_id']) & set(df_comparator['person_id'])
+    if common:
+        raise ValueError(f"중복 환자 발견: {list(common)[:5]}... (총 {len(common)}명)")
     df_full = pd.concat([df_target, df_comparator]).reset_index(drop=True)
-    df_full = df_full.drop(columns=[col for col in ['age', 'gender'] if col in df_full.columns])
+    df_full = df_full.drop(columns=[c for c in ['age', 'gender'] if c in df_full.columns])
 
-    if "procedure_ids" not in df_full.columns:
-        df_full["procedure_ids"] = [[] for _ in range(len(df_full))]
-    if "condition_ids" not in df_full.columns:
-        df_full["condition_ids"] = [[] for _ in range(len(df_full))]
+    for col in ("procedure_ids", "condition_ids"):
+        if col not in df_full.columns:
+            df_full[col] = [[] for _ in range(len(df_full))]
 
-    procedure_df = process_ohe_dictvectorizer(df_full, "procedure_ids", normalize=normalize)
-    condition_df = process_ohe_dictvectorizer(df_full, "condition_ids", normalize=normalize)
+    proc_df = process_ohe_dictvectorizer(df_full, "procedure_ids", normalize)
+    cond_df = process_ohe_dictvectorizer(df_full, "condition_ids", normalize)
 
-    df_final = df_full[['person_id', 'label']].drop_duplicates().set_index("person_id")
-    
-    df_procedure = df_final.join(procedure_df, how="left").fillna(0).astype(float)
-    df_condition = df_final.join(condition_df, how="left").fillna(0).astype(float)
-    
-    df_procedure = df_procedure.drop(columns=[col for col in cols_to_drop if col in df_procedure.columns])
-    df_condition = df_condition.drop(columns=[col for col in cols_to_drop if col in df_condition.columns])
+    df_idx = df_full[['person_id', 'label']].drop_duplicates().set_index("person_id")
+    df_proc = df_idx.join(proc_df, how="left").fillna(0).astype(float)
+    df_cond = df_idx.join(cond_df, how="left").fillna(0).astype(float)
 
-    feature_cols_procedure = df_procedure.drop(columns=["label"]).columns
-    feature_cols_condition = df_condition.drop(columns=["label"]).columns
-    
-    if len(feature_cols_procedure) > 30000:
-        feature_counts = (df_procedure[feature_cols_procedure] == 1).sum()
-        sorted_features = feature_counts.sort_values(ascending=True)
-        num_to_drop = len(sorted_features) - 30000
-        features_to_drop = sorted_features.index[:num_to_drop].tolist()
-        df_procedure = df_procedure.drop(columns=features_to_drop)
+    for df_part in (df_proc, df_cond):
+        to_drop = [c for c in cols_to_drop if c in df_part.columns]
+        df_part.drop(columns=to_drop, inplace=True)
+        feats = df_part.columns.drop("label")
+        if len(feats) > 30000:
+            counts = (df_part[feats] == 1).sum()
+            dropn = counts.sort_values().index[: len(counts) - 30000]
+            df_part.drop(columns=dropn, inplace=True)
 
-    if len(feature_cols_condition) > 30000:
-        feature_counts = (df_condition[feature_cols_condition] == 1).sum()
-        sorted_features = feature_counts.sort_values(ascending=True)
-        num_to_drop = len(sorted_features) - 30000
-        features_to_drop = sorted_features.index[:num_to_drop].tolist()
-        df_condition = df_condition.drop(columns=features_to_drop)
+    return df_proc, df_cond
 
-    return df_procedure, df_condition
 def train_model(X, y):
-    model = XGBClassifier(n_estimators=100, learning_rate=0.05, max_depth=6, random_state=42)
+    model = XGBClassifier(**XGB_COMMON_PARAMS)
     model.fit(X, y)
     return model
 
@@ -130,49 +133,45 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
     best_model    = model
     iteration     = 0
     current_ratio = initial_ratio
-
     while iteration < max_iter:
         explainer = shap.TreeExplainer(best_model)
-        shap_vals   = explainer.shap_values(X_train)
-        if isinstance(shap_vals, list):        
+        shap_vals = explainer.shap_values(X_train)
+        if isinstance(shap_vals, list):
             shap_vals = shap_vals[1]
 
-        abs_vals       = np.abs(shap_vals)      
-        sum_abs        = abs_vals.sum(axis=1, keepdims=True) 
-        sum_abs[sum_abs == 0] = 1                            
-        rel_pct_vals   = abs_vals / sum_abs * 100            
-        mean_rel_pct   = rel_pct_vals.mean(axis=0)           
+        abs_vals   = np.abs(shap_vals)
+        total_abs  = abs_vals.sum(axis=1, keepdims=True)
+        total_abs[total_abs == 0] = 1
+        rel_pct    = abs_vals / total_abs * 100
+        mean_pct   = rel_pct.mean(axis=0)
 
-        feature_importance = (
-            pd.DataFrame({"feature": X_train.columns,
-                          "mean_pct": mean_rel_pct})         
-              .sort_values("mean_pct", ascending=False)
+        fi = (
+            pd.DataFrame({"feature": X_train.columns, "mean_pct": mean_pct})
+            .sort_values("mean_pct", ascending=False)
         )
 
-        num_top_features = int(len(feature_importance) * current_ratio)
-        top_features     = feature_importance["feature"].iloc[:num_top_features].tolist()
+        top_n = int(len(fi) * current_ratio)
+        top_features = fi["feature"].iloc[:top_n].tolist()
 
-        model_top = XGBClassifier(
-            n_estimators=100, learning_rate=0.05,
-            max_depth=6, random_state=42
-        )
+        model_top = XGBClassifier(**XGB_COMMON_PARAMS)
         model_top.fit(X_train[top_features], y_train)
-        new_results = evaluate_model(model_top, X_val[top_features], y_val)
 
+        new_results = evaluate_model(model_top, X_val[top_features], y_val)
         if new_results["f1"] - best_results["f1"] >= improvement_threshold:
             best_results, best_features, best_model = new_results, top_features, model_top
-            X_train, X_val = X_train[top_features], X_val[top_features]
+            X_train = X_train[top_features]
+            X_val   = X_val[top_features]
         else:
             break
 
         current_ratio = min(current_ratio + ratio_increment, 1.0)
-        iteration    += 1
-    return best_model, best_features, best_results, feature_importance
+        iteration += 1
 
+    return best_model, best_features, best_results, fi
 
 def predict_cohort_probability(model, X_new):
-    probabilities = model.predict_proba(X_new)[:, 1]
-    return probabilities
+    return model.predict_proba(X_new)[:, 1]
+
 
 
 
