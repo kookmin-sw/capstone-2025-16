@@ -373,17 +373,6 @@ export class CohortService {
           });
 
           for (const query of queries.flat()) {
-            if (process.env.DEBUG) {
-              let { parameters, sql } = query.compile();
-              for (let i of parameters) {
-                sql = sql.replace(
-                  '?',
-                  typeof i === 'string' ? `'${i}'` : `${i}`,
-                );
-              }
-              console.log(sql);
-            }
-
             const result = await query.execute();
             if ('select' in query) {
               // container person counts
