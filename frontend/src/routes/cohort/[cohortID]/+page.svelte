@@ -410,7 +410,7 @@
                 <div class="mt-8">
                     <div class="flex justify-between items-center mb-2">
                         {#if featureData.multiple > 0}
-                            <span class="text-sm text-gray-600">Comparison Size Multiplier: {featureData.multiple}x</span>
+                            <span class="text-sm text-gray-600">Comparison Size(people) : {analysisData.totalPatients * featureData.multiple} ({featureData.multiple} x {analysisData.totalPatients})</span>
                         {:else}
                             <span></span>
                         {/if}
