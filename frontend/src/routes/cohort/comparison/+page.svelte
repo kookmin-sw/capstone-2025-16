@@ -16,7 +16,7 @@
   import Footer from '$lib/components/Footer.svelte';
 
   export let data;
-  console.log(data);
+
   // 코호트 데이터
   const cohortStats = data.cohortList;
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
