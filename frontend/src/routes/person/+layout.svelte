@@ -17,20 +17,18 @@
         loading = true;
 
         try {
-            const response = await fetch('/user-testdata.json');
-            const data = await response.json();
-
-            const matchedPerson = data.find((item) => item.personid === searchInput);
-
-            if (!matchedPerson) {
+            const response = await fetch(`/api/persondata/${searchInput}`);
+            if(!response.ok){
                 error = 'Patient ID not found';
                 personData = null;
                 goto(`/person`);
                 return;
             }
+
+            const data = await response.json();
             
             goto(`/person/${searchInput}`);
-            personData = matchedPerson;
+            personData = data;
         } catch (err) {
             error = 'An error occurred while loading data';
             goto(`/person`);
@@ -55,7 +53,7 @@
             <div class="container mx-auto w-[85%] py-4">
                 <div class="flex items-center justify-center gap-4">
                     <input
-                        type="number"
+                        type="text"
                         bind:value={searchInput}
                         on:keypress={handleKeyPress}
                         placeholder="Enter Patient ID"
