@@ -10,7 +10,7 @@
     <div class="visit-info">
       <span class="info"><strong>Visit ID:</strong> {visitOccurrence.visit_occurrence_id}</span>
       <span class="info"><strong>Visit Dates:</strong> {visitOccurrence.visit_start_date} ~ {visitOccurrence.visit_end_date}</span>
-      <span class="info"><strong>Concept ID:</strong> {visitOccurrence.visit_concept_id}</span>
+      <span class="info"><strong>Concept ID:</strong> {visitOccurrence.concept_name}</span>
     </div>
     <div class="care-info">
       <span class="info"><strong>Care Site:</strong> {careSite?.care_site_name}</span>
