@@ -10,28 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shap
 import time
-def compare_comparator(df_comparator_previous, df_comparator_current):
-    # 이전 epoch의 df_comparator와 현재 epoch의 df_comparator에서 다른 patient_id를 찾기
-    previous_ids = set(df_comparator_previous['person_id'])
-    current_ids = set(df_comparator_current['person_id'])
-    
-    new_patients = current_ids - previous_ids  
-    removed_patients = previous_ids - current_ids  # 제외된 환자
-
-    print(f"New patients in current epoch: {len(new_patients)}")
-    print(f"Removed patients from previous epoch: {len(removed_patients)}")
-
-    return len(new_patients), len(removed_patients)
-def check_target_comparator_overlap(df_target, df_comparator):
-    """
-    Target 과 comparator 사이에 같은 사람(person_id)이 섞여 있는지 확인
-    """
-    dup_ids = set(df_target["person_id"]).intersection(df_comparator["person_id"])
-    if dup_ids:
-        print(f"⚠️  Target-Comparator 중복 환자 {len(dup_ids)}명 → 데이터 누출 위험!")
-        print(list(dup_ids)[:10], "...")
-    else:
-        print("✔️  Target 과 Comparator 에 중복 person_id 없음")
 def main(cohort_id = "0196815f-1e2d-7db9-b630-a747f8393a2d", k = 30):
     db_cohort_drop(cohort_id)
     start_time = time.time()
