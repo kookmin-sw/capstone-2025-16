@@ -280,15 +280,15 @@
     
     selectedCohorts.forEach((cohortId) => {
       const cohortName = cohortStats[cohortId].basicInfo.name;
-      ageGroups.forEach(ageGroup => {
+      for(const [key, value] of Object.entries(cohortStats[cohortId].statistics.age)){
         ageData.push({
-          label: ageGroup,
-          value: cohortStats[cohortId].statistics.age[ageGroup],
+          label: key,
+          value: value,
           series: cohortName
         });
-      });
+      }
     });
-    
+    console.log(ageData);
     return ageData;
   } catch (error) {
       console.error('Error loading age distribution data:', error);
