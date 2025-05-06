@@ -1,5 +1,5 @@
 <script>
-    import analysisData from '$lib/data/singleCohortAnalysisTest.json';
+    // import analysisData from '$lib/data/singleCohortAnalysisTest.json';
     import ChartCard from "$lib/components/ChartCard.svelte";
     import DataTable from "$lib/components/DataTable.svelte";
     import { AGE_GROUPS, SINGLE_DATA_COLOR } from '$lib/constants.js';
@@ -16,7 +16,7 @@
     import { page } from '$app/stores';
 
     let { data } = $props();
-
+    console.log(data);
     let activeTab = $state('definition');
     const tabs = [
 		{ key: 'definition', label: 'Definition' },
@@ -45,9 +45,13 @@
     let isLoading = $state(false);
     let analysisStarted = $state(false);
     let shapFeatures = $state([]);
+
+    // 통계관련
     let analysisError = $state(null);
     let cohortID = $derived($page.params.cohortID); // URL에서 cohortID 추출
     let cohortInfo = $state(data.cohortinfo);
+    let analysisData = $state(data.cohortStatistics);
+    let ageDistributionChartData = $state([]);
 
     // SHAP 분석 시작 함수 (백엔드 연동 필요)
     async function startAnalysis() {
@@ -118,6 +122,26 @@
         }
     }
 
+    async function loadAgeDistributionData() {
+        try {
+            const ageData = [];
+            
+            const cohortName = cohortInfo.name;
+            for(const [key, value] of Object.entries(analysisData.age)){
+                ageData.push({
+                    label: key,
+                    value: value,
+                    series: cohortName
+                });
+            }
+            
+            return ageData;
+        } catch (error) {
+            console.error('Error loading age distribution data:', error);
+            return [];
+        }
+    }
+
     function updateIndicator() {
         if (!tabElements || tabElements.length === 0) return;
         const activeElement = tabElements.find(el => el?.dataset.key === activeTab);
@@ -135,7 +159,7 @@
         updateIndicator();
     }
 
-    onMount(() => {
+    onMount(async() => {
         updateIndicator();
         
         resizeObserver = new ResizeObserver(() => {
@@ -146,6 +170,8 @@
         if (tabContainer) {
             resizeObserver.observe(tabContainer);
         }
+
+        ageDistributionChartData = await loadAgeDistributionData();
     });
 
     onDestroy(() => {
@@ -172,7 +198,7 @@
                 </div>
                 <div class="text-blue-600 font-medium">{cohortInfo.name}</div>
                 <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
-                    {analysisData.totalPatients}
+                    {cohortInfo.count}
                 </span>
             </div>
 
@@ -219,7 +245,7 @@
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
                     <p class="text-gray-500">Author</p>
-                    <p class="font-medium">{cohortInfo.author} ({analysisData.basicInfo.author.department})</p>
+                    <p class="font-medium">{cohortInfo.author} </p> <!--  ({analysisData.basicInfo.author.department}) -->
                 </div>
                 <div>
                     <p class="text-gray-500">Created at</p>
@@ -398,13 +424,13 @@
                     hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.gender = detail}
                 >
-                    <SingleDonutChartWrapper data={analysisData.statistics.gender} />
+                    <SingleDonutChartWrapper data={analysisData.gender} />
 
                     <div slot="table" class="w-full h-full flex flex-col pt-2">
                         <DataTable data={transformDonutChartToTableData({
-                            cohortName: analysisData.basicInfo.name,
-                            data: analysisData.statistics.gender,
-                            totalPatients: analysisData.totalPatients
+                            cohortName: cohortInfo.name,
+                            data: analysisData.gender,
+                            totalPatients: cohortInfo.count
                         })} 
                         />
                     </div>
@@ -419,14 +445,14 @@
                     hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.mortality = detail}
                 >
-                    <SingleDonutChartWrapper data={analysisData.statistics.mortality} />
+                    <SingleDonutChartWrapper data={analysisData.mortality} />
 
                     <div slot="table" class="w-full h-full flex flex-col pt-2">
                         <DataTable
                         data={transformDonutChartToTableData({
-                            cohortName: analysisData.basicInfo.name,
-                            data: analysisData.statistics.mortality,
-                            totalPatients: analysisData.totalPatients
+                            cohortName: cohortInfo.name,
+                            data: analysisData.mortality,
+                            totalPatients: cohortInfo.count
                         })}
                         />
                     </div>
@@ -441,14 +467,14 @@
                     hasXButton={false}
                     on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
                 >
-                    <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
+                    <SingleDonutChartWrapper data={analysisData.visitType} />
 
                     <div slot="table" class="w-full h-full flex flex-col pt-2">
                         <DataTable
                         data={transformDonutChartToTableData({
-                            cohortName: analysisData.basicInfo.name,
-                            data: analysisData.statistics.visitType,
-                            totalPatients: analysisData.totalPatients
+                            cohortName: cohortInfo.name,
+                            data: analysisData.visitType,
+                            totalPatients: cohortInfo.count
                         })}
                         />
                     </div>
@@ -464,24 +490,15 @@
                     on:toggleView={({ detail }) => isTableView.age = detail}
                 >
                     <LineChart
-                        data={AGE_GROUPS.map(label => ({
-                            label,
-                            value: analysisData.statistics.age[label] ?? 0,
-                            series: analysisData.basicInfo.name
-                        }))}
-                        cohortColorMap={{ [analysisData.basicInfo.name]: SINGLE_DATA_COLOR }}
+                        data={ageDistributionChartData}
+                        cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
                         showLegend={false}
+                        
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <DataTable
-                        data={transformLineChartToTableData(
-                            AGE_GROUPS.map(label => ({
-                            label,
-                            value: analysisData.statistics.age[label] ?? 0,
-                            series: analysisData.basicInfo.name
-                            }))
-                        )}
+                        data={transformLineChartToTableData(ageDistributionChartData)}
                         />
                     </div>
                 </ChartCard>
@@ -496,22 +513,22 @@
                     on:toggleView={({ detail }) => isTableView.visitCount = detail}
                 >
                     <LineChart
-                        data={Object.entries(analysisData.statistics.visitCount).map(([count, value]) => ({
-                        label: count,
-                        value: value,
-                        series: analysisData.basicInfo.name
+                        data={Object.entries(analysisData.visitCount).map(([count, value]) => ({
+                            label: count,
+                            value: value,
+                            series: cohortInfo.name
                         }))}
-                        cohortColorMap={{ [analysisData.basicInfo.name]: SINGLE_DATA_COLOR }}
+                        cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
                         showLegend={false}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <DataTable
                             data={transformLineChartToTableData(
-                                Object.entries(analysisData.statistics.visitCount).map(([count, value]) => ({
+                                Object.entries(analysisData.visitCount).map(([count, value]) => ({
                                 label: count,
                                 value: value,
-                                series: analysisData.basicInfo.name
+                                series: cohortInfo.name
                                 }))
                             )}
                         />
@@ -528,17 +545,17 @@
                     on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
                 >
                     <BarChartWrapper
-                    data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
-                    cohortName={analysisData.basicInfo.name}
-                    cohortTotalCount={analysisData.totalPatients}
+                    data={Object.entries(analysisData.topTenDrug).map(([name, count]) => ({ name, count }))}
+                    cohortName={cohortInfo.name}
+                    cohortTotalCount={cohortInfo.count}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                            data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                            data={Object.entries(analysisData.topTenDrug).map(([name, count]) => ({ name, count }))}
                             domainKey="drug"
-                            cohortName={analysisData.basicInfo.name}
-                            cohortTotalCount={analysisData.totalPatients}
+                            cohortName={cohortInfo.name}
+                            cohortTotalCount={cohortInfo.count}
                         />
                     </div>
                 </ChartCard>
@@ -553,17 +570,17 @@
                     on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
                 >
                     <BarChartWrapper
-                    data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
-                    cohortName={analysisData.basicInfo.name}
-                    cohortTotalCount={analysisData.totalPatients}
+                    data={Object.entries(analysisData.topTenCondition).map(([name, count]) => ({ name, count }))}
+                    cohortName={cohortInfo.name}
+                    cohortTotalCount={cohortInfo.count}
                     />
                 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                            data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                            data={Object.entries(analysisData.topTenCondition).map(([name, count]) => ({ name, count }))}
                             domainKey="condition"
-                            cohortName={analysisData.basicInfo.name}
-                            cohortTotalCount={analysisData.totalPatients}
+                            cohortName={cohortInfo.name}
+                            cohortTotalCount={cohortInfo.count}
                         />
                     </div>
                 </ChartCard>
@@ -578,17 +595,17 @@
                     on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
-                        cohortName={analysisData.basicInfo.name}
-                        cohortTotalCount={analysisData.totalPatients}
+                        data={Object.entries(analysisData.topTenProcedure).map(([name, count]) => ({ name, count }))}
+                        cohortName={cohortInfo.name}
+                        cohortTotalCount={cohortInfo.count}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                            data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                            data={Object.entries(analysisData.topTenProcedure).map(([name, count]) => ({ name, count }))}
                             domainKey="procedure"
-                            cohortName={analysisData.basicInfo.name}
-                            cohortTotalCount={analysisData.totalPatients}
+                            cohortName={cohortInfo.name}
+                            cohortTotalCount={cohortInfo.count}
                         />
                     </div>
                 </ChartCard>
@@ -603,17 +620,17 @@
                     on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
-                        cohortName={analysisData.basicInfo.name}
-                        cohortTotalCount={analysisData.totalPatients}
+                        data={Object.entries(analysisData.topTenMeasurement).map(([name, count]) => ({ name, count }))}
+                        cohortName={cohortInfo.name}
+                        cohortTotalCount={cohortInfo.count}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <BarChartTableView
-                            data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                            data={Object.entries(analysisData.topTenMeasurement).map(([name, count]) => ({ name, count }))}
                             domainKey="measurement"
-                            cohortName={analysisData.basicInfo.name}
-                            cohortTotalCount={analysisData.totalPatients}
+                            cohortName={cohortInfo.name}
+                            cohortTotalCount={cohortInfo.count}
                         />
                     </div>
                 </ChartCard>
