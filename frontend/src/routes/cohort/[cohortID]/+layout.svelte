@@ -133,7 +133,6 @@
 	<div class="flex-1 overflow-y-auto px-2" bind:this={cohortDiv}>
 		<!-- 환자 목록 -->
 		<div class="flex flex-col rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden">
-		<div class="flex flex-col rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden">
 			{#each paginatedData as user}
 				<a href="/cohort/{cohortID}/{user}"
 					class="group transition-colors duration-200 hover:bg-blue-50
