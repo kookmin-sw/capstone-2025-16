@@ -415,13 +415,27 @@ CREATE TABLE IF NOT EXISTS `statistics` (
     `statistics_id` UUID DEFAULT generateUUIDv7(),
     `name` String,
     `description` String,
+    `person_id` Nullable(Int64),
+    `cohort_ids` Nullable(String), -- 1111,2222,3333
+    `author` UUID,
+    `created_at` DateTime64 DEFAULT now(),
+    `updated_at` DateTime64 DEFAULT now()
+)
+ORDER BY `statistics_id`;
+
+CREATE TABLE IF NOT EXISTS `statistics_chart` (
+    `chart_id` UUID,
+    `statistics_id` UUID,
+    `name` String,
+    `description` String, -- {groups: ..., countBy: ...}
     `type` String,
     `definition` String,
     `result` String,
     `author` UUID,
     `created_at` DateTime64 DEFAULT now(),
     `updated_at` DateTime64 DEFAULT now()
-) ORDER BY `statistics_id`;
+)
+ORDER BY (`statistics_id`, `chart_id`);
 
 CREATE TABLE IF NOT EXISTS `feature_extraction`
 (
