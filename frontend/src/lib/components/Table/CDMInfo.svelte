@@ -8,13 +8,13 @@
   <h2 class="title">Visit & Care Site Information</h2>
   <div class="visit-row">
     <div class="visit-info">
-      <span class="info"><strong>Visit ID:</strong> {visitOccurrence[0].visit_occurrence_id}</span>
-      <span class="info"><strong>Visit Dates:</strong> {visitOccurrence[0].visit_start_date} ~ {visitOccurrence[0].visit_end_date}</span>
-      <span class="info"><strong>Concept ID:</strong> {visitOccurrence[0].visit_concept_id}</span>
+      <span class="info"><strong>Visit ID:</strong> {visitOccurrence.visit_occurrence_id}</span>
+      <span class="info"><strong>Visit Dates:</strong> {visitOccurrence.visit_start_date} ~ {visitOccurrence.visit_end_date}</span>
+      <span class="info"><strong>Concept ID:</strong> {visitOccurrence.visit_concept_id}</span>
     </div>
     <div class="care-info">
-      <span class="info"><strong>Care Site:</strong> {careSite.care_site_name}</span>
-      <span class="info"><strong>Address:</strong> {location.address_1}, {location.address_2} / {location.zip}</span>
+      <span class="info"><strong>Care Site:</strong> {careSite?.care_site_name}</span>
+      <span class="info"><strong>Address:</strong> {location?.address_1}, {location?.address_2} / {location?.zip}</span>
     </div>
   </div>
 </div>
