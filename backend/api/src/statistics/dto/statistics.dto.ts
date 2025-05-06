@@ -282,6 +282,20 @@ export class StatisticsResponse {
   })
   description: string;
 
+  @ApiPropertyOptional({
+    description: 'Cohort IDs',
+    example:
+      '00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000',
+    type: String,
+  })
+  cohort_ids?: string;
+
+  @ApiPropertyOptional({
+    description: 'Person ID',
+    example: '1',
+  })
+  person_id?: Identifier;
+
   @ApiProperty({
     description: 'Statistics author',
     example: '00000000-0000-0000-0000-000000000000',
