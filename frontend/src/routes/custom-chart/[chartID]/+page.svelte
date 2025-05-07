@@ -232,6 +232,14 @@
         expandedStates[index] = !expandedStates[index];
         expandedStates = [...expandedStates];
     }
+
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error('클립보드 복사 실패:', err);
+        }
+    }
 </script>
 
 <div class="px-10">
@@ -395,20 +403,39 @@
                 <div class="pt-4 px-2">
                     <ChartCard 
                         title="Custom Chart"
+                        description="Visualize and compare data across different targets and groups"
                         hasXButton = {false}
                         height="400px"
                     >
                         <div class="w-full h-full flex items-center justify-center">
                             {#if chart.type === "boxplot"}
-                                <BoxPlot data={chart.result} />
+                                <BoxPlot data={chart} />
                             {:else}
-                                <GroupedBarChart data={chart.result} />
+                                <GroupedBarChart data={chart} />
                             {/if}
                         </div>
                     </ChartCard>
                 </div>
-                <div class="p-4 border-t">
-                    <p class="text-gray-500">Chart Detail Information will be displayed here.</p>
+                <div class="p-4 border-t mt-5">
+                    <h4 class="text-md font-medium text-gray-700 mb-3">Chart Definition</h4>
+                    {#each chart.definition.groups as group, index}
+                        <div class="mb-4 last:mb-0">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
+                                <button 
+                                    class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors flex items-center gap-1"
+                                    onclick={() => copyToClipboard(JSON.stringify(group.definition, null, 2))}
+                                >
+                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre class="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(group.definition, null, 2)}</pre>
+                        </div>
+                    {/each}
                 </div>
             </div>
           {/if}
