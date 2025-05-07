@@ -7,9 +7,10 @@ import { VisitModule } from './visit/visit.module';
 import { ConceptModule } from './concept/concept.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { FeatureModule } from './feature/feature.module';
+import { AutocohortModule } from './autocohort/autocohort.module';
 
 @Module({
-  imports: [CohortModule, PersonModule, VisitModule, ConceptModule, StatisticsModule, FeatureModule],
+  imports: [CohortModule, PersonModule, VisitModule, ConceptModule, StatisticsModule, FeatureModule, AutocohortModule],
   controllers: [AppController],
   providers: [AppService],
 })
