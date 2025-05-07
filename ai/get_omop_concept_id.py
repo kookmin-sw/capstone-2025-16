@@ -56,7 +56,7 @@ Instructions:
    - CHF → Congestive Heart Failure
    - COPD → Chronic Obstructive Pulmonary Disease
    - HTN → Hypertension
-   - pH level→ power of hydrogen
+   - pH level → power of hydrogen
 
 2. Remove qualifiers and modifiers that might not exist in the database:
    - Remove "or higher", "or more", "or greater", "or above", "or over"
@@ -71,6 +71,12 @@ Instructions:
    - "Acute Kidney Injury" (NOT "AKI")
    - "Type 2 Diabetes Mellitus" (NOT "T2DM")
    - "End Stage Renal Disease" (NOT "ESRD")
+   - [CRITICAL] DO NOT return the same term as input
+   - [CRITICAL] ALWAYS modify the term to be more general or standard
+   - [CRITICAL] If the term is already in standard form, add a more general term
+     * Example: "Partial pressure of carbon dioxide" → "Carbon dioxide"
+     * Example: "pH level" → "pH"
+     * Example: "Glasgow Coma Scale Motor Component" → "Glasgow Coma Scale"
 
 **Modified Examples**:
 - Input: "CKD Stage 4 or higher" → Output: "Chronic Kidney Disease Stage 4"

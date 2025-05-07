@@ -293,7 +293,6 @@ Extract the cohort selection criteria from the following text and return ONLY th
 
 # 텍스트에서 코호트 정의를 추출
 def extract_terms_from_text(text: str) -> dict:
-    # KST 시간대 계산
     kst_offset = timedelta(hours=9)
     current_datetime = (datetime.now(timezone.utc) + kst_offset).strftime('%Y-%m-%d %H:%M:%S')
     
@@ -310,9 +309,8 @@ def extract_terms_from_text(text: str) -> dict:
     )
     llm_response = response.choices[0].message.content
     
-    # 디버깅을 위한 출력
-    print("\n[LLM 응답 원본]:")
-    print(llm_response)
+    # print("\n[LLM 응답 원본]:")
+    # print(llm_response)
     
     try:
         content = llm_response.strip()
@@ -344,7 +342,7 @@ def extract_terms_from_text(text: str) -> dict:
                 conceptset["items"] = []
         
         # 디버깅을 위한 출력
-        print("\n[파싱된 JSON]:")
+        print("\n[LLM 응답 파싱된 JSON]:")
         print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
         
         return cohort_json
