@@ -2,10 +2,30 @@
     import * as d3 from 'd3';
     import { onMount, onDestroy } from 'svelte';
   
-    export let data = [];
+    export let data = {};
   
     let svgContainer;
     let resizeObserver;
+  
+    // 데이터 변환 함수
+    function transformData(chartData) {
+        if (!chartData || !chartData.definition || !chartData.result) return [];
+        
+        const groups = chartData.definition.groups.map(g => g.name);
+        const transformedData = [];
+        
+        chartData.result.forEach(result => {
+            result.values.forEach((value, index) => {
+                transformedData.push({
+                    group: groups[index],
+                    target: result.cohortId,
+                    value: value
+                });
+            });
+        });
+        
+        return transformedData;
+    }
   
     onMount(() => {
       drawChart();
@@ -28,44 +48,41 @@
     });
   
     function drawChart() {
-      if (!data || data.length === 0 || !svgContainer) return;
-  
-      // 컨테이너 크기에 맞게 조정
-      const containerRect = svgContainer.getBoundingClientRect();
+      if (!data || !data.definition || !data.result || !svgContainer) return;
       
-      // 컨테이너 크기 적용 (10px 여백 제거)
+      const chartData = transformData(data);
+      if (chartData.length === 0) return;
+  
+      const containerRect = svgContainer.getBoundingClientRect();
       const width = containerRect.width - 10;
       const height = containerRect.height - 10;
       
-      // 데이터 크기에 따라 동적으로 여백 조정
-      const dataCount = new Set(data.map(d => d.group)).size;
-      const marginLeft = Math.min(Math.max(50, 10 + dataCount * 3), 40); // 데이터 수에 따라 25~40px 사이로 조정
-      const marginBottom = Math.min(30, Math.max(20, dataCount * 2)); // 20~30px 사이로 조정
+      const dataCount = data.definition.groups.length;
+      const marginLeft = Math.min(Math.max(50, 10 + dataCount * 3), 40);
+      const marginBottom = Math.min(30, Math.max(20, dataCount * 2));
       
       const marginTop = 10;
       const marginRight = 10;
-      const minGroupGap = 20;  // 최소 그룹 간 여백
-      const groupWidth = 50;   // 그룹당 기본 폭 (코호트 수와 막대폭 기준)
+      const minGroupGap = 20;
+      const groupWidth = 50;
       const totalRequiredWidth = dataCount * (groupWidth + minGroupGap);
       const finalWidth = Math.max(width, totalRequiredWidth);
       const barWidth = 17;
-
   
       svgContainer.innerHTML = '';
   
-      // x축 스케일 - 데이터 수에 따라 padding 동적 조정
       const fx = d3.scaleBand()
-        .domain(new Set(data.map(d => d.group)))
+        .domain(data.definition.groups.map(g => g.name))
         .rangeRound([marginLeft, width - marginRight])
-        .paddingInner(Math.min(0.2, 0.2 + (1 / dataCount))) // 데이터가 많을수록 패딩을 줄임
+        .paddingInner(Math.min(0.2, 0.2 + (1 / dataCount)))
         .paddingOuter(0.05);
   
-      const targets = Array.from(new Set(data.map(d => d.target)));
+      const targets = data.result.map(r => r.cohortId);
   
       const x = d3.scaleBand()
         .domain(targets)
         .rangeRound([0, fx.bandwidth()])
-        .padding(Math.min(5, 5 + (1 / targets.length))); // 데이터가 많을수록 패딩을 줄임
+        .padding(Math.min(5, 5 + (1 / targets.length)));
   
       // 색상 팔레트
       const customColors = ["#4595EC", "#FF6B6B", "#FFD166", "#06D6A0", "#9D8DF1"];
@@ -77,7 +94,7 @@
   
       // y축 스케일
       const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.value) * 1.05]).nice()
+        .domain([0, d3.max(chartData, d => d.value) * 1.05]).nice()
         .range([height - marginBottom, marginTop]);
   
       // SVG 생성 - viewBox를 사용하여 자동 스케일링
@@ -119,7 +136,7 @@
       // 막대 그래프 그리기
       svg.append("g")
         .selectAll("g")
-        .data(d3.group(data, d => d.group))
+        .data(d3.group(chartData, d => d.group))
         .join("g")
           .attr("transform", ([group]) => `translate(${fx(group)},0)`)
         .selectAll("rect")
@@ -184,7 +201,7 @@
             tooltip.style("visibility", "hidden");
           });
   
-      // X축 - 데이터가 많으면 글꼴 크기 줄이고 회전
+      // X축
       const xAxisG = svg.append("g")
         .attr("transform", `translate(0,${height - marginBottom})`)
         .call(d3.axisBottom(fx))
@@ -193,7 +210,7 @@
         
       // 데이터 개수에 따라 텍스트 스타일 조정
       xAxisG.selectAll("text")
-        .style("font-size", `${Math.max(11, 9 - dataCount * 0.5)}px`) // 데이터가 많을수록 작게
+        .style("font-size", `${Math.max(11, 9 - dataCount * 0.5)}px`)
         .style("font-weight", "500")
         .attr("dx", "-0.5em")
         .attr("dy", "0.5em")
