@@ -1,15 +1,18 @@
 from clickhouse_driver import Client
 import pandas as pd
+import os
+
 
 def get_client():
     client = Client(
-        host='localhost',
-        user='#######',
-        password='#######',
-        database='#######',
-        port=111111
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASS"),
+        database=os.getenv("DB_NAME"),
+        port=os.getenv("DB_PORT"),
     )
     return client
+
 
 def execute_query(query: str) -> pd.DataFrame:
     client = get_client()
@@ -17,11 +20,12 @@ def execute_query(query: str) -> pd.DataFrame:
     df = pd.DataFrame(data)
     return df
 
+
 def generate_cohort_queries_v1(base_cohort_cte: str) -> tuple[str, str]:
     base_cte_clean = base_cohort_cte.strip().rstrip(';')
     if base_cte_clean[:4].upper() == "WITH":
         base_cte_clean = base_cte_clean[4:].strip()
-    
+
     target_query = f"""
 WITH
     {base_cte_clean},
@@ -58,8 +62,7 @@ LEFT JOIN proc_agg ON ep.person_id = proc_agg.person_id
 LEFT JOIN cond_agg ON ep.person_id = cond_agg.person_id
 LEFT JOIN patient_details AS pd ON ep.person_id = pd.person_id;
 """
-    
-    
+
     comparator_query = f"""
 WITH
     target_count AS (
@@ -108,8 +111,9 @@ LEFT JOIN proc_agg ON rp.person_id = proc_agg.person_id
 LEFT JOIN cond_agg ON rp.person_id = cond_agg.person_id
 LEFT JOIN patient_details AS pd ON rp.person_id = pd.person_id;
 """
-    
+
     return target_query, comparator_query
+
 
 def generate_cohort_queries(cohort_id: str) -> tuple[str, str]:
     cohort_id = f"toUUID('{cohort_id}')"
@@ -209,6 +213,7 @@ LEFT JOIN patient_details AS pd ON ntp.person_id = pd.person_id;
 
     return target_query, comparator_query
 
+
 def get_drop_id(cohort_id: str) -> tuple[str, str]:
     cohort_id = f"toUUID('{cohort_id}')"
 
@@ -219,32 +224,36 @@ def get_drop_id(cohort_id: str) -> tuple[str, str]:
     WHERE  cohort_id = {cohort_id}
 """
     data = client.execute(cols_to_drop)
-    cols_to_drop = [row[0] for row in data]     
+    cols_to_drop = [row[0] for row in data]
     return cols_to_drop
+
+
 def get_target_cohort(cohort_id: str) -> pd.DataFrame:
     target_query, _ = generate_cohort_queries(cohort_id)
     df = execute_query(target_query)
     df.rename(columns={
-    0: "person_id",
-    1: "procedure_ids",
-    2: "condition_ids",
-    3: "age",
-    4: "gender"
+        0: "person_id",
+        1: "procedure_ids",
+        2: "condition_ids",
+        3: "age",
+        4: "gender"
     }, inplace=True)
     df['label'] = 1
     return df
+
 
 def get_comparator_cohort(cohort_id: str) -> pd.DataFrame:
     _, comparator_query = generate_cohort_queries(cohort_id)
     df = execute_query(comparator_query)
     df.rename(columns={
-    0: "person_id",
-    1: "procedure_ids",
-    2: "condition_ids",
-    3: "age",
-    4: "gender"}, inplace=True)
+        0: "person_id",
+        1: "procedure_ids",
+        2: "condition_ids",
+        3: "age",
+        4: "gender"}, inplace=True)
     df['label'] = 0
     return df
+
 
 def insert_feature_extraction_data(cohort_id, k, final_proc_importances, final_cond_importances, execution_time):
     client = get_client()
@@ -255,22 +264,25 @@ def insert_feature_extraction_data(cohort_id, k, final_proc_importances, final_c
     rows = []
     for i in range(10):
         proc_row = top_proc_importances.iloc[i]
-        rank_proc = i + 1  
+        rank_proc = i + 1
         concept_id_proc = int(proc_row['feature'])
         influence_proc = proc_row['importance']
-        
+
         cond_row = top_cond_importances.iloc[i]
-        rank_cond = i + 1  
+        rank_cond = i + 1
         concept_id_cond = int(cond_row['feature'])
         influence_cond = cond_row['importance']
 
-        rows.append((cohort_id, k, 'procedure', rank_proc, concept_id_proc, influence_proc, int(execution_time)))
-        rows.append((cohort_id, k, 'condition', rank_cond, concept_id_cond, influence_cond, int(execution_time)))
-    
+        rows.append((cohort_id, k, 'procedure', rank_proc,
+                    concept_id_proc, influence_proc, int(execution_time)))
+        rows.append((cohort_id, k, 'condition', rank_cond,
+                    concept_id_cond, influence_cond, int(execution_time)))
+
     client.execute("""
         INSERT INTO feature_extraction (cohort_id, multiple, domain_name, rank, concept_id, influence, execution_time)
         VALUES
     """, rows)
+
 
 def db_cohort_drop(cohort_id):
     cohort_id = f"toUUID('{cohort_id}')"
@@ -279,4 +291,4 @@ def db_cohort_drop(cohort_id):
    ALTER TABLE feature_extraction
    DELETE WHERE cohort_id = {cohort_id}; 
 """
-    )
+                   )

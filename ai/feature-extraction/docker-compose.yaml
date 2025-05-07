@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+  api:
+    build:
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PYTHONUNBUFFERED: 1

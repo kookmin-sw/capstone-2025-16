@@ -11,6 +11,7 @@ export interface Database {
   cohort_concept: CohortConcept;
   statistics: Statistics;
   statistics_chart: StatisticsChart;
+  feature_extraction: FeatureExtraction;
 
   condition_era: ConditionEra;
   drug_era: DrugEra;
@@ -116,6 +117,16 @@ export interface StatisticsChart {
   author: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface FeatureExtraction {
+  cohort_id: string;
+  multiple: string;
+  domain_name: string;
+  rank: string;
+  concept_id: string;
+  influence: number;
+  execution_time: string;
 }
 
 export interface ConditionEra {

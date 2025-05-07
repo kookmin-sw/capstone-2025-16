@@ -1,0 +1,11 @@
+clickhouse-driver==0.2.9
+matplotlib==3.10.1
+numpy==2.2.5
+pandas==2.2.3
+python-dotenv==1.1.0
+scikit-learn==1.6.1
+xgboost==3.0.0
+shap==0.47.2
+torch==2.7.0
+nats-py==2.10.0
+flask==3.1.0
