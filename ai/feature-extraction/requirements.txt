@@ -8,3 +8,4 @@ xgboost==3.0.0
 shap==0.47.2
 torch==2.7.0
 nats-py==2.10.0
+flask==3.1.0

@@ -9,12 +9,39 @@ from model import prepare_two_features, train_model, iterative_shap_train, prepa
 from db import get_target_cohort, get_comparator_cohort, get_drop_id, insert_feature_extraction_data, db_cohort_drop
 import pandas as pd
 import nats
+from flask import Flask, jsonify
+import threading
 
 
 load_dotenv()
 
+now_running = False
+
+# Flask app setup
+app = Flask(__name__)
+
+
+@app.route('/', methods=['GET'])
+def get_status():
+    global now_running
+    if now_running:
+        return jsonify({
+            "status": "running",
+            "cohort_id": now_running
+        })
+    else:
+        return jsonify({
+            "status": "idle",
+            "cohort_id": None
+        })
+
+
+def start_flask():
+    app.run(host='0.0.0.0', port=3001, debug=False)
+
 
 async def main():
+    global now_running
     nc = await nats.connect(os.getenv("NATS_URL"))
     stream_name = os.getenv("NATS_STREAM_NAME")
     subject = os.getenv("NATS_SUBJECT")
@@ -38,10 +65,12 @@ async def main():
             await msg.ack_sync()  # sync 방식으로 확인 정보가 서버에 전달될 때까지 대기
 
             print("Received message:", data)
+            now_running = data["cohort_id"]
             run(data["cohort_id"], data["k"])
         except nats.errors.TimeoutError:
             pass
         except Exception as e:
+            now_running = False
             print("Error:", e)
 
 
@@ -125,5 +154,11 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
 
 
 if __name__ == "__main__":
+    # Start Flask server in a separate thread
+    flask_thread = threading.Thread(target=start_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # Run NATS consumer in the main thread
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
