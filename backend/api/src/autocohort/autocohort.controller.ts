@@ -6,8 +6,6 @@ import {
   UseInterceptors,
   HttpCode,
   HttpStatus,
-  Res,
-  Header,
 } from '@nestjs/common';
 import { AutocohortService } from './autocohort.service';
 import {
@@ -22,27 +20,13 @@ import {
   AutocohortTextRequest,
   AutocohortPDFResponse,
 } from './dto/autocohort.dto';
-import { Express, Response } from 'express';
+import { Express } from 'express';
+import { CohortDefinition } from 'src/types/type';
 
 @ApiTags('Autocohort')
 @Controller('/api/autocohort')
 export class AutocohortController {
   constructor(private readonly autocohortService: AutocohortService) {}
-
-  async handleKeepAlive<T>(res: Response, data: Promise<T>) {
-    const interval = setInterval(() => {
-      res.write(' ', () => {});
-    }, 150 * 1000);
-    try {
-      let d = await data;
-      res.write(JSON.stringify(d));
-    } catch (err) {
-      res.write(JSON.stringify(err));
-    } finally {
-      clearInterval(interval);
-      res.end();
-    }
-  }
 
   @ApiOperation({ summary: 'Generate cohort from text' })
   @ApiBody({ type: AutocohortTextRequest })
@@ -52,14 +36,11 @@ export class AutocohortController {
     type: Object,
   })
   @Post('/text')
-  @Header('Content-Type', 'application/json; charset=utf-8')
-  @Header('Transfer-Encoding', 'chunked')
   @HttpCode(HttpStatus.OK)
   async processText(
     @Body() { text }: AutocohortTextRequest,
-    @Res() res: Response,
-  ): Promise<void> {
-    await this.handleKeepAlive(res, this.autocohortService.processText(text));
+  ): Promise<CohortDefinition> {
+    return await this.autocohortService.processText(text);
   }
 
   @ApiOperation({ summary: 'Summarize text from PDF' })
@@ -83,13 +64,10 @@ export class AutocohortController {
   })
   @Post('/pdf')
   @UseInterceptors(FileInterceptor('pdf'))
-  @Header('Content-Type', 'application/json; charset=utf-8')
-  @Header('Transfer-Encoding', 'chunked')
   @HttpCode(HttpStatus.OK)
   async processPdf(
     @UploadedFile() pdf: Express.Multer.File,
-    @Res() res: Response,
-  ): Promise<void> {
-    await this.handleKeepAlive(res, this.autocohortService.processPdf(pdf));
+  ): Promise<AutocohortPDFResponse> {
+    return await this.autocohortService.processPdf(pdf);
   }
 }
