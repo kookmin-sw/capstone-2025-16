@@ -4,6 +4,7 @@
 
   // 새 데이터 형식: 
   // {
+  //   "chart_id": "...",
   //   "statistics_id": "...",
   //   "name": "...",
   //   "description": "...",
@@ -27,6 +28,7 @@
   //     ...
   //   ]
   // }
+
   export let data = {};
   export let colors = ["#4595EC", "#FF6B6B", "#FFD166", "#06D6A0", "#9D8DF1"];
 
