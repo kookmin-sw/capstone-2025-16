@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bento-dark-900 text-bento-gray-300 antialiased;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom Scrollbar for Webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2d3748; /* or bento-gray */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5568; /* or bento-blue */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #718096; /* or bento-lightblue */
+}
+
