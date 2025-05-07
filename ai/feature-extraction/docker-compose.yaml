@@ -8,3 +8,5 @@ services:
     env_file: .env
     environment:
       PYTHONUNBUFFERED: 1
+    ports:
+      - "3001:3001"
