@@ -1,7 +1,5 @@
-version: "3"
-
 services:
-  api:
+  feature-extraction:
     build:
       dockerfile: Dockerfile
     restart: unless-stopped
