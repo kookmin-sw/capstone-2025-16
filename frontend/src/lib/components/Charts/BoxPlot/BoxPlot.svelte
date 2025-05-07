@@ -399,11 +399,22 @@
       }
     });
 
-    // 차트 제거 시 툴팁도 제거
-    svgContainer.addEventListener("DOMNodeRemoved", function(event) {
-      if (event.target === svgContainer) {
-        tooltip.remove();
-      }
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+          Array.from(mutation.removedNodes).forEach((node) => {
+            if (node === svgContainer) {
+              tooltip.remove();
+              observer.disconnect();
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(svgContainer.parentNode, {
+      childList: true,
+      subtree: false
     });
 
     // SVG 추가
