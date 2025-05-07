@@ -293,7 +293,6 @@ Extract the cohort selection criteria from the following text and return ONLY th
 
 # 텍스트에서 코호트 정의를 추출
 def extract_terms_from_text(text: str) -> dict:
-    # KST 시간대 계산
     kst_offset = timedelta(hours=9)
     current_datetime = (datetime.now(timezone.utc) + kst_offset).strftime('%Y-%m-%d %H:%M:%S')
     
@@ -310,9 +309,8 @@ def extract_terms_from_text(text: str) -> dict:
     )
     llm_response = response.choices[0].message.content
     
-    # 디버깅을 위한 출력
-    print("\n[LLM 응답 원본]:")
-    print(llm_response)
+    # print("\n[LLM 응답 원본]:")
+    # print(llm_response)
     
     try:
         content = llm_response.strip()
@@ -344,7 +342,7 @@ def extract_terms_from_text(text: str) -> dict:
                 conceptset["items"] = []
         
         # 디버깅을 위한 출력
-        print("\n[파싱된 JSON]:")
+        print("\n[LLM 응답 파싱된 JSON]:")
         print(json.dumps(cohort_json, indent=2, ensure_ascii=False))
         
         return cohort_json
@@ -388,12 +386,37 @@ def main():
     # print("\n[Implementable Criteria 부분만]:")
     # print(implementable_text)
 
+    # implementable_text = """
+    # Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    # external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    # 2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    # diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    # stay duration of less than 24 h.
+    # """
+    
     implementable_text = """
-    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
-    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
-    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
-    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
-    stay duration of less than 24 h.
+    Patients became eligible when they were first docu-
+    mented to be receiving oxygen with inspired oxygen
+    fraction (FiO2) of 0.4 or more via non-rebreather mask,
+    noninvasive positive pressure ventilation (NIV), or high-
+    flow nasal cannula (HFNC), within 24 h of ICU admis-
+    sion. We excluded patients with prior invasive ventilation
+    during the same ICU admission, goals of care precluding
+    invasive ventilation, ICU admission from the operating
+    room, or a tracheostomy. Patients were also excluded
+    when equipoise was less certain at the moment of eli-
+    gibility, defined as a Glasgow Coma Scale (GCS) motor
+    component of less than 4, or a partial pressure of carbon
+    dioxide (pCO2) of 60 or more with pH of 7.20 or less [33].
+    Patients were not excluded if these characteristics devel-
+    oped during the follow-up period, after initial inclusion.
+    Wherever oxygen flow was available but FiO2 was not
+    (for example, non-rebreather masks), FiO2 was estimated
+    using the validated equation: FiO2
+    =
+    0.21 + (oxygen flow
+    in liters per minute)*0.03 [34]. Further details are avail-
+    able in Additional file 1: (§4, Table e2).
     """
     
     # 2. 텍스트에서 COHORT JSON 추출
