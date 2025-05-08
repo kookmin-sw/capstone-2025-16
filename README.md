@@ -69,53 +69,33 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 
 
 ## 4. 주요 기능
-<table style="width: 100%; table-layout: fixed;">
+<table>
   <tr>
-    <td style="width: 30%;">
-      <div>기능</div>
-    </td>
-    <td style="width: 70%;">
-      <div>설명</div>
+    <th width="30%">기능</th>
+    <th width="70%">설명</th>
+  </tr>
+  <tr>
+    <td>코호트 정의</td>
+    <td>
+      드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다. 직관적인 UI/UX와 LLM을 활용한 코호트 구성, 쿼리 load/export 기능을 제공합니다.
     </td>
   </tr>
   <tr>
+    <td>통계</td>
     <td>
-      <div>코호트 정의</div>
-    </td>
-    <td>
-      <div>
-        드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다. 직관적인 UI/UX와 LLM을 활용한 코호트 구성, 쿼리 load/export 기능을 제공합니다.
-      </div>
+      여러 코호트를 한눈에 비교·분석할 수 있는 그래프를 제공하며, 개별 환자의 상세 데이터도 실시간으로 확인할 수 있습니다. 사용자가 직접 정의한 통계 지표 기반의 시각화·분석이 가능합니다.
     </td>
   </tr>
   <tr>
+    <td>환자군 특징 분석</td>
     <td>
-      <div>통계</div>
-    </td>
-    <td>
-      <div>
-        여러 코호트를 한눈에 비교·분석할 수 있는 그래프를 제공하며, 개별 환자의 상세 데이터도 실시간으로 확인할 수 있습니다. 사용자가 직접 정의한 통계 지표 기반의 시각화·분석이 가능합니다.
-      </div>
+      AI 분석을 통해 코호트 집단의 특징을 추가적으로 파악하여 연구진에게 제시합니다. 이를 통해 연구 계획에 빠진 내용이나 관련된 새로운 특징을 발견할 수 있습니다.
     </td>
   </tr>
   <tr>
+    <td>자동 코호트 생성</td>
     <td>
-      <div>환자군 특징 분석</div>
-    </td>
-    <td>
-      <div>
-        AI 분석을 통해 코호트 집단의 특징을 추가적으로 파악하여 연구진에게 제시합니다. 이를 통해 연구 계획에 빠진 내용이나 관련된 새로운 특징을 발견할 수 있습니다.
-      </div>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <div>자동 코호트 생성</div>
-    </td>
-    <td>
-      <div>
-        텍스트 입력, 논문 드래그 앤 드롭 등을 통해 자동으로 코호트를 생성해 줍니다. 이를 통해 초보 연구자도 쉽게 사용할 수 있도록 환경을 제공하며, 연구자의 편리성을 높일 수 있습니다.
-      </div>
+      텍스트 입력, 논문 드래그 앤 드롭 등을 통해 자동으로 코호트를 생성해 줍니다. 이를 통해 초보 연구자도 쉽게 사용할 수 있도록 환경을 제공하며, 연구자의 편리성을 높일 수 있습니다.
     </td>
   </tr>
 </table>
@@ -142,7 +122,7 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
   <tr>
     <td><Strong>BackEnd API</Strong></td>
     <td>
-      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
         <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
         <img src="https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white">
         <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
@@ -173,7 +153,7 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
   <tr>
     <td><Strong>AI</Strong></td>
     <td>
-      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
         <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white">
         <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white">
         <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white">
