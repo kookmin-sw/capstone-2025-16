@@ -33,7 +33,7 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 
 ## 3. 팀 소개
 
-<table style="width: 100%; table-layout: fixed;">
+<table style="width: 100%; table-layout: fixed; border: 1px solid black; border-collapse: collapse; text-align: center;">
   <tr>
     <td>
       <img src="https://github.com/IamWonILuvWon.png" width="150" height="150"/><br/><a href="https://github.com/IamWonILuvWon">장원준</a><br/>PM, AI Engineer
@@ -69,49 +69,50 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 
 
 ## 4. 주요 기능
-<table>
+<table style="width: 100%; border: 1px solid black; border-collapse: collapse; text-align: center;">
   <tr>
-    <th width="30%">기능</th>
-    <th width="70%">설명</th>
+    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 30%;">기능</th>
+    <th style="border: 1px solid black; padding: 8px; text-align: center;">설명</th>
   </tr>
   <tr>
-    <td>코호트 정의</td>
-    <td>
+    <td style="border: 1px solid black; padding: 8px;">코호트 정의</td>
+    <td style="border: 1px solid black; padding: 8px; text-align: left;">
       드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다. 직관적인 UI/UX와 LLM을 활용한 코호트 구성, 쿼리 load/export 기능을 제공합니다.
     </td>
   </tr>
   <tr>
-    <td>통계</td>
-    <td>
+    <td style="border: 1px solid black; padding: 8px;">통계</td>
+    <td style="border: 1px solid black; padding: 8px; text-align: left;">
       여러 코호트를 한눈에 비교·분석할 수 있는 그래프를 제공하며, 개별 환자의 상세 데이터도 실시간으로 확인할 수 있습니다. 사용자가 직접 정의한 통계 지표 기반의 시각화·분석이 가능합니다.
     </td>
   </tr>
   <tr>
-    <td>환자군 특징 분석</td>
-    <td>
+    <td style="border: 1px solid black; padding: 8px;">환자군 특징 분석</td>
+    <td style="border: 1px solid black; padding: 8px; text-align: left;">
       AI 분석을 통해 코호트 집단의 특징을 추가적으로 파악하여 연구진에게 제시합니다. 이를 통해 연구 계획에 빠진 내용이나 관련된 새로운 특징을 발견할 수 있습니다.
     </td>
   </tr>
   <tr>
-    <td>자동 코호트 생성</td>
-    <td>
+    <td style="border: 1px solid black; padding: 8px;">자동 코호트 생성</td>
+    <td style="border: 1px solid black; padding: 8px; text-align: left;">
       텍스트 입력, 논문 드래그 앤 드롭 등을 통해 자동으로 코호트를 생성해 줍니다. 이를 통해 초보 연구자도 쉽게 사용할 수 있도록 환경을 제공하며, 연구자의 편리성을 높일 수 있습니다.
     </td>
   </tr>
 </table>
 
+
 ## 5. 시스템 아키텍처
 (사진 삽입 예정)
 
 ## 6. 기술 스택
-<table style="width: 100%; table-layout: fixed;">
+<table style="width: 100%; border: 1px solid black; border-collapse: collapse; text-align: center;">
   <tr>
-    <td style="width: 30%">포지션</td>
-    <td style="width: 70%">스택</td>
+    <th style="border: 1px solid black; text-align: center; width: 30%;">포지션</th>
+    <th style="border: 1px solid black; text-align: center;">스택</th>
   </tr>
   <tr>
-    <td><Strong>FrontEnd</Strong></td>
-    <td>
+    <td style="border: 1px solid black;"><strong>FrontEnd</strong></td>
+    <td style="border: 1px solid black;">
       <img src="https://img.shields.io/badge/SvelteKit-FF3E00?style=for-the-badge&logo=svelte&logoColor=white">
       <img src="https://img.shields.io/badge/TailwindCss-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white">
       <img src="https://img.shields.io/badge/D3.js-F9A03C?style=for-the-badge&logo=d3&logoColor=white">
@@ -120,63 +121,31 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
     </td>
   </tr>
   <tr>
-    <td><Strong>BackEnd API</Strong></td>
-    <td>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
-        <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
-        <img src="https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white">
-        <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
-        <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white">
-        <div style="
-            display: inline-flex; 
-            align-items: center; 
-            background-color: #0078D7; 
-            color: white; 
-            padding: 0 10px; 
-            height: 28px;
-            font-size: 13px; 
-            font-weight: bold; 
-            text-decoration: none; 
-            gap: 6px;">
-            <img src="https://kysely.dev/img/logo.svg" style="width: 16px; height: 16px;">
-            <span>Kysely</span>
-        </div>
-      </div>
+    <td style="border: 1px solid black;"><strong>BackEnd API</strong></td>
+    <td style="border: 1px solid black;">
+      <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
+      <img src="https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white">
+      <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
+      <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white">
     </td>
   </tr>
   <tr>
-    <td><Strong>Cohort Query Service</Strong></td>
-    <td>
+    <td style="border: 1px solid black;"><strong>Cohort Query Service</strong></td>
+    <td style="border: 1px solid black;">
       <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white">
     </td>
   </tr>
   <tr>
-    <td><Strong>AI</Strong></td>
-    <td>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
-        <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white">
-        <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white">
-        <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white">
-        <div style="
-            display: inline-flex; 
-            align-items: center; 
-            background-color: #0078D7; 
-            color: white; 
-            padding: 0 10px; 
-            height: 28px; /* 동일한 높이로 설정 */
-            font-size: 13px; 
-            font-weight: bold; 
-            text-decoration: none; 
-            gap: 6px;">
-            <img src="https://pymupdf.readthedocs.io/en/latest/_static/sidebar-logo-light.svg" style="width: 16px; height: 16px;">
-            <span>PyMuPDF</span>
-        </div>
-      </div>
+    <td style="border: 1px solid black;"><strong>AI</strong></td>
+    <td style="border: 1px solid black;">
+      <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white">
+      <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white">
+      <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white">
     </td>
   </tr>
   <tr>
-    <td><Strong>Infra</Strong></td>
-    <td>
+    <td style="border: 1px solid black;"><strong>Infra</strong></td>
+    <td style="border: 1px solid black;">
       <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
       <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
       <img src="https://img.shields.io/badge/dotENV-ECD53F?style=for-the-badge&logo=dotenv&logoColor=white">
@@ -186,6 +155,7 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
     </td>
   </tr>
 </table>
+
 
 ## 7. 실행방법
 <p style="font-size: 20px;"><strong>Common</strong></p>
@@ -225,7 +195,7 @@ git clone https://github.com/kookmin-sw/capstone-2025-16.git
 - <a href="/DOCS/인공지능전공_16조_캡스톤디자인 최초계획서.pdf">최초 보고서</a>
 - <a href="/DOCS/[최종]16조 중간발표 피피티.pptx">중간발표 피피티</a>
 
-<style>
+<!-- <style>
   table, th, td {
     border: 1px solid black;
     border-collapse: collapse;
@@ -242,4 +212,4 @@ git clone https://github.com/kookmin-sw/capstone-2025-16.git
     background: #213555;
     border: 0;
   }
-</style>
+</style> -->
