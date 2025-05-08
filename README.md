@@ -71,10 +71,10 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 ## 4. 주요 기능
 <table style="width: 100%; table-layout: fixed;">
   <tr>
-    <td style="width: 20%">
+    <td style="width: 30%">
       <div>기능</div>
     </td>
-    <td style="width: 80%">
+    <td style="width: 70%">
       <div>설명</div>
     </td>
   </tr>
@@ -132,41 +132,33 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
   <tr>
     <td><Strong>FrontEnd</Strong></td>
     <td>
-      <div>
-        <img src="https://img.shields.io/badge/SvelteKit-FF3E00?style=for-the-badge&logo=svelte&logoColor=white">
-        <img src="https://img.shields.io/badge/TailwindCss-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white">
-        <img src="https://img.shields.io/badge/D3.js-F9A03C?style=for-the-badge&logo=d3&logoColor=white">
-      </div>
-      <div>
-        <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
-        <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white">
-      </div>
+      <img src="https://img.shields.io/badge/SvelteKit-FF3E00?style=for-the-badge&logo=svelte&logoColor=white">
+      <img src="https://img.shields.io/badge/TailwindCss-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white">
+      <img src="https://img.shields.io/badge/D3.js-F9A03C?style=for-the-badge&logo=d3&logoColor=white">
+      <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
+      <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white">
     </td>
   </tr>
   <tr>
     <td><Strong>BackEnd API</Strong></td>
     <td>
-      <div>
-        <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
-        <img src="https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white">
-        <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
-      </div>
-      <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white">
-        <div style="
-            display: inline-flex; 
-            align-items: center; 
-            background-color: #0078D7; 
-            color: white; 
-            padding: 0 10px; 
-            height: 28px;
-            font-size: 13px; 
-            font-weight: bold; 
-            text-decoration: none; 
-            gap: 6px;">
-            <img src="https://kysely.dev/img/logo.svg" style="width: 16px; height: 16px;">
-            <span>Kysely</span>
-        </div>
+      <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
+      <img src="https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white">
+      <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
+      <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white">
+      <div style="
+          display: inline-flex; 
+          align-items: center; 
+          background-color: #0078D7; 
+          color: white; 
+          padding: 0 10px; 
+          height: 28px;
+          font-size: 13px; 
+          font-weight: bold; 
+          text-decoration: none; 
+          gap: 6px;">
+          <img src="https://kysely.dev/img/logo.svg" style="width: 16px; height: 16px;">
+          <span>Kysely</span>
       </div>
     </td>
   </tr>
@@ -179,24 +171,22 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
   <tr>
     <td><Strong>AI</Strong></td>
     <td>
-      <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white">
-        <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white">
-        <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white">
-        <div style="
-            display: inline-flex; 
-            align-items: center; 
-            background-color: #0078D7; 
-            color: white; 
-            padding: 0 10px; 
-            height: 28px; /* 동일한 높이로 설정 */
-            font-size: 13px; 
-            font-weight: bold; 
-            text-decoration: none; 
-            gap: 6px;">
-            <img src="https://pymupdf.readthedocs.io/en/latest/_static/sidebar-logo-light.svg" style="width: 16px; height: 16px;">
-            <span>PyMuPDF</span>
-        </div>
+      <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white">
+      <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white">
+      <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white">
+      <div style="
+          display: inline-flex; 
+          align-items: center; 
+          background-color: #0078D7; 
+          color: white; 
+          padding: 0 10px; 
+          height: 28px; /* 동일한 높이로 설정 */
+          font-size: 13px; 
+          font-weight: bold; 
+          text-decoration: none; 
+          gap: 6px;">
+          <img src="https://pymupdf.readthedocs.io/en/latest/_static/sidebar-logo-light.svg" style="width: 16px; height: 16px;">
+          <span>PyMuPDF</span>
       </div>
     </td>
   </tr>
@@ -217,7 +207,41 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
   </tr>
 </table>
 
-## 7. 기타
+## 7. 실행방법
+<p style="font-size: 20px;"><strong>Common</strong></p>
+
+```bash
+git clone https://github.com/kookmin-sw/capstone-2025-16.git
+```
+
+<details>
+  <summary style="font-size: 20px;"><strong>FrontEnd</strong></summary>
+
+  Svelte Package Update
+  ```bash
+  cd frontend
+  npm install
+  ```
+
+  Create .env
+  ```bash
+  vi .env
+  API_ADDRESS = Server IP
+  :wq
+  ```
+
+  Start Project
+  ```bash
+  npm run dev
+  ```
+</details>
+
+<details>
+  <summary style="font-size: 20px;"><strong>BackEnd</strong></summary>
+  
+</details>
+
+## 8. 기타
 - <a href="/DOCS/인공지능전공_16조_캡스톤디자인 최초계획서.pdf">최초 보고서</a>
 - <a href="/DOCS/[최종]16조 중간발표 피피티.pptx">중간발표 피피티</a>
 
