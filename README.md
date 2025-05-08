@@ -71,10 +71,10 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 ## 4. 주요 기능
 <table style="width: 100%; table-layout: fixed;">
   <tr>
-    <td style="width: 30%">
+    <td style="width: 30%;">
       <div>기능</div>
     </td>
-    <td style="width: 70%">
+    <td style="width: 70%;">
       <div>설명</div>
     </td>
   </tr>
@@ -142,23 +142,25 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
   <tr>
     <td><Strong>BackEnd API</Strong></td>
     <td>
-      <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
-      <img src="https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white">
-      <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
-      <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white">
-      <div style="
-          display: inline-flex; 
-          align-items: center; 
-          background-color: #0078D7; 
-          color: white; 
-          padding: 0 10px; 
-          height: 28px;
-          font-size: 13px; 
-          font-weight: bold; 
-          text-decoration: none; 
-          gap: 6px;">
-          <img src="https://kysely.dev/img/logo.svg" style="width: 16px; height: 16px;">
-          <span>Kysely</span>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white">
+        <img src="https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white">
+        <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
+        <img src="https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white">
+        <div style="
+            display: inline-flex; 
+            align-items: center; 
+            background-color: #0078D7; 
+            color: white; 
+            padding: 0 10px; 
+            height: 28px;
+            font-size: 13px; 
+            font-weight: bold; 
+            text-decoration: none; 
+            gap: 6px;">
+            <img src="https://kysely.dev/img/logo.svg" style="width: 16px; height: 16px;">
+            <span>Kysely</span>
+        </div>
       </div>
     </td>
   </tr>
@@ -171,38 +173,36 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
   <tr>
     <td><Strong>AI</Strong></td>
     <td>
-      <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white">
-      <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white">
-      <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white">
-      <div style="
-          display: inline-flex; 
-          align-items: center; 
-          background-color: #0078D7; 
-          color: white; 
-          padding: 0 10px; 
-          height: 28px; /* 동일한 높이로 설정 */
-          font-size: 13px; 
-          font-weight: bold; 
-          text-decoration: none; 
-          gap: 6px;">
-          <img src="https://pymupdf.readthedocs.io/en/latest/_static/sidebar-logo-light.svg" style="width: 16px; height: 16px;">
-          <span>PyMuPDF</span>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white">
+        <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white">
+        <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white">
+        <div style="
+            display: inline-flex; 
+            align-items: center; 
+            background-color: #0078D7; 
+            color: white; 
+            padding: 0 10px; 
+            height: 28px; /* 동일한 높이로 설정 */
+            font-size: 13px; 
+            font-weight: bold; 
+            text-decoration: none; 
+            gap: 6px;">
+            <img src="https://pymupdf.readthedocs.io/en/latest/_static/sidebar-logo-light.svg" style="width: 16px; height: 16px;">
+            <span>PyMuPDF</span>
+        </div>
       </div>
     </td>
   </tr>
   <tr>
     <td><Strong>Infra</Strong></td>
     <td>
-      <div>
-         <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
-        <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
-        <img src="https://img.shields.io/badge/dotENV-ECD53F?style=for-the-badge&logo=dotenv&logoColor=white">
-        <img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white">
-      </div>
-      <div>
-        <img src="https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=white">
-        <img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white">
-      </div>
+      <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
+      <img src="https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white">
+      <img src="https://img.shields.io/badge/dotENV-ECD53F?style=for-the-badge&logo=dotenv&logoColor=white">
+      <img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white">
+      <img src="https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=white">
+      <img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white">
     </td>
   </tr>
 </table>
