@@ -6,15 +6,21 @@
 1. api 디렉토리로 이동 후 docker compose를 사용해 실행합니다.
    ```bash
    cd api
+   cp .env.example .env
+   vi .env # env를 수정합니다
    docker compose up -d --build
    ```
 2. clickhouse 디렉토리로 이동 후 docker compose를 사용해 실행합니다.
    ```bash
    cd clickhouse
+   cp .env.example .env
+   vi .env # env를 수정합니다
    docker compose up -d
    ```
 3. nats 디렉토리로 이동 후 docker compose를 사용해 실행합니다.
    ```bash
    cd nats
+   cp .env.example .env
+   vi .env # env를 수정합니다
    docker compose up -d
    ```
