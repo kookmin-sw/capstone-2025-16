@@ -1,43 +1,53 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/gFPznrUY)
-# Welcome to GitHub
+<h1> 연구자들의 편의를 위한 의료 CDM 데이터 Viewer - <a>Bento</a></h1>
 
-캡스톤 팀 생성을 축하합니다.
+ #### Bento는 일본어로 **도시락**이라는 의미를 가지고 있습니다. 저희는 다양한 반찬을 원하는대로 골라 담는 이 도시락처럼, 연구진들이 방대한 의료데이터 속에서 필요한 정보를 쉽고 편리하게 선택하고 조합하여 분석할 수 있도록 돕겠다는 의미를 담아 이 프로젝트명을 벤토로 결정했습니다.
 
-## 팀소개 및 페이지를 꾸며주세요.
+<a href="https://kookmin-sw.github.io/capstone-2025-16/">팀 소개 페이지 바로가기</a>
 
-- 프로젝트 소개
-  - 프로젝트 설치방법 및 데모, 사용방법, 프리뷰등을 readme.md에 작성.
-  - Api나 사용방법등 내용이 많을경우 wiki에 꾸미고 링크 추가.
+## 1. 프로젝트 소개
+### 1-1. 프로젝트명 : Bento
 
-- 팀페이지 꾸미기
-  - 프로젝트 소개 및 팀원 소개
-  - index.md 예시보고 수정.
-
-- GitHub Pages 리파지토리 Settings > Options > GitHub Pages 
-  - Source를 marster branch
-  - Theme Chooser에서 태마선택
-  - 수정후 팀페이지 확인하여 점검.
-
-**팀페이지 주소** -> https://kookmin-sw.github.io/ '{{자신의 리파지토리 아이디}}'
-
-**예시)** 2023년 0조  https://kookmin-sw.github.io/capstone-2023-00/
-
-
-## 내용에 아래와 같은 내용들을 추가하세요.
-
-### 1. 프로잭트 소개
-
-프로젝트
 
 ### 2. 소개 영상
 
-프로젝트 소개하는 영상을 추가하세요
+(추가 예정)
 
 ### 3. 팀 소개
 
-팀을 소개하세요.
+<table style="width: 100%; table-layout: fixed;">
+  <tr>
+    <td style="text-align: center;">
+      <img src="https://github.com/IamWonILuvWon.png" width="150" height="150"/><br/><a href="https://github.com/IamWonILuvWon">장원준</a><br/>PM, AI Engineer
+    </td>
+    <td style="text-align: center;">
+      <img src="https://github.com/ima9ine4.png" width="150" height="150"/><br/><a 
+      href="https://github.com/ima9ine4">임혜진</a><br/>FrontEnd
+    </td>
+    <td style="text-align: center;">
+      <img src="https://github.com/rktlskan021.png" width="150" height="150"/><br/>
+      <a href="https://github.com/rktlskan021">이재영</a><br/>FrontEnd
+    </td>
+    <td style="text-align: center;">
+      <img src="https://github.com/cg10036.png" width="150" height="150"/><br/><a
+      href="https://github.com/cg10036">이수혁</a><br/>BackEnd
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;">
+      <img src="https://github.com/honeybugs.png" width="150" height="150"/><br/>
+      <a href="https://github.com/honeybugs">권세건</a><br/>FrontEnd
+    </td>
+    <td style="text-align: center;">
+      <img src="https://github.com/chloebh9.png" width="150" height="150"/><br/>
+      <a href="https://github.com/chloebh9">정채원</a><br/>AI Engineer
+    </td>
+    <td style="text-align: center;">
+      <img src="https://github.com/bgw4399.png" width="150" height="150"/><br/>
+      <a href="https://github.com/bgw4399"></a>배진우<br/>AI Engineer
+    </td>
+  </tr>
+</table>
 
-팀원정보 및 담당이나 사진 및 SNS를 이용하여 소개하세요.
 
 ### 4. 사용법
 
@@ -69,17 +79,3 @@ Syntax highlighted code block
 
 [Link](url) and ![Image](src)
 ```
-
-자세한 내용은 [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-## Team
-| <img src="https://github.com/ima9ine4.png" width="150" height="150"/> | <img src="https://github.com/cg10036.png" width="150" height="150"/> | <img src="https://github.com/rktlskan021.png" width="150" height="150"/> | <img src="https://github.com/IamWonILuvWon.png" width="150" height="150"/> | <img src="https://github.com/honeybugs.png" width="150" height="150"/> | <img src="https://github.com/chloebh9.png" width="150" height="150"/> | <img src="https://github.com/bgw4399.png" width="150" height="150"/> |
-|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|
-| 임혜진<br/>[@ima9ine4](https://github.com/ima9ine4) | 이수혁<br/>[@cg10036](https://github.com/cg10036) | 이재영<br/>[@rktlskan021](https://github.com/rktlskan021) | 장원준<br/>[@IamWonILuvWon](https://github.com/IamWonILuvWon) | 권세건<br/>[@honeybugs](https://github.com/honeybugs) | 정채원<br/>[@chloebh9](https://github.com/chloebh9) | 배진우<br/>[@bgw4399](https://github.com/bgw4399) |
-
-
-
-
-### Support or Contact
-
-readme 파일 생성에 추가적인 도움이 필요하면 [도움말](https://help.github.com/articles/about-readmes/) 이나 [contact support](https://github.com/contact) 을 이용하세요.
