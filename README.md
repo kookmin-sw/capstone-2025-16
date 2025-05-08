@@ -1,4 +1,4 @@
-<h1 style="border-bottom: 2px solid #213555">다학제간캡스톤디자인 16조 - 도시락 </h1>
+<div style="border-bottom: 2px solid #213555; font-size: 32px; font-weight: bold; margin-bottom: 10px;">다학제간캡스톤디자인 16조 - 도시락</div>
 
 <p style="font-size: 25px; margin: 5px 0px 5px 0px;"><strong>산학 협력 기관</strong></p>
 (병원 로고 사진)
@@ -7,18 +7,19 @@
 
 서울대학교병원 융합의학기술원은 2020년 3월 1일 설립되어, 인류의 질병과 장애, 의학적 난제를 해결하기 위한 혁신적인 의료기술을 개발하고 있습니다. 최첨단 연구시설과 융합의학 전문 인력, 그리고 독립적인 조직을 통해 융합의학 연구 역량을 집중시켜 성장을 거듭해 왔습니다.
 
-<hr/>
-<h1 style="margin-top: 20px;"> 연구자들의 편의를 위한 의료 CDM 데이터 Viewer - <span style="color: #4B89DC">Bento</span></h1>
+<hr style="height: 1px; background: #213555; border: none;"/>
 
- <p style="text-align:justify;">
+<div style="font-size: 28px; margin-top: 20px;"> 연구자들의 편의를 위한 의료 CDM 데이터 Viewer - <span style="color: #4B89DC">Bento</span></div>
+
+<p style="text-align:justify;">
   Bento는 일본어로 <strong>도시락</strong>이라는 의미를 가지고 있습니다. 저희는 다양한 반찬을 원하는대로 골라 담는 이 도시락처럼, 연구진들이 방대한 의료데이터 속에서 필요한 정보를 쉽고 편리하게 선택하고 조합하여 분석할 수 있도록 돕겠다는 의미를 담아 이 프로젝트명을 벤토로 결정했습니다.
 </p>
 
-<a href="https://kookmin-sw.github.io/capstone-2025-16/">팀 소개 페이지 바로가기</a>
+<a href="https://kookmin-sw.github.io/capstone-2025-16/" style="font-size: 18px;">팀 소개 페이지 바로가기</a>
 
-<hr/>
+<hr style="height: 1px; background: #213555; border: none;"/>
 
-<h2> 1. 프로젝트 소개 </h2>
+<h2 style="font-size: 24px;">1. 프로젝트 소개</h2>
 (프로젝트 로고 추가)
 
 Bento는 급격히 증가하는 의료 데이터를 빠르고 효율적으로 탐색 및 시각화하여 연구 기획과 진행 속도를 획기적으로 개선하는 시스템입니다.
