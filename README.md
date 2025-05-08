@@ -2,11 +2,11 @@
 
 **산학 협력 기관**
 
-> (병원 로고 사진)
-> 
-> **서울대학교병원 융합의학기술원 (SNUH Institute of Convergence Medicine)**
-> 
-> 서울대학교병원 융합의학기술원은 2020년 3월 1일 설립되어, 인류의 질병과 장애, 의학적 난제를 해결하기 위한 혁신적인 의료기술을 개발하고 있습니다. 최첨단 연구시설과 융합의학 전문 인력, 그리고 독립적인 조직을 통해 융합의학 연구 역량을 집중시켜 성장을 거듭해 왔습니다.
+(병원 로고 사진) 
+
+**서울대학교병원 융합의학기술원 (SNUH Institute of Convergence Medicine)**
+
+서울대학교병원 융합의학기술원은 2020년 3월 1일 설립되어, 인류의 질병과 장애, 의학적 난제를 해결하기 위한 혁신적인 의료기술을 개발하고 있습니다. 최첨단 연구시설과 융합의학 전문 인력, 그리고 독립적인 조직을 통해 융합의학 연구 역량을 집중시켜 성장을 거듭해 왔습니다.
 
 ---
 
@@ -21,11 +21,11 @@
 
 ## 1. 프로젝트 소개
 
-> Bento는 급격히 증가하는 의료 데이터를 빠르고 효율적으로 탐색 및 시각화하여 연구 기획과 진행 속도를 획기적으로 개선하는 시스템입니다.
->
-> 현재 가장 많이 사용하는 Atlas 프로그램보다 **950배 빠른 속도**를 자랑하며, 기본 제공 차트 외에도 사용자가 직접 정의한 통계 지표를 기반으로 원하는 데이터를 자유롭게 그래프로 생성·분석할 수 있습니다.
->
-> Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도구를 활용해 연구 설계 단계의 신뢰도와 효율성을 높여 연구 진행 속도를 획기적으로 단축합니다.
+Bento는 급격히 증가하는 의료 데이터를 빠르고 효율적으로 탐색 및 시각화하여 연구 기획과 진행 속도를 획기적으로 개선하는 시스템입니다.
+
+현재 가장 많이 사용하는 Atlas 프로그램보다 **950배 빠른 속도**를 자랑하며, 기본 제공 차트 외에도 사용자가 직접 정의한 통계 지표를 기반으로 원하는 데이터를 자유롭게 그래프로 생성·분석할 수 있습니다.
+
+Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도구를 활용해 연구 설계 단계의 신뢰도와 효율성을 높여 연구 진행 속도를 획기적으로 단축합니다.
 
 ---
 
@@ -49,13 +49,13 @@ _(추가 예정)_
 ## 4. 주요 기능
 
 | 기능 | 설명 |
-| --- | --- |
-| **코호트 정의** | 드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다. 직관적인 UI/UX와 LLM을 활용한 코호트 구성, 쿼리 load/export 기능을 제공합니다. |
-| **통계** | 여러 코호트를 한눈에 비교·분석할 수 있는 그래프를 제공하며, 개별 환자의 상세 데이터도 실시간으로 확인할 수 있습니다. |
-| **환자군 특징 분석** | AI 분석을 통해 코호트 집단의 특징을 추가적으로 파악하여 연구진에게 제시합니다. 이를 통해 연구 계획에 빠진 내용이나 관련된 새로운 특징을 발견할 수 있습니다. |
-| **자동 코호트 생성** | 텍스트 입력, 논문 드래그 앤 드롭 등을 통해 자동으로 코호트를 생성해 줍니다. 이를 통해 초보 연구자도 쉽게 사용할 수 있도록 환경을 제공하며, 연구자의 편리성을 높일 수 있습니다. |
+| :---: | :---: |
+| **코호트 정의** | 드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다.<br>직관적인 UI/UX와 LLM을 활용한 코호트 구성, 쿼리 load/export 기능을 제공합니다. |
+| **통계** | 여러 코호트를 한눈에 비교·분석할 수 있는 그래프를 제공하며, <br>개별 환자의 상세 데이터도 실시간으로 확인할 수있습니다.|
+| **환자군 특징 분석** | AI 분석을 통해 코호트 집단의 특징을 추가적으로 파악하여 연구진에게 제시합니다.<br>이를 통해 연구 계획에 빠진 내용이나 관련된 새로운 특징을 발견할 수 있습니다. |
+| **자동 코호트 생성** | 텍스트 입력, 논문 드래그 앤 드롭 등을 통해 자동으로 코호트를 생성해 줍니다.<br>이를 통해 초보 연구자도 쉽게 사용할 수 있도록 환경을 제공하며, 연구자의 편리성을 높일 수 있습니다. |
+||
 
----
 
 ## 5. 시스템 아키텍처
 _(사진 삽입 예정)_
@@ -65,14 +65,15 @@ _(사진 삽입 예정)_
 ## 6. 기술 스택
 
 | 포지션 | 스택 |
-| --- | --- |
+| :---: | :---: |
 | **FrontEnd** | ![SvelteKit](https://img.shields.io/badge/SvelteKit-FF3E00?style=for-the-badge&logo=svelte&logoColor=white) ![TailwindCss](https://img.shields.io/badge/TailwindCss-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white) ![D3.js](https://img.shields.io/badge/D3.js-F9A03C?style=for-the-badge&logo=d3&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) |
 | **BackEnd API** | ![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white) ![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white) ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white) |
 | **Cohort Query Service** | ![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white) |
 | **AI** | ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white) ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white) ![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white) |
 | **Infra** | ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white) ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white) ![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white) |
+||
 
----
+
 
 ## 7. 실행방법
 <p style="font-size: 20px;"><strong>Common</strong></p>
@@ -81,29 +82,6 @@ _(사진 삽입 예정)_
 git clone https://github.com/kookmin-sw/capstone-2025-16.git
 ```
 
-<details>
-  <summary style="font-size: 20px;"><strong>FrontEnd</strong></summary>
+<a href="https://github.com/kookmin-sw/capstone-2025-16/blob/master/frontend/README.md"><p style="font-size: 20px;"><strong>FrontEnd</strong></p></a>
 
-  Svelte Package Update
-  ```bash
-  cd frontend
-  npm install
-  ```
-
-  Create .env
-  ```bash
-  vi .env
-  API_ADDRESS = Server IP
-  :wq
-  ```
-
-  Start Project
-  ```bash
-  npm run dev
-  ```
-</details>
-
-<details>
-  <summary style="font-size: 20px;"><strong>BackEnd</strong></summary>
-  
-</details>
+<a href="https://github.com/kookmin-sw/capstone-2025-16/blob/master/backend/README.md"><p style="font-size: 20px;"><strong>BackEnd</strong></p></a>
