@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 
-async function GET({ fetch }) {
+export async function GET({ fetch }) {
     const response = await fetch('https://bento.kookm.in/api/cohort', {
         method: 'POST',
         body: JSON.stringify({
@@ -20,5 +20,6 @@ async function GET({ fetch }) {
             temporary: false
         })
     }).then(res => res.json());
+    console.log(response);
     return redirect(302, '/edit/' + response.cohortId);
 }
