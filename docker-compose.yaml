@@ -1,0 +1,6 @@
+include:
+  - backend/clickhouse/docker-compose.yaml
+  - backend/nats/docker-compose.yaml
+  - ai/feature-extraction/docker-compose.yaml
+  - ai/auto-cohort/docker-compose.yaml
+  - backend/api/docker-compose.yaml
