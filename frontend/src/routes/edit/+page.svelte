@@ -16,6 +16,26 @@
 	import DateOperator from './components/operators/DateOperator.svelte';
 	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
 
+
+	async function createNewCohortDefinition() {
+		const response = await fetch('https://bento.kookm.in/api/cohort', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				name: cohortName,
+				description: cohortDescription,
+				cohortDefinition: cohortDefinition,
+				temporary: false
+			})
+		});
+
+		const data = await response.json();
+		console.log(data);
+	}
+
+
 	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
 	interface Operator<T> {
 		neq?: T | T[];
@@ -1482,9 +1502,24 @@
 
 			<div class="flex justify-center p-12">
 				<button
-					class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+					on:click={createNewCohortDefinition}
+					class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:before:opacity-10 active:scale-95"
 				>
-					Create Cohort
+					<span class="relative z-10 flex items-center justify-center gap-2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-4 w-4"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+						Create Cohort
+					</span>
 				</button>
 			</div>
 		</div>
