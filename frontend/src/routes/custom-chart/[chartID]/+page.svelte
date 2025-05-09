@@ -6,6 +6,7 @@
     import { dndzone } from 'svelte-dnd-action';
     import ChartCard from "$lib/components/ChartCard.svelte";
     import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
+    import domtoimage from 'dom-to-image';
 
     const targetSetData = {
         statistics_id: "10001",
@@ -240,6 +241,25 @@
             console.error('클립보드 복사 실패:', err);
         }
     }
+
+    async function exportChartImage(chartId, format = 'png') {
+        const chartElement = document.getElementById(`chart-${chartId}`);
+        if (!chartElement) {
+            console.error(`Chart element not found for id: chart-${chartId}`);
+            return;
+        }
+
+        try {
+            const dataUrl = await domtoimage.toPng(chartElement);
+            const link = document.createElement('a');
+            link.download = `${chartId}.${format}`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Export error:', error);
+        }
+    }
+
 </script>
 
 <div class="px-10">
@@ -380,6 +400,20 @@
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
                 </button>
+                <button 
+                    aria-label="export chart image"
+                    class="absolute top-2 right-10 p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                    onclick={(e) => {
+                        e.stopPropagation();
+                        exportChartImage(chart.chart_id, 'png'); // png or 'jpeg'
+                    }}
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
 
                 <div class="space-y-1">
                     <div>
@@ -407,7 +441,7 @@
                         hasXButton = {false}
                         height="400px"
                     >
-                        <div class="w-full h-full flex items-center justify-center">
+                        <div id={"chart-"+chart.chart_id} class="w-full h-full flex items-center justify-center">
                             {#if chart.type === "boxplot"}
                                 <BoxPlot data={chart} />
                             {:else}
