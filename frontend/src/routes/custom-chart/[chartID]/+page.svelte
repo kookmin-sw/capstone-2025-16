@@ -217,6 +217,7 @@
     }
     
     let expandedStates = cohortIds.map(() => false);
+    let chartDefinitionStates = chartData.charts.map(() => false);
 
     function handleDnd({ detail }) {
         chartData.charts = detail.items.map(item => {
@@ -258,6 +259,12 @@
         } catch (error) {
             console.error('Export error:', error);
         }
+    }
+
+    async function toggleChartDefinition(chartIndex) {
+        await tick();
+        chartDefinitionStates[chartIndex] = !chartDefinitionStates[chartIndex];
+        chartDefinitionStates = [...chartDefinitionStates];
     }
 
 </script>
@@ -356,21 +363,23 @@
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
                 onclick={() => toggleExpand(index)}
             >
-                <div class="flex items-start gap-2 min-w-0">
+                <div class="flex items-center gap-2">
                     <svg 
-                        class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
+                        class="w-3 h-3 mr-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-0' : '-rotate-90'}" 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
                     >
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-1">
-                        <span class="text-xs font-medium text-gray-400 truncate">{chart.chart_id}</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+                    <div class="flex items-start gap-2 min-w-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1">
+                            <span class="text-xs font-medium text-gray-400 truncate">{chart.chart_id}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -451,25 +460,45 @@
                     </ChartCard>
                 </div>
                 <div class="p-4 border-t mt-5">
-                    <h4 class="text-md font-medium text-gray-700 mb-3">Chart Definition</h4>
-                    {#each chart.definition.groups as group, index}
-                        <div class="mb-4 last:mb-0">
-                            <div class="flex items-center justify-between mb-2">
-                                <h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
-                                <button 
-                                    class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors flex items-center gap-1"
-                                    onclick={() => copyToClipboard(JSON.stringify(group.definition, null, 2))}
-                                >
-                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                    </svg>
-                                    Copy
-                                </button>
-                            </div>
-                            <pre class="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(group.definition, null, 2)}</pre>
+                    <div class="flex justify-start items-center">
+                        <button 
+                            aria-label="toggle chart definition"
+                            class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                            onclick={() => toggleChartDefinition(index)}
+                        >
+                            <svg 
+                                class="w-3 h-3 flex-shrink-0 transform transition-transform {chartDefinitionStates[index] ? 'rotate-0' : '-rotate-90'}" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            <div class="text-md font-medium text-gray-700">Chart Definition</div>
+                        </button>
+                    </div>
+                    {#if chartDefinitionStates[index]}
+                        <div transition:slide>
+                            {#each chart.definition.groups as group, index}
+                                <div class="mb-4 ml-6 last:mb-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
+                                        <button 
+                                            class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors flex items-center gap-1"
+                                            onclick={() => copyToClipboard(JSON.stringify(group.definition, null, 2))}
+                                        >
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <pre class="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(group.definition, null, 2)}</pre>
+                                </div>
+                            {/each}
                         </div>
-                    {/each}
+                    {/if}
                 </div>
             </div>
           {/if}
