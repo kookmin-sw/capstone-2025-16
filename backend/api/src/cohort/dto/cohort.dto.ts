@@ -282,6 +282,12 @@ export class CreateCohortResponse {
     example: [400, 200],
   })
   containerCounts: number[];
+
+  @ApiProperty({
+    description: 'Elapsed time',
+    example: 100,
+  })
+  elapsedTime: number;
 }
 
 export class UpdateCohortResponse {

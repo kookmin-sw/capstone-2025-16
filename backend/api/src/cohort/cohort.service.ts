@@ -381,6 +381,7 @@ export class CohortService {
     }
 
     let containerCounts: number[] = [];
+    const startTime: number = +new Date();
     if (cohortDef) {
       await getBaseDB()
         .connection()
@@ -416,6 +417,7 @@ export class CohortService {
       message: 'Cohort successfully created.',
       cohortId,
       containerCounts,
+      elapsedTime: +new Date() - startTime,
     };
   }
 
