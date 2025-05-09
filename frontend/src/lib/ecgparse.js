@@ -13,7 +13,7 @@ export async function xmlParseToJson(path) {
     const results = waveformElements.map(waveform => {
         const waveformType = getText("WaveformType", waveform);
         const leadDataElements = Array.from(waveform.getElementsByTagName("LeadData"));
-        const leadData = leadDataElements.map(lead => ({
+        let leadData = leadDataElements.map(lead => ({
             LeadSampleCountTotal: getText("LeadSampleCountTotal", lead),
             LeadAmplitudeUnitsPerBit: getText("LeadAmplitudeUnitsPerBit", lead),
             LeadID: getText("LeadID", lead),
@@ -24,7 +24,6 @@ export async function xmlParseToJson(path) {
         
         if(waveformType === 'Median'){
             sortLeadData(leadData);
-            console.log(leadData);
         }
 
         return {
@@ -34,14 +33,15 @@ export async function xmlParseToJson(path) {
             LeadData: leadData
         };
     });
-
+    
+    console.log(results);
     return results;
 }
 
 function addAugmentedLeads(leadData) {
     const leadI = leadData.find(lead => lead.LeadID === 'I');
     const leadII = leadData.find(lead => lead.LeadID === 'II');
-    const leadIII = leadData.find(lead => lead.LeadID === 'III');
+    const leadIII = leadData.find(lead => lead.LeadID === 'III' ? lead.LeadID === 'III' : []);
     const leadSampleCountTotal = leadData[0].LeadSampleCountTotal;
     const leadAmplitudeUnitsPerBit = leadData[0].LeadAmplitudeUnitsPerBit;
 
@@ -49,28 +49,19 @@ function addAugmentedLeads(leadData) {
         leadData.push(
             { LeadSampleCountTotal: leadSampleCountTotal, LeadAmplitudeUnitsPerBit: leadAmplitudeUnitsPerBit, LeadID: 'aVR', WaveFormData: calculateLeadAVR(leadI, leadII) },
             { LeadSampleCountTotal: leadSampleCountTotal, LeadAmplitudeUnitsPerBit: leadAmplitudeUnitsPerBit, LeadID: 'aVL', WaveFormData: calculateLeadAVL(leadI, leadIII) },
-            { LeadSampleCountTotal: leadSampleCountTotal, LeadAmplitudeUnitsPerBit: leadAmplitudeUnitsPerBit, LeadID: 'aVF', WaveFormData: calculateLeadAVF(leadII, leadIII) }
+            { LeadSampleCountTotal: leadSampleCountTotal, LeadAmplitudeUnitsPerBit: leadAmplitudeUnitsPerBit, LeadID: 'aVF', WaveFormData: calculateLeadAVF(leadII, leadIII) },
+            { LeadSampleCountTotal: leadSampleCountTotal, LeadAmplitudeUnitsPerBit: leadAmplitudeUnitsPerBit, LeadID: 'III', WaveFormData: '' }
         );
     }
-}
 
-function groupLeadData(leadData) {
-    const groups = [
-        { groupName: 'Group1', leads: ['I', 'aVR', 'V1', 'V4'] },
-        { groupName: 'Group2', leads: ['II', 'aVL', 'V2', 'V5'] },
-        { groupName: 'Group3', leads: ['III', 'aVF', 'V3', 'V6'] }
-    ];
-
-    const groupedData = groups.map(group => ({
-        groupName: group.groupName,
-        leads: leadData.filter(lead => group.leads.includes(lead.LeadID))
-    }));
-
-    return groupedData;
+    
 }
 
 function sortLeadData(leadData) {
     const leadOrder = ['I', 'aVR', 'V1', 'V4', 'II', 'aVL', 'V2', 'V5', 'III', 'aVF', 'V3', 'V6'];
+    const leadList1 = ['I', 'aVR', 'V1', 'V4'];
+    const leadList2 = ['II', 'aVL', 'V2', 'V5'];
+    const leadList3 = ['III', 'aVF', 'V3', 'V6'];
 
     leadData.sort((a, b) => {
         const indexA = leadOrder.indexOf(a.LeadID);
@@ -83,8 +74,15 @@ function sortLeadData(leadData) {
         return indexA - indexB;
     });
 
-    // 그룹으로 묶기
-    return groupLeadData(leadData);
+    const lead1 = [leadData.filter(lead => leadList1.includes(lead.LeadID))];
+    const lead2 = [leadData.filter(lead => leadList2.includes(lead.LeadID))];
+    const lead3 = [leadData.filter(lead => leadList3.includes(lead.LeadID))];
+
+    leadData = [];
+    console.log(lead1);
+    if (lead1) leadData.push(lead1);
+    if (lead2) leadData.push(lead2);
+    if (lead3) leadData.push(lead3);
 }
 
 function calculateLeadAVR(leadI, leadII) {

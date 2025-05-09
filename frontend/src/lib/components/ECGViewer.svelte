@@ -38,11 +38,29 @@
 		d3.select(container).selectAll("*").remove(); // 기존 SVG 제거
 
 		waveformList.forEach((waveform) => {
+			const waveformType = waveform.WaveformType;
 			const SampleBase = waveform.SampleBase;
-			const waveformContainer = document.createElement('div');
-			waveformContainer.className = 'waveformContainer';
-			waveformContainer.style.display = 'flex';
-			waveformContainer.style.overflowX = "auto";
+
+			if(waveformType === 'Median'){
+				const waveformContainer = document.createElement('div');
+				waveformContainer.className = 'waveformContainer';
+				waveformContainer.style.overflowX = "auto";
+				const leadList1 = ['I', 'aVR', 'V1', 'V4'];
+    			const leadList2 = ['II', 'aVL', 'V2', 'V5'];
+    			const leadList3 = ['III', 'aVF', 'V3', 'V6'];
+
+				const leadContainer1 = document.createElement('div');
+				leadContainer1.className = 'leadContainer1'
+				leadContainer1.style.display = 'flex';
+
+				const leadContainer2 = document.createElement('div');
+				leadContainer2.className = 'leadContainer2'
+				leadContainer2.style.display = 'flex';
+
+				const leadContainer3 = document.createElement('div');
+				leadContainer3.className = 'leadContainer3'
+				leadContainer3.style.display = 'flex';
+
 				waveform.LeadData.forEach((lead) => {
 					const { LeadID, LeadSampleCountTotal, LeadAmplitudeUnitsPerBit, WaveFormData } = lead;
 			
@@ -52,11 +70,42 @@
 					leadContainer.className = 'leadContainer'
 					leadContainer.style.marginBottom = '24px';
 
-					waveformContainer.appendChild(leadContainer);
-
+					if(leadList1.includes(LeadID)){
+						leadContainer1.appendChild(leadContainer);
+					}
+					else if(leadList2.includes(LeadID)){
+						leadContainer2.appendChild(leadContainer);
+					}
+					else if(leadList3.includes(LeadID)){
+						leadContainer3.appendChild(leadContainer);
+					}
 					drawLeadChart(leadContainer, decoded, duration, LeadID);
 				});
-			container.appendChild(waveformContainer);
+				waveformContainer.appendChild(leadContainer1);
+				waveformContainer.appendChild(leadContainer2);
+				waveformContainer.appendChild(leadContainer3);
+
+				container.appendChild(waveformContainer);
+			} else{
+				const waveformContainer = document.createElement('div');
+				waveformContainer.className = 'waveformContainer';
+				waveformContainer.style.display = 'flex';
+				waveformContainer.style.overflowX = "auto";
+				waveform.LeadData.forEach((lead) => {
+					const { LeadID, LeadSampleCountTotal, LeadAmplitudeUnitsPerBit, WaveFormData } = lead;
+			
+					const duration = LeadSampleCountTotal / SampleBase;
+					const decoded = decodeBase64ToInt16Array(WaveFormData, LeadAmplitudeUnitsPerBit);
+					const leadContainer = document.createElement('div');
+					leadContainer.className = 'leadContainer'
+					leadContainer.style.marginBottom = '24px';
+
+					drawLeadChart(leadContainer, decoded, duration, LeadID);
+					waveformContainer.appendChild(leadContainer);
+				});
+
+				container.appendChild(waveformContainer);
+			}
 		});
 	}
 
