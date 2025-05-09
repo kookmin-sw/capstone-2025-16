@@ -20,6 +20,7 @@ export class ClickhouseConnection implements DatabaseConnection {
         date_time_input_format: 'best_effort',
       },
       session_id: randomUUID(),
+      max_open_connections: 10,
     })
   }
 
