@@ -1,37 +1,46 @@
 <script>
     import { page } from '$app/stores';
-    import { get } from 'svelte/store';
+    import { get, writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import { filter } from 'd3';
 	import { onMount, tick } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import analysisData from '$lib/data/singleCohortAnalysisTest.json';
+	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 
-	let { children, data } = $props();
+	export let children;
+	export let isLoading = true;
+	export let cohortInfo = [];
+	
     const cohortID = $page.params.cohortID;
-	let searchQuery = $state("");
-	let filteredData = $state([]);
-	let itemsPerPage = $state(10);
-	let currentPage = $state(0);
-	let paginatedData = $state([]);
+
+	let searchQuery = "";
+	let filteredData = [];
+	let itemsPerPage = 10;
+	let currentPage = 0;
+	let paginatedData = [];
+	let userData = [];
+
 	let cohortDiv;
 	let resizeObserver;
-	let currentPersonId = $state(null);
+	let currentPersonId = null;
 
-	const rowHeight = 35;
+	const rowHeight = 35;	
+
 
 	function calculateItemsPerPage() {
+		if(!cohortDiv) return;
 		const availableHeight = cohortDiv.clientHeight - 32;
 		itemsPerPage = Math.floor(availableHeight / rowHeight);
 	}
+
 	// 검색어에 따라 데이터를 필터링
 	function filterData() {
 		if(searchQuery.length === 0){
-			filteredData = data.userData.persons;
+			filteredData = userData.persons;
 			return;	
 		}
 
-		filteredData = data.userData.persons.filter((item) =>
+		filteredData = userData.persons.filter((item) =>
 			item.personid === parseInt(searchQuery)
 		);
 	}
@@ -40,22 +49,44 @@
 		currentPersonId = personid;
 	}
 
-	onMount(async () => {
-		const personIdFromUrl = get(page).params.person;
-		if (personIdFromUrl) {
-			currentPersonId = parseInt(personIdFromUrl);
-		}
+	onMount(async() => {
+		try{
+			const res = await fetch(`/api/userdata/${cohortID}`);
+			if (!res.ok) {
+				throw new Error('Failed to fetch data');
+			}
+			const data = await res.json();
 
-		if (data.userData.persons.length !== 0) {
-			currentPage = 1;
-			filteredData = data.userData.persons;
+			if (data.persons.length !== 0) {
+				currentPage = 1;
+				filteredData = data.persons;
+				userData = data;
+
+				paginatedData = filteredData.slice(
+					(currentPage - 1) * itemsPerPage,
+					currentPage * itemsPerPage
+				);
+			}
+
+			const res2 = await fetch(`/api/cohortinfo/${cohortID}`);
+			if (!res2.ok) {
+				throw new Error('Failed to fetch data');
+			}
+			const data2 = await res2.json();
+			
+			if (data2.length !== 0) {
+				cohortInfo = data2;
+			}
+		}catch (error) {
+			console.error('Error fetching data:', error);
+		} finally {
+			isLoading = false;
 		}
 
 		await tick();
-
 		if (cohortDiv) {
 			calculateItemsPerPage();
-
+			
 			resizeObserver = new ResizeObserver(() => {
 				calculateItemsPerPage();
 			});
@@ -70,21 +101,34 @@
 		};
 	});
 
-	$effect(() => {
+	$: {
 		paginatedData = filteredData.slice(
 			(currentPage - 1) * itemsPerPage,
 			currentPage * itemsPerPage
 		);
-	})
+	}
 
 	function nextPage() {
 		if (currentPage * itemsPerPage < filteredData.length) currentPage++;
+		paginatedData = filteredData.slice(
+			(currentPage - 1) * itemsPerPage,
+			currentPage * itemsPerPage
+		);
+		
 	}
+
 	function prevPage() {
 		if (currentPage > 1) currentPage--;
+		paginatedData = filteredData.slice(
+			(currentPage - 1) * itemsPerPage,
+			currentPage * itemsPerPage
+		);
 	}
 </script>
 
+{#if isLoading}
+	<LoadingComponent message="Loading..." />
+{:else}
 <div class="fixed left-0 top-[65px] flex h-[calc(100vh-65px)] w-[200px] flex-col border-r border-zinc-200">
 	<div class="px-2 pt-2">
 		<button 
@@ -93,10 +137,10 @@
 		>
 			<div class="flex-1 min-w-0">
 				<div class="flex items-center gap-1">
-					<span class="text-[10px] font-medium text-gray-400 truncate">{analysisData.basicInfo?.id || cohortID}</span>
+					<span class="text-[10px] font-medium text-gray-400 truncate">{cohortID}</span>
 				</div>
 				<div class="flex items-center gap-1">
-					<div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{analysisData.basicInfo?.name || "Cohort"}</div>
+					<div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohortInfo.name}</div>
 				</div>
 			</div>
 			<div class="flex items-center text-gray-400 group-hover:text-blue-600">
@@ -187,3 +231,4 @@
 <div class="relative left-[200px] px-6 w-[calc(100%-206px)]">
     {@render children()}
 </div>
+{/if}
