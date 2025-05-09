@@ -31,6 +31,7 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 ## 2. 소개 영상
 _(추가 예정)_
 
+[소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
 ---
 
 ## 3. 팀 소개
@@ -43,7 +44,7 @@ _(추가 예정)_
 | [권세건](https://github.com/honeybugs)         | [정채원](https://github.com/chloebh9)      | [배진우](https://github.com/bgw4399)         |                                             |
 | FrontEnd                                       | AI Engineer                               | AI Engineer                                 |                                             |
 
-[팀 소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
+
 ---
 
 ## 4. 주요 기능
