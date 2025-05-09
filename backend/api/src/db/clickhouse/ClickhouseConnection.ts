@@ -1,50 +1,50 @@
-import {
-  CompiledQuery,
-  DatabaseConnection,
-  QueryResult
-} from 'kysely';
+import { CompiledQuery, DatabaseConnection, QueryResult } from 'kysely';
 
-import { createClient } from '@clickhouse/client'
+import { createClient } from '@clickhouse/client';
 import { ClickhouseDialectConfig } from '.';
 import { NodeClickHouseClient } from '@clickhouse/client/dist/client';
 import { randomUUID } from 'node:crypto';
 
 export class ClickhouseConnection implements DatabaseConnection {
-  #client: NodeClickHouseClient
+  static client: NodeClickHouseClient;
+  #sessionId: string;
 
   constructor(config: ClickhouseDialectConfig) {
-    this.#client = createClient({
-      ...config.options,
-      clickhouse_settings: {
-        ...config.options?.clickhouse_settings,
-        date_time_input_format: 'best_effort',
-      },
-      session_id: randomUUID(),
-      max_open_connections: 10,
-    })
+    if (!ClickhouseConnection.client) {
+      ClickhouseConnection.client = createClient({
+        ...config.options,
+        clickhouse_settings: {
+          ...config.options?.clickhouse_settings,
+          date_time_input_format: 'best_effort',
+        },
+        max_open_connections: 100,
+        request_timeout: 60000,
+      });
+    }
+    this.#sessionId = randomUUID();
   }
 
   prepareQuery<O>(compiledQuery: CompiledQuery): string {
-    let i = 0
+    let i = 0;
     const compiledSql = compiledQuery.sql.replace(/\?/g, () => {
-      const param = compiledQuery.parameters[i++]
+      const param = compiledQuery.parameters[i++];
 
       if (typeof param === 'number') {
-        return `${param}`
+        return `${param}`;
       }
 
       // should never happen
       if (typeof param !== 'string') {
-        return `'${JSON.stringify(param)}'`
+        return `'${JSON.stringify(param)}'`;
       }
 
-      return `'${param.replace(/'/gm, `\\'`).replace(/\\"/g, '\\\\"')}'`
-    })
+      return `'${param.replace(/'/gm, `\\'`).replace(/\\"/g, '\\\\"')}'`;
+    });
 
     return compiledSql.replace(
       /^update ((`\w+`\.)*`\w+`) set/i,
-      "alter table $1 update"
-    )
+      'alter table $1 update',
+    );
   }
 
   async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
@@ -56,75 +56,78 @@ export class ClickhouseConnection implements DatabaseConnection {
       // @ts-expect-error: fix types
       if (!compiledQuery.query.values?.values) {
         // handle complex query (ex: INSERT INTO ... SELECT ...)
-        const query = this.prepareQuery(compiledQuery)
-        const result = await this.#client.query({
+        const query = this.prepareQuery(compiledQuery);
+        const result = await ClickhouseConnection.client.query({
           query,
           clickhouse_settings: {
             date_time_input_format: 'best_effort',
           },
+          session_id: this.#sessionId,
         });
 
-        const summary = result.response_headers['x-clickhouse-summary']
+        const summary = result.response_headers['x-clickhouse-summary'];
         const summaryObject = JSON.parse(
-          (Array.isArray(summary) ? summary[0] : summary) ?? '{}'
-        )
+          (Array.isArray(summary) ? summary[0] : summary) ?? '{}',
+        );
 
         return {
           rows: [],
           numAffectedRows: BigInt(summaryObject.written_rows ?? 0),
           numChangedRows: BigInt(summaryObject.written_rows ?? 0),
-        }
+        };
       }
 
       const values = [
-        compiledQuery.query.columns?.map(c => c.column.name) ?? [],
+        compiledQuery.query.columns?.map((c) => c.column.name) ?? [],
         // @ts-expect-error: fix types
-        ...compiledQuery.query.values?.values.map(v => v.values) ?? [],
-      ]
-      
+        ...(compiledQuery.query.values?.values.map((v) => v.values) ?? []),
+      ];
+
       const schema = compiledQuery.query.into?.table?.schema?.name;
-      const table = compiledQuery.query.into?.table.identifier.name ?? "";
-      const fullQualifiedTable = schema ? `${schema}.${table}` : table
-      const resultSet = await this.#client.insert({
+      const table = compiledQuery.query.into?.table.identifier.name ?? '';
+      const fullQualifiedTable = schema ? `${schema}.${table}` : table;
+      const resultSet = await ClickhouseConnection.client.insert({
         table: fullQualifiedTable,
         format: 'JSONCompactEachRowWithNames',
         values,
         clickhouse_settings: {
           date_time_input_format: 'best_effort',
         },
-      })
+        session_id: this.#sessionId,
+      });
 
       return {
         rows: [],
         numAffectedRows: BigInt(resultSet.summary?.written_rows ?? 0),
         numChangedRows: BigInt(resultSet.summary?.written_rows ?? 0),
-      }
+      };
     }
 
     if (compiledQuery.query.kind === 'SelectQueryNode') {
-      const query = this.prepareQuery(compiledQuery)
+      const query = this.prepareQuery(compiledQuery);
 
-      const resultSet = await this.#client.query({
+      const resultSet = await ClickhouseConnection.client.query({
         query,
-      })
-      const response = await resultSet.json()
+        session_id: this.#sessionId,
+      });
+      const response = await resultSet.json();
 
       return {
         rows: response.data as O[],
-      }
+      };
     }
 
-    await this.#client.command({
+    await ClickhouseConnection.client.command({
       query: this.prepareQuery(compiledQuery),
       clickhouse_settings: {
         wait_end_of_query: 1,
       },
-    })
+      session_id: this.#sessionId,
+    });
 
     return {
       rows: [],
-    }
-
+    };
   }
 
   async beginTransaction() {
@@ -139,20 +142,24 @@ export class ClickhouseConnection implements DatabaseConnection {
     throw new Error('Transactions are not supported.');
   }
 
-  async *streamQuery<O>(compiledQuery: CompiledQuery, chunkSize: number): AsyncIterableIterator<QueryResult<O>> {
-    const query = this.prepareQuery(compiledQuery)
+  async *streamQuery<O>(
+    compiledQuery: CompiledQuery,
+    chunkSize: number,
+  ): AsyncIterableIterator<QueryResult<O>> {
+    const query = this.prepareQuery(compiledQuery);
 
-    const resultSet = await this.#client.query({
+    const resultSet = await ClickhouseConnection.client.query({
       query,
       format: 'JSONEachRow',
-    })
+      session_id: this.#sessionId,
+    });
 
-    const stream = resultSet.stream()
+    const stream = resultSet.stream();
 
     for await (const row of stream) {
       yield {
         rows: [row as O],
-      }
+      };
     }
   }
 }
