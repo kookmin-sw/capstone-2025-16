@@ -2,7 +2,7 @@
 
 **산학 협력 기관**
 
-(병원 로고 사진) 
+![서울대학교병원 로고](./Logo/SNUH로고.svg)
 
 **서울대학교병원 융합의학기술원 (SNUH Institute of Convergence Medicine)**
 
@@ -15,11 +15,10 @@
 **Bento**는 일본어로 **도시락**이라는 의미를 가지고 있습니다.  
 저희는 다양한 반찬을 원하는대로 골라 담는 이 도시락처럼, 연구진들이 방대한 의료데이터 속에서 필요한 정보를 쉽고 편리하게 선택하고 조합하여 분석할 수 있도록 돕겠다는 의미를 담아 이 프로젝트명을 **Bento**로 결정했습니다.
 
-[팀 소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
-
 ---
 
 ## 1. 프로젝트 소개
+<img src="./Logo/logo_svg.svg" width="100%" height="200" alt="Bento Logo"></img>
 
 Bento는 급격히 증가하는 의료 데이터를 빠르고 효율적으로 탐색 및 시각화하여 연구 기획과 진행 속도를 획기적으로 개선하는 시스템입니다.
 
@@ -44,6 +43,7 @@ _(추가 예정)_
 | [권세건](https://github.com/honeybugs)         | [정채원](https://github.com/chloebh9)      | [배진우](https://github.com/bgw4399)         |                                             |
 | FrontEnd                                       | AI Engineer                               | AI Engineer                                 |                                             |
 
+[팀 소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
 ---
 
 ## 4. 주요 기능
@@ -57,8 +57,7 @@ _(추가 예정)_
 
 
 ## 5. 시스템 아키텍처
-_(사진 삽입 예정)_
-
+![System Architecture](./Logo/Bento.drawio.png)
 ---
 
 ## 6. 기술 스택
