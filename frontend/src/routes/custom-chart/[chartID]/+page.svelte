@@ -395,6 +395,7 @@
           {#if expandedStates[index]}
             <div class="p-2 border-t text-sm relative" transition:slide>
                 <button 
+                    title="Delete Chart"
                     aria-label="custom chart delete button",
                     class="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                     onclick={(e) => {
@@ -410,6 +411,7 @@
                 </svg>
                 </button>
                 <button 
+                    title="Download Chart Image"
                     aria-label="export chart image"
                     class="absolute top-2 right-10 p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
                     onclick={(e) => {
