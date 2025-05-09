@@ -6,6 +6,7 @@
     import { dndzone } from 'svelte-dnd-action';
     import ChartCard from "$lib/components/ChartCard.svelte";
     import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
+    import domtoimage from 'dom-to-image';
 
     const targetSetData = {
         statistics_id: "10001",
@@ -216,6 +217,7 @@
     }
     
     let expandedStates = cohortIds.map(() => false);
+    let chartDefinitionStates = chartData.charts.map(() => false);
 
     function handleDnd({ detail }) {
         chartData.charts = detail.items.map(item => {
@@ -240,6 +242,31 @@
             console.error('클립보드 복사 실패:', err);
         }
     }
+
+    async function exportChartImage(chartId, format = 'png') {
+        const chartElement = document.getElementById(`chart-${chartId}`);
+        if (!chartElement) {
+            console.error(`Chart element not found for id: chart-${chartId}`);
+            return;
+        }
+
+        try {
+            const dataUrl = await domtoimage.toPng(chartElement);
+            const link = document.createElement('a');
+            link.download = `${chartId}.${format}`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Export error:', error);
+        }
+    }
+
+    async function toggleChartDefinition(chartIndex) {
+        await tick();
+        chartDefinitionStates[chartIndex] = !chartDefinitionStates[chartIndex];
+        chartDefinitionStates = [...chartDefinitionStates];
+    }
+
 </script>
 
 <div class="px-10">
@@ -336,21 +363,23 @@
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
                 onclick={() => toggleExpand(index)}
             >
-                <div class="flex items-start gap-2 min-w-0">
+                <div class="flex items-center gap-2">
                     <svg 
-                        class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
+                        class="w-3 h-3 mr-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-0' : '-rotate-90'}" 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
                     >
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-1">
-                        <span class="text-xs font-medium text-gray-400 truncate">{chart.chart_id}</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+                    <div class="flex items-start gap-2 min-w-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1">
+                            <span class="text-xs font-medium text-gray-400 truncate">{chart.chart_id}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -366,6 +395,7 @@
           {#if expandedStates[index]}
             <div class="p-2 border-t text-sm relative" transition:slide>
                 <button 
+                    title="Delete Chart"
                     aria-label="custom chart delete button",
                     class="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                     onclick={(e) => {
@@ -379,6 +409,21 @@
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
+                </button>
+                <button 
+                    title="Download Chart Image"
+                    aria-label="export chart image"
+                    class="absolute top-2 right-10 p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                    onclick={(e) => {
+                        e.stopPropagation();
+                        exportChartImage(chart.chart_id, 'png'); // png or 'jpeg'
+                    }}
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
                 </button>
 
                 <div class="space-y-1">
@@ -407,7 +452,7 @@
                         hasXButton = {false}
                         height="400px"
                     >
-                        <div class="w-full h-full flex items-center justify-center">
+                        <div id={"chart-"+chart.chart_id} class="w-full h-full flex items-center justify-center">
                             {#if chart.type === "boxplot"}
                                 <BoxPlot data={chart} />
                             {:else}
@@ -417,25 +462,45 @@
                     </ChartCard>
                 </div>
                 <div class="p-4 border-t mt-5">
-                    <h4 class="text-md font-medium text-gray-700 mb-3">Chart Definition</h4>
-                    {#each chart.definition.groups as group, index}
-                        <div class="mb-4 last:mb-0">
-                            <div class="flex items-center justify-between mb-2">
-                                <h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
-                                <button 
-                                    class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors flex items-center gap-1"
-                                    onclick={() => copyToClipboard(JSON.stringify(group.definition, null, 2))}
-                                >
-                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                    </svg>
-                                    Copy
-                                </button>
-                            </div>
-                            <pre class="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(group.definition, null, 2)}</pre>
+                    <div class="flex justify-start items-center">
+                        <button 
+                            aria-label="toggle chart definition"
+                            class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                            onclick={() => toggleChartDefinition(index)}
+                        >
+                            <svg 
+                                class="w-3 h-3 flex-shrink-0 transform transition-transform {chartDefinitionStates[index] ? 'rotate-0' : '-rotate-90'}" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            <div class="text-md font-medium text-gray-700">Chart Definition</div>
+                        </button>
+                    </div>
+                    {#if chartDefinitionStates[index]}
+                        <div transition:slide>
+                            {#each chart.definition.groups as group, index}
+                                <div class="mb-4 ml-6 last:mb-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
+                                        <button 
+                                            class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors flex items-center gap-1"
+                                            onclick={() => copyToClipboard(JSON.stringify(group.definition, null, 2))}
+                                        >
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <pre class="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(group.definition, null, 2)}</pre>
+                                </div>
+                            {/each}
                         </div>
-                    {/each}
+                    {/if}
                 </div>
             </div>
           {/if}
