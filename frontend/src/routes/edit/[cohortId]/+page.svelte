@@ -12,6 +12,8 @@
 	import StringOperator from './components/operators/StringOperator.svelte';
 	import DateOperator from './components/operators/DateOperator.svelte';
 	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
+	import ConceptSelector from './components/operators/ConceptSelector.svelte';
+	import ConceptSelectorWrapper from './components/ConceptSelectorWrapper.svelte';
 
 	const { data } = $props();
 	const { cohort, counts } = data;
@@ -1419,18 +1421,10 @@
 								on:change={(e) => updateFilterValue(property.name, e.detail)}
 							/>
 						{:else if property.type === 'concept'}
-							<IdentifierOperator
+							<ConceptSelectorWrapper
 								value={currentFilterValues[property.name] || {}}
-								options={cohortDefinition.conceptsets.flatMap((cs) =>
-									cs.items
-										? cs.items.map((item) => ({
-												id: item.concept_id,
-												name: `${item.concept_name} (${cs.name})`
-											}))
-										: []
-								)}
-								placeholder="select concept set"
-								on:change={(e) => updateFilterValue(property.name, e.detail)}
+								{property}
+								onChange={updateFilterValue}
 							/>
 						{:else if property.type === 'numberrange'}
 							<NumberOperator
