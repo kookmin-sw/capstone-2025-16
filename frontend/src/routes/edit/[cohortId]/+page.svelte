@@ -14,6 +14,7 @@
 	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
 	import ConceptSelector from './components/operators/ConceptSelector.svelte';
 	import ConceptSelectorWrapper from './components/ConceptSelectorWrapper.svelte';
+	import ContainerHeader from './components/ContainerHeader.svelte';
 
 	const { data } = $props();
 	const { cohort, counts } = data;
@@ -1011,66 +1012,26 @@
 								draggedGroupType = null;
 							}}
 						>
-							<div class="mb-4 flex items-center justify-between">
-								<div class="flex items-center">
-									{#if containerIndex > 0}
-										<select
-											class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
-											value={container.operator}
-											on:change={(e) =>
-												updateContainerOperator('initialGroup', containerIndex, e.target.value)}
-										>
-											<option value="AND">AND</option>
-											<option value="OR">OR</option>
-											<option value="NOT">NOT</option>
-										</select>
-									{/if}
-									<h4 class="flex items-center text-lg font-medium text-blue-600">
-										<svg
-											class="h-4 w-4 text-gray-400"
-											xmlns="http://www.w3.org/2000/svg"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-											/>
-										</svg>
-										<input
-											id="containerName"
-											type="text"
-											class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 transition-colors duration-200 hover:bg-blue-50 focus:ring-0"
-											value={container.name}
-											on:change={(e) =>
-												updateContainerName('initialGroup', containerIndex, e.target.value)}
-										/>
-									</h4>
-								</div>
-								<div class="flex space-x-2">
-									<button
-										class="text-sm text-blue-500 hover:text-blue-700"
-										on:click={() => {
-											editingGroupType = 'initialGroup';
-											editingContainerIndex = containerIndex;
-											selectedDomainType = null;
-										}}
-									>
-										Add Filter
-									</button>
-									{#if containerIndex > 0 || cohortDefinition.initialGroup.containers.length > 1}
-										<button
-											class="text-sm text-red-500 hover:text-red-700"
-											on:click={() => removeContainer('initialGroup', containerIndex)}
-										>
-											Remove
-										</button>
-									{/if}
-								</div>
-							</div>
+							<ContainerHeader
+								name={container.name}
+								operator={container.operator || 'AND'}
+								patientCount={counts && counts.containerCounts
+									? counts.containerCounts[containerIndex]
+									: null}
+								canRemove={containerIndex > 0 ||
+									cohortDefinition.initialGroup.containers.length > 1}
+								isFirstContainer={containerIndex === 0}
+								groupType="initialGroup"
+								{containerIndex}
+								onContainerNameChange={updateContainerName}
+								onOperatorChange={updateContainerOperator}
+								onAddFilter={() => {
+									editingGroupType = 'initialGroup';
+									editingContainerIndex = containerIndex;
+									selectedDomainType = null;
+								}}
+								onRemove={removeContainer}
+							/>
 
 							{#if container.filters.length === 0}
 								<div
@@ -1178,69 +1139,28 @@
 									draggedGroupType = null;
 								}}
 							>
-								<div class="mb-4 flex items-center justify-between">
-									<div class="flex items-center">
-										{#if containerIndex > 0}
-											<select
-												class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
-												value={container.operator}
-												on:change={(e) =>
-													updateContainerOperator(
-														'comparisonGroup',
-														containerIndex,
-														e.target.value
-													)}
-											>
-												<option value="AND">AND</option>
-												<option value="OR">OR</option>
-												<option value="NOT">NOT</option>
-											</select>
-										{/if}
-										<h4 class="flex items-center text-lg font-medium text-blue-600">
-											<svg
-												class="h-4 w-4 text-gray-400"
-												xmlns="http://www.w3.org/2000/svg"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-												/>
-											</svg>
-											<input
-												type="text"
-												class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 transition-colors duration-200 hover:bg-blue-50 focus:ring-0"
-												value={container.name}
-												on:change={(e) =>
-													updateContainerName('comparisonGroup', containerIndex, e.target.value)}
-											/>
-										</h4>
-									</div>
-									<div class="flex space-x-2">
-										<button
-											class="text-sm text-blue-500 hover:text-blue-700"
-											on:click={() => {
-												editingGroupType = 'comparisonGroup';
-												editingContainerIndex = containerIndex;
-												selectedDomainType = null;
-											}}
-										>
-											Add Filter
-										</button>
-										{#if containerIndex > 0 || cohortDefinition.comparisonGroup.containers.length > 1}
-											<button
-												class="text-sm text-red-500 hover:text-red-700"
-												on:click={() => removeContainer('comparisonGroup', containerIndex)}
-											>
-												Remove
-											</button>
-										{/if}
-									</div>
-								</div>
+								<ContainerHeader
+									name={container.name}
+									operator={container.operator || 'AND'}
+									patientCount={counts && counts.containerCounts
+										? counts.containerCounts[
+												containerIndex + cohortDefinition.initialGroup.containers.length
+											]
+										: null}
+									canRemove={containerIndex > 0 ||
+										cohortDefinition.comparisonGroup.containers.length > 1}
+									isFirstContainer={containerIndex === 0}
+									groupType="comparisonGroup"
+									{containerIndex}
+									onContainerNameChange={updateContainerName}
+									onOperatorChange={updateContainerOperator}
+									onAddFilter={() => {
+										editingGroupType = 'comparisonGroup';
+										editingContainerIndex = containerIndex;
+										selectedDomainType = null;
+									}}
+									onRemove={removeContainer}
+								/>
 
 								{#if container.filters.length === 0}
 									<div

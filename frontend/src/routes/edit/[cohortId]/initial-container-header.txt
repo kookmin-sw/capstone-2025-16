@@ -1,0 +1,17 @@
+<ContainerHeader
+	name={container.name}
+	operator={container.operator || "AND"}
+	patientCount={counts && counts.containerCounts ? counts.containerCounts[containerIndex] : null}
+	canRemove={containerIndex > 0 || cohortDefinition.initialGroup.containers.length > 1}
+	isFirstContainer={containerIndex === 0}
+	groupType="initialGroup"
+	{containerIndex}
+	onContainerNameChange={updateContainerName}
+	onOperatorChange={updateContainerOperator}
+	onAddFilter={() => {
+		editingGroupType = 'initialGroup';
+		editingContainerIndex = containerIndex;
+		selectedDomainType = null;
+	}}
+	onRemove={removeContainer}
+/>
