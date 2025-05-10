@@ -3,18 +3,40 @@
 -->
 
 <script lang="ts">
-	import '../../app.css';
 	import { page } from '$app/state';
 	import ConceptSetModal from './components/ConceptSetModal.svelte';
-	import InclusionRuleModal from './components/InclusionRuleModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
-	import type { ConceptSet, Concept } from './models/ConceptSet';
 
 	// 연산자 컴포넌트 가져오기
 	import NumberOperator from './components/operators/NumberOperator.svelte';
 	import StringOperator from './components/operators/StringOperator.svelte';
 	import DateOperator from './components/operators/DateOperator.svelte';
 	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
+	import ConceptSelectorWrapper from './components/ConceptSelectorWrapper.svelte';
+	import ContainerHeader from './components/ContainerHeader.svelte';
+
+	const { data } = $props();
+	const { cohort, counts } = data;
+	console.log('data : ', data);
+	console.log(cohort);
+	console.log(cohort.cohort_definition);
+	console.log(counts.containerCounts);
+	async function updateCohortDefinition() {
+		const response = await fetch(`https://bento.kookm.in/api/cohort/${cohort.cohort_id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				name: cohortName,
+				description: cohortDescription,
+				cohortDefinition: cohortDefinition
+			})
+		});
+
+		const data = await response.json();
+		console.log(data);
+	}
 
 	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
 	interface Operator<T> {
@@ -102,212 +124,17 @@
 		conceptset?: IdentifierWithOperator;
 	}
 
-	let pathname = $state(page.url.pathname);
 	let showCohortAIModal = $state(false);
 
-	let cohortName = $state('Cohort Name');
-	let cohortDescription = $state('Edit Cohort Description');
+	let cohortName = $state(cohort.name);
+	let cohortDescription = $state(cohort.description);
 
 	/**
 	 * 초기 코호트 정의 구조 생성
 	 * - 기본 인구통계학적 컨셉셋(성별, 인종, 민족성)을 포함
 	 * - 각 컨셉셋은 해당 도메인의 표준 개념들을 포함
 	 */
-	let cohortDefinition = $state<CohortDefinition>({
-		conceptsets: [
-			// 기본 인구통계학적 개념셋 생성
-			// {
-			// 	conceptset_id: '1',
-			// 	name: '성별',
-			// 	items: [
-			// 		{
-			// 			concept_id: '8507',
-			// 			concept_name: 'Male',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '248153007',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8532',
-			// 			concept_name: 'Female',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '248152002',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8521',
-			// 			concept_name: 'Unknown',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '1220005',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8551',
-			// 			concept_name: 'Other',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '385435006',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		}
-			// 	]
-			// },
-			// {
-			// 	conceptset_id: '2',
-			// 	name: '인종',
-			// 	items: [
-			// 		{
-			// 			concept_id: '8515',
-			// 			concept_name: 'Asian',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280000',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8516',
-			// 			concept_name: 'Black',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280001',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8527',
-			// 			concept_name: 'White',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280002',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8552',
-			// 			concept_name: 'Hispanic',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280003',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8522',
-			// 			concept_name: 'Native Hawaiian or Other Pacific Islander',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280004',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8657',
-			// 			concept_name: 'American Indian or Alaska Native',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280005',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '0',
-			// 			concept_name: 'Unknown',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280006',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		}
-			// 	]
-			// },
-			// {
-			// 	conceptset_id: '3',
-			// 	name: '민족성',
-			// 	items: [
-			// 		{
-			// 			concept_id: '38003563',
-			// 			concept_name: 'Hispanic',
-			// 			domain_id: 'Ethnicity',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Ethnicity',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280007',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '38003564',
-			// 			concept_name: 'Not Hispanic',
-			// 			domain_id: 'Ethnicity',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Ethnicity',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280008',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '0',
-			// 			concept_name: 'Unknown',
-			// 			domain_id: 'Ethnicity',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Ethnicity',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280009',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		}
-			// 	]
-			// }
-		],
-		initialGroup: {
-			containers: [
-				// 첫 번째 컨테이너 (필수)
-				{
-					name: 'Container 1',
-					filters: []
-				}
-			]
-		},
-		// comparisonGroup은 옵션
-		comparisonGroup: {
-			containers: [
-				{
-					name: 'Container 1',
-					filters: []
-				}
-			]
-		}
-	});
+	let cohortDefinition = $state<CohortDefinition>(cohort.cohort_definition);
 
 	// Handle AI generated cohort
 	function handleCohortAISubmit(data: any) {
@@ -566,15 +393,6 @@
 	// 현재 편집중인 필터 속성 값
 	let currentFilterValues = $state<FilterValues>({});
 
-	// 임시 값 저장 (범위 입력 등을 위한)
-	let tempRangeValues = $state<{
-		[key: string]: { min?: string; max?: string; start?: string; end?: string };
-	}>({});
-
-	// 드래그 앤 드롭 관련 변수
-	let draggedItem = $state(null);
-	let draggedItemIndex = $state(null);
-	let hoveredItemIndex = $state(null);
 
 	// 컨테이너 드래그 앤 드롭 관련 변수
 	let draggedContainerIndex = $state(null);
@@ -583,8 +401,6 @@
 
 	// 모달 관련 상태 변수
 	let showConceptSetModal = $state(false);
-	let showInclusionRuleModal = $state(false);
-	let editingRuleIndex = $state(-1);
 
 	// 필터 초기화 함수
 	function resetFilterValues() {
@@ -668,61 +484,6 @@
 		currentFilterValues[property] = value;
 	}
 
-	// 숫자 범위 업데이트 함수 - NumberWithOperator 타입 적용
-	function updateNumberRange(property, min, max) {
-		// Operator<number> 형식으로 저장
-		if (min !== null && min !== '' && max !== null && max !== '') {
-			currentFilterValues[property] = {
-				gte: Number(min),
-				lte: Number(max)
-			};
-		} else if (min !== null && min !== '') {
-			currentFilterValues[property] = {
-				gte: Number(min)
-			};
-		} else if (max !== null && max !== '') {
-			currentFilterValues[property] = {
-				lte: Number(max)
-			};
-		} else {
-			currentFilterValues[property] = null;
-		}
-	}
-
-	// 날짜 범위 업데이트 함수 - DateWithOperator 타입 적용
-	function updateDateRange(property, start, end) {
-		// Operator<string> 형식으로 저장
-		if (start && end) {
-			currentFilterValues[property] = {
-				gte: start,
-				lte: end
-			};
-		} else if (start) {
-			currentFilterValues[property] = {
-				gte: start
-			};
-		} else if (end) {
-			currentFilterValues[property] = {
-				lte: end
-			};
-		} else {
-			currentFilterValues[property] = null;
-		}
-	}
-
-	// 문자열 연산자 업데이트 함수 - StringWithOperator 타입 적용
-	function updateStringOperator(property, value, operator = 'eq') {
-		if (!value) {
-			currentFilterValues[property] = null;
-			return;
-		}
-
-		// StringOperator 형식으로 저장
-		const operatorObj = {};
-		operatorObj[operator] = value;
-		currentFilterValues[property] = operatorObj;
-	}
-
 	// 새 컨테이너 추가 함수 - SubsequentContainer 타입 적용
 	function addContainer(groupType) {
 		const containers = cohortDefinition[groupType].containers;
@@ -762,23 +523,6 @@
 		}
 	}
 
-	// 비교 그룹 토글 함수
-	function toggleComparisonGroup() {
-		if (cohortDefinition.comparisonGroup) {
-			// 비교 그룹이 있으면 제거
-			delete cohortDefinition.comparisonGroup;
-		} else {
-			// 비교 그룹이 없으면 추가
-			cohortDefinition.comparisonGroup = {
-				containers: [
-					{
-						name: 'Container 1',
-						filters: []
-					}
-				]
-			};
-		}
-	}
 
 	// 컨셉셋 업데이트 함수
 	function handleConceptSetUpdate(event: { detail: { conceptSets: ConceptSet[] } }) {
@@ -1097,46 +841,6 @@
 					</button>
 				</div>
 			</div>
-			<!-- 
-			<div class="mb-6 bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-				<div class="flex items-center justify-between">
-					<h2 class="text-lg font-semibold text-gray-800">Cohort Structure</h2>
-					<div class="flex items-center gap-2">
-						{#if cohortDefinition.comparisonGroup}
-							<span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-								<svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-									<circle cx="4" cy="4" r="3" />
-								</svg>
-								Comparison Mode
-							</span>
-							<button 
-								class="rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-								on:click={toggleComparisonGroup}
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-								</svg>
-								Remove Comparison
-							</button>
-						{:else}
-							<button 
-								class="rounded-md border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
-								on:click={toggleComparisonGroup}
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-								</svg>
-								Add Comparison Group
-							</button>
-						{/if}
-					</div>
-				</div>
-				{#if cohortDefinition.comparisonGroup}
-					<div class="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
-						<p><span class="font-medium">Comparison mode:</span> The Initial Group AND Comparison Group criteria must both be satisfied. Patients must meet conditions from both groups to be included in the final cohort.</p>
-					</div>
-				{/if}
-			</div> -->
 
 			<!-- Initial Group Section -->
 			<div class="mb-6">
@@ -1183,66 +887,26 @@
 								draggedGroupType = null;
 							}}
 						>
-							<div class="mb-4 flex items-center justify-between">
-								<div class="flex items-center">
-									{#if containerIndex > 0}
-										<select
-											class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
-											value={container.operator}
-											on:change={(e) =>
-												updateContainerOperator('initialGroup', containerIndex, e.target.value)}
-										>
-											<option value="AND">AND</option>
-											<option value="OR">OR</option>
-											<option value="NOT">NOT</option>
-										</select>
-									{/if}
-									<h4 class="flex items-center text-lg font-medium text-blue-600">
-										<svg
-											class="h-4 w-4 text-gray-400"
-											xmlns="http://www.w3.org/2000/svg"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-											/>
-										</svg>
-										<input
-											id="containerName"
-											type="text"
-											class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 transition-colors duration-200 hover:bg-blue-50 focus:ring-0"
-											value={container.name}
-											on:change={(e) =>
-												updateContainerName('initialGroup', containerIndex, e.target.value)}
-										/>
-									</h4>
-								</div>
-								<div class="flex space-x-2">
-									<button
-										class="text-sm text-blue-500 hover:text-blue-700"
-										on:click={() => {
-											editingGroupType = 'initialGroup';
-											editingContainerIndex = containerIndex;
-											selectedDomainType = null;
-										}}
-									>
-										Add Filter
-									</button>
-									{#if containerIndex > 0 || cohortDefinition.initialGroup.containers.length > 1}
-										<button
-											class="text-sm text-red-500 hover:text-red-700"
-											on:click={() => removeContainer('initialGroup', containerIndex)}
-										>
-											Remove
-										</button>
-									{/if}
-								</div>
-							</div>
+							<ContainerHeader
+								name={container.name}
+								operator={container.operator || 'AND'}
+								patientCount={counts && counts.containerCounts
+									? counts.containerCounts[containerIndex]
+									: null}
+								canRemove={containerIndex > 0 ||
+									cohortDefinition.initialGroup.containers.length > 1}
+								isFirstContainer={containerIndex === 0}
+								groupType="initialGroup"
+								{containerIndex}
+								onContainerNameChange={updateContainerName}
+								onOperatorChange={updateContainerOperator}
+								onAddFilter={() => {
+									editingGroupType = 'initialGroup';
+									editingContainerIndex = containerIndex;
+									selectedDomainType = null;
+								}}
+								onRemove={removeContainer}
+							/>
 
 							{#if container.filters.length === 0}
 								<div
@@ -1350,69 +1014,28 @@
 									draggedGroupType = null;
 								}}
 							>
-								<div class="mb-4 flex items-center justify-between">
-									<div class="flex items-center">
-										{#if containerIndex > 0}
-											<select
-												class="mr-2 rounded border border-gray-300 bg-gray-50 px-2 py-1 pr-8 text-sm"
-												value={container.operator}
-												on:change={(e) =>
-													updateContainerOperator(
-														'comparisonGroup',
-														containerIndex,
-														e.target.value
-													)}
-											>
-												<option value="AND">AND</option>
-												<option value="OR">OR</option>
-												<option value="NOT">NOT</option>
-											</select>
-										{/if}
-										<h4 class="flex items-center text-lg font-medium text-blue-600">
-											<svg
-												class="h-4 w-4 text-gray-400"
-												xmlns="http://www.w3.org/2000/svg"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-												/>
-											</svg>
-											<input
-												type="text"
-												class="w-full rounded border-0 bg-transparent p-0 text-lg font-medium text-blue-600 transition-colors duration-200 hover:bg-blue-50 focus:ring-0"
-												value={container.name}
-												on:change={(e) =>
-													updateContainerName('comparisonGroup', containerIndex, e.target.value)}
-											/>
-										</h4>
-									</div>
-									<div class="flex space-x-2">
-										<button
-											class="text-sm text-blue-500 hover:text-blue-700"
-											on:click={() => {
-												editingGroupType = 'comparisonGroup';
-												editingContainerIndex = containerIndex;
-												selectedDomainType = null;
-											}}
-										>
-											Add Filter
-										</button>
-										{#if containerIndex > 0 || cohortDefinition.comparisonGroup.containers.length > 1}
-											<button
-												class="text-sm text-red-500 hover:text-red-700"
-												on:click={() => removeContainer('comparisonGroup', containerIndex)}
-											>
-												Remove
-											</button>
-										{/if}
-									</div>
-								</div>
+								<ContainerHeader
+									name={container.name}
+									operator={container.operator || 'AND'}
+									patientCount={counts && counts.containerCounts
+										? counts.containerCounts[
+												containerIndex + cohortDefinition.initialGroup.containers.length
+											]
+										: null}
+									canRemove={containerIndex > 0 ||
+										cohortDefinition.comparisonGroup.containers.length > 1}
+									isFirstContainer={containerIndex === 0}
+									groupType="comparisonGroup"
+									{containerIndex}
+									onContainerNameChange={updateContainerName}
+									onOperatorChange={updateContainerOperator}
+									onAddFilter={() => {
+										editingGroupType = 'comparisonGroup';
+										editingContainerIndex = containerIndex;
+										selectedDomainType = null;
+									}}
+									onRemove={removeContainer}
+								/>
 
 								{#if container.filters.length === 0}
 									<div
@@ -1482,9 +1105,24 @@
 
 			<div class="flex justify-center p-12">
 				<button
-					class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+					on:click={updateCohortDefinition}
+					class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:before:opacity-10 active:scale-95"
 				>
-					Create Cohort
+					<span class="relative z-10 flex items-center justify-center gap-2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-4 w-4"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+						Update Cohort
+					</span>
 				</button>
 			</div>
 		</div>
@@ -1578,18 +1216,10 @@
 								on:change={(e) => updateFilterValue(property.name, e.detail)}
 							/>
 						{:else if property.type === 'concept'}
-							<IdentifierOperator
+							<ConceptSelectorWrapper
 								value={currentFilterValues[property.name] || {}}
-								options={cohortDefinition.conceptsets.flatMap((cs) =>
-									cs.items
-										? cs.items.map((item) => ({
-												id: item.concept_id,
-												name: `${item.concept_name} (${cs.name})`
-											}))
-										: []
-								)}
-								placeholder="select concept set"
-								on:change={(e) => updateFilterValue(property.name, e.detail)}
+								{property}
+								onChange={updateFilterValue}
 							/>
 						{:else if property.type === 'numberrange'}
 							<NumberOperator
