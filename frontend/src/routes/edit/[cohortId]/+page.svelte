@@ -12,7 +12,6 @@
 	import StringOperator from './components/operators/StringOperator.svelte';
 	import DateOperator from './components/operators/DateOperator.svelte';
 	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
-	import ConceptSelector from './components/operators/ConceptSelector.svelte';
 	import ConceptSelectorWrapper from './components/ConceptSelectorWrapper.svelte';
 	import ContainerHeader from './components/ContainerHeader.svelte';
 
@@ -125,7 +124,6 @@
 		conceptset?: IdentifierWithOperator;
 	}
 
-	let pathname = $state(page.url.pathname);
 	let showCohortAIModal = $state(false);
 
 	let cohortName = $state(cohort.name);
@@ -395,15 +393,6 @@
 	// 현재 편집중인 필터 속성 값
 	let currentFilterValues = $state<FilterValues>({});
 
-	// 임시 값 저장 (범위 입력 등을 위한)
-	let tempRangeValues = $state<{
-		[key: string]: { min?: string; max?: string; start?: string; end?: string };
-	}>({});
-
-	// 드래그 앤 드롭 관련 변수
-	let draggedItem = $state(null);
-	let draggedItemIndex = $state(null);
-	let hoveredItemIndex = $state(null);
 
 	// 컨테이너 드래그 앤 드롭 관련 변수
 	let draggedContainerIndex = $state(null);
@@ -412,8 +401,6 @@
 
 	// 모달 관련 상태 변수
 	let showConceptSetModal = $state(false);
-	let showInclusionRuleModal = $state(false);
-	let editingRuleIndex = $state(-1);
 
 	// 필터 초기화 함수
 	function resetFilterValues() {
@@ -497,61 +484,6 @@
 		currentFilterValues[property] = value;
 	}
 
-	// 숫자 범위 업데이트 함수 - NumberWithOperator 타입 적용
-	function updateNumberRange(property, min, max) {
-		// Operator<number> 형식으로 저장
-		if (min !== null && min !== '' && max !== null && max !== '') {
-			currentFilterValues[property] = {
-				gte: Number(min),
-				lte: Number(max)
-			};
-		} else if (min !== null && min !== '') {
-			currentFilterValues[property] = {
-				gte: Number(min)
-			};
-		} else if (max !== null && max !== '') {
-			currentFilterValues[property] = {
-				lte: Number(max)
-			};
-		} else {
-			currentFilterValues[property] = null;
-		}
-	}
-
-	// 날짜 범위 업데이트 함수 - DateWithOperator 타입 적용
-	function updateDateRange(property, start, end) {
-		// Operator<string> 형식으로 저장
-		if (start && end) {
-			currentFilterValues[property] = {
-				gte: start,
-				lte: end
-			};
-		} else if (start) {
-			currentFilterValues[property] = {
-				gte: start
-			};
-		} else if (end) {
-			currentFilterValues[property] = {
-				lte: end
-			};
-		} else {
-			currentFilterValues[property] = null;
-		}
-	}
-
-	// 문자열 연산자 업데이트 함수 - StringWithOperator 타입 적용
-	function updateStringOperator(property, value, operator = 'eq') {
-		if (!value) {
-			currentFilterValues[property] = null;
-			return;
-		}
-
-		// StringOperator 형식으로 저장
-		const operatorObj = {};
-		operatorObj[operator] = value;
-		currentFilterValues[property] = operatorObj;
-	}
-
 	// 새 컨테이너 추가 함수 - SubsequentContainer 타입 적용
 	function addContainer(groupType) {
 		const containers = cohortDefinition[groupType].containers;
@@ -591,23 +523,6 @@
 		}
 	}
 
-	// 비교 그룹 토글 함수
-	function toggleComparisonGroup() {
-		if (cohortDefinition.comparisonGroup) {
-			// 비교 그룹이 있으면 제거
-			delete cohortDefinition.comparisonGroup;
-		} else {
-			// 비교 그룹이 없으면 추가
-			cohortDefinition.comparisonGroup = {
-				containers: [
-					{
-						name: 'Container 1',
-						filters: []
-					}
-				]
-			};
-		}
-	}
 
 	// 컨셉셋 업데이트 함수
 	function handleConceptSetUpdate(event: { detail: { conceptSets: ConceptSet[] } }) {
@@ -926,46 +841,6 @@
 					</button>
 				</div>
 			</div>
-			<!-- 
-			<div class="mb-6 bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-				<div class="flex items-center justify-between">
-					<h2 class="text-lg font-semibold text-gray-800">Cohort Structure</h2>
-					<div class="flex items-center gap-2">
-						{#if cohortDefinition.comparisonGroup}
-							<span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-								<svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-									<circle cx="4" cy="4" r="3" />
-								</svg>
-								Comparison Mode
-							</span>
-							<button 
-								class="rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-								on:click={toggleComparisonGroup}
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-								</svg>
-								Remove Comparison
-							</button>
-						{:else}
-							<button 
-								class="rounded-md border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
-								on:click={toggleComparisonGroup}
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-								</svg>
-								Add Comparison Group
-							</button>
-						{/if}
-					</div>
-				</div>
-				{#if cohortDefinition.comparisonGroup}
-					<div class="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
-						<p><span class="font-medium">Comparison mode:</span> The Initial Group AND Comparison Group criteria must both be satisfied. Patients must meet conditions from both groups to be included in the final cohort.</p>
-					</div>
-				{/if}
-			</div> -->
 
 			<!-- Initial Group Section -->
 			<div class="mb-6">
