@@ -3,12 +3,9 @@
 -->
 
 <script lang="ts">
-	import '../../app.css';
 	import { page } from '$app/state';
 	import ConceptSetModal from './components/ConceptSetModal.svelte';
-	import InclusionRuleModal from './components/InclusionRuleModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
-	import type { ConceptSet, Concept } from './models/ConceptSet';
 
 	// 연산자 컴포넌트 가져오기
 	import NumberOperator from './components/operators/NumberOperator.svelte';
@@ -16,25 +13,28 @@
 	import DateOperator from './components/operators/DateOperator.svelte';
 	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
 
-
-	async function createNewCohortDefinition() {
-		const response = await fetch('https://bento.kookm.in/api/cohort', {
-			method: 'POST',
+	const { data } = $props();
+	const { cohort, counts } = data;
+	console.log('data : ', data);
+	console.log(cohort);
+	console.log(cohort.cohort_definition);
+	console.log(counts.containerCounts);
+	async function updateCohortDefinition() {
+		const response = await fetch(`https://bento.kookm.in/api/cohort/${cohort.cohort_id}`, {
+			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
 				name: cohortName,
 				description: cohortDescription,
-				cohortDefinition: cohortDefinition,
-				temporary: false
+				cohortDefinition: cohortDefinition
 			})
 		});
 
 		const data = await response.json();
 		console.log(data);
 	}
-
 
 	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
 	interface Operator<T> {
@@ -125,209 +125,15 @@
 	let pathname = $state(page.url.pathname);
 	let showCohortAIModal = $state(false);
 
-	let cohortName = $state('Cohort Name');
-	let cohortDescription = $state('Edit Cohort Description');
+	let cohortName = $state(cohort.name);
+	let cohortDescription = $state(cohort.description);
 
 	/**
 	 * 초기 코호트 정의 구조 생성
 	 * - 기본 인구통계학적 컨셉셋(성별, 인종, 민족성)을 포함
 	 * - 각 컨셉셋은 해당 도메인의 표준 개념들을 포함
 	 */
-	let cohortDefinition = $state<CohortDefinition>({
-		conceptsets: [
-			// 기본 인구통계학적 개념셋 생성
-			// {
-			// 	conceptset_id: '1',
-			// 	name: '성별',
-			// 	items: [
-			// 		{
-			// 			concept_id: '8507',
-			// 			concept_name: 'Male',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '248153007',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8532',
-			// 			concept_name: 'Female',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '248152002',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8521',
-			// 			concept_name: 'Unknown',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '1220005',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8551',
-			// 			concept_name: 'Other',
-			// 			domain_id: 'Gender',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Gender',
-			// 			standard_concept: 'S',
-			// 			concept_code: '385435006',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		}
-			// 	]
-			// },
-			// {
-			// 	conceptset_id: '2',
-			// 	name: '인종',
-			// 	items: [
-			// 		{
-			// 			concept_id: '8515',
-			// 			concept_name: 'Asian',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280000',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8516',
-			// 			concept_name: 'Black',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280001',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8527',
-			// 			concept_name: 'White',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280002',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8552',
-			// 			concept_name: 'Hispanic',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280003',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8522',
-			// 			concept_name: 'Native Hawaiian or Other Pacific Islander',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280004',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '8657',
-			// 			concept_name: 'American Indian or Alaska Native',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280005',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '0',
-			// 			concept_name: 'Unknown',
-			// 			domain_id: 'Race',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Race',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280006',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		}
-			// 	]
-			// },
-			// {
-			// 	conceptset_id: '3',
-			// 	name: '민족성',
-			// 	items: [
-			// 		{
-			// 			concept_id: '38003563',
-			// 			concept_name: 'Hispanic',
-			// 			domain_id: 'Ethnicity',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Ethnicity',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280007',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '38003564',
-			// 			concept_name: 'Not Hispanic',
-			// 			domain_id: 'Ethnicity',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Ethnicity',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280008',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		},
-			// 		{
-			// 			concept_id: '0',
-			// 			concept_name: 'Unknown',
-			// 			domain_id: 'Ethnicity',
-			// 			vocabulary_id: 'SNOMED',
-			// 			concept_class_id: 'Ethnicity',
-			// 			standard_concept: 'S',
-			// 			concept_code: '315280009',
-			// 			valid_start_date: '1970-01-01',
-			// 			valid_end_date: '2099-12-31'
-			// 		}
-			// 	]
-			// }
-		],
-		initialGroup: {
-			containers: [
-				// 첫 번째 컨테이너 (필수)
-				{
-					name: 'Container 1',
-					filters: []
-				}
-			]
-		},
-		// comparisonGroup은 옵션
-		comparisonGroup: {
-			containers: [
-				{
-					name: 'Container 1',
-					filters: []
-				}
-			]
-		}
-	});
+	let cohortDefinition = $state<CohortDefinition>(cohort.cohort_definition);
 
 	// Handle AI generated cohort
 	function handleCohortAISubmit(data: any) {
@@ -1502,7 +1308,7 @@
 
 			<div class="flex justify-center p-12">
 				<button
-					on:click={createNewCohortDefinition}
+					on:click={updateCohortDefinition}
 					class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:before:opacity-10 active:scale-95"
 				>
 					<span class="relative z-10 flex items-center justify-center gap-2">
@@ -1518,7 +1324,7 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-						Create Cohort
+						Update Cohort
 					</span>
 				</button>
 			</div>
