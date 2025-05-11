@@ -16,6 +16,9 @@
 
 	const { data } = $props();
 
+	const { statistics_id } = data;
+	console.log(statistics_id);
+
 	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
 	interface Operator<T> {
 		neq?: T | T[];
@@ -125,6 +128,10 @@
 	// Function to update Count By values
 	function updateCountByValue(property, value) {
 		currentCountByValues[property] = value;
+	}
+
+	async function addChart() {
+		
 	}
 
 	// Types.ts 기반 도메인 타입
