@@ -6,7 +6,7 @@ from xgboost import XGBClassifier
 import shap
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import NearestNeighbors
-from validation import evaluate_model
+from validation import evaluate_model, cross_validate_model
 
 try:
     import torch
@@ -142,10 +142,10 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
                          initial_ratio=0.1, ratio_increment=0.2,
                          improvement_threshold=0.01, max_iter=3):
 
-    best_results = evaluate_model(model, X_val, y_val)
+    best_results  = cross_validate_model(model, X_val, y_val)
     best_features = X_train.columns.tolist()
-    best_model = model
-    iteration = 0
+    best_model    = model
+    iteration     = 0
     current_ratio = initial_ratio
     while iteration < max_iter:
         explainer = shap.TreeExplainer(best_model)
@@ -153,11 +153,11 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
         if isinstance(shap_vals, list):
             shap_vals = shap_vals[1]
 
-        abs_vals = np.abs(shap_vals)
-        total_abs = abs_vals.sum(axis=1, keepdims=True)
+        abs_vals   = np.abs(shap_vals)
+        total_abs  = abs_vals.sum(axis=1, keepdims=True)
         total_abs[total_abs == 0] = 1
-        rel_pct = abs_vals / total_abs * 100
-        mean_pct = rel_pct.mean(axis=0)
+        rel_pct    = abs_vals / total_abs * 100
+        mean_pct   = rel_pct.mean(axis=0)
 
         fi = (
             pd.DataFrame({"feature": X_train.columns, "mean_pct": mean_pct})
@@ -170,18 +170,18 @@ def iterative_shap_train(model, X_train, y_train, X_val, y_val,
         model_top = XGBClassifier(**XGB_COMMON_PARAMS)
         model_top.fit(X_train[top_features], y_train)
 
-        new_results = evaluate_model(model_top, X_val[top_features], y_val)
+        new_results = cross_validate_model(model_top, X_val[top_features], y_val)
         if new_results["f1"] - best_results["f1"] >= improvement_threshold:
             best_results, best_features, best_model = new_results, top_features, model_top
             X_train = X_train[top_features]
-            X_val = X_val[top_features]
+            X_val   = X_val[top_features]
         else:
             break
 
         current_ratio = min(current_ratio + ratio_increment, 1.0)
         iteration += 1
-
-    return best_model, best_features, best_results, fi
+        
+    return best_model, best_features, best_results["f1"], fi
 
 
 def predict_cohort_probability(model, X_new):

@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 from dotenv import load_dotenv
+import numpy as np
 import time
 from sklearn.model_selection import train_test_split
 from validation import evaluate_model
@@ -82,6 +83,8 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
 
     procedure_importances_all_runs = []
     condition_importances_all_runs = []
+    procedure_f1_results = []
+    condition_f1_results = []
     cols_to_drop = get_drop_id(cohort_id)
     df_comparator_origin = get_comparator_cohort(cohort_id)
     df_comparator = prepare_psm_features(
@@ -109,6 +112,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
         df_importance_proc = feature_importance.rename(
             columns={'mean_pct': 'importance'})
         procedure_importances_list.append(df_importance_proc)
+        procedure_f1_results.append(best_results)
 
         X_condition = df_condition.drop(columns=["label"])
         y_cond = df_condition["label"]
@@ -124,6 +128,8 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
         df_importance_cond = feature_importance.rename(
             columns={'mean_pct': 'importance'})
         condition_importances_list.append(df_importance_cond)
+        condition_f1_results.append(best_results)
+
     all_proc_importances = pd.concat(
         procedure_importances_list, ignore_index=True)
     print(all_proc_importances)
@@ -146,11 +152,12 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
         procedure_importances_all_runs, ignore_index=True)
     final_cond_importances = pd.concat(
         condition_importances_all_runs, ignore_index=True)
-
+    avg_proc_f1 = float(np.mean(procedure_f1_results))
+    avg_cond_f1 = float(np.mean(condition_f1_results))
     end_time = time.time()
     execution_time = end_time - start_time
     insert_feature_extraction_data(
-        cohort_id, k, final_proc_importances, final_cond_importances, execution_time)
+        cohort_id, k, final_proc_importances, final_cond_importances, execution_time,avg_proc_f1, avg_cond_f1)
 
 
 if __name__ == "__main__":
