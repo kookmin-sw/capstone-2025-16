@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { Concept } from '../../models/ConceptSet';
+  import type { Concept } from '../../../routes/custom-chart/[chartID]/chart/[chartID]/models/ConceptSet';
   
   // Operator type definition
   type ConceptOperatorType = {
@@ -23,8 +23,8 @@
   
   // Available operators
   const availableOperators = [
-    { type: 'eq', label: 'Equal to (=)' },
-    { type: 'neq', label: 'Not equal to (≠)' }
+    { type: 'eq', label: 'Equal to (=)', icon: '=' },
+    { type: 'neq', label: 'Not equal to (≠)', icon: '≠' }
   ];
   
   const dispatch = createEventDispatcher();
@@ -198,13 +198,19 @@
     showSearch = false;
     updateValue();
   }
+
+  // Get operator icon
+  function getOperatorIcon(type: string): string {
+    const op = availableOperators.find(o => o.type === type);
+    return op ? op.icon : type;
+  }
 </script>
 
 <div class="relative w-full">
   <!-- Trigger button -->
   <button
     type="button"
-    class="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm hover:bg-gray-50"
+    class="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
     on:click={toggleSearch}
   >
     <span class="truncate">{displayValue}</span>
@@ -215,118 +221,139 @@
   
   <!-- Dropdown panel -->
   {#if showSearch}
-    <div class="absolute z-10 mt-1 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-      <div class="p-3">
-        <div class="mb-3 flex items-center justify-between">
-          <span class="text-sm font-medium text-gray-700">{label}</span>
-          <div class="flex items-center space-x-2">
-            <!-- Operator selection -->
-            <select 
-              class="rounded-md border border-gray-300 py-1 text-xs"
-              bind:value={selectedOperator}
-              on:change={() => updateValue()}
-            >
-              {#each availableOperators as op}
-                <option value={op.type}>{op.label}</option>
-              {/each}
-            </select>
-            
-            <!-- Multiple/single toggle -->
-            <button 
-              type="button"
-              class="text-xs text-blue-600 hover:text-blue-800"
-              on:click={toggleMultipleMode}
-            >
-              {isMultipleMode ? 'Single' : 'Multiple'}
-            </button>
-          </div>
-        </div>
-        
-        <!-- Search input -->
-        <div class="mb-3 flex items-center space-x-2">
-          <input
-            type="text"
-            placeholder={placeholder}
-            class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            bind:value={searchQuery}
-            on:keydown={(e) => e.key === 'Enter' && searchConcepts()}
-          />
-          <button
-            type="button"
-            class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            on:click={searchConcepts}
-            disabled={isSearching}
+    <div class="absolute z-10 mt-1 w-full origin-top-right rounded-lg bg-white p-3 shadow-lg ring-1 ring-black ring-opacity-5">
+      <div class="mb-3 flex items-center justify-between">
+        <span class="text-sm font-medium text-gray-700">{label}</span>
+        <div class="flex items-center space-x-2">
+          <!-- Operator selection -->
+          <select 
+            class="rounded-md border border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            bind:value={selectedOperator}
+            on:change={() => updateValue()}
           >
-            {isSearching ? 'Searching...' : 'Search'}
+            {#each availableOperators as op}
+              <option value={op.type}>{op.label}</option>
+            {/each}
+          </select>
+          
+          <!-- Multiple/single toggle -->
+          <button 
+            type="button"
+            class="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
+            on:click={toggleMultipleMode}
+          >
+            {isMultipleMode ? 'Multiple' : 'Single'}
           </button>
         </div>
-        
-        <!-- Selected concepts -->
-        {#if selectedConcepts.length > 0}
-          <div class="mb-3">
-            <h4 class="mb-1 text-xs font-medium text-gray-500">Selected</h4>
-            <div class="max-h-28 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-2">
-              {#each selectedConcepts as concept}
-                <div class="mb-1 flex items-center justify-between rounded bg-white px-2 py-1 text-xs">
-                  <div class="flex-1 truncate">
-                    <span class="font-medium">{concept.concept_name}</span>
-                    <span class="ml-1 text-gray-500">({concept.concept_id})</span>
-                  </div>
-                  <button
-                    type="button"
-                    class="ml-1 text-red-600 hover:text-red-800"
-                    on:click={() => removeConcept(concept.concept_id)}
-                  >
-                    ×
-                  </button>
+      </div>
+      
+      <!-- Search input -->
+      <div class="mb-3 flex items-center space-x-2">
+        <input
+          type="text"
+          placeholder={placeholder}
+          class="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          bind:value={searchQuery}
+          on:keydown={(e) => e.key === 'Enter' && searchConcepts()}
+        />
+        <button
+          type="button"
+          class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          on:click={searchConcepts}
+          disabled={isSearching}
+        >
+          {isSearching ? 'Searching...' : 'Search'}
+        </button>
+      </div>
+      
+      <!-- Selected concepts -->
+      {#if selectedConcepts.length > 0}
+        <div class="mb-3">
+          <h4 class="mb-1 text-xs font-medium text-gray-500">Selected</h4>
+          <div class="max-h-28 space-y-1 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-2">
+            {#each selectedConcepts as concept}
+              <div class="flex items-center justify-between rounded-md bg-white px-2 py-1.5 text-sm shadow-sm">
+                <div class="flex-1 truncate">
+                  <span class="font-medium text-gray-700">{concept.concept_name}</span>
+                  <span class="ml-1 text-gray-500">({concept.concept_id})</span>
                 </div>
-              {/each}
-            </div>
-          </div>
-        {/if}
-        
-        <!-- Search results -->
-        {#if searchResults.length > 0}
-          <div>
-            <h4 class="mb-1 text-xs font-medium text-gray-500">Results</h4>
-            <div class="max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white p-2">
-              {#each searchResults as concept}
-                <div 
-                  class="mb-1 cursor-pointer rounded px-2 py-1 text-xs hover:bg-gray-100"
-                  on:click={() => addConcept(concept)}
+                <button
+                  type="button"
+                  class="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-red-600"
+                  on:click={() => removeConcept(concept.concept_id)}
                 >
-                  <div class="font-medium">{concept.concept_name}</div>
-                  <div class="text-gray-500">
-                    ID: {concept.concept_id} | {concept.domain_id} | {concept.vocabulary_id}
-                  </div>
-                </div>
-              {/each}
-            </div>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            {/each}
           </div>
-        {:else if searchQuery && !isSearching}
-          <div class="rounded-md bg-gray-50 p-2 text-center text-xs text-gray-500">
-            No concepts found. Try different search terms.
-          </div>
-        {/if}
-        
-        <!-- Action buttons -->
-        <div class="mt-3 flex justify-end space-x-2">
-          <button
-            type="button"
-            class="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
-            on:click={() => showSearch = false}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
-            on:click={applyChanges}
-          >
-            Apply
-          </button>
         </div>
+      {/if}
+      
+      <!-- Search results -->
+      {#if searchResults.length > 0}
+        <div>
+          <h4 class="mb-1 text-xs font-medium text-gray-500">Results</h4>
+          <div class="max-h-40 space-y-1 overflow-y-auto rounded-md border border-gray-200 bg-white p-2">
+            {#each searchResults as concept}
+              <div 
+                class="cursor-pointer rounded-md bg-white px-2 py-1.5 text-sm shadow-sm transition-all hover:bg-gray-50"
+                on:click={() => addConcept(concept)}
+              >
+                <div class="font-medium text-gray-700">{concept.concept_name}</div>
+                <div class="text-xs text-gray-500">
+                  ID: {concept.concept_id} | {concept.domain_id} | {concept.vocabulary_id}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {:else if searchQuery && !isSearching}
+        <div class="rounded-md bg-gray-50 p-2 text-center text-xs text-gray-500">
+          No concepts found. Try different search terms.
+        </div>
+      {/if}
+      
+      <!-- Action buttons -->
+      <div class="mt-3 flex justify-end space-x-2">
+        <button
+          type="button"
+          class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          on:click={() => showSearch = false}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          on:click={applyChanges}
+        >
+          Apply
+        </button>
       </div>
     </div>
   {/if}
 </div>
+
+<style>
+  /* 스크롤바 스타일링 */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+</style>
