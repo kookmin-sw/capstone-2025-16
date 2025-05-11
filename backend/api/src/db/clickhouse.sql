@@ -445,7 +445,8 @@ CREATE TABLE IF NOT EXISTS `feature_extraction`
     rank        Int64,                     
     concept_id  Int64,
     influence Float64,
-    execution_time Int64
+    execution_time Int64,
+    avg_f1_score Float64
 )
 ORDER BY (`cohort_id`, `multiple`,`domain_name`, `rank`);
 

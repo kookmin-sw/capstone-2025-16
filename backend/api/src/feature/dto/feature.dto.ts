@@ -44,6 +44,12 @@ export class FeatureExtractionDto {
     example: '2023-01-01 12:00:00',
   })
   execution_time: string;
+
+  @ApiProperty({
+    description: 'F1 score',
+    example: 0.95,
+  })
+  avg_f1_score: number;
 }
 
 export class FeatureListResponseDto {
