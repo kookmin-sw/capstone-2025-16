@@ -7,11 +7,10 @@
 	import { slide } from 'svelte/transition';
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 
-	export let children;
-	export let isLoading = true;
-	export let cohortInfo = [];
-	
-    const cohortID = $page.params.cohortID;
+	// export let children;
+	let isLoading = true;
+	let cohortInfo = [];
+    let cohortID = $page.params.cohortID;
 
 	let searchQuery = "";
 	let filteredData = [];
@@ -127,7 +126,7 @@
 </script>
 
 {#if isLoading}
-	<LoadingComponent message="Loading..." />
+	<LoadingComponent message="Loading cohort data...." />
 {:else}
 <div class="fixed left-0 top-[65px] flex h-[calc(100vh-65px)] w-[200px] flex-col border-r border-zinc-200">
 	<div class="px-2 pt-2">
@@ -227,8 +226,7 @@
 		</div>
 	</div>
 </div>
-
 <div class="relative left-[200px] px-6 w-[calc(100%-206px)]">
-    {@render children()}
+	<slot />
 </div>
 {/if}
