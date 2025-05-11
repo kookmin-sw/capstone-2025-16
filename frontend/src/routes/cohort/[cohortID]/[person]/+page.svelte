@@ -32,6 +32,7 @@
     let isLoading = true;
     $: personID = $page.params.person;
 
+    let message = ""
     let personTable = [];
     let personVisits = [];
     let personStatistics = [];
@@ -85,7 +86,9 @@
     };
 
     async function fetchDataById(id) {
+        isLoading = true;
         isStatisticsView = true;
+        message = "Loading Table...";
         try {
             const res = await fetch(`/api/persontable/${id}`);
             const fullData = await res.json();
@@ -99,8 +102,12 @@
                 specimen: { specimen: fullData?.specimens },
                 bio_signal: { bioSignal: fullData?.bio_signal }
             };
+            console.log("tableProps", tableProps);
         } catch (error) {
             console.error("데이터 로드 실패:", error);
+        } finally{
+            isLoading = false;
+            drawTimeline();
         }
     }
 
@@ -345,7 +352,7 @@
                 .attr("width", d => Math.max(newXScale(new Date(d.end)) - newXScale(new Date(d.start)), 5));
 
             d3.selectAll(".death-bar")
-                .attr("x", newXScale(new Date(personTable.death.death_date)))
+                .attr("x", newXScale(new Date(personTable?.death.death_date)))
                 .attr("width", DEATH_BAR_WIDTH);
             });
 
@@ -406,6 +413,7 @@
 
     async function fetchData(){
         isLoading = true;
+        message = "Loading data...";
         try{
             const res = await fetch(`/api/persondata/${personID}`);
             if (!res.ok) {
@@ -466,7 +474,7 @@
 
 
 {#if isLoading}
-    <LoadingComponent />
+    <LoadingComponent message={message}/>
 {:else}
 <header class="py-4 bg-white border-b w-full">
     <div class="flex justify-between py-2">
