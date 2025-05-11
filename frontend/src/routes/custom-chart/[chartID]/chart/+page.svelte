@@ -410,7 +410,7 @@
 
 	// 모달 관련 상태 변수
 	let showConceptSetModal = $state(false);
-	let showChartTypeModal = $state(false);
+	let showChartTypeModal = $state(true);
 
 	function onGroupNameChange(groupIndex, name) {
 		groups[groupIndex].name = name;
