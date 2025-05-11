@@ -7,7 +7,6 @@
 	import { slide } from 'svelte/transition';
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 
-	// export let children;
 	let isLoading = true;
 	let cohortInfo = [];
     let cohortID = $page.params.cohortID;
