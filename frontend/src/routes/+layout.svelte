@@ -123,6 +123,21 @@
 									Custom Chart
 								</a>
 							</div>
+
+							<!-- About 메뉴 -->
+							<div class="w-[200px]">
+								<a 
+									href="/guide"
+									role="menuitem"
+									tabindex="-1"
+									onmouseenter={() => activeMenu = 'about'}
+									class="flex items-center h-[60px] w-full px-6 text-[15px] transition-all duration-200
+										{activeMenu === 'about' ? 'text-slate-900 font-semibold' : 'text-slate-700 font-medium'} 
+										hover:text-slate-900 hover:font-semibold">
+									About
+								</a>
+							</div>
+
 						</div>
 					</div>
 					<div class="flex w-full justify-end">
@@ -215,6 +230,34 @@
 											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
 											onmouseenter={() => activeMenu = 'custom'}>
 											Chart Definition
+										</a>
+									</li>
+								</ul>
+							</div>
+
+							<!-- About 섹션 -->
+							<div class="w-[200px] py-4 border-r border-slate-300">
+								<ul class="space-y-3">
+									<li>
+										<a href="/guide" 
+											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
+											onmouseenter={() => activeMenu = 'about'}>
+											Guide
+										</a>
+									</li>
+									<li>
+										<a href="https://kookmin-sw.github.io/capstone-2025-16/" 
+											target="_blank"
+											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
+											onmouseenter={() => activeMenu = 'about'}>
+											About Us
+										</a>
+									</li>
+									<li>
+										<a href="/support" 
+											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
+											onmouseenter={() => activeMenu = 'about'}>
+											Support
 										</a>
 									</li>
 								</ul>
