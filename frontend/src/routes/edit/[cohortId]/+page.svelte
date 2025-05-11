@@ -8,11 +8,11 @@
 	import CohortAIModal from './components/CohortAIModal.svelte';
 
 	// 연산자 컴포넌트 가져오기
-	import NumberOperator from './components/operators/NumberOperator.svelte';
-	import StringOperator from './components/operators/StringOperator.svelte';
-	import DateOperator from './components/operators/DateOperator.svelte';
-	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
-	import ConceptSelectorWrapper from './components/ConceptSelectorWrapper.svelte';
+	import NumberOperator from '$lib/components/operators/NumberOperator.svelte';
+	import StringOperator from '$lib/components/operators/StringOperator.svelte';
+	import DateOperator from '$lib/components/operators/DateOperator.svelte';
+	import IdentifierOperator from '$lib/components/operators/IdentifierOperator.svelte';
+	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
 	import ContainerHeader from './components/ContainerHeader.svelte';
 
 	const { data } = $props();
