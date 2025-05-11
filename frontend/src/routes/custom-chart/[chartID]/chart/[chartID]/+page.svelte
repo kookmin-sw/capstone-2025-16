@@ -942,7 +942,7 @@
 									<div
 										class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
 									>
-										<p class="text-gray-500">No filters added. Click "Add Data" to add a filter.</p>
+										<p class="text-gray-500">No data added. Click "Add Data" to add a data.</p>
 									</div>
 								{:else}
 									<div class="space-y-4">
