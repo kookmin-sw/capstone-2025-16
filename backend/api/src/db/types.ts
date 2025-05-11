@@ -127,6 +127,7 @@ export interface FeatureExtraction {
   concept_id: string;
   influence: number;
   execution_time: string;
+  avg_f1_score: number;
 }
 
 export interface ConditionEra {
