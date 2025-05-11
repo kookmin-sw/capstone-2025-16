@@ -4,6 +4,7 @@
 
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import ConceptSetModal from './components/ConceptSetModal.svelte';
 	import ChartTypeModal from './components/ChartTypeModal.svelte';
 
@@ -132,6 +133,13 @@
 
 	async function createChart() {
 
+
+		// concept sets 연결
+		groups.forEach(group => {
+			group.definition.conceptsets = conceptsets;
+		});
+
+		// 차트 생성
 		await fetch(`/api/statistics/${statistics_id}/chart`, {
 			method: 'POST',
 			body: JSON.stringify({
@@ -142,7 +150,9 @@
 				countBy: currentCountByValues
 			})
 		});
-		
+
+		// 차트 생성 후 페이지 이동
+		goto(`/custom-chart/${statistics_id}`);
 	}
 
 	// Types.ts 기반 도메인 타입
