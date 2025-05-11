@@ -570,72 +570,126 @@
 		}
 	}
 
-	// 범위값 추출 함수
-	function extractRangeValue(operatorObj, key) {
-		if (!operatorObj) return '';
-		return operatorObj[key] !== undefined ? operatorObj[key] : '';
-	}
+	// 연산자 타입 정의
+	type OperatorType = {
+		eq?: string | string[];
+		neq?: string | string[];
+		gt?: string | number;
+		gte?: string | number;
+		lt?: string | number;
+		lte?: string | number;
+		startsWith?: string;
+		endsWith?: string;
+		contains?: string;
+		[key: string]: string | string[] | number | undefined;
+	};
 
-	// JSON 변환 함수
-	function getCohortDefinitionJSON() {
-		return JSON.stringify(cohortDefinition, null, 2);
-	}
+	// 연산자 표시 설정
+	const operatorDisplayConfig = {
+		eq: { symbol: '=', label: 'Equal to' },
+		neq: { symbol: '≠', label: 'Not equal to' },
+		gt: { symbol: '>', label: 'Greater than' },
+		gte: { symbol: '≥', label: 'Greater than or equal to' },
+		lt: { symbol: '<', label: 'Less than' },
+		lte: { symbol: '≤', label: 'Less than or equal to' },
+		startsWith: { symbol: 'starts with', label: 'Starts with' },
+		endsWith: { symbol: 'ends with', label: 'Ends with' },
+		contains: { symbol: 'contains', label: 'Contains' }
+	};
 
 	// 속성값 표시 함수
 	function displayPropertyValue(value: any, type?: string): string {
 		if (value === null || value === undefined) return 'Not specified';
 
+		// Boolean 값 처리
 		if (typeof value === 'boolean') {
 			return value ? 'Yes' : 'No';
 		}
 
+		// 객체 처리 (Operator 타입)
 		if (typeof value === 'object') {
-			// Operator 객체인 경우 범위 표시
-			if (value.eq !== undefined) {
-				// 개념 ID인 경우 개념 이름으로 표시
-				if (type === 'concept' || type === 'conceptset') {
-					const conceptId = value.eq;
-					const concept = findConceptById(conceptId);
-					return concept ? `= ${concept.name}` : `= ${conceptId}`;
+			const parts: string[] = [];
+
+			// 범위 연산자 처리
+			const rangeOperators = ['gte', 'gt', 'lte', 'lt'];
+			const hasRangeStart = value.gte !== undefined || value.gt !== undefined;
+			const hasRangeEnd = value.lte !== undefined || value.lt !== undefined;
+
+			if (hasRangeStart || hasRangeEnd) {
+				if (hasRangeStart) {
+					const startOp = value.gte !== undefined ? 'gte' : 'gt';
+					parts.push(
+						`${operatorDisplayConfig[startOp].label} ${formatValue(value[startOp], type)}`
+					);
 				}
-				return `= ${value.eq}`;
+
+				if (hasRangeEnd) {
+					const endOp = value.lte !== undefined ? 'lte' : 'lt';
+					parts.push(`${operatorDisplayConfig[endOp].label} ${formatValue(value[endOp], type)}`);
+				}
 			}
 
-			if (value.neq !== undefined) {
-				// 개념 ID인 경우 개념 이름으로 표시
-				if (type === 'concept' || type === 'conceptset') {
-					const conceptId = value.neq;
-					const concept = findConceptById(conceptId);
-					return concept ? `≠ ${concept.name}` : `≠ ${conceptId}`;
+			// 문자열 연산자 처리
+			const stringOperators = ['startsWith', 'endsWith', 'contains'];
+			for (const op of stringOperators) {
+				if (value[op] !== undefined) {
+					parts.push(`${operatorDisplayConfig[op].label} "${value[op]}"`);
 				}
-				return `≠ ${value.neq}`;
 			}
 
-			let result = '';
-			if (value.gte !== undefined) result += `between ${value.gte}`;
-			if (value.gt !== undefined) result += `> ${value.gt}`;
-			if (
-				(value.gte !== undefined || value.gt !== undefined) &&
-				(value.lte !== undefined || value.lt !== undefined)
-			)
-				result += ' and ';
-			if (value.lte !== undefined) result += `${value.lte}`;
-			if (value.lt !== undefined) result += `< ${value.lt}`;
+			// 동등성 연산자 처리
+			const equalityOperators = ['eq', 'neq'];
+			for (const op of equalityOperators) {
+				if (value[op] !== undefined) {
+					const opValue = value[op];
+					if (Array.isArray(opValue)) {
+						// 다중 값 처리
+						const formattedValues = opValue.map((v) => formatValue(v, type));
+						parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+					} else {
+						// 단일 값 처리
+						parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+					}
+				}
+			}
 
-			// String Operator 객체인 경우
-			if (value.startsWith !== undefined) result += `Starts with ${value.startsWith}`;
-			if (value.endsWith !== undefined) result += `Ends with ${value.endsWith}`;
-			if (value.contains !== undefined) result += `Contains ${value.contains}`;
-
-			return result || JSON.stringify(value);
+			return parts.join('\n') || JSON.stringify(value);
 		}
 
-		// 개념 ID를 개념 이름으로 변환
+		// 단일 값 처리
+		return formatValue(value, type);
+	}
+
+	// 값 포맷팅 함수
+	function formatValue(value: any, type?: string): string {
+		// 개념 또는 개념 세트 타입 처리
 		if (type === 'concept' || type === 'conceptset') {
-			const concept = findConceptById(value);
-			return concept ? concept.name : value.toString();
+			if (Array.isArray(value)) {
+				// 다중 개념 ID 처리
+				return value
+					.map((id) => {
+						const concept = findConceptById(id);
+						return concept ? concept.name : id;
+					})
+					.join(', ');
+			} else {
+				// 단일 개념 ID 처리
+				const concept = findConceptById(value);
+				return concept ? concept.name : value.toString();
+			}
 		}
 
+		// 날짜 타입 처리
+		if (type === 'date') {
+			return new Date(value).toLocaleDateString();
+		}
+
+		// 숫자 타입 처리
+		if (typeof value === 'number') {
+			return value.toLocaleString();
+		}
+
+		// 기본 문자열 처리
 		return value.toString();
 	}
 
