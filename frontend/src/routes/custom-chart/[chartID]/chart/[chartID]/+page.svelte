@@ -112,7 +112,7 @@
 			}
 		}
 	]);
-	let conceptsets = $state([]);
+	let conceptsets = $state<ConceptSet[]>([]);
 	let chartType = $state('bar');
 	// Make sure these variables are defined in your state:
 	let countBy = $state<BoxPlotCountBy>({
@@ -122,21 +122,9 @@
 		value: undefined
 	});
 
-
-
 	// Function to update Count By values
 	function updateCountByValue(property, value) {
 		currentCountByValues[property] = value;
-	}
-
-
-
-
-	// Handle AI generated cohort
-	function handleCohortAISubmit(data: any) {
-		console.log('AI Cohort Data:', data);
-		// Here you would process the AI-generated cohort definition
-		// and update the cohortDefinition state
 	}
 
 	// Types.ts 기반 도메인 타입
@@ -453,9 +441,12 @@
 		currentFilterValues = {};
 		selectedDomainType = null;
 		editingFilterIndex = null;
+		editingDataIndex = null;
 		editingCountBy = false;
+		if (editingGroupIndex === null) {
+			editingGroupIndex = 0;
+		}
 	}
-
 
 	// Count By 설정 저장 함수
 	function saveCountBySettings() {
@@ -767,6 +758,15 @@
 				Manage
 			</button>
 		</div>
+		{#if conceptsets.length === 0}
+			<p class="mb-2 ml-2 text-xs italic text-gray-500">No concept sets defined</p>
+		{:else}
+			{#each conceptsets as conceptset}
+				<div class="mb-2 rounded-md bg-purple-50 px-2 py-1">
+					<p class="text-xs font-medium text-purple-700">{conceptset.name}</p>
+				</div>
+			{/each}
+		{/if}
 	</div>
 </div>
 
@@ -1242,7 +1242,7 @@
 				<h3 class="mb-2 text-xl font-bold text-gray-800">
 					Add Data to {groups[editingDataIndex].name}
 				</h3>
-			{:else}
+			{:else if editingFilterIndex !== null}
 				<h3 class="mb-3 text-xl font-bold text-gray-800">Add Filter</h3>
 				<p class="mb-4 text-sm text-gray-600">Select a domain type to add a filter.</p>
 			{/if}
@@ -1365,13 +1365,12 @@
 	on:save={handleChartTypeUpdate}
 />
 
-<!-- Concept Set Management Modal
 <ConceptSetModal
 	bind:show={showConceptSetModal}
-	conceptSets={cohortDefinition.conceptsets}
+	conceptSets={conceptsets}
 	on:update={handleConceptSetUpdate}
 	on:close={() => (showConceptSetModal = false)}
-/> -->
+/>
 
 <style>
 	@keyframes gradient-rotate {
