@@ -5,6 +5,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import ConceptSetModal from './components/ConceptSetModal.svelte';
+	import ChartTypeModal from './components/ChartTypeModal.svelte';
 
 	// 연산자 컴포넌트 가져오기
 	import NumberOperator from './components/operators/NumberOperator.svelte';
@@ -12,7 +13,6 @@
 	import DateOperator from './components/operators/DateOperator.svelte';
 	import IdentifierOperator from './components/operators/IdentifierOperator.svelte';
 	import ConceptSelectorWrapper from './components/ConceptSelectorWrapper.svelte';
-	import ContainerHeader from './components/ContainerHeader.svelte';
 
 	const { data } = $props();
 
@@ -86,6 +86,13 @@
 		conceptset?: IdentifierWithOperator;
 	}
 
+	interface BoxPlotCountBy {
+		concept?: Identifier;
+		age?: NumberWithOperator;
+		date?: DateWithOperator;
+		value?: NumberWithOperator;
+	}
+
 	let chartName = $state('Chart name');
 	let chartDescription = $state('Chart Description');
 
@@ -107,6 +114,13 @@
 	]);
 	let conceptsets = $state([]);
 	let chartType = $state('bar');
+	let countBy = $state<BoxPlotCountBy>({
+		concept: undefined,
+		age: undefined,
+		date: undefined,
+		value: undefined
+	});
+	
 
 	// Handle AI generated cohort
 	function handleCohortAISubmit(data: any) {
@@ -372,6 +386,7 @@
 
 	// 모달 관련 상태 변수
 	let showConceptSetModal = $state(false);
+	let showChartTypeModal = $state(false);
 
 	function onGroupNameChange(groupIndex, name) {
 		groups[groupIndex].name = name;
@@ -521,6 +536,12 @@
 	function handleConceptSetUpdate(event: { detail: { conceptSets: ConceptSet[] } }) {
 		const { conceptSets } = event.detail;
 		conceptsets = conceptSets;
+	}
+
+	// 차트 타입 업데이트 함수
+	function handleChartTypeUpdate(event: { detail: { chartType: string } }) {
+		const { chartType: newChartType } = event.detail;
+		chartType = newChartType;
 	}
 
 	// 컨셉셋 선택 함수
@@ -683,6 +704,31 @@
 		<p class="mb-2 ml-2 text-sm font-bold text-gray-700">
 			{chartType === 'bar' ? 'Bar Chart' : 'Box Plot'}
 		</p>
+		<div class="px-1">
+			<!-- Simple chart type visual indicator -->
+			{#if chartType === 'bar'}
+				<svg width="100%" height="30" viewBox="0 0 100 30" class="mx-auto opacity-70">
+					<rect x="10" y="5" width="10" height="20" fill="#4B96FF" />
+					<rect x="30" y="10" width="10" height="15" fill="#4B96FF" />
+					<rect x="50" y="8" width="10" height="17" fill="#4B96FF" />
+					<rect x="70" y="12" width="10" height="13" fill="#4B96FF" />
+				</svg>
+			{:else}
+				<svg width="100%" height="30" viewBox="0 0 100 30" class="mx-auto opacity-70">
+					<line x1="20" y1="5" x2="20" y2="25" stroke="#4B96FF" stroke-width="1" />
+					<rect x="15" y="10" width="10" height="10" fill="#E5EFFF" stroke="#4B96FF" />
+					<line x1="15" y1="15" x2="25" y2="15" stroke="#4B96FF" stroke-width="2" />
+					<line x1="10" y1="5" x2="30" y2="5" stroke="#4B96FF" stroke-width="1" />
+					<line x1="10" y1="25" x2="30" y2="25" stroke="#4B96FF" stroke-width="1" />
+
+					<line x1="60" y1="5" x2="60" y2="25" stroke="#4B96FF" stroke-width="1" />
+					<rect x="55" y="8" width="10" height="14" fill="#E5EFFF" stroke="#4B96FF" />
+					<line x1="55" y1="15" x2="65" y2="15" stroke="#4B96FF" stroke-width="2" />
+					<line x1="50" y1="5" x2="70" y2="5" stroke="#4B96FF" stroke-width="1" />
+					<line x1="50" y1="25" x2="70" y2="25" stroke="#4B96FF" stroke-width="1" />
+				</svg>
+			{/if}
+		</div>
 	</div>
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<div class="mb-3 flex items-center justify-between">
@@ -774,6 +820,16 @@
 					</div>
 				</div>
 			</div>
+			{#if chartType === 'boxplot'}
+				<div class="mb-6">
+					<div class="mb-4 flex items-center justify-between">
+						<h3 class="text-lg font-semibold text-gray-800">Count By (Y-axis)</h3>
+						<div>
+
+						</div>
+					</div>
+				</div>
+			{/if}
 
 			<!-- Initial Group Section -->
 			<div class="mb-6">
@@ -914,76 +970,79 @@
 									{/each}
 								</div>
 							{/if}
-							<div class="my-2 flex items-center space-x-4">
-								<p class="text-sm font-bold text-gray-700">Count</p>
-								<div class="flex items-center space-x-2">
-									<input
-										type="radio"
-										id="data-{containerIndex}"
-										value="data"
-										on:click={() => (group.definition.data = null)}
-										checked={group.definition.data !== undefined}
-									/>
-									<label for="data-{containerIndex}">number of data</label>
-									<input
-										type="radio"
-										id="patient-{containerIndex}"
-										value="patient"
-										on:click={() => (group.definition.data = undefined)}
-										checked={group.definition.data === undefined}
-									/>
-									<label for="patient-{containerIndex}">number of patients</label>
-								</div>
-							</div>
-							{#if group.definition.data !== undefined}
-								<p class="text-sm font-bold text-gray-700">Data</p>
 
-								{#if group.definition.data === null}
-									<div
-										class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
-									>
-										<p class="text-gray-500">No data added. Click "Add Data" to add a data.</p>
+							{#if chartType === 'bar'}
+								<div class="my-2 flex items-center space-x-4">
+									<p class="text-sm font-bold text-gray-700">Count</p>
+									<div class="flex items-center space-x-2">
+										<input
+											type="radio"
+											id="data-{containerIndex}"
+											value="data"
+											on:click={() => (group.definition.data = null)}
+											checked={group.definition.data !== undefined}
+										/>
+										<label for="data-{containerIndex}">number of data</label>
+										<input
+											type="radio"
+											id="patient-{containerIndex}"
+											value="patient"
+											on:click={() => (group.definition.data = undefined)}
+											checked={group.definition.data === undefined}
+										/>
+										<label for="patient-{containerIndex}">number of patients</label>
 									</div>
-								{:else}
-									<div class="space-y-4">
-										<div class="rounded border border-gray-200 bg-gray-50 p-3">
-											<div class="mb-2 flex items-center justify-between">
-												<h5 class="text-base font-medium text-gray-700">
-													{getDomainTypeName(group.definition.data.type)}
-												</h5>
-												<div class="flex space-x-2">
-													<button
-														class="text-xs text-blue-500 hover:text-blue-700"
-														on:click={() => editDataFilter(containerIndex)}
-													>
-														Edit
-													</button>
-													<button
-														class="text-xs text-red-500 hover:text-red-700"
-														on:click={() => removeDataFilter(containerIndex)}
-													>
-														Remove
-													</button>
+								</div>
+								{#if group.definition.data !== undefined}
+									<p class="text-sm font-bold text-gray-700">Data</p>
+
+									{#if group.definition.data === null}
+										<div
+											class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
+										>
+											<p class="text-gray-500">No data added. Click "Add Data" to add a data.</p>
+										</div>
+									{:else}
+										<div class="space-y-4">
+											<div class="rounded border border-gray-200 bg-gray-50 p-3">
+												<div class="mb-2 flex items-center justify-between">
+													<h5 class="text-base font-medium text-gray-700">
+														{getDomainTypeName(group.definition.data.type)}
+													</h5>
+													<div class="flex space-x-2">
+														<button
+															class="text-xs text-blue-500 hover:text-blue-700"
+															on:click={() => editDataFilter(containerIndex)}
+														>
+															Edit
+														</button>
+														<button
+															class="text-xs text-red-500 hover:text-red-700"
+															on:click={() => removeDataFilter(containerIndex)}
+														>
+															Remove
+														</button>
+													</div>
+												</div>
+
+												<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2">
+													{#each Object.entries(group.definition.data).filter(([key]) => key !== 'type') as [property, value]}
+														<div>
+															<span class="font-medium">{property}:</span>
+															{displayPropertyValue(
+																value,
+																property === 'gender' ||
+																	property === 'raceType' ||
+																	property === 'ethnicityType'
+																	? 'concept'
+																	: undefined
+															)}
+														</div>
+													{/each}
 												</div>
 											</div>
-
-											<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2">
-												{#each Object.entries(group.definition.data).filter(([key]) => key !== 'type') as [property, value]}
-													<div>
-														<span class="font-medium">{property}:</span>
-														{displayPropertyValue(
-															value,
-															property === 'gender' ||
-																property === 'raceType' ||
-																property === 'ethnicityType'
-																? 'concept'
-																: undefined
-														)}
-													</div>
-												{/each}
-											</div>
 										</div>
-									</div>
+									{/if}
 								{/if}
 							{/if}
 						</div>
@@ -1144,6 +1203,13 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Chart Type Selection Modal -->
+<ChartTypeModal
+	bind:show={showChartTypeModal}
+	bind:selectedChartType={chartType}
+	on:save={handleChartTypeUpdate}
+/>
 
 <!-- Concept Set Management Modal
 <ConceptSetModal
