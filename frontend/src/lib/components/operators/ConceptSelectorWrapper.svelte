@@ -3,7 +3,7 @@
   in the main page template, and is designed to act as a drop-in replacement for IdentifierOperator
 -->
 <script>
-  import ConceptSelector from './operators/ConceptSelector.svelte';
+  import ConceptSelector from './ConceptSelector.svelte';
 
   // Set up props to match IdentifierOperator's API for easy substitution
   export let value = {};
