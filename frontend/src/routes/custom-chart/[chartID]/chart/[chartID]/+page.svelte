@@ -389,7 +389,6 @@
 	// 컨테이너 드래그 앤 드롭 관련 변수
 	let draggedContainerIndex = $state(null);
 	let hoveredContainerIndex = $state(null);
-	let draggedGroupType = $state(null);
 
 	// 모달 관련 상태 변수
 	let showConceptSetModal = $state(false);
