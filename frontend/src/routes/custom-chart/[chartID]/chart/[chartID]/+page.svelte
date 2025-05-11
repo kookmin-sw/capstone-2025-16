@@ -114,13 +114,23 @@
 	]);
 	let conceptsets = $state([]);
 	let chartType = $state('bar');
+	// Make sure these variables are defined in your state:
 	let countBy = $state<BoxPlotCountBy>({
 		concept: undefined,
 		age: undefined,
 		date: undefined,
 		value: undefined
 	});
-	
+
+
+
+	// Function to update Count By values
+	function updateCountByValue(property, value) {
+		currentCountByValues[property] = value;
+	}
+
+
+
 
 	// Handle AI generated cohort
 	function handleCohortAISubmit(data: any) {
@@ -375,9 +385,18 @@
 	let editingFilterIndex = $state<number | null>(null); // 편집할 필터 인덱스
 	let editingGroupIndex = $state<number | null>(0); // 편집할 그룹 인덱스
 	let editingDataIndex = $state<number | null>(0); // 편집할 데이터 인덱스
+	let editingCountBy = $state<boolean>(false); // Count By 편집 모드
 
 	// 현재 편집중인 필터 속성 값
 	let currentFilterValues = $state<FilterValues>({});
+
+	// 현재 편집중인 Count By 속성 값
+	let currentCountByValues = $state<BoxPlotCountBy>({
+		concept: undefined,
+		age: undefined,
+		date: undefined,
+		value: undefined
+	});
 
 	// 컨테이너 드래그 앤 드롭 관련 변수
 	let draggedContainerIndex = $state(null);
@@ -434,6 +453,14 @@
 		currentFilterValues = {};
 		selectedDomainType = null;
 		editingFilterIndex = null;
+		editingCountBy = false;
+	}
+
+
+	// Count By 설정 저장 함수
+	function saveCountBySettings() {
+		countBy = { ...currentCountByValues };
+		resetFilterValues();
 	}
 
 	// 필터 생성 함수 - Filter 타입에 맞게 설정
@@ -825,9 +852,71 @@
 					<div class="mb-4 flex items-center justify-between">
 						<h3 class="text-lg font-semibold text-gray-800">Count By (Y-axis)</h3>
 						<div>
-
+							<button
+								on:click={() => {
+									editingGroupIndex = null;
+									editingDataIndex = null;
+									editingCountBy = true;
+									selectedDomainType = null;
+								}}
+								class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+							>
+								Add Count By
+							</button>
 						</div>
 					</div>
+
+					{#if countBy.concept || countBy.age || countBy.date || countBy.value}
+						<div class="rounded border border-gray-200 bg-gray-50 p-3">
+							<div class="mb-2 flex items-center justify-between">
+								<h5 class="text-base font-medium text-gray-700">Count By Settings</h5>
+								<div class="flex space-x-2">
+									<button
+										class="text-xs text-blue-500 hover:text-blue-700"
+										on:click={() => {
+											editingGroupIndex = null;
+											editingDataIndex = null;
+											editingCountBy = true;
+											selectedDomainType = null;
+											currentCountByValues = { ...countBy };
+										}}
+									>
+										Edit
+									</button>
+									<button
+										class="text-xs text-red-500 hover:text-red-700"
+										on:click={() => {
+											countBy = {
+												concept: undefined,
+												age: undefined,
+												date: undefined,
+												value: undefined
+											};
+										}}
+									>
+										Remove
+									</button>
+								</div>
+							</div>
+
+							<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2">
+								{#each Object.entries(countBy).filter(([key, value]) => value !== undefined) as [property, value]}
+									<div>
+										<span class="font-medium">{property}:</span>
+										{displayPropertyValue(value, property === 'concept' ? 'concept' : undefined)}
+									</div>
+								{/each}
+							</div>
+						</div>
+					{:else}
+						<div
+							class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
+						>
+							<p class="text-gray-500">
+								No Count By settings added. Click "Add Count By" to configure.
+							</p>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
@@ -1077,7 +1166,72 @@
 <div
 	class="fixed right-0 top-[60px] h-[calc(100vh-60px)] w-[400px] overflow-y-auto border-l border-gray-300 bg-gray-50 p-5"
 >
-	{#if selectedDomainType === null}
+	{#if editingCountBy}
+		<div class="mb-4">
+			<div class="flex items-center justify-between">
+				<h3 class="text-xl font-bold text-gray-800">Count By Settings</h3>
+				<button
+					class="text-sm text-gray-500 hover:text-gray-700"
+					on:click={() => {
+						editingCountBy = false;
+					}}
+				>
+					Cancel
+				</button>
+			</div>
+			<p class="mb-4 text-sm text-gray-600">Configure Count By parameters for the Y-axis.</p>
+		</div>
+
+		<div class="mb-6 space-y-4">
+			<!-- Concept Setting -->
+			<div class="mb-3">
+				<label class="mb-1 block text-sm font-medium text-gray-700">Concept</label>
+				<ConceptSelectorWrapper
+					value={currentCountByValues.concept || {}}
+					placeholder="Select concept"
+					on:change={(e) => updateCountByValue('concept', e.detail)}
+				/>
+			</div>
+
+			<!-- Age Setting -->
+			<div class="mb-3">
+				<label class="mb-1 block text-sm font-medium text-gray-700">Age</label>
+				<NumberOperator
+					value={currentCountByValues.age || {}}
+					placeholder="Enter age"
+					on:change={(e) => updateCountByValue('age', e.detail)}
+				/>
+			</div>
+
+			<!-- Date Setting -->
+			<div class="mb-3">
+				<label class="mb-1 block text-sm font-medium text-gray-700">Date</label>
+				<DateOperator
+					value={currentCountByValues.date || {}}
+					on:change={(e) => updateCountByValue('date', e.detail)}
+				/>
+			</div>
+
+			<!-- Value Setting -->
+			<div class="mb-3">
+				<label class="mb-1 block text-sm font-medium text-gray-700">Value</label>
+				<NumberOperator
+					value={currentCountByValues.value || {}}
+					placeholder="Enter value"
+					on:change={(e) => updateCountByValue('value', e.detail)}
+				/>
+			</div>
+		</div>
+
+		<div class="mt-6 flex justify-end">
+			<button
+				class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+				on:click={saveCountBySettings}
+			>
+				Save Count By Settings
+			</button>
+		</div>
+	{:else if selectedDomainType === null}
 		<div class="mb-4">
 			<!-- Display context info based on the current editing state -->
 			{#if editingGroupIndex !== null}
