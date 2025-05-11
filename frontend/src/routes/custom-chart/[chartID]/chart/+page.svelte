@@ -16,6 +16,9 @@
 
 	const { data } = $props();
 
+	const { statistics_id } = data;
+	console.log(statistics_id);
+
 	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
 	interface Operator<T> {
 		neq?: T | T[];
@@ -125,6 +128,21 @@
 	// Function to update Count By values
 	function updateCountByValue(property, value) {
 		currentCountByValues[property] = value;
+	}
+
+	async function createChart() {
+
+		await fetch(`/api/statistics/${statistics_id}/chart`, {
+			method: 'POST',
+			body: JSON.stringify({
+				name: chartName,
+				description: chartDescription,
+				type: chartType,
+				groups: groups,
+				countBy: currentCountByValues
+			})
+		});
+		
 	}
 
 	// Types.ts 기반 도메인 타입
@@ -392,7 +410,7 @@
 
 	// 모달 관련 상태 변수
 	let showConceptSetModal = $state(false);
-	let showChartTypeModal = $state(false);
+	let showChartTypeModal = $state(true);
 
 	function onGroupNameChange(groupIndex, name) {
 		groups[groupIndex].name = name;
@@ -1194,6 +1212,7 @@
 
 			<div class="flex justify-center p-12">
 				<button
+					on:click={createChart}
 					class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:before:opacity-10 active:scale-95"
 				>
 					<span class="relative z-10 flex items-center justify-center gap-2">
@@ -1209,7 +1228,7 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-						Update Cohort
+						Create New Chart
 					</span>
 				</button>
 			</div>
