@@ -3,6 +3,7 @@ import { getBaseDB } from '../query-builder/base';
 import {
   ConceptResponseDto,
   ConceptSearchResponseDto,
+  DomainType,
 } from './dto/concept.dto';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class ConceptService {
     query?: string,
     page: number = 0,
     limit: number = 100,
+    domain?: DomainType,
   ): Promise<ConceptSearchResponseDto> {
     const offset = page * limit;
 
@@ -23,6 +25,10 @@ export class ConceptService {
         'vocabulary_id',
         'domain_id',
       ]);
+
+    if (domain) {
+      conceptQuery = conceptQuery.where('domain_id', '=', domain);
+    }
 
     query = query?.trim() || '';
 
