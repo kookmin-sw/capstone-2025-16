@@ -53,6 +53,7 @@
 				res.json();
 			})
 			.then((data) => {
+				console.log(data);
 				checkedCohortText = data;
 				generationStep = 'generated';
 				isLoading = false;
@@ -200,14 +201,8 @@
 				{:else if generationStep === 'preview'}
 					<!-- Editable Summary View -->
 					<div class="mb-6 h-full">
-						<h3 class="mb-2 font-semibold text-gray-800">생성된 코호트 구조</h3>
-						<textarea
-							value={JSON.stringify(generatedCohort, null, 2)}
-							disabled
-							class="h-full w-full rounded-md border border-gray-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-						></textarea>
-						<!-- Action Buttons -->
-						<div class="mt-6 flex justify-end space-x-4">
+						<div class="flex justify-between">
+							<h3 class="mb-2 font-semibold text-gray-800">생성된 코호트 구조</h3>
 							<button
 								class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
 								on:click={applyCohort}
@@ -215,6 +210,12 @@
 								적용하기
 							</button>
 						</div>
+						<textarea
+							value={JSON.stringify(generatedCohort, null, 2)}
+							disabled
+							class="h-full w-full rounded-md border border-gray-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+						></textarea>
+						<!-- Action Buttons -->
 					</div>
 				{:else if generationStep === 'checking'}
 					<!-- Editable Summary View -->
