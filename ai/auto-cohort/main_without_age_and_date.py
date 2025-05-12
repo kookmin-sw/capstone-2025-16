@@ -117,6 +117,20 @@ Strict requirements:
    - [CRITICAL] ANY text that describes what you're doing or why
    - [CRITICAL] ANY age-related conditions
    - [CRITICAL] ANY time-related phrases (but keep the medical conditions)
+
+10. [CRITICAL] ICD Code Processing:
+    - When ICD code is included (e.g., I50.0, E11.9):
+      * Convert ICD code to its corresponding medical term
+      * Examples:
+        - "I50.0 Congestive heart failure" → "Congestive heart failure"
+        - "I50.9 Heart failure, unspecified" → "Heart failure, unspecified"
+        - "I50.1 Left ventricular failure" → "Left ventricular failure"
+      * When only code is present (e.g., "I50.0"):
+        - Convert to corresponding medical term
+        - Example: "I50.0" → "Congestive heart failure"
+    - For non-ICD codes:
+      * Apply existing refinement logic
+      * Perform medical term expansion and standardization
 """
 JSON_OUTPUT_EXAMPLE = """
 다음은 주어진 임상시험 텍스트를 바탕으로 OMOP CDM 규격에 맞게 구성된 최종 JSON 예시입니다:
@@ -386,44 +400,34 @@ def main():
     # print("\n[Implementable Criteria 부분만]:")
     # print(implementable_text)
 
-    # implementable_text = """
-    # Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
-    # external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
-    # 2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
-    # diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
-    # stay duration of less than 24 h.
+    implementable_text = """
+    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    stay duration of less than 24 h.
     # """
     
-    implementable_text = """
-    Patients became eligible when they were first docu-
-    mented to be receiving oxygen with inspired oxygen
-    fraction (FiO2) of 0.4 or more via non-rebreather mask,
-    noninvasive positive pressure ventilation (NIV), or high-
-    flow nasal cannula (HFNC), within 24 h of ICU admis-
-    sion. We excluded patients with prior invasive ventilation
-    during the same ICU admission, goals of care precluding
-    invasive ventilation, ICU admission from the operating
-    room, or a tracheostomy. Patients were also excluded
-    when equipoise was less certain at the moment of eli-
-    gibility, defined as a Glasgow Coma Scale (GCS) motor
-    component of less than 4, or a partial pressure of carbon
-    dioxide (pCO2) of 60 or more with pH of 7.20 or less [33].
-    Patients were not excluded if these characteristics devel-
-    oped during the follow-up period, after initial inclusion.
-    Wherever oxygen flow was available but FiO2 was not
-    (for example, non-rebreather masks), FiO2 was estimated
-    using the validated equation: FiO2
-    =
-    0.21 + (oxygen flow
-    in liters per minute)*0.03 [34]. Further details are avail-
-    able in Additional file 1: (§4, Table e2).
-    """
-    
+    # implementable_text = """
+    # This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
+    # to 2019. Patients with severe chronic kidney disease
+    # (CKD), defined as CKD stage ≥ 4 or estimated glomerular
+    # filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
+    # undergoing long-term dialysis treatment were excluded.
+    # """
+
+
+    # implementable_text = """
+    # We conducted this retrospective cohort study based on a US publicdatabase: Medical Information Mart for Intensive Care IV (MIMIC-IV)Database.
+    # 11–13 All sepsis patients with sepsis 3.0 criteria were in-cluded.14 Exclusion criteria were as follows: (1) Without records ofFBG and TG in 24 h after admission; (2) Age less than 18-year-old;
+    # (3) Diabetes and patients with antidiabetic treatment (insulin or oralantidiabetics); (4) Died within 48 h after admission; (5) Patients withacute pancreatitis; (6) Patients with dyslipidemia and patients withreceiving lipid-lowering drugs.
+    # """
+
     # 2. 텍스트에서 COHORT JSON 추출
     cohort_json = text_to_json(implementable_text)
 
     # 4. JSON 파일로 저장
-    output_file = os.path.join(current_dir, "cohort_criteria_sample.json")
+    output_file = os.path.join(current_dir, "cohort_criteria_sample_2.json")
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(cohort_json, f, indent=4, ensure_ascii=False)
     print(f"\nCohort definition saved to: {output_file}")
