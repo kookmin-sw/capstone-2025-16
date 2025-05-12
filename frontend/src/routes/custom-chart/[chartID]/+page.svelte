@@ -1,97 +1,21 @@
 <script>
     import { goto } from "$app/navigation";
-    import { tick } from 'svelte';
+    import { onMount, tick } from 'svelte';
+    import { page } from "$app/stores";
     import { slide } from 'svelte/transition';
     import GroupedBarChart from '$lib/components/Charts/GroupedBarChart/GroupedBarChart.svelte';
     import { dndzone } from 'svelte-dnd-action';
     import ChartCard from "$lib/components/ChartCard.svelte";
+    import LoadingComponent from "$lib/components/LoadingComponent.svelte";
+	import { utcDay } from "d3";
 
-    const targetSetData = {
-        id: "10001",
-        name: "Custom Target Set 1",
-        description: "Description for Custom Chart Set",
-        author : {
-            name: "Dr. Kim",
-            department: "Lab 1"
-        },
-        createdAt: "2024/01/10 10:00",
-        targetID: ["100001", "100002", "100003"],
-        targetName: ["Cohort 1", "Cohort 2", "Cohort 3"]
-    }
+    let isLoading = true;
+    let chartID = $page.params.chartID;
 
-    let customChartData = [
-        {
-            id: "20001",
-            name: "Custom Target 1",
-            description: "Description for Custom Chart 1",
-            author : {
-                name: "Dr. Kim",
-                department: "Lab 2"
-            },
-            createdAt: "2024/01/10 10:00",
-            chartType: "Bar Chart",
-            chartData : [
-                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 1', target: 'Cohort 4', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 4', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 4', value: 6000000 },
-            ]
-        },
-        {
-            id: "20002",
-            name: "Custom Target 2",
-            description: "Description for Custom Chart 2",
-            author : {
-                name: "Dr. Kim",
-                department: "Endocrinology"
-            },
-            createdAt: "2024/01/10 10:00",
-            chartType: "Bar Chart",
-            chartData: [
-                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
-            ]
-        },
-        {
-            id: "20003",
-            name: "Custom Target 3",
-            description: "Description for Custom Chart 3",
-            author : {
-                name: "Dr. Kim",
-                department: "Endocrinology"
-            },
-            createdAt: "2024/01/10 10:00",
-            chartType: "Bar Chart",
-            chartData: [
-                { group: 'Group 1', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 1', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 1', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 2', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 2', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 2', target: 'Cohort 3', value: 6000000 },
-                { group: 'Group 3', target: 'Cohort 1', value: 5000000 },
-                { group: 'Group 3', target: 'Cohort 2', value: 7000000 },
-                { group: 'Group 3', target: 'Cohort 3', value: 6000000 },
-            ]
-        },
-    ]
-
-    let expandedStates = targetSetData.targetID.map(() => false);
+    let cumtomInfo = [];
+    let targetSetData = [];
+    let customChartData = [];
+    let expandedStates = [];
 
     function handleDnd({ detail }) {
         customChartData = detail.items;
@@ -102,8 +26,49 @@
         expandedStates[index] = !expandedStates[index];
         expandedStates = [...expandedStates];
     }
+    
+    onMount(async() => {
+        try{
+            const res = await fetch(`/api/custominfo/${chartID}`);
+            if (!res.ok) {
+                throw new Error("Failed to fetch data");
+            }
+            const data = await res.json();
+            cumtomInfo = data;
+            const targetID = data.cohort_ids.split(',');
+            const result = await Promise.all(
+                targetID.map(async(element) => {
+                    const res2 = await fetch(`/api/cohortinfo/${element}`);
+                    if (!res2.ok) {
+                        throw new Error("Failed to fetch data");
+                    }
+                    return res2.json();
+                })
+            );
+
+            const res3 = await fetch(`/api/customchart/${chartID}`);
+            if (!res3.ok) {
+                throw new Error("Failed to fetch data");
+            }
+            const data3 = await res3.json();
+            
+            customChartData= data3.charts.map((chart) => ({
+                ...chart,
+                id:chart.chart_id
+            }));
+            targetSetData = result;
+            expandedStates = targetID.map(() => false)
+        } catch(error) {
+            console.error("Error loading data:", error);
+        } finally {
+            isLoading = false;
+        }
+    });
 </script>
 
+{#if isLoading}
+    <LoadingComponent />
+{:else}
 <div class="px-10">
     <div class="w-full h-[200px] border rounded-lg overflow-hidden mb-3 mt-3 flex">
         <!-- 좌측: Custom Target 영역 -->
@@ -113,17 +78,17 @@
             </div>
             
             <div class="p-4 overflow-y-auto flex flex-col gap-2">
-                {#each targetSetData.targetID as id, index}
+                {#each targetSetData as id, index}
                     <button 
                         class="w-full flex items-center justify-between px-3 py-2 bg-white rounded-lg border hover:bg-blue-50 transition-colors group"
-                        onclick={() => goto(`/cohort/${id}`)}
+                        onclick={() => goto(`/cohort/${id.cohort_id}`)}
                     >
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-1">
-                                <span class="text-[10px] font-medium text-gray-400 truncate">{id}</span>
+                                <span class="text-[10px] font-medium text-gray-400 truncate">{id.cohort_id}</span>
                             </div>
                             <div class="flex items-center gap-1">
-                                <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{targetSetData.targetName[index]}</div>
+                                <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{id.name}</div>
                             </div>
                         </div>
                         <div class="flex items-center text-gray-400 group-hover:text-blue-600">
@@ -140,7 +105,7 @@
                 <div class="flex items-center gap-4">
                     <div class="font-medium">
                         <span class="text-sm text-gray-400">ID</span>
-                        <span class="text-sm text-black-500">{targetSetData.id}</span>
+                        <span class="text-sm text-black-500">{cumtomInfo.statistics_id}</span>
                     </div>
                     <div class="text-blue-600 font-medium">Custom Target Set 1</div>
                 </div>
@@ -150,15 +115,15 @@
                 <div class="grid grid-cols-3 gap-4 text-sm">
                     <div>
                         <p class="text-gray-500">Author</p>
-                        <p class="font-medium">{targetSetData.author.name}</p>
+                        <p class="font-medium">{cumtomInfo.author}</p>
                     </div>
                     <div>
                         <p class="text-gray-500">Created at</p>
-                        <p class="font-medium">{new Date(targetSetData.createdAt).toLocaleString()}</p>
+                        <p class="font-medium">{new Date(cumtomInfo.created_at).toLocaleString()}</p>
                     </div>
                     <div class="col-span-3">
                         <p class="text-gray-500">Description</p>
-                        <p class="font-medium">{targetSetData.description}</p>
+                        <p class="font-medium">{cumtomInfo.description}</p>
                     </div>
                 </div>
             </div>
@@ -189,7 +154,7 @@
                 onfinalize={handleDnd}
                 class="space-y-2 py-4 px-10"
                 >
-    {#each customChartData as chart, index (chart.id)}
+    {#each customChartData as chart, index (chart.chart_id)}
         <div class="border rounded-lg overflow-hidden bg-white">
             <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
@@ -206,7 +171,7 @@
                     </svg>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-1">
-                        <span class="text-xs font-medium text-gray-400 truncate">{chart.id}</span>
+                            <span class="text-xs font-medium text-gray-400 truncate">{chart.statistics_id}</span>
                         </div>
                         <div class="flex items-center gap-1">
                             <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
@@ -243,11 +208,11 @@
                 <div class="space-y-1">
                     <div>
                         <span class="text-gray-500">Author:</span>
-                        <span class="font-regular">{chart.author.name} ({chart.author.department})</span>
+                        <span class="font-regular">{chart.author}</span>
                     </div>
                     <div>
                         <span class="text-gray-500">Created at:</span>
-                        <span class="font-regular">{chart.createdAt}</span>
+                        <span class="font-regular">{chart.created_at}</span>
                     </div>
                     <div>
                         <span class="text-gray-500">Description:</span>
@@ -255,7 +220,7 @@
                     </div>
                     <div>
                         <span class="text-gray-500">Chart Type:</span>
-                        <span class="font-regular">{chart.chartType}</span>
+                        <span class="font-regular">{chart.type}</span>
                     </div>
                 </div>
                 <!-- 차트 및 설명 영역 추가 -->
@@ -265,7 +230,7 @@
                         hasXButton = {false}
                     >
                         <div class="w-full h-full flex items-center justify-center">
-                            <GroupedBarChart data={customChartData[index].chartData} />
+                            <GroupedBarChart data={chart.result} />
                         </div>
                     </ChartCard>
                 </div>
@@ -277,3 +242,4 @@
         </div>
     {/each}
 </div>
+{/if}
