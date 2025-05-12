@@ -142,7 +142,6 @@
               bind:value={searchInput}
               on:keydown={event => {
                 if (event.key === 'Enter') {
-                  console.log('Enter key pressed');
                   handleSearch();
                 }
               }}
