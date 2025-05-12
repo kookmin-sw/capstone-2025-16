@@ -319,9 +319,15 @@ def extract_terms_from_text(text: str) -> dict:
                 text=text
             )}
         ],
-        temperature=0.0
+        temperature=0.0,
+        stream=True
     )
-    llm_response = response.choices[0].message.content
+    
+    llm_response = ""
+    for chunk in response:
+        delta = chunk.choices[0].delta
+        if delta.content is not None:
+            llm_response += delta.content
     
     # print("\n[LLM 응답 원본]:")
     # print(llm_response)
