@@ -253,13 +253,6 @@
 											About Us
 										</a>
 									</li>
-									<li>
-										<a href="/support" 
-											class="block text-sm text-slate-600 hover:text-blue-600 transition-colors px-6"
-											onmouseenter={() => activeMenu = 'about'}>
-											Support
-										</a>
-									</li>
 								</ul>
 							</div>
 						</div>
