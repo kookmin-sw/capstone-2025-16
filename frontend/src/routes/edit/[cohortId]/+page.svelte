@@ -139,6 +139,7 @@
 	// Handle AI generated cohort
 	function handleCohortAISubmit(data: any) {
 		console.log('AI Cohort Data:', data);
+		cohortDefinition = data;
 		// Here you would process the AI-generated cohort definition
 		// and update the cohortDefinition state
 	}
