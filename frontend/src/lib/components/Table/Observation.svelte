@@ -17,7 +17,7 @@
       <tbody>
         {#each observation as obs}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{obs.observation_concept_id}</td>
+            <td class="px-4 py-2 border-b">{obs.concept_name}</td>
             <td class="px-4 py-2 border-b">{obs.observation_date}</td>
             <td class="px-4 py-2 border-b">
               <span class="font-medium">{obs.value_as_string} {(String.toString(obs.unit_source_value) === "N/A") ? obs.unit_source_value : "" }</span>

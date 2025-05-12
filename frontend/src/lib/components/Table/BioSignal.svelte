@@ -11,7 +11,7 @@
 	{#if bioSignal && bioSignal.length > 0}
 		{#each bioSignal as signal, i}
 			<div class="bio-signal-row">
-				<span class="text-sm"><strong>Date:</strong> {signal.bio_signal_date}</span>
+				<span class="text-sm"><strong>Date:</strong> {signal.concept_name}</span>
 				<span class="divider">|</span>
 				<span class="text-sm"><strong>Concept ID:</strong> {signal.bio_signal_concept_id}</span>
 				<span class="divider">|</span>

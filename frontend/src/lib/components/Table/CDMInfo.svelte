@@ -13,8 +13,8 @@
       <span class="info"><strong>Concept ID:</strong> {visitOccurrence.concept_name}</span>
     </div>
     <div class="care-info">
-      <span class="info"><strong>Care Site:</strong> {careSite?.care_site_name}</span>
-      <span class="info"><strong>Address:</strong> {location?.address_1}, {location?.address_2} / {location?.zip}</span>
+      <span class="info"><strong>Care Site:</strong> {careSite?.care_site_name ? careSite?.care_site_name : "No data"}</span>
+      <span class="info"><strong>Address:</strong> {location ? `${location?.address_1}, ${location?.address_2} / ${location?.zip}` : "No data"}</span>
     </div>
   </div>
 </div>
