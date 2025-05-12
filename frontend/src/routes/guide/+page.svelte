@@ -1,5 +1,6 @@
 <script>
   import { onMount, tick } from 'svelte';
+  import { slide } from 'svelte/transition';
 
   const categories = [
     {
@@ -125,7 +126,6 @@
   let selectedSub = null;
   let openGuideIndexes = new Set();
   
-
   // 단계별 상세 토글 상태 (가이드별로 따로 관리)
   let openStepIndexesMap = new Map();
 
@@ -178,9 +178,9 @@
 
 </script>
 
-<div class="flex min-h-screen bg-gray-50 flex-col md:flex-row">
+<div class="flex h-screen bg-gray-50 flex-col md:flex-row">
   <!-- 좌측 네비게이션 -->
-  <aside class="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-gray-200 p-4 md:pt-8 md:pl-6 flex flex-row md:flex-col items-start md:items-stretch gap-8 md:gap-0">
+  <aside class="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-gray-200 p-4 md:pt-8 md:pl-6 flex flex-row md:flex-col items-start md:items-stretch gap-8 md:gap-0 overflow-y-auto h-full">
     <nav class="w-full">      
       <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
         Guide
@@ -210,10 +210,14 @@
                                 class="text-gray-700 text-sm px-2 py-1 w-full text-left hover:bg-blue-50 rounded"
                                 on:click={() => {
                                   const el = document.getElementById(`guide-${gIdx}`);
-                                  if (el) {
-                                    const yOffset = - 80;
-                                    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                                    window.scrollTo({ top: y, behavior: 'smooth'});
+                                  const container = document.getElementById('guide-scroll-area');
+
+                                  if (el && container) {
+                                    const yOffset = -80;
+                                    const containerTop = container.getBoundingClientRect().top;
+                                    const elementTop = el.getBoundingClientRect().top;
+                                    const scrollY = elementTop - containerTop + container.scrollTop + yOffset;
+                                    container.scrollTo({ top: scrollY, behavior: 'smooth' });
                                   }
                                 }}
                               >
@@ -244,12 +248,12 @@
     </nav>
   </aside>
   <!-- 우측 상세: 카테고리별 전체 가이드/매뉴얼 페이지 -->
-  <main class="flex-1 p-4 md:p-12 flex flex-col overflow-y-auto">
+  <main id="guide-container" class="flex-1 p-4 md:p-12 flex flex-col overflow-y-auto h-full">
     {#if selectedSub}
       <header class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900 mb-2">{selectedSub.name ?? categories[selectedCategoryIdx].name}</h1>
       </header>
-      <section class="flex-1 space-y-15 overflow-y-auto">
+      <section id="guide-scroll-area" class="flex-1 space-y-15 overflow-y-auto">
         {#each selectedSub.guides as guide, gIdx}
           <div class="mb-8" id={"guide-" + gIdx}>
             <button class="text-xl font-semibold text-blue-700 mb-3 flex items-center justify-between w-full text-left cursor-pointer" transition:slide
