@@ -11,7 +11,7 @@
     import BarChartWrapper from "$lib/components/Charts/BarChart/BarChartWrapper.svelte"
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
     import Footer from '$lib/components/Footer.svelte';
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount, onDestroy, tick } from 'svelte';
     import { page } from '$app/stores';
     import LoadingComponent from "$lib/components/LoadingComponent.svelte";
 
