@@ -477,7 +477,7 @@
     <LoadingComponent message={message}/>
 {:else}
 <header class="py-4 bg-white border-b w-full">
-    <div class="flex justify-between py-2">
+    <div class="flex justify-between items-center py-2">
         
         <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
             <a href="/cohort/{cohortIdFromUrl}" aria-label="go back">
@@ -497,7 +497,7 @@
             <!-- <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}.{personTable.info.month_of_birth}.{personTable.info.day_of_birth}</span> -->
             <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}</span>
         </div>
-        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
+        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 mr-2">
             <button 
                 class="px-2 py-0.5 text-xs rounded-full transition-colors
                     {!isStatisticsView ? 
