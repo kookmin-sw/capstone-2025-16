@@ -205,26 +205,28 @@
                       {#if openSubIndexes.get(cIdx)?.has(sIdx)}
                         <ul class="ml-4 mt-1 max-h-60 overflow-y-auto pr-1">
                           {#each sub.guides as guide, gIdx}
-                            <li>
-                              <button
-                                class="text-gray-700 text-sm px-2 py-1 w-full text-left hover:bg-blue-50 rounded"
-                                on:click={() => {
-                                  const el = document.getElementById(`guide-${gIdx}`);
-                                  const container = document.getElementById('guide-scroll-area');
+                            <button
+                              class="text-gray-700 text-sm px-2 py-1 w-full text-left hover:bg-blue-50 rounded"
+                              on:click={async () => {
+                                selectedSub = sub;
+                                await tick();
 
-                                  if (el && container) {
-                                    const yOffset = -80;
-                                    const containerTop = container.getBoundingClientRect().top;
-                                    const elementTop = el.getBoundingClientRect().top;
-                                    const scrollY = elementTop - containerTop + container.scrollTop + yOffset;
-                                    container.scrollTo({ top: scrollY, behavior: 'smooth' });
-                                  }
-                                }}
-                              >
-                                {guide.title}
-                              </button>
-                            </li>
+                                const el = document.getElementById(`guide-${gIdx}`);
+                                const container = document.getElementById('guide-scroll-area');
+
+                                if (el && container) {
+                                  const yOffset = -80;
+                                  const containerTop = container.getBoundingClientRect().top;
+                                  const elementTop = el.getBoundingClientRect().top;
+                                  const scrollY = elementTop - containerTop + container.scrollTop + yOffset;
+                                  container.scrollTo({ top: scrollY, behavior: 'smooth' });
+                                }
+                              }}
+                            >
+                              {guide.title}
+                            </button>
                           {/each}
+
                         </ul>
                       {/if}
                     {:else}
