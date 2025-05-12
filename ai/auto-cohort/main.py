@@ -28,6 +28,7 @@ def pdf_process():
             "non_implementable_text": non_implementable_text
         })
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
     finally:
         # Clean up the temporary file
@@ -47,6 +48,7 @@ def text_process():
         result = text_to_json(text)
         return result
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
 
 
