@@ -35,6 +35,6 @@
 </style>
   
 <div class="loading-container">
-    <div class="spinner"></div>
+    <div class="spinner mr-5"></div>
     <p>{message}</p>
 </div>
