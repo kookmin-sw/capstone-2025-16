@@ -17,9 +17,8 @@
 	let generatedCohort = null;
 	let checkedCohortText = {
 		non_implementable_text: '',
-		implementation_text: ''
+		implementable_text: ''
 	};
-	let isGeneratingCohort = false;
 	let isApplyingCohort = false;
 	let generationStep = ''; // "generated", "generating", "applying", "completed", "checking"
 
@@ -49,16 +48,23 @@
 			method: 'POST',
 			body: formData
 		})
-			.then((res) => {
-				res.json();
-			})
+			.then((res) => (res.json()))
 			.then((data) => {
-				console.log(data);
 				checkedCohortText = data;
-				generationStep = 'generated';
+				generationStep = 'checking';
 				isLoading = false;
 			});
 	}
+
+  function applyCohort() {
+    generationStep = 'applying';
+    isLoading = true;
+    setTimeout(() => {
+      onSubmit(generatedCohort);
+      generationStep = 'completed';
+      isLoading = false;
+    }, 1000);
+  }
 
 	// Apply cohort definition to create the actual cohort
 	async function generateCohortbyText() {
@@ -222,7 +228,7 @@
 					<div class="mb-6">
 						<h3 class="mb-2 font-semibold text-gray-800">생성된 코호트 요약 (수정 가능)</h3>
 						<textarea
-							bind:value={checkedCohortText.implementation_text}
+							bind:value={checkedCohortText.implementable_text}
 							rows="8"
 							class="w-full rounded-md border border-gray-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 						></textarea>
@@ -231,9 +237,12 @@
 
 					<div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
 						<h3 class="mb-2 font-semibold text-gray-700">기술적 세부사항</h3>
-						<ul class="list-disc space-y-1 pl-5 text-sm text-gray-600">
-							<p>{checkedCohortText.non_implementable_text}</p>
-						</ul>
+						<textarea
+							value={checkedCohortText.non_implementable_text}
+							rows={10}
+							disabled
+							class="w-full rounded-md border border-gray-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+						></textarea>
 					</div>
 
 					<!-- Action Buttons -->
@@ -246,7 +255,10 @@
 						</button>
 						<button
 							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-							on:click={generateCohortbyText}
+							on:click={() => {
+								cohortText = checkedCohortText.implementable_text;
+								generateCohortbyText();
+							}}
 						>
 							생성하기
 						</button>
