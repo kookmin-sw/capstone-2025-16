@@ -11,6 +11,7 @@
 
     let isLoading = true;
     let chartID = $page.params.chartID;
+    let isDragging = false;
 
     let cumtomInfo = [];
     let targetSetData = [];
@@ -18,7 +19,10 @@
     let expandedStates = [];
 
     function handleDnd({ detail }) {
-        customChartData = detail.items;
+        console.log(detail);
+        isDragging = true;
+        customChartData = Array.isArray(detail.items) ? detail.items : customChartData;
+        isDragging = false;
     }
 
     async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
@@ -154,7 +158,7 @@
                 onfinalize={handleDnd}
                 class="space-y-2 py-4 px-10"
                 >
-    {#each customChartData as chart, index (chart.chart_id)}
+    {#each customChartData as chart, index (chart.id)}
         <div class="border rounded-lg overflow-hidden bg-white">
             <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
@@ -171,7 +175,7 @@
                     </svg>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-1">
-                            <span class="text-xs font-medium text-gray-400 truncate">{chart.statistics_id}</span>
+                            <span class="text-xs font-medium text-gray-400 truncate">{chart.id}</span>
                         </div>
                         <div class="flex items-center gap-1">
                             <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
@@ -194,8 +198,8 @@
                     class="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                     onclick={(e) => {
                         e.stopPropagation();
-                        if(confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
-                        customChartData = customChartData.filter((_, i) => i !== index);
+                        if(!isDragging && confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
+                            customChartData = [...customChartData.filter((_, i) => i !== index)];
                         }
                     }}
                 >
