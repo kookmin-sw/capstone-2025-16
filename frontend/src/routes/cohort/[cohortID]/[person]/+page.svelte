@@ -162,7 +162,7 @@
 
         return d3.scaleTime()
             .domain([minStart, maxEnd])
-            .range([MARGIN.left, width - MARGIN.right]);
+            .range([MARGIN.left, width - MARGIN.right - 50]);
     }
 
     function setupClipPath(svg) {
@@ -196,7 +196,7 @@
     function drawYAxis(svg) {
         const entries = Object.entries(visitMapping);
         const labelGroup = svg.append("g")
-            .attr("transform", `translate(${MARGIN.left - 40}, ${MARGIN.top})`);
+            .attr("transform", `translate(${MARGIN.left+50}, ${MARGIN.top})`);
 
         labelGroup.selectAll("text")
             .data(entries)
@@ -204,7 +204,7 @@
             .append("text")
             .attr("x", 0)
             .attr("y", ([id]) => visitMapping[id][0] * ROW_GAP + 10)
-            .attr("text-anchor", "middle")
+            .attr("text-anchor", "end")
             .attr("font-size", "11px")
             .attr("alignment-baseline", "middle")
             .text(([_, [, label]]) => label);
@@ -352,7 +352,7 @@
                 .attr("width", d => Math.max(newXScale(new Date(d.end)) - newXScale(new Date(d.start)), 5));
 
             d3.selectAll(".death-bar")
-                .attr("x", newXScale(new Date(personTable?.death.death_date)))
+                .attr("x", newXScale(new Date(personTable.death?.death_date)))
                 .attr("width", DEATH_BAR_WIDTH);
             });
 
@@ -493,8 +493,9 @@
             <span class="text-sm text-gray-400">Gender</span>
             <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[personTable.info.gender_concept_id]}</span>
             <span class="text-gray-200 mx-3">|</span>
-            <span class="text-sm text-gray-400">Birth</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}.{personTable.info.month_of_birth}.{personTable.info.day_of_birth}</span>
+            <span class="text-sm text-gray-400">Birth(Year)</span>
+            <!-- <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}.{personTable.info.month_of_birth}.{personTable.info.day_of_birth}</span> -->
+            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}</span>
         </div>
         <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 absolute right-14 top-6">
             <button 
