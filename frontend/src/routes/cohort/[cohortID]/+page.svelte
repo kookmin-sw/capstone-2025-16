@@ -13,17 +13,21 @@
     import Footer from '$lib/components/Footer.svelte';
     import { onMount, onDestroy } from 'svelte';
     import { page } from '$app/stores';
+    import LoadingComponent from "$lib/components/LoadingComponent.svelte";
 
-    let { data } = $props();
+    let isLoading = true;
+    let isShapLoading = false;
+    let cohortInfo = [];
+    let cohortID = $page.params.cohortID;
 
-    let activeTab = $state('definition');
+    let activeTab = 'definition';
     const tabs = [
 		{ key: 'definition', label: 'Definition' },
 		{ key: 'features', label: 'Features' },
 		{ key: 'charts', label: 'Charts' },
 	];
 
-    let isTableView = $state({
+    let isTableView = {
         genderRatio: false,
         mortality: false,
         visitTypeRatio: false,
@@ -33,29 +37,26 @@
         topTenConditions: false,
         topTenProcedures: false,
         topTenMeasurements: false
-    });
+    };
 
-    let tabElements = $state(Array(tabs.length).fill(null));
-    let indicatorStyle = $state('');
+    let tabElements = Array(tabs.length).fill(null);
+    let indicatorStyle = '';
     let resizeObserver;
 
     // SHAP 분석 관련 상태 변수 추가
-    let comparisonGroupSize = $state('');
-    let isLoading = $state(false);
-    let analysisStarted = $state(false);
-    let shapFeatures = $state([]);
+    let comparisonGroupSize = '';
+    let analysisStarted = false;
+    let shapFeatures = [];
 
     // 통계관련
-    let analysisError = $state(null);
-    let cohortID = $derived($page.params.cohortID); // URL에서 cohortID 추출
-    let cohortInfo = $state(data.cohortinfo);
-    let analysisData = $state(data.cohortStatistics);
-    let ageDistributionChartData = $state([]);
+    let analysisError = null;
+    let analysisData = [];
+    let ageDistributionChartData = [];
 
     // SHAP 분석 시작 함수 (백엔드 연동 필요)
     async function startAnalysis() {
         analysisStarted = true;
-        isLoading = true;
+        isShapLoading = true;
         shapFeatures = [];
         analysisError = null;
 
@@ -63,7 +64,7 @@
         const size = parseInt(comparisonGroupSize);
         if (isNaN(size) || size <= 0) {
             analysisError = "Comparison group size must be a positive integer greater than or equal to 1.";
-            isLoading = false;
+            isShapLoading = false;
             return;
         }
 
@@ -73,7 +74,7 @@
             // if (!response.ok) throw new Error('분석 중 오류가 발생했습니다.');
             // const data = await response.json();
             // shapFeatures = data.features; // 백엔드 응답에 domain 필드가 포함되어야 함
-
+            const res = await fetch(`/`)
             // 임시 비동기 처리 및 더미 데이터 설정 (domain 추가)
             await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 딜레이 시뮬레이션
             // 성공 시 더미 데이터 (확장 및 influence 조정)
@@ -117,7 +118,7 @@
             analysisError = error.message || "An unexpected error occurred while running SHAP analysis. Please try again later.";
             shapFeatures = []; // 에러 발생 시 기존 결과 초기화
         } finally {
-            isLoading = false;
+            isShapLoading = false;
         }
     }
 
@@ -159,6 +160,33 @@
     }
 
     onMount(async() => {
+        try{
+            const res = await fetch(`/api/cohortstatistics/${cohortID}`);
+            if (!res.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            
+            const data = await res.json();
+            if (data.length !== 0) {
+                analysisData = data;
+            }
+
+            const res2 = await fetch(`/api/cohortinfo/${cohortID}`);
+			if (!res2.ok) {
+				throw new Error('Failed to fetch data');
+			}
+			const data2 = await res2.json();
+			
+			if (data2.length !== 0) {
+				cohortInfo = data2;
+			}
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            isLoading = false;
+        }
+
+        await tick();
         updateIndicator();
         
         resizeObserver = new ResizeObserver(() => {
@@ -179,13 +207,16 @@
         }
     });
 
-    $effect(() => {
+    $:{
         if (activeTab) {
             updateIndicator();
         }
-    });
+    };
 </script>
 
+{#if isLoading}
+    <LoadingComponent message="Loading cohort data..." />
+{:else}
 <div class="pl-4 pr-4">
     <div class="border rounded-lg overflow-hidden mb-8 mt-3">
         <!-- 상단 정보 -->
@@ -285,7 +316,7 @@
             <!-- Cohort JSON display (for debugging) -->
 			<div class="rounded-lg border border-gray-200 p-4">
 				<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON</h3>
-				<pre class="rounded-md bg-gray-100 p-2 text-xs">{JSON.stringify(JSON.parse(data.cohortinfo.cohort_definition), null, 2)}</pre>
+				<pre class="rounded-md bg-gray-100 p-2 text-xs">{JSON.stringify(JSON.parse(cohortInfo.cohort_definition), null, 2)}</pre>
 			</div>
         </div>
     {/if}
@@ -312,10 +343,10 @@
                 </div>
                 <button
                     onclick={startAnalysis}
-                    disabled={isLoading || !comparisonGroupSize || parseInt(comparisonGroupSize) <= 0}
+                    disabled={isShapLoading || !comparisonGroupSize || parseInt(comparisonGroupSize) <= 0}
                     class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                    {#if isLoading}
+                    {#if isShapLoading}
                         Analyzing...
                     {:else}
                         Start Analysis
@@ -323,7 +354,7 @@
                 </button>
             </div>
 
-            {#if isLoading}
+            {#if isShapLoading}
                 <div class="mt-6 flex justify-center items-center space-x-2 text-gray-600">
                     <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -333,13 +364,13 @@
                 </div>
             {/if}
 
-            {#if analysisError && !isLoading}
+            {#if analysisError && !isShapLoading}
                 <div class="mt-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-md text-sm">
                     <p><strong class="font-medium">Error:</strong> {analysisError}</p>
                 </div>
             {/if}
 
-            {#if !isLoading && !analysisError && shapFeatures.length > 0}
+            {#if !isShapLoading && !analysisError && shapFeatures.length > 0}
                 {@const procedureFeatures = shapFeatures.filter(f => f.domain === 'Procedure').sort((a, b) => b.influence - a.influence).slice(0, 10)}
                 {@const conditionFeatures = shapFeatures.filter(f => f.domain === 'Condition').sort((a, b) => b.influence - a.influence).slice(0, 10)}
                 
@@ -644,6 +675,7 @@
 </div>
 
 <Footer />
+{/if}
 
 <style>
     .tab {

@@ -13,8 +13,7 @@
     import BioSignal from "$lib/components/Table/BioSignal.svelte";
     import * as d3 from "d3";
     import Footer from '$lib/components/Footer.svelte';
-
-    import analysisData from '$lib/data/patientAnalysisTest.json';
+    import LoadingComponent from "$lib/components/LoadingComponent.svelte";
     import ChartCard from '$lib/components/ChartCard.svelte';
     import DataTable from '$lib/components/DataTable.svelte';
     import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
@@ -29,7 +28,14 @@
     let isSelectTableOpen = false;
     let isStatisticsView = false;
     let show = false;
-    export let data;
+    let cohortIdFromUrl;
+    let isLoading = true;
+    $: personID = $page.params.personID;
+
+    let message = ""
+    let personTable = [];
+    let personVisits = [];
+    let personStatistics = [];
 
     let isTableView = {
         visitTypeRatio: false,
@@ -80,7 +86,9 @@
     };
 
     async function fetchDataById(id) {
+        isLoading = true;
         isStatisticsView = true;
+        message = "Loading Table...";
         try {
             const res = await fetch(`/api/persontable/${id}`);
             const fullData = await res.json();
@@ -94,8 +102,12 @@
                 specimen: { specimen: fullData?.specimens },
                 bio_signal: { bioSignal: fullData?.bio_signal }
             };
+            console.log("tableProps", tableProps);
         } catch (error) {
             console.error("데이터 로드 실패:", error);
+        } finally{
+            isLoading = false;
+            drawTimeline();
         }
     }
 
@@ -107,9 +119,9 @@
     let xScale, xAxisGroup, innerWidth, innerHeight;
 
     async function drawTimeline() {
-        await tick();
-        if (!timelineContainer || !data?.visitData) return;
 
+        await tick();
+        if (!timelineContainer || !personVisits) return;
         const width = timelineContainer.clientWidth;
         const height = timelineContainer.clientHeight;
         innerWidth = width - MARGIN.left - MARGIN.right;
@@ -141,8 +153,8 @@
     }
 
     function setupScales(width) {
-        let minStart = new Date(Math.min(...data.visitData.map(d => new Date(d.visit_start_date))));
-        let maxEnd = new Date(Math.max(...data.visitData.map(d => new Date(d.visit_end_date))));
+        let minStart = new Date(Math.min(...personVisits.map(d => new Date(d.visit_start_date))));
+        let maxEnd = new Date(Math.max(...personVisits.map(d => new Date(d.visit_end_date))));
         minStart.setDate(minStart.getDate() - 360);
         minStart.setHours(0, 0, 0, 0);
         maxEnd.setHours(23, 59, 59, 999);
@@ -150,7 +162,7 @@
 
         return d3.scaleTime()
             .domain([minStart, maxEnd])
-            .range([MARGIN.left, width - MARGIN.right]);
+            .range([MARGIN.left, width - MARGIN.right - 50]);
     }
 
     function setupClipPath(svg) {
@@ -162,10 +174,12 @@
             .attr("y", 0)
             .attr("width", innerWidth)
             .attr("height", innerHeight);
-}
+    }
 
     function setupTooltip() {
-        const tooltip = d3.select('body')
+        let tooltip = d3.select(timelineContainer).select(".tooltip");
+        if (tooltip.empty()) {
+            tooltip = d3.select(timelineContainer)
             .append("div")
             .attr("class", "tooltip")
             .style("position", "absolute")
@@ -175,14 +189,14 @@
             .style("border-radius", "5px")
             .style("font-size", "12px")
             .style("visibility", "hidden");
-
+        }
         return tooltip;
     }
 
     function drawYAxis(svg) {
         const entries = Object.entries(visitMapping);
         const labelGroup = svg.append("g")
-            .attr("transform", `translate(${MARGIN.left-40}, ${MARGIN.top})`);
+            .attr("transform", `translate(${MARGIN.left+50}, ${MARGIN.top})`);
 
         labelGroup.selectAll("text")
             .data(entries)
@@ -190,7 +204,7 @@
             .append("text")
             .attr("x", 0)
             .attr("y", ([id]) => visitMapping[id][0] * ROW_GAP + 10)
-            .attr("text-anchor", "middle")
+            .attr("text-anchor", "end")
             .attr("font-size", "11px")
             .attr("alignment-baseline", "middle")
             .text(([_, [, label]]) => label);
@@ -231,19 +245,19 @@
             .attr("transform", `translate(0,${MARGIN.top})`)
             .attr("clip-path", "url(#clip-timeline)");
 
-        const grouped = groupOverlappingVisits(data.visitData);
+        const grouped = groupOverlappingVisits(personVisits);
 
         // Death bar
-        if (data.personInfo.death) {
+        if (personTable.death) {
             barGroup.append("rect")
             .attr("class", "death-bar")
-            .attr("x", xScale(new Date(data.personInfo.death.death_date)))
+            .attr("x", xScale(new Date(personTable.death.death_date)))
             .attr("y", 0)
             .attr("width", DEATH_BAR_WIDTH)
             .attr("height", innerHeight - 20)
             .attr("fill", "black")
             .attr("opacity", 1)
-            .on("mouseover", (event) => showTooltip(event, tooltip, `death_concept : ${data.personInfo.death.cause_concept_id}\ndeath_date : ${data.personInfo.death.death_date}`))
+            .on("mouseover", (event) => showTooltip(event, tooltip, `death_concept : ${personTable.death.cause_concept_id}\ndeath_date : ${personTable.death.death_date}`))
             .on("mousemove", (event) => moveTooltip(event, tooltip))
             .on("mouseout", () => tooltip.style("visibility", "hidden"));
         }
@@ -312,19 +326,17 @@
     function moveTooltip(event, tooltip) {
         const tooltipWidth = tooltip.node().offsetWidth;
         const tooltipHeight = tooltip.node().offsetHeight;
+        const svgRect = timelineContainer.getBoundingClientRect();
+        const pageX = event.clientX - svgRect.left;
+        const pageY = event.clientY - svgRect.top;
 
-        let left = event.pageX + 10;
-        let top = event.pageY + 10;
+        let tooltipX = pageX + 10;
+        let tooltipY = pageY - 30;
 
-        if (left + tooltipWidth > window.innerWidth) {
-            left = event.pageX - tooltipWidth - 10;
-        }
-        if (top + tooltipHeight > window.innerHeight) {
-            top = event.pageY - tooltipHeight - 10;
-        }
+        if (tooltipX + tooltipWidth > svgRect.width) tooltipX = pageX - tooltipWidth - 10;
+        if (tooltipY + tooltipHeight > svgRect.height) tooltipY = pageY - tooltipHeight - 10;
 
-
-        tooltip.style("top", `${top}px`).style("left", `${left}px`);
+        tooltip.style("top", `${tooltipY}px`).style("left", `${tooltipX}px`);
     }
 
     function setupZoom(svg, width, height) {
@@ -340,7 +352,7 @@
                 .attr("width", d => Math.max(newXScale(new Date(d.end)) - newXScale(new Date(d.start)), 5));
 
             d3.selectAll(".death-bar")
-                .attr("x", newXScale(new Date(data.personInfo.death?.death_date)))
+                .attr("x", newXScale(new Date(personTable.death?.death_date)))
                 .attr("width", DEATH_BAR_WIDTH);
             });
 
@@ -399,8 +411,42 @@
         return groups;
     }
 
-    onMount(() => {
-        drawTimeline(); 
+    async function fetchData(){
+        isLoading = true;
+        message = "Loading data...";
+        try{
+            const res = await fetch(`/api/persondata/${personID}`);
+            if (!res.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            personTable = await res.json();
+            
+            const res2 = await fetch(`/api/visitdata/${personID}`);
+            if (!res2.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            personVisits = await res2.json();
+
+            const res3 = await fetch(`/api/personstatistics/${personID}`)
+            if (!res3.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            personStatistics = await res3.json();
+        }
+        catch (error) {
+            console.error("데이터 로드 실패:", error);
+        }
+        finally {
+            isLoading = false;
+            drawTimeline();
+        }
+    }
+
+    onMount(async() => {
+        await fetchData();
+        await tick();
+        cohortIdFromUrl = get(page).params.cohortID;
+
 
         const handleResize = () => {
             // 기존 svg 강제 삭제 후 다시 그리기
@@ -410,13 +456,13 @@
         };
 
         window.addEventListener("resize", handleResize);
-        onDestroy(() => window.removeEventListener("resize", handleResize));
     });
-    
-    // ✅ 데이터 변경 시마다 실행
-    $: if (data.visitData) {
-        tick().then(() => drawTimeline());
-        tableProps = {};
+
+    $: if (personID) {
+        (async () => {
+            await fetchData();
+            tableProps = {};
+        })();
     }
 
     onDestroy(() => {
@@ -426,19 +472,31 @@
     });
 </script>
 
+
+{#if isLoading}
+    <LoadingComponent message={message}/>
+{:else}
 <header class="py-4 bg-white border-b w-full">
-    <div class="flex justify-between py-2">
+    <div class="flex justify-between items-center py-2">
         <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
+            <a href="/cohort/{cohortIdFromUrl}" aria-label="go back">
+                <button class="flex items-center pr-[10px]" aria-label="go back">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-gray-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            </a>
             <span class="text-sm text-gray-400">ID</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{data.personInfo.info.person_id}</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.person_id}</span>
             <span class="text-gray-200 mx-3">|</span>
             <span class="text-sm text-gray-400">Gender</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[data.personInfo.info.gender_concept_id]}</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[personTable.info.gender_concept_id]}</span>
             <span class="text-gray-200 mx-3">|</span>
-            <span class="text-sm text-gray-400">Birth</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{data.personInfo.info.year_of_birth}.{data.personInfo.info.person_id?.month_of_birth}.{data.personInfo.info.person_id?.day_of_birth}</span>
+            <span class="text-sm text-gray-400">Birth(Year)</span>
+            <!-- <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}.{personTable.info.month_of_birth}.{personTable.info.day_of_birth}</span> -->
+            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}</span>
         </div>
-        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50">
+        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 mr-2 h-fit">
             <button 
                 class="px-2 py-0.5 text-xs rounded-full transition-colors
                     {!isStatisticsView ? 
@@ -485,13 +543,13 @@
                     isTableView={isTableView.visitTypeRatio}
                     on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
                 >
-                    <SingleDonutChartWrapper data={data.personStatistics.visitType} />
+                    <SingleDonutChartWrapper data={personStatistics.visitType} />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <DataTable
                                 data={transformDonutChartToTableData({
-                                    data: data.personStatistics.visitType,
+                                    data: personStatistics.visitType,
                                 })}
                             />
                         </div>
@@ -505,15 +563,15 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.departmentVisits}
-                    on:toggleView={({ detail }) => isTableView.departmentVisit = detail}
+                    on:toggleView={({ detail }) => isTableView.departmentVisits = detail}
                 >
-                    <SingleDonutChartWrapper data={data.personStatistics.departmentVisit} />
+                    <SingleDonutChartWrapper data={personStatistics.departmentVisit} />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <DataTable
                                 data={transformDonutChartToTableData({
-                                    data: data.personStatistics.departmentVisit,
+                                    data: personStatistics.departmentVisit,
                                 })}
                             />
                         </div>
@@ -527,16 +585,16 @@
                     hasTableView={true}
                     hasXButton={false}
                     isTableView={isTableView.topTenDrugs}
-                    on:toggleView={({ detail }) => {isTableView.topTenDrugs = detail}}
+                    on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(data.personStatistics.topTenDrug).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenDrug).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(data.personStatistics.topTenDrug)?.map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenDrug).map(([name, count]) => ({ name, count }))}
                                 domainKey="drug"
                             />
                         </div>
@@ -553,13 +611,13 @@
                     on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(data.personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
                     />
                 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(data.personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
                                 domainKey="condition"
                             />
                         </div>
@@ -576,13 +634,13 @@
                     on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(data.personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(data.personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
                                 domainKey="procedure"
                             />
                         </div>
@@ -599,13 +657,13 @@
                     on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(data.personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(data.personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
                                 domainKey="measurement"
                             />
                         </div>
@@ -650,3 +708,4 @@
     {/if}
     <Footer />
 </div>
+{/if}

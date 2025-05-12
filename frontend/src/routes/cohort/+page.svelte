@@ -1,12 +1,10 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import LoadingComponent from "$lib/components/LoadingComponent.svelte";
   import Footer from '$lib/components/Footer.svelte';
 
-  export let data;
-  
-  let { cohortList } = data;
-
+  let loading = true;
   let searchQuery = "";
   let searchInput = "";
   let errorMessage = "";
@@ -16,7 +14,8 @@
   const itemsPerPage = 10;
   let totalPages = 0;
 
-  let filteredData = [...cohortList.cohorts];
+  let cohortList = [];
+  let filteredData = [];
   let selectedItems = {};
 
   // 현재 페이지의 데이터만 반환하는 함수
@@ -55,7 +54,10 @@
   }
 
   function filterData() {
-    if (!data.length) return;
+    if (!searchQuery) {
+      filteredData = [...cohortList];
+      return;
+    }
 
     filteredData = cohortList.filter(
       (item) =>
@@ -91,15 +93,39 @@
     filterData();
   }
 
-  $: {
-    if (!searchInput) {
-      searchQuery = "";
-      filteredData = [...cohortList.cohorts];
+  onMount(async() => {
+    try{
+      const res = await fetch('/api/cohortlistdata');
+      if (!res.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const cohortListData = await res.json(); 
+      if (cohortListData.error) {
+        errorMessage = cohortListData.error;
+        setTimeout(() => {
+          errorMessage = "";
+        }, 5000);
+      } else {
+        cohortList = cohortListData.cohorts;
+        filteredData = cohortListData.cohorts;
+        totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        loading = false;
+      }
+    }catch (error) {
+      errorMessage = "An error occurred while fetching data.";
+      setTimeout(() => {
+        errorMessage = "";
+      }, 5000);
+    } finally {
+      loading = false;
     }
-  }
-
+  });
 </script>
 
+
+{#if loading}
+  <LoadingComponent message="Loading cohort data..." />
+{:else}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
@@ -114,6 +140,12 @@
             <input
               type="text"
               bind:value={searchInput}
+              on:keydown={event => {
+                if (event.key === 'Enter') {
+                  console.log('Enter key pressed');
+                  handleSearch();
+                }
+              }}
               placeholder="Search cohorts by name, description, or author"
               class="w-full pl-10 pr-24 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -271,3 +303,4 @@
   {/if}
   <Footer />
 </div>
+{/if}
