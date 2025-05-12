@@ -14,11 +14,12 @@
   import StackedBarChartWrapper from "$lib/components/Charts/StackedBarChart/StackedBarChartWrapper.svelte";
   import StackedBarChartTableView from "$lib/components/Charts/StackedBarChart/StackedBarChartTableView.svelte";
   import Footer from '$lib/components/Footer.svelte';
+  import LoadingComponent from "$lib/components/LoadingComponent.svelte";
 
-  export let data;
+  let isLoading = true; // 로딩 상태 관리
 
   // 코호트 데이터
-  const cohortStats = data.cohortList;
+  let cohortStats = [];
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
   let expandedStates = []; // 코호트 목록 toggle 펼치거나 접기 위한 상태 배열
@@ -66,26 +67,17 @@
     measurements: '',
   };
 
-  let chartData = {
-    drugs: [],
-    conditions: [],
-    procedures: [],
-    measurements: []
-  }
+  let chartData = [];
 
   $: if(selectedCohorts.length > 0){
-    stackedDrugsData = prepareStackedDomainData('drug');
-    stackedConditionsData = prepareStackedDomainData('condition');
-    stackedMeasurementsData = prepareStackedDomainData('measurement');
-    stackedProceduresData = prepareStackedDomainData('procedure');
+    cohortTotalCounts = Object.fromEntries(
+      selectedCohorts
+      .filter(cohortId => cohortStats[cohortId])
+      .map(cohortId => [
+        cohortStats[cohortId].basicInfo.name,
+        cohortStats[cohortId].basicInfo.count
+      ]));
   }
-
-  $: cohortTotalCounts = Object.fromEntries(
-    selectedCohorts.map(cohortId => [
-      cohortStats[cohortId].name,
-      cohortStats[cohortId].totalPatients
-    ])
-  );
 
   // DonutChart와 동일한 색상 매핑 사용
   const color = d3
@@ -134,7 +126,19 @@
     expandedStates = new Array(cohortIds.length).fill(false);
 
     try {
-      cohortData = loadCohortListData(cohortStats, cohortIds);
+      const result = await Promise.all(
+        cohortIds.map(async (id) => {
+          const res = await fetch(`/api/cohortinfo/${id}`);
+          const data = await res.json();
+
+          const res2 = await fetch(`/api/cohortstatistics/${id}`);
+          const data2 = await res2.json();
+
+          return {[id] : {basicInfo:data, statistics:data2}};
+        })
+      );
+      cohortData = Object.assign({}, ...result);
+      cohortStats = cohortData;
       if (selectedCohorts.length > 0) {
         // 코호트별 색상 매핑 초기화
         cohortColorMap = Object.fromEntries(
@@ -156,20 +160,25 @@
             selectedCohortStates[chartType] = selectedCohorts[0];
           }
         });
-
+        stackedDrugsData = prepareStackedDomainData('drug');
+        stackedConditionsData = prepareStackedDomainData('condition');
+        stackedMeasurementsData = prepareStackedDomainData('measurement');
+        stackedProceduresData = prepareStackedDomainData('procedure');
         // 각 차트별 데이터 초기화
-        chartData.drugs = selectedCohorts.map(cohortId => ({
-          cohortName: cohortStats[cohortId].basicInfo.name,
-          drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrug)
-            .map(([name, count], index) => ({
-              rank: index + 1,
-              name,
-              count
-            }))
-        }));
+        // chartData.drugs = selectedCohorts.map(cohortId => ({
+        //   cohortName: cohortStats[cohortId].basicInfo.name,
+        //   drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrug)
+        //     .map(([name, count], index) => ({
+        //       rank: index + 1,
+        //       name,
+        //       count
+        //     }))
+        // }));
       }
     } catch (error) {
       console.error("Error loading data:", error);
+    } finally {
+      isLoading = false;
     }
   });
 
@@ -185,10 +194,8 @@
     }))
   }
 
-  async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
-    await tick();
+  function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
     expandedStates[index] = !expandedStates[index];
-    expandedStates = [...expandedStates];
   }
 
   function handleDelete() { // 체크박스 선택한 코호트 삭제 함수
@@ -390,6 +397,9 @@
   }
 </style>
 
+{#if isLoading}
+  <LoadingComponent/>
+{:else}
 <div class="flex h-[calc(100vh-60px)] bg-gray-50">
   <!-- 좌측 사이드바 -->
   <div class="bg-white border-r border-gray-200 flex flex-col h-full sidebar-transition {isSidebarCollapsed ? 'w-[40px]' : 'w-[250px]'}">
@@ -434,6 +444,7 @@
       <div class="h-[calc(100%-4rem)] overflow-y-auto px-4 sidebar-scroll">
         <div class="space-y-2 py-4">
           {#each cohortData as cohort, index}
+            {cohort}
             <div class="border rounded-lg overflow-hidden bg-white">
               <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
@@ -450,7 +461,7 @@
                   </svg>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1">
-                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.id}</span>
+                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.cohort_id}</span>
                     </div>
                     <div class="flex items-center gap-1">
                     <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohort.name}</div>
@@ -859,4 +870,6 @@
     </div>
   </div>
 </div>
+{/if}
+
 <svelte:window on:click={handleClickOutside} /> 
