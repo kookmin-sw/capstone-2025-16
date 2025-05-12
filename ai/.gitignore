@@ -8,6 +8,9 @@ csv
 chaewon.py
 graph.py
 test.py
+auto-cohort/pdf_to_keywords.py
+auto-cohort/cohort_langchain.py
+auto-cohort/query_test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
