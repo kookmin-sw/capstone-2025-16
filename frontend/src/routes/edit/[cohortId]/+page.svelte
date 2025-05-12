@@ -1195,7 +1195,7 @@
 					Add Filter to {editingGroupType === 'initialGroup' ? 'Initial Group' : 'Comparison Group'}
 				</h3>
 				<p class="mb-4 text-sm text-gray-600">
-					Container: {cohortDefinition[editingGroupType].containers[editingContainerIndex].name}
+					Container: {cohortDefinition[editingGroupType].containers[editingContainerIndex]?.name}
 				</p>
 			{:else}
 				<h3 class="mb-3 text-xl font-bold text-gray-800">Add Filter</h3>

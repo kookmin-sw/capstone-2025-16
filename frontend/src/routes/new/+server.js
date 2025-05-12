@@ -1,25 +1,37 @@
 import { redirect } from '@sveltejs/kit';
 
 export async function GET({ fetch }) {
+
     const response = await fetch('https://bento.kookm.in/api/cohort', {
         method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-            cohortName: 'Cohort Name',
-            cohortDescription: 'Cohort Description',
+            name: 'Cohort Name',
+            description: 'Cohort Description',
             cohortDefinition: {
                 conceptsets: [],
                 initialGroup: {
-                    containers: [
-                    ]
+                  containers: [
+                    {
+                      name: "Container 1",
+                      filters: []
+                    }
+                  ]
                 },
                 comparisonGroup: {
-                    containers: [
-                    ]
+                  containers: [
+                    {
+                      name: "Container 1",
+                      filters: []
+                    }
+                  ]
                 }
-            },
+              },
             temporary: false
         })
     }).then(res => res.json());
     console.log(response);
-    return redirect(302, '/edit/' + response.cohortId);
+    return redirect(302, '/edit/' + response.cohort_id);
 }
