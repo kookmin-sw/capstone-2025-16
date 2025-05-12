@@ -3,6 +3,7 @@ from pdf_to_text import extract_cohort_definition_from_pdf
 from flask import Flask, jsonify, request
 import os
 import uuid
+import traceback
 
 app = Flask(__name__)
 
@@ -28,7 +29,7 @@ def pdf_process():
             "non_implementable_text": non_implementable_text
         })
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
     finally:
         # Clean up the temporary file
@@ -48,7 +49,7 @@ def text_process():
         result = text_to_json(text)
         return result
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 
