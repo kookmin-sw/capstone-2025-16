@@ -43,10 +43,14 @@
     let isLoading = $state(false);
     let analysisStarted = $state(false);
     let featureData = $state({
-        condition: [],
-        procedure: [],
-        execution_time: 0,
-        multiple: 0
+        cohort_id: "",
+        status: "",
+        features: {
+            features: [],
+            total: 0,
+            page: 0,
+            limit: 100
+        }
     });
     let analysisError = $state(null);
     let cohortID = $derived($page.params.cohortID); // URL에서 cohortID 추출
@@ -109,6 +113,31 @@
             hasPreviousAnalysis = false;
         }
     }
+
+    function exportToCSV(data, filename) {
+        if (!data || data.length === 0) {
+            alert("No data to export.");
+            return;
+        }
+
+        const headers = Object.keys(data[0]);
+        const rows = data.map(row =>
+            headers.map(field => `"${(row[field] ?? '').toString().replace(/"/g, '""')}"`).join(',')
+        );
+
+        const csvContent = [headers.join(','), ...rows].join('\r\n');
+
+        // BOM 추가 (엑셀 한글 깨짐 방지)
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
     
     // 페이지 로드 시 이전 분석 결과 확인
     onMount(() => {
@@ -141,10 +170,14 @@
         analysisStarted = true;
         isLoading = true;
         featureData = {
-            condition: [],
-            procedure: [],
-            execution_time: 0,
-            multiple: 0
+            cohort_id: "",
+            status: "",
+            features: {
+                features: [],
+                total: 0,
+                page: 0,
+                limit: 100
+            }
         };
         analysisError = null;
 
@@ -162,32 +195,71 @@
             
             // 테스트 데이터 설정
             featureData = {
-                condition: [
-                    { rank: 1,  concept_id: 197320,  concept_name: "Kidney injury", influence: 59.25 },
-                    { rank: 2,  concept_id: 433753,  concept_name: "Arteriosclerosis", influence: 18.26 },
-                    { rank: 3,  concept_id: 432867,  concept_name: "Hypertension", influence: 5.91 },
-                    { rank: 4,  concept_id: 317576,  concept_name: "Hyperlipidemia", influence: 4.72 },
-                    { rank: 5,  concept_id: 442588,  concept_name: "Alcohol abuse", influence: 3.42 },
-                    { rank: 6,  concept_id: 439727,  concept_name: "Anemia (post-hemorrhage)", influence: 2.44 },
-                    { rank: 7,  concept_id: 320128,  concept_name: "Opioid abuse", influence: 1.13 },
-                    { rank: 8,  concept_id: 438130,  concept_name: "HIV", influence: 0.85 },
-                    { rank: 9,  concept_id: 434894,  concept_name: "Sleep apnea", influence: 0.74 },
-                    { rank: 10, concept_id: 4113821, concept_name: "Anxiety", influence: 0.56 }
-                ],
-                procedure: [
-                    { rank: 1,  concept_id: 4021323,  concept_name: "Observation std A", influence: 56.74 },  // standard, A코드
-                    { rank: 2,  concept_id: 2514402,  concept_name: "Observation std B", influence: 22.34 },  // standard, B코드
-                    { rank: 3,  concept_id: 40756852, concept_name: "Non-coronary angioplasty", influence: 10.96 },
-                    { rank: 4,  concept_id: 2514401,  concept_name: "Facial fracture repair", influence: 9.35 },
-                    { rank: 5,  concept_id: 2767062,  concept_name: "Respiratory measurement", influence: 0.18 },
-                    { rank: 6,  concept_id: 2514403,  concept_name: "Coronary catheter", influence: 0.18 },
-                    { rank: 7,  concept_id: 2007052,  concept_name: "Observation high", influence: 0.15 },    // high complexity
-                    { rank: 8,  concept_id: 2004952,  concept_name: "Cervical fusion (anterior)", influence: 0.05 },
-                    { rank: 9,  concept_id: 4163971,  concept_name: "Pain check", influence: 0.01 },
-                    { rank: 10, concept_id: 2002222,  concept_name: "Lap cholecystectomy", influence: 0.01 }
-                ],
-                execution_time: 559,
-                multiple: 30
+                cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                status: "completed",
+                features: {
+                    features: [
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Condition",
+                            rank: "1",
+                            concept_id: "197320",
+                            concept_name: "Acute kidney injury",
+                            influence: 59.25,
+                            execution_time: "559",
+                            avg_f1_score: 0.7245
+                        },
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Procedure",
+                            rank: "1",
+                            concept_id: "433753",
+                            concept_name: "Arteriosclerosis",
+                            influence: 18.26,
+                            execution_time: "559",
+                            avg_f1_score: 0.7245
+                        },
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Condition",
+                            rank: "2",
+                            concept_id: "433753",
+                            concept_name: "Arteriosclerosis",
+                            influence: 18.26,
+                            execution_time: "559",
+                            avg_f1_score: 0.7245
+                        },
+                        
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Procedure",
+                            rank: "2",
+                            concept_id: "4021323",
+                            concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard",
+                            influence: 56.74,
+                            execution_time: "559",
+                            avg_f1_score: 0.8245
+                        },
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Procedure",
+                            rank: "3",
+                            concept_id: "2514402",
+                            concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard",
+                            influence: 22.34,
+                            execution_time: "559",
+                            avg_f1_score: 0.8245
+                        }
+                    ],
+                    total: 150,
+                    page: 0,
+                    limit: 100
+                }
             };
             
             // 분석 결과 저장
@@ -199,10 +271,14 @@
             console.error("SHAP analysis error:", error);
             analysisError = error.message || "An unexpected error occurred while running SHAP analysis. Please try again later.";
             featureData = {
-                condition: [],
-                procedure: [],
-                execution_time: 0,
-                multiple: 0
+                cohort_id: "",
+                status: "",
+                features: {
+                    features: [],
+                    total: 0,
+                    page: 0,
+                    limit: 100
+                }
             }; // 에러 발생 시 기존 결과 초기화
         } finally {
             isLoading = false;
@@ -406,26 +482,110 @@
                 </div>
             {/if}
 
-            {#if !isLoading && !analysisError && (featureData.condition.length > 0 || featureData.procedure.length > 0)}
+            {#if !isLoading && !analysisError && featureData.features.features.length > 0}
                 <div class="mt-8">
-                    <div class="flex justify-between items-center mb-2">
-                        {#if featureData.multiple > 0}
-                            <span class="text-sm text-gray-600">Comparison Size(people) : {analysisData.totalPatients * featureData.multiple} ({featureData.multiple} x {analysisData.totalPatients})</span>
+                    <div class="flex justify-between items-center mb-1">
+                        {#if featureData.features.features[0].multiple > 0}
+                          <span class="text-sm text-gray-600">
+                            <span class="text-gray-500">Comparison Size (people): </span>
+                            <span class="text-zinc-700 font-medium">{analysisData.totalPatients * featureData.features.features[0].multiple}</span>
+                            <span class="text-zinc-700 font-medium"> ({featureData.features.features[0].multiple} x {analysisData.totalPatients})</span>
+                          </span>
                         {:else}
-                            <span></span>
+                          <span></span>
                         {/if}
-                        
-                        {#if featureData.execution_time > 0}
-                            <span class="text-xs text-gray-500">Execution Time: {formatExecutionTime(featureData.execution_time)}</span>
+                      
+                        {#if featureData.features.features[0].execution_time}
+                          <span class="text-sm text-gray-500">
+                            <span class="text-gray-500">Execution Time: </span>
+                            <span class="text-zinc-700 font-medium">{formatExecutionTime(featureData.features.features[0].execution_time)}</span>
+                          </span>
+                        {/if}
+                    </div>
+                      
+                    <div class="flex justify-start items-center mb-5 gap-3">
+                        {#if featureData.features.features.find(f => f.domain_name === 'Condition')}
+                            <span class="text-sm text-gray-600">
+                                <span class="text-gray-500">Condition Model F1 Score: </span>
+                                <span class="text-zinc-700 font-medium">{featureData.features.features.find(f => f.domain_name === 'Condition').avg_f1_score}</span>
+                            </span>
+                        {/if}
+                        {#if featureData.features.features.find(f => f.domain_name === 'Procedure')}
+                            <span class="text-sm text-gray-500">|</span>
+                            <span class="text-sm text-gray-600">
+                                <span class="text-gray-500">Procedure Model F1 Score: </span>
+                                <span class="text-zinc-700 font-medium">{featureData.features.features.find(f => f.domain_name === 'Procedure').avg_f1_score}</span>
+                            </span>
                         {/if}
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
+                        <!-- Condition Column -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-semibold text-gray-700">Condition</h4>
+                                <button 
+                                    title="Download CSV"
+                                    aria-label="export csv"
+                                    class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                                    onclick={() => exportToCSV(featureData.features.features.filter(f => f.domain_name === 'Condition'), 'condition_features.csv')}
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                            {#if featureData.features.features.filter(f => f.domain_name === 'Condition').length > 0}
+                                <div class="border rounded-lg overflow-hidden shadow-sm">
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50 sticky top-0 z-10">
+                                        <tr>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            {#each featureData.features.features.filter(f => f.domain_name === 'Condition') as feature}
+                                                <tr>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
+                                                    <td class="px-3 py-1.5 text-gray-700 font-medium truncate max-w-[200px]" title={feature.concept_name}>
+                                                        {feature.concept_name}
+                                                    </td>                                                    
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
+                                                </tr>
+                                            {/each}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {:else}
+                                <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
+                                    No significant condition features found.
+                                </div>
+                            {/if}
+                        </div>
                         <!-- Procedure Column -->
                         <div>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Procedure</h4>
-                            {#if featureData.procedure.length > 0}
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-semibold text-gray-700">Procedure</h4>
+                                <button 
+                                    title="Download CSV"
+                                    aria-label="export csv"
+                                    class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                                    onclick={() => exportToCSV(featureData.features.features.filter(f => f.domain_name === 'Procedure'), 'procedure_features.csv')}
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                            {#if featureData.features.features.filter(f => f.domain_name === 'Procedure').length > 0}
                                 <div class="border rounded-lg overflow-hidden shadow-sm">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                                         <thead class="bg-gray-50 sticky top-0 z-10">
@@ -437,11 +597,13 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
-                                            {#each featureData.procedure as feature}
+                                            {#each featureData.features.features.filter(f => f.domain_name === 'Procedure') as feature}
                                                 <tr>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
-                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.concept_name}</td>
+                                                    <td class="px-3 py-1.5 text-gray-700 font-medium truncate max-w-[200px]" title={feature.concept_name}>
+                                                        {feature.concept_name}
+                                                    </td>  
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
                                                 </tr>
                                             {/each}
@@ -451,39 +613,6 @@
                             {:else}
                                 <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
                                     No significant procedure features found.
-                                </div>
-                            {/if}
-                        </div>
-
-                        <!-- Condition Column -->
-                        <div>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Condition</h4>
-                            {#if featureData.condition.length > 0}
-                                <div class="border rounded-lg overflow-hidden shadow-sm">
-                                        <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                            <thead class="bg-gray-50 sticky top-0 z-10">
-                                            <tr>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-gray-200">
-                                                {#each featureData.condition as feature}
-                                                    <tr>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.concept_name}</td>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
-                                                    </tr>
-                                                {/each}
-                                            </tbody>
-                                        </table>
-                                </div>
-                            {:else}
-                                <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
-                                    No significant condition features found.
                                 </div>
                             {/if}
                         </div>
