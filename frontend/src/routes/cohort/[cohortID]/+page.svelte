@@ -520,55 +520,6 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Procedure Column -->
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="text-sm font-semibold text-gray-700">Procedure</h4>
-                                <button 
-                                    title="Download CSV"
-                                    aria-label="export csv"
-                                    class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
-                                    onclick={() => exportToCSV(featureData.features.features.filter(f => f.domain_name === 'Procedure'), 'procedure_features.csv')}
-                                >
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="7 10 12 15 17 10"></polyline>
-                                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                                    </svg>
-                                </button>
-                            </div>
-                            {#if featureData.features.features.filter(f => f.domain_name === 'Procedure').length > 0}
-                                <div class="border rounded-lg overflow-hidden shadow-sm">
-                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                        <thead class="bg-gray-50 sticky top-0 z-10">
-                                            <tr>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            {#each featureData.features.features.filter(f => f.domain_name === 'Procedure') as feature}
-                                                <tr>
-                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
-                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
-                                                    <td class="px-3 py-1.5 text-gray-700 font-medium truncate max-w-[200px]" title={feature.concept_name}>
-                                                        {feature.concept_name}
-                                                    </td>  
-                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
-                                                </tr>
-                                            {/each}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            {:else}
-                                <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
-                                    No significant procedure features found.
-                                </div>
-                            {/if}
-                        </div>
-
                         <!-- Condition Column -->
                         <div>
                             <div class="flex justify-between items-center mb-2">
@@ -614,6 +565,54 @@
                             {:else}
                                 <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
                                     No significant condition features found.
+                                </div>
+                            {/if}
+                        </div>
+                        <!-- Procedure Column -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-semibold text-gray-700">Procedure</h4>
+                                <button 
+                                    title="Download CSV"
+                                    aria-label="export csv"
+                                    class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                                    onclick={() => exportToCSV(featureData.features.features.filter(f => f.domain_name === 'Procedure'), 'procedure_features.csv')}
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                            {#if featureData.features.features.filter(f => f.domain_name === 'Procedure').length > 0}
+                                <div class="border rounded-lg overflow-hidden shadow-sm">
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50 sticky top-0 z-10">
+                                            <tr>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
+                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            {#each featureData.features.features.filter(f => f.domain_name === 'Procedure') as feature}
+                                                <tr>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
+                                                    <td class="px-3 py-1.5 text-gray-700 font-medium truncate max-w-[200px]" title={feature.concept_name}>
+                                                        {feature.concept_name}
+                                                    </td>  
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
+                                                </tr>
+                                            {/each}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {:else}
+                                <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
+                                    No significant procedure features found.
                                 </div>
                             {/if}
                         </div>
