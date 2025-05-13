@@ -7,9 +7,10 @@
     import ChartCard from "$lib/components/ChartCard.svelte";
     import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
     import domtoimage from 'dom-to-image';
-    
+    import TargetSetModal from './components/TargetSetModal.svelte';
+
     const { data } = $props();
-    const { statistics_id } = data;
+    const { statisticsId } = data;
 
     const targetSetData = {
         statistics_id: "10001",
@@ -510,3 +511,7 @@
         </div>
     {/each}
 </div>
+
+{#if statisticsId == "new"}
+    <TargetSetModal/>
+{/if}
