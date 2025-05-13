@@ -296,6 +296,25 @@ export class UpdateCohortResponse {
     example: 'Cohort updated successfully',
   })
   message: string;
+
+  @ApiPropertyOptional({
+    description: 'Cohort ID',
+    example: '00000000-0000-0000-0000-000000000000',
+  })
+  cohortId: string;
+
+  @ApiProperty({
+    description: 'Person count per containers',
+    type: [Number],
+    example: [400, 200],
+  })
+  containerCounts: number[];
+
+  @ApiProperty({
+    description: 'Elapsed time',
+    example: 100,
+  })
+  elapsedTime: number;
 }
 
 export class DeleteCohortResponse {

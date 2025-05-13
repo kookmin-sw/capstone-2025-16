@@ -450,8 +450,49 @@ export class CohortService {
       .where('cohort_id', '=', cohortId)
       .execute();
 
+    let containerCounts: number[] = [];
+    const startTime: number = +new Date();
+    if (cohortDef) {
+      await getBaseDB()
+        .deleteFrom('cohort_detail')
+        .where('cohort_id', '=', cohortId)
+        .execute();
+
+      await getBaseDB()
+        .connection()
+        .execute(async (db) => {
+          const queries = buildCreateCohortQuery(db, {
+            cohortId,
+            cohortDef,
+            database: process.env.DB_TYPE,
+          });
+
+          for (const query of queries.flat()) {
+            const result = await query.execute();
+            if ('select' in query) {
+              // container person counts
+              containerCounts = Array(
+                cohortDef.initialGroup.containers.length +
+                  (cohortDef.comparisonGroup?.containers.length ?? 0),
+              ).fill(0);
+
+              for (const { container_id, count } of result as {
+                container_id: string;
+                count: string;
+              }[]) {
+                containerCounts[Number.parseInt(container_id) - 1] =
+                  Number.parseInt(count);
+              }
+            }
+          }
+        });
+    }
+
     return {
       message: 'Cohort successfully updated.',
+      cohortId,
+      containerCounts,
+      elapsedTime: +new Date() - startTime,
     };
   }
 
