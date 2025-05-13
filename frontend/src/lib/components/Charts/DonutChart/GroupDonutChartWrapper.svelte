@@ -23,6 +23,23 @@
         name: cohort.cohortName,
         data: cohort.data
     })) || [];
+
+    $: allUniqueData = processedData.reduce((acc, cohort) => {
+        if (cohort.data && typeof cohort.data === 'object') {
+            Object.entries(cohort.data).forEach(([label, value]) => {
+                if (!acc.find(d => d.label === label)) {
+                    acc.push({ label, value });
+                }
+            });
+        }
+        return acc;
+    }, []);
+
+    $: legendData = allUniqueData.reduce((acc, item) => {
+        acc[item.label] = item.value;
+        return acc;
+    }, {});
+
 </script>
 
 <div class="flex flex-col items-center justify-center w-full">
@@ -45,7 +62,7 @@
     {#if processedData.length > 0}
         <div class="mt-4">
             <Legend 
-                data={processedData[0].data} 
+                data={legendData} 
                 bind:hoveredLabel
             />
         </div>
