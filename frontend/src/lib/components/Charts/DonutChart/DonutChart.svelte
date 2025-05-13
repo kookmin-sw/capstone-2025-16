@@ -17,11 +17,11 @@
         .scaleOrdinal()
         .domain([
           // Gender
-          "Male", "Female", "Unknown",
+          "MALE", "FEMALE", "UNKNOWN",
           // Mortality
-          "Alive", "Deceased",
+          "alive", "deceased",
           // Visit Type
-          "Inpatient", "Outpatient", "Emergency Room Visit", "Home Visit", "Other Visit Type"
+          "Inpatient Visit", "Ambulatory Surgical Center", "Emergency Room and Inpatient Visit", "Emergency Room - Hospital", "Observation Room", "Ambulatory Clinic / Center"
         ])
         .range([
           // Gender colors
@@ -29,7 +29,8 @@
           // Mortality colors
           "#4CAF50", "#5E6C7F",
           // Visit Type colors
-          "#FF6B6B", "#4ECDC4", "#FFB236", "#95A5A6", "#BDC3C7"
+          "#4F8EF7", "#F78CA2", "#FFD166", "#06D6A0", "#9B5DE5",
+          "#43AA8B", "#FF61A6", "#3A86FF", "#FFBE0B"
         ]);
 
     // 데이터가 있을 때만 실행하도록 수정
