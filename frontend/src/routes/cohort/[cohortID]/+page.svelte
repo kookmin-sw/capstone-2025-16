@@ -43,10 +43,14 @@
     let isLoading = $state(false);
     let analysisStarted = $state(false);
     let featureData = $state({
-        condition: [],
-        procedure: [],
-        execution_time: 0,
-        multiple: 0
+        cohort_id: "",
+        status: "",
+        features: {
+            features: [],
+            total: 0,
+            page: 0,
+            limit: 100
+        }
     });
     let analysisError = $state(null);
     let cohortID = $derived($page.params.cohortID); // URL에서 cohortID 추출
@@ -166,10 +170,14 @@
         analysisStarted = true;
         isLoading = true;
         featureData = {
-            condition: [],
-            procedure: [],
-            execution_time: 0,
-            multiple: 0
+            cohort_id: "",
+            status: "",
+            features: {
+                features: [],
+                total: 0,
+                page: 0,
+                limit: 100
+            }
         };
         analysisError = null;
 
@@ -187,34 +195,71 @@
             
             // 테스트 데이터 설정
             featureData = {
-                condition: [
-                    { rank: 1,  concept_id: 197320,  concept_name: "Acute kidney injury", influence: 59.25 },
-                    { rank: 2,  concept_id: 433753,  concept_name: "Arteriosclerosis", influence: 18.26 },
-                    { rank: 3,  concept_id: 432867,  concept_name: "Hypertension", influence: 5.91 },
-                    { rank: 4,  concept_id: 317576,  concept_name: "Hyperlipidemia", influence: 4.72 },
-                    { rank: 5,  concept_id: 442588,  concept_name: "Alcohol abuse", influence: 3.42 },
-                    { rank: 6,  concept_id: 439727,  concept_name: "Anemia (post-hemorrhage)", influence: 2.44 },
-                    { rank: 7,  concept_id: 320128,  concept_name: "Opioid abuse", influence: 1.13 },
-                    { rank: 8,  concept_id: 438130,  concept_name: "HIV", influence: 0.85 },
-                    { rank: 9,  concept_id: 434894,  concept_name: "Sleep apnea", influence: 0.74 },
-                    { rank: 10, concept_id: 4113821, concept_name: "Anxiety", influence: 0.56 }
-                ],
-                procedure: [
-                    { rank: 1,  concept_id: 4021323,  concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or ", influence: 56.74 },  // standard, A코드
-                    { rank: 2,  concept_id: 2514402,  concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or ", influence: 22.34 },  // standard, B코드
-                    { rank: 3,  concept_id: 40756852, concept_name: "Non-coronary angioplasty", influence: 10.96 },
-                    { rank: 4,  concept_id: 2514401,  concept_name: "Facial fracture repair", influence: 9.35 },
-                    { rank: 5,  concept_id: 2767062,  concept_name: "Respiratory measurement", influence: 0.18 },
-                    { rank: 6,  concept_id: 2514403,  concept_name: "Coronary catheter", influence: 0.18 },
-                    { rank: 7,  concept_id: 2007052,  concept_name: "Observation high", influence: 0.15 },    // high complexity
-                    { rank: 8,  concept_id: 2004952,  concept_name: "Cervical fusion (anterior)", influence: 0.05 },
-                    { rank: 9,  concept_id: 4163971,  concept_name: "Pain check", influence: 0.01 },
-                    { rank: 10, concept_id: 2002222,  concept_name: "Lap cholecystectomy", influence: 0.01 }
-                ],
-                execution_time: 559,
-                multiple: 30,
-                condition_f1_score: 0.7245,
-                procedure_f1_score: 0.7245
+                cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                status: "completed",
+                features: {
+                    features: [
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Condition",
+                            rank: "1",
+                            concept_id: "197320",
+                            concept_name: "Acute kidney injury",
+                            influence: 59.25,
+                            execution_time: "2024-03-20 12:00:00",
+                            avg_f1_score: 0.7245
+                        },
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Procedure",
+                            rank: "1",
+                            concept_id: "433753",
+                            concept_name: "Arteriosclerosis",
+                            influence: 18.26,
+                            execution_time: "2024-03-20 12:00:00",
+                            avg_f1_score: 0.7245
+                        },
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Condition",
+                            rank: "2",
+                            concept_id: "433753",
+                            concept_name: "Arteriosclerosis",
+                            influence: 18.26,
+                            execution_time: "2024-03-20 12:00:00",
+                            avg_f1_score: 0.7245
+                        },
+                        
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Procedure",
+                            rank: "2",
+                            concept_id: "4021323",
+                            concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard",
+                            influence: 56.74,
+                            execution_time: "2024-03-20 12:00:00",
+                            avg_f1_score: 0.8245
+                        },
+                        {
+                            cohort_id: "0196815f-1e2d-7db9-b630-a747f8393a2d",
+                            multiple: "30",
+                            domain_name: "Procedure",
+                            rank: "3",
+                            concept_id: "2514402",
+                            concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard",
+                            influence: 22.34,
+                            execution_time: "2024-03-20 12:00:00",
+                            avg_f1_score: 0.8245
+                        }
+                    ],
+                    total: 150,
+                    page: 0,
+                    limit: 100
+                }
             };
             
             // 분석 결과 저장
@@ -226,10 +271,14 @@
             console.error("SHAP analysis error:", error);
             analysisError = error.message || "An unexpected error occurred while running SHAP analysis. Please try again later.";
             featureData = {
-                condition: [],
-                procedure: [],
-                execution_time: 0,
-                multiple: 0
+                cohort_id: "",
+                status: "",
+                features: {
+                    features: [],
+                    total: 0,
+                    page: 0,
+                    limit: 100
+                }
             }; // 에러 발생 시 기존 결과 초기화
         } finally {
             isLoading = false;
@@ -433,39 +482,42 @@
                 </div>
             {/if}
 
-            {#if !isLoading && !analysisError && (featureData.condition.length > 0 || featureData.procedure.length > 0)}
+            {#if !isLoading && !analysisError && featureData.features.features.length > 0}
                 <div class="mt-8">
                     <div class="flex justify-between items-center mb-1">
-                        {#if featureData.multiple > 0}
+                        {#if featureData.features.features[0].multiple > 0}
                           <span class="text-sm text-gray-600">
                             <span class="text-gray-500">Comparison Size (people): </span>
-                            <span class="text-zinc-700 font-medium">{analysisData.totalPatients * featureData.multiple}</span>
-                            <span class="text-zinc-700 font-medium"> ({featureData.multiple} x {analysisData.totalPatients})</span>
+                            <span class="text-zinc-700 font-medium">{analysisData.totalPatients * featureData.features.features[0].multiple}</span>
+                            <span class="text-zinc-700 font-medium"> ({featureData.features.features[0].multiple} x {analysisData.totalPatients})</span>
                           </span>
                         {:else}
                           <span></span>
                         {/if}
                       
-                        {#if featureData.execution_time > 0}
+                        {#if featureData.features.features[0].execution_time}
                           <span class="text-sm text-gray-500">
                             <span class="text-gray-500">Execution Time: </span>
-                            <span class="text-zinc-700 font-medium">{formatExecutionTime(featureData.execution_time)}</span>
+                            <span class="text-zinc-700 font-medium">{featureData.features.features[0].execution_time}</span>
                           </span>
                         {/if}
-                      </div>
-                      
-                      <div class="flex justify-start items-center mb-5 gap-3">
-                        <span class="text-sm text-gray-600">
-                          <span class="text-gray-500">Condition Model F1 Score: </span>
-                          <span class="text-zinc-700 font-medium">{featureData.condition_f1_score}</span>
-                        </span>
-                        <span class="text-sm text-gray-500">|</span>
-                        <span class="text-sm text-gray-600">
-                          <span class="text-gray-500">Procedure Model F1 Score: </span>
-                          <span class="text-zinc-700 font-medium">{featureData.procedure_f1_score}</span>
-                        </span>
                     </div>
                       
+                    <div class="flex justify-start items-center mb-5 gap-3">
+                        {#if featureData.features.features.find(f => f.domain_name === 'Condition')}
+                            <span class="text-sm text-gray-600">
+                                <span class="text-gray-500">Condition Model F1 Score: </span>
+                                <span class="text-zinc-700 font-medium">{featureData.features.features.find(f => f.domain_name === 'Condition').avg_f1_score}</span>
+                            </span>
+                        {/if}
+                        {#if featureData.features.features.find(f => f.domain_name === 'Procedure')}
+                            <span class="text-sm text-gray-500">|</span>
+                            <span class="text-sm text-gray-600">
+                                <span class="text-gray-500">Procedure Model F1 Score: </span>
+                                <span class="text-zinc-700 font-medium">{featureData.features.features.find(f => f.domain_name === 'Procedure').avg_f1_score}</span>
+                            </span>
+                        {/if}
+                    </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Procedure Column -->
@@ -476,7 +528,7 @@
                                     title="Download CSV"
                                     aria-label="export csv"
                                     class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
-                                    onclick={() => exportToCSV([...featureData.procedure], 'procedure_features.csv')}
+                                    onclick={() => exportToCSV(featureData.features.features.filter(f => f.domain_name === 'Procedure'), 'procedure_features.csv')}
                                 >
                                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -485,7 +537,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            {#if featureData.procedure.length > 0}
+                            {#if featureData.features.features.filter(f => f.domain_name === 'Procedure').length > 0}
                                 <div class="border rounded-lg overflow-hidden shadow-sm">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                                         <thead class="bg-gray-50 sticky top-0 z-10">
@@ -497,7 +549,7 @@
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
-                                            {#each featureData.procedure as feature}
+                                            {#each featureData.features.features.filter(f => f.domain_name === 'Procedure') as feature}
                                                 <tr>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
@@ -525,7 +577,7 @@
                                     title="Download CSV"
                                     aria-label="export csv"
                                     class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
-                                    onclick={() => exportToCSV([...featureData.condition], 'condition_features.csv')}
+                                    onclick={() => exportToCSV(featureData.features.features.filter(f => f.domain_name === 'Condition'), 'condition_features.csv')}
                                 >
                                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -534,7 +586,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            {#if featureData.condition.length > 0}
+                            {#if featureData.features.features.filter(f => f.domain_name === 'Condition').length > 0}
                                 <div class="border rounded-lg overflow-hidden shadow-sm">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                                         <thead class="bg-gray-50 sticky top-0 z-10">
@@ -546,7 +598,7 @@
                                         </tr>
                                         </thead>
                                         <tbody class="bg-white divide-y divide-gray-200">
-                                            {#each featureData.condition as feature}
+                                            {#each featureData.features.features.filter(f => f.domain_name === 'Condition') as feature}
                                                 <tr>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
