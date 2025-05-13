@@ -10,7 +10,7 @@
 	import { utcDay } from "d3";
 
     let isLoading = true;
-    let chartID = $page.params.chartID;
+    let statisticsID = $page.params.statisticsId;
     let isDragging = false;
 
     let cumtomInfo = [];
@@ -19,7 +19,6 @@
     let expandedStates = [];
 
     function handleDnd({ detail }) {
-        console.log(detail);
         isDragging = true;
         customChartData = Array.isArray(detail.items) ? detail.items : customChartData;
         isDragging = false;
@@ -33,7 +32,7 @@
     
     onMount(async() => {
         try{
-            const res = await fetch(`/api/custominfo/${chartID}`);
+            const res = await fetch(`/api/custominfo/${statisticsID}`);
             if (!res.ok) {
                 throw new Error("Failed to fetch data");
             }
@@ -50,7 +49,7 @@
                 })
             );
 
-            const res3 = await fetch(`/api/customchart/${chartID}`);
+            const res3 = await fetch(`/api/customchart/${statisticsID}`);
             if (!res3.ok) {
                 throw new Error("Failed to fetch data");
             }
@@ -60,6 +59,7 @@
                 ...chart,
                 id:chart.chart_id
             }));
+            console.log(customChartData[0].result);
             targetSetData = result;
             expandedStates = targetID.map(() => false)
         } catch(error) {
@@ -147,7 +147,7 @@
     </div>
 </div>
 
-<div use:dndzone={{ items: chartData.charts.map(chart => ({
+<div use:dndzone={{ items: customChartData.map(chart => ({
                         ...chart,
                         id: chart.chart_id  // chart_id를 id로 복사
                     })),
@@ -161,7 +161,7 @@
                 onfinalize={handleDnd}
                 class="space-y-2 py-4 px-10"
                 >
-    {#each chartData.charts as chart, index (chart.chart_id)}
+    {#each customChartData as chart, index (chart.chart_id)}
         <div class="border rounded-lg overflow-hidden bg-white">
             <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
@@ -267,7 +267,7 @@
                             onclick={() => toggleChartDefinition(index)}
                         >
                             <svg 
-                                class="w-3 h-3 flex-shrink-0 transform transition-transform {chartDefinitionStates[index] ? 'rotate-0' : '-rotate-90'}" 
+                                class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-0' : '-rotate-90'}" 
                                 fill="none" 
                                 stroke="currentColor" 
                                 viewBox="0 0 24 24"
@@ -277,7 +277,7 @@
                             <div class="text-md font-medium text-gray-700">Chart Definition</div>
                         </button>
                     </div>
-                    {#if chartDefinitionStates[index]}
+                    {#if expandedStates[index]}
                         <div transition:slide>
                             {#each chart.definition.groups as group, index}
                                 <div class="mb-4 ml-6 last:mb-0">
