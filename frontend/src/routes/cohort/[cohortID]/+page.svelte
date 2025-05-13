@@ -187,7 +187,9 @@
                     { rank: 10, concept_id: 2002222,  concept_name: "Lap cholecystectomy", influence: 0.01 }
                 ],
                 execution_time: 559,
-                multiple: 30
+                multiple: 30,
+                condition_f1_score: 0.7245,
+                procedure_f1_score: 0.7245
             };
             
             // 분석 결과 저장
@@ -408,17 +410,37 @@
 
             {#if !isLoading && !analysisError && (featureData.condition.length > 0 || featureData.procedure.length > 0)}
                 <div class="mt-8">
-                    <div class="flex justify-between items-center mb-2">
+                    <div class="flex justify-between items-center mb-1">
                         {#if featureData.multiple > 0}
-                            <span class="text-sm text-gray-600">Comparison Size(people) : {analysisData.totalPatients * featureData.multiple} ({featureData.multiple} x {analysisData.totalPatients})</span>
+                          <span class="text-sm text-gray-600">
+                            <span class="text-gray-500">Comparison Size (people): </span>
+                            <span class="text-zinc-700 font-medium">{analysisData.totalPatients * featureData.multiple}</span>
+                            <span class="text-zinc-700 font-medium"> ({featureData.multiple} x {analysisData.totalPatients})</span>
+                          </span>
                         {:else}
-                            <span></span>
+                          <span></span>
                         {/if}
-                        
+                      
                         {#if featureData.execution_time > 0}
-                            <span class="text-xs text-gray-500">Execution Time: {formatExecutionTime(featureData.execution_time)}</span>
+                          <span class="text-sm text-gray-500">
+                            <span class="text-gray-500">Execution Time: </span>
+                            <span class="text-zinc-700 font-medium">{formatExecutionTime(featureData.execution_time)}</span>
+                          </span>
                         {/if}
-                    </div>
+                      </div>
+                      
+                      <div class="flex justify-start items-center mb-5 gap-3">
+                        <span class="text-sm text-gray-600">
+                          <span class="text-gray-500">Condition Model F1 Score: </span>
+                          <span class="text-zinc-700 font-medium">{featureData.condition_f1_score}</span>
+                        </span>
+                        <span class="text-sm text-gray-500">|</span>
+                        <span class="text-sm text-gray-600">
+                          <span class="text-gray-500">Procedure Model F1 Score: </span>
+                          <span class="text-zinc-700 font-medium">{featureData.procedure_f1_score}</span>
+                        </span>
+                      </div>
+                      
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
