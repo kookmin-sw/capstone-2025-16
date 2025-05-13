@@ -48,7 +48,7 @@
 			method: 'POST',
 			body: formData
 		})
-			.then((res) => (res.json()))
+			.then((res) => res.json())
 			.then((data) => {
 				checkedCohortText = data;
 				generationStep = 'checking';
@@ -56,15 +56,15 @@
 			});
 	}
 
-  function applyCohort() {
-    generationStep = 'applying';
-    isLoading = true;
-    setTimeout(() => {
-      onSubmit(generatedCohort);
-      generationStep = 'completed';
-      isLoading = false;
-    }, 1000);
-  }
+	function applyCohort() {
+		generationStep = 'applying';
+		isLoading = true;
+		setTimeout(() => {
+			onSubmit(generatedCohort);
+			generationStep = 'completed';
+			isLoading = false;
+		}, 1000);
+	}
 
 	// Apply cohort definition to create the actual cohort
 	async function generateCohortbyText() {
@@ -171,8 +171,8 @@
 								/>
 							</svg>
 						</div>
-						<h3 class="text-lg font-medium text-gray-900">코호트 생성 완료</h3>
-						<p class="mt-2 text-sm text-gray-500">코호트가 성공적으로 생성되었습니다.</p>
+						<h3 class="text-lg font-medium text-gray-900">Cohort Generation Completed</h3>
+						<p class="mt-2 text-sm text-gray-500">The cohort has been successfully generated.</p>
 					</div>
 				{:else if generationStep === 'generating'}
 					<!-- Processing View -->
@@ -199,21 +199,21 @@
 								></path>
 							</svg>
 						</div>
-						<h3 class="text-lg font-medium text-gray-900">코호트 생성 중</h3>
+						<h3 class="text-lg font-medium text-gray-900">Generating Cohort</h3>
 						<p class="mt-2 text-sm text-gray-500">
-							요청하신 코호트를 생성하고 있습니다. 잠시만 기다려주세요.
+							We are generating your requested cohort. Please wait a moment.
 						</p>
 					</div>
 				{:else if generationStep === 'preview'}
 					<!-- Editable Summary View -->
 					<div class="mb-6 h-full">
 						<div class="flex justify-between">
-							<h3 class="mb-2 font-semibold text-gray-800">생성된 코호트 구조</h3>
+							<h3 class="mb-2 font-semibold text-gray-800">Generated Cohort Structure</h3>
 							<button
 								class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
 								on:click={applyCohort}
 							>
-								적용하기
+								Apply
 							</button>
 						</div>
 						<textarea
@@ -226,17 +226,17 @@
 				{:else if generationStep === 'checking'}
 					<!-- Editable Summary View -->
 					<div class="mb-6">
-						<h3 class="mb-2 font-semibold text-gray-800">생성된 코호트 요약 (수정 가능)</h3>
+						<h3 class="mb-2 font-semibold text-gray-800">Generated Cohort Summary (Editable)</h3>
 						<textarea
 							bind:value={checkedCohortText.implementable_text}
 							rows="8"
 							class="w-full rounded-md border border-gray-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 						></textarea>
-						<p class="mt-1 text-xs text-gray-500">요약 내용을 검토하고 필요에 따라 수정하세요.</p>
+						<p class="mt-1 text-xs text-gray-500">Review the summary and modify it as needed.</p>
 					</div>
 
 					<div class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-						<h3 class="mb-2 font-semibold text-gray-700">기술적 세부사항</h3>
+						<h3 class="mb-2 font-semibold text-gray-700">Non-Implementable summary in the PDF</h3>
 						<textarea
 							value={checkedCohortText.non_implementable_text}
 							rows={10}
@@ -251,7 +251,7 @@
 							class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
 							on:click={goBackToInput}
 						>
-							취소하기
+							Cancel
 						</button>
 						<button
 							class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -260,7 +260,7 @@
 								generateCohortbyText();
 							}}
 						>
-							생성하기
+							Generate
 						</button>
 					</div>
 				{:else}
@@ -274,7 +274,7 @@
 										: 'text-gray-500 hover:text-gray-700'}"
 									on:click={switchToTextTab}
 								>
-									텍스트 입력
+									Input Text
 								</button>
 								<button
 									class="px-6 py-3 text-sm font-medium {activeTab === 'file'
@@ -282,7 +282,7 @@
 										: 'text-gray-500 hover:text-gray-700'}"
 									on:click={switchToFileTab}
 								>
-									논문 파일 업로드
+									Upload PDF
 								</button>
 							</div>
 						</div>
@@ -326,16 +326,16 @@
 							</div>
 							<h3 class="mb-2 text-lg font-medium text-gray-800">
 								{#if activeTab === 'text'}
-									코호트 기준을 텍스트로 입력해주세요
+									Input the cohort definition criteria in text.
 								{:else}
-									논문 파일을 업로드해주세요
+									Upload the PDF file containing the cohort definition.
 								{/if}
 							</h3>
 							<p class="text-sm text-gray-600">
 								{#if activeTab === 'text'}
-									코호트 정의 기준, 포함/제외 기준 등을 자연어로 입력해주세요.
+									Input the cohort definition criteria, including inclusion/exclusion criteria, in natural language.
 								{:else}
-									코호트 정의가 담긴 PDF 논문 파일을 업로드해주세요.
+									Upload the PDF file containing the cohort definition.
 								{/if}
 							</p>
 						</div>
@@ -347,7 +347,7 @@
 									bind:value={cohortText}
 									rows="10"
 									class="w-full rounded-md border border-gray-300 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-									placeholder="여기에 코호트 정의 기준을 직접 입력하세요. 예: '고혈압 환자 중 50세 이상이며, 최근 5년간 최소 2회 이상 병원을 방문한 환자들...'"
+									placeholder="Enter the cohort definition criteria directly here. For example: 'Patients with hypertension aged 50 and older, who have visited the hospital at least twice in the past 5 years...'"
 								></textarea>
 							</div>
 						{:else}
@@ -372,9 +372,9 @@
 												></path>
 											</svg>
 											<p class="mb-2 text-sm text-gray-500">
-												<span class="font-semibold">클릭하여 파일 선택</span> 또는 여기에 드래그 앤 드롭
+												<span class="font-semibold">Click to select a file</span> or drag and drop here
 											</p>
-											<p class="text-xs text-gray-500">PDF 파일만 가능</p>
+											<p class="text-xs text-gray-500">Only PDF files are allowed</p>
 										</div>
 										<input type="file" class="hidden" accept=".pdf" on:change={handleFileUpload} />
 									</label>
@@ -384,7 +384,7 @@
 								{#if files.length > 0}
 									<div class="mt-6">
 										<h4 class="mb-2 text-sm font-medium text-gray-700">
-											업로드된 파일 ({files.length})
+											Uploaded files ({files.length})
 										</h4>
 										<div class="max-h-40 space-y-2 overflow-y-auto pr-2">
 											{#each files as file, index}
@@ -460,7 +460,7 @@
 									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 								></path>
 							</svg>
-							<span class="text-sm text-gray-600">코호트 요약 생성 중...</span>
+							<span class="text-sm text-gray-600">Generating cohort summary...</span>
 						</div>
 					{/if}
 
@@ -479,7 +479,7 @@
 								on:click={generateCohortbyText}
 								disabled={isLoading || (activeTab === 'text' && !cohortText.trim())}
 							>
-								코호트 생성
+								Generate Cohort
 							</button>
 						{:else}
 							<button
@@ -487,7 +487,7 @@
 								on:click={generateCohortbyPDF}
 								disabled={isLoading || (activeTab === 'file' && files.length === 0)}
 							>
-								코호트 텍스트 생성
+								Generate Cohort Summary
 							</button>
 						{/if}
 					{/if}
