@@ -167,12 +167,10 @@
             console.error("Failed to check previous analysis:", e);
         }
     });
-    let comparisonGroupSize = '';
-    let analysisStarted = false;
+
     let shapFeatures = [];
 
     // 통계관련
-    let analysisError = null;
     let analysisData = [];
     let ageDistributionChartData = [];
 
