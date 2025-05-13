@@ -1,4 +1,6 @@
 <script>
+	import { goto } from '$app/navigation';
+
 	let { show } = $props();
 	if (show == undefined) {
 		show = true;
@@ -9,6 +11,17 @@
 
 	let selected_Cohorts = $state([]);
 	let selected_Person = $state(null);
+	let isPersonIdValid = $state(false);
+
+	async function verifyPersonId() {
+		const response = await fetch(`https://bento.kookm.in/api/person/${selected_Person}`);
+		const data = await response.json();
+		if (data.error) {
+			isPersonIdValid = false;
+		} else {
+			isPersonIdValid = true;
+		}
+	}
 
 	async function getCohortList() {
 		const response = await fetch('https://bento.kookm.in/api/cohort');
@@ -16,18 +29,10 @@
 		cohortList = data.cohorts;
 	}
 
-	async function getPersonList() {
-		const response = await fetch('https://bento.kookm.in/api/person');
-		const data = await response.json();
-		personList = data.persons;
-	}
-
 	function changeTab(tab) {
 		activeTab = tab;
 		if (tab == 'cohort') {
 			getCohortList();
-		} else {
-			getPersonList();
 		}
 	}
 	// Close the modal when clicking outside
@@ -38,9 +43,33 @@
 		}
 	}
 	let activeTab = $state('cohort'); // cohort, person
-	function handleCreate() {
-		// Dispatch the selected chart type
-		dispatch('save', { chartType: selectedTargetSet });
+	getCohortList();
+
+	async function handleCreate() {
+		let requestsBody = {
+			name: 'Statistics name',
+			description: 'Statistics description'
+		};
+		if (activeTab === 'cohort' && selected_Cohorts.length > 0) {
+			requestsBody = {
+				...requestsBody,
+				cohortIds: selected_Cohorts.map((cohort) => cohort.cohortId)
+			};
+		} else if (activeTab === 'person' && isPersonIdValid) {
+			requestsBody = { ...requestsBody, personId: selected_Person };
+		}
+		await fetch('https://bento.kookm.in/api/statistics', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(requestsBody)
+		})
+			.then((res) => res.json())
+			.then(({ statisticsId }) => {
+				goto(`/custom-chart/${statisticsId}/chart`);
+			});
+
 		close();
 	}
 
@@ -148,6 +177,43 @@
 						</div>
 					</div>
 				</div>
+			{:else if activeTab === 'person'}
+				<div>
+					<h3 class="mb-4 text-lg font-semibold text-gray-900">Selected Persons</h3>
+					<div class="flex min-h-[3rem] flex-wrap gap-2 rounded-lg bg-gray-50 p-2">
+						<input
+							value={selected_Person}
+							placeholder="Input person id"
+							on:input={(e) => {
+								selected_Person = e.target.value;
+							}}
+						/>
+						<button
+							class="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700"
+							on:click={verifyPersonId}
+						>
+							{#if isPersonIdValid}
+								Check
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="mr-1 h-5 w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+							{:else}
+								Check
+							{/if}
+						</button>
+					</div>
+				</div>
 			{/if}
 
 			<div class="mt-8 flex justify-end space-x-3">
@@ -159,7 +225,7 @@
 				</button>
 				<button
 					class="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700"
-					on:click={handleSave}
+					on:click={handleCreate}
 				>
 					Apply
 				</button>
