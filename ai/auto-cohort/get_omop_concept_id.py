@@ -254,9 +254,9 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
             }
             concepts.append(concept)
     
-    # 검색 결과가 없는 경우 재검색
-    if not results and auto_refine:
-        print(f"\n[get_omop_concept_id] 검색 결과가 없습니다. 용어를 수정하여 재검색합니다...")
+    # 검색 결과가 없거나 is_used=1인 결과가 없는 경우 재검색
+    if (not results or not concepts) and auto_refine:
+        print(f"\n[get_omop_concept_id] 검색 결과가 없거나 실제 사용된 개념이 없습니다. 용어를 수정하여 재검색합니다...")
         refined_term = refine_search_query(cleaned_term)
         if refined_term != cleaned_term:
             print(f"[get_omop_concept_id] 검색어 수정: '{cleaned_term}' → '{refined_term}'")
@@ -406,4 +406,4 @@ if __name__ == "__main__":
     test_concept_search("T2DM", "Condition") 
     
     # 구체적인 표현 -> 일반 표현
-    test_concept_search("Hemoglobin level over 13 g/dL", "Measurement") 
+    # test_concept_search("Hemoglobin level over 13 g/dL", "Measurement") 
