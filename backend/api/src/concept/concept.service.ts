@@ -36,7 +36,7 @@ export class ConceptService {
     if (query) {
       conceptQuery = conceptQuery.where(
         'concept_name',
-        'like',
+        'ilike',
         `%${query.replaceAll('%', '%%')}%`,
       );
     }
@@ -49,7 +49,7 @@ export class ConceptService {
     if (query) {
       countQuery = countQuery.where(
         'concept_name',
-        'like',
+        'ilike',
         `%${query.replaceAll('%', '%%')}%`,
       );
     }
