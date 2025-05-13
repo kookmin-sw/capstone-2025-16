@@ -16,113 +16,15 @@
 	import ContainerHeader from './components/ContainerHeader.svelte';
 
 	const { data } = $props();
-	const { cohort, counts } = data;
+	let { cohort, counts } = data;
 	console.log('data : ', data);
 	console.log(cohort);
 	console.log(cohort.cohort_definition);
 	console.log(counts.containerCounts);
-	async function updateCohortDefinition() {
-		const response = await fetch(`https://bento.kookm.in/api/cohort/${cohort.cohort_id}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				name: cohortName,
-				description: cohortDescription,
-				cohortDefinition: cohortDefinition
-			})
-		});
 
-		const data = await response.json();
-		console.log(data);
-	}
-
-	// 타입 정의 - backend/api/src/types/type.ts에서 가져옴
-	interface Operator<T> {
-		neq?: T | T[];
-		eq?: T | T[];
-		gt?: T | T[];
-		gte?: T | T[];
-		lt?: T | T[];
-		lte?: T | T[];
-	}
-
-	interface StringOperator {
-		neq?: string | string[];
-		eq?: string | string[];
-		startsWith?: string | string[];
-		endsWith?: string | string[];
-		contains?: string | string[];
-	}
-
-	type Identifier = string;
-
-	interface IdentifierOperator {
-		neq?: Identifier | Identifier[];
-		eq?: Identifier | Identifier[];
-	}
-
-	type NumberWithOperator = number | Operator<number>;
-	type IdentifierWithOperator = Identifier | IdentifierOperator;
-	type DateWithOperator = string | Operator<string>;
-	type StringWithOperator = string | StringOperator;
-
-	interface BaseContainer {
-		name: string;
-		filters: Filter[];
-		operator?: 'AND' | 'OR' | 'NOT';
-	}
-
-	interface BaseGroup {
-		containers: BaseContainer[];
-	}
-
-	// type.ts에 맞게 수정된 Concept 인터페이스
-	interface Concept {
-		concept_id: Identifier;
-		concept_name: string;
-		domain_id: string;
-		vocabulary_id: string;
-		concept_class_id: string;
-		standard_concept: string;
-		concept_code: string;
-		valid_start_date: string;
-		valid_end_date: string;
-		invalid_reason?: string;
-
-		isExcluded?: boolean;
-		includeDescendants?: boolean;
-		includeMapped?: boolean;
-	}
-
-	// type.ts에 맞게 수정된 ConceptSet 인터페이스
-	interface ConceptSet {
-		conceptset_id: Identifier;
-		name: string;
-		items: Concept[]; // expression.items.concept에서 직접 items로 변경
-	}
-
-	interface CohortDefinition {
-		conceptsets: ConceptSet[];
-		initialGroup: BaseGroup;
-		comparisonGroup?: BaseGroup;
-	}
-
-	type DomainType = string;
-
-	interface Filter {
-		type: DomainType;
-		conceptset?: IdentifierWithOperator;
-		first?: boolean;
-		[key: string]: any;
-	}
-
-	// 현재 필터 속성 값의 타입
-	interface FilterValues {
-		[key: string]: any;
-		conceptset?: IdentifierWithOperator;
-	}
+	let containerCounts = $state(counts.containerCounts);
+	let isUpdating = $state(false);
+	let isPatientCountUpdating = $state(false);
 
 	let showCohortAIModal = $state(false);
 
@@ -565,6 +467,7 @@
 
 		// 상태 초기화
 		resetFilterValues();
+		getCohortCounts()
 	}
 
 	// 필터 수정 함수
@@ -585,6 +488,7 @@
 		// 기존 값 로드
 		currentFilterValues = { ...filter } as FilterValues;
 		delete currentFilterValues.type; // type 속성 제외
+
 	}
 
 	// 필터 삭제 함수
@@ -594,6 +498,7 @@
 		filterIndex: number
 	) {
 		cohortDefinition[groupType].containers[containerIndex].filters.splice(filterIndex, 1);
+		getCohortCounts()
 	}
 
 	// 조건 타입 이름 표시 함수
@@ -631,6 +536,7 @@
 		}
 
 		cohortDefinition[groupType].containers.splice(containerIndex, 1);
+		getCohortCounts()
 	}
 
 	// 컨테이너 이름 변경 함수
@@ -754,6 +660,47 @@
 			id: item.concept_id,
 			name: item.concept_name
 		}));
+	}
+
+	async function getCohortCounts() {
+		isPatientCountUpdating = true;
+		const response = await fetch(`https://bento.kookm.in/api/cohort`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				name: 'temporary',
+				description: 'temporary',
+				cohortDefinition: cohortDefinition,
+				temporary: true
+			})
+		});
+		counts = await response.json();
+		containerCounts = counts.containerCounts;
+		isPatientCountUpdating = false;
+	}
+
+	async function updateCohortDefinition() {
+		isUpdating = true;
+
+		const response = await fetch(`https://bento.kookm.in/api/cohort/${cohort.cohort_id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				name: cohortName,
+				description: cohortDescription,
+				cohortDefinition: cohortDefinition
+			})
+		});
+
+		const data = await response.json();
+		getCohortCounts()
+		setTimeout(() => {
+			isUpdating = false;
+		}, 500);
 	}
 </script>
 
@@ -954,14 +901,13 @@
 							<ContainerHeader
 								name={container.name}
 								operator={container.operator || 'AND'}
-								patientCount={counts && counts.containerCounts
-									? counts.containerCounts[containerIndex]
-									: null}
+								patientCount={containerCounts[containerIndex] || null}
 								canRemove={containerIndex > 0 ||
 									cohortDefinition.initialGroup.containers.length > 1}
 								isFirstContainer={containerIndex === 0}
 								groupType="initialGroup"
 								{containerIndex}
+								isLoading={isPatientCountUpdating}
 								onContainerNameChange={updateContainerName}
 								onOperatorChange={updateContainerOperator}
 								onAddFilter={() => {
@@ -1074,16 +1020,15 @@
 								<ContainerHeader
 									name={container.name}
 									operator={container.operator || 'AND'}
-									patientCount={counts && counts.containerCounts
-										? counts.containerCounts[
-												containerIndex + cohortDefinition.initialGroup.containers.length
-											]
-										: null}
+									patientCount={containerCounts[
+										containerIndex + cohortDefinition.initialGroup.containers.length
+									] || null}
 									canRemove={containerIndex > 0 ||
 										cohortDefinition.comparisonGroup.containers.length > 1}
 									isFirstContainer={containerIndex === 0}
 									groupType="comparisonGroup"
 									{containerIndex}
+									isLoading={isPatientCountUpdating}
 									onContainerNameChange={updateContainerName}
 									onOperatorChange={updateContainerOperator}
 									onAddFilter={() => {
@@ -1164,21 +1109,29 @@
 				<button
 					on:click={updateCohortDefinition}
 					class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:before:opacity-10 active:scale-95"
+					disabled={isUpdating}
 				>
 					<span class="relative z-10 flex items-center justify-center gap-2">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-4 w-4"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						Update Cohort
+						{#if isUpdating}
+							<div
+								class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+							></div>
+							Updating...
+						{:else}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-4 w-4"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+							Update Cohort
+						{/if}
 					</span>
 				</button>
 			</div>
