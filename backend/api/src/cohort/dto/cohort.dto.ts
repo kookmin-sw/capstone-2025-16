@@ -105,7 +105,7 @@ export class PaginationQuery {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  page?: number = 0;
+  page?: number;
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
@@ -115,7 +115,7 @@ export class PaginationQuery {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  limit?: number = 50;
+  limit?: number;
 }
 
 export class CohortResponse {
@@ -162,27 +162,23 @@ export class CohortResponse {
   updated_at: string;
 }
 
+export class CohortDetailResponse extends CohortResponse {
+  @ApiProperty({
+    description: 'Number of persons in the cohort',
+    example: 100,
+  })
+  count: number;
+}
+
 export class CohortStatisticsResponse {
   @ApiProperty({
     description: 'Gender statistics',
-    example: [
-      {
-        concept_id: '8507',
-        concept_name: 'MALE',
-        count: 143623,
-      },
-      {
-        concept_id: '8532',
-        concept_name: 'FEMALE',
-        count: 170916,
-      },
-    ],
+    example: {
+      MALE: 302758,
+      FEMALE: 11781,
+    },
   })
-  gender: Array<{
-    concept_id: string;
-    concept_name: string;
-    count: number;
-  }>;
+  gender: { [concept_name: string]: number };
 
   @ApiProperty({
     description: 'Morality statistics',
@@ -286,6 +282,12 @@ export class CreateCohortResponse {
     example: [400, 200],
   })
   containerCounts: number[];
+
+  @ApiProperty({
+    description: 'Elapsed time',
+    example: 100,
+  })
+  elapsedTime: number;
 }
 
 export class UpdateCohortResponse {

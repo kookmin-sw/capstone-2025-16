@@ -12,6 +12,7 @@ import {
   DeleteCohortResponse,
   CohortListResponse,
   CohortPersonsResponse,
+  CohortDetailResponse,
 } from './dto/cohort.dto';
 
 @Injectable()
@@ -61,7 +62,7 @@ export class CohortService {
     }
 
     const [
-      gender,
+      genders,
       mortality,
       age,
       visitTypes,
@@ -78,7 +79,6 @@ export class CohortService {
         .leftJoin('concept', 'concept.concept_id', 'person.gender_concept_id')
         .groupBy(['concept.concept_id', 'concept.concept_name'])
         .select(({ fn }) => [
-          'concept.concept_id',
           'concept.concept_name',
           fn.count('person.person_id').as('count'),
         ])
@@ -122,7 +122,7 @@ export class CohortService {
           fn.count('age').as('count'),
         ])
         .execute(),
-      getBaseDB()
+      getBaseDB() // visit type
         .selectFrom('visit_occurrence')
         .where('person_id', 'in', (eb) =>
           eb
@@ -137,7 +137,7 @@ export class CohortService {
           fn.count('concept_name').as('count'),
         ])
         .execute(),
-      getBaseDB()
+      getBaseDB() // visit count
         .selectFrom(
           getBaseDB()
             .selectFrom('visit_occurrence')
@@ -154,76 +154,100 @@ export class CohortService {
         .groupBy('cnt')
         .select(({ fn }) => ['cnt', fn.count('cnt').as('cnt_cnt')])
         .execute(),
-      getBaseDB()
-        .selectFrom('drug_exposure')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 drug
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('drug_exposure')
+            .select(({ eb }) => [
+              eb.ref('drug_concept_id').as('concept_id'),
+              eb.fn.count('drug_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('drug_concept_id')
+            .orderBy(({ fn }) => fn.count('drug_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'drug_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
-      getBaseDB()
-        .selectFrom('condition_occurrence')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 condition
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('condition_occurrence')
+            .select(({ eb }) => [
+              eb.ref('condition_concept_id').as('concept_id'),
+              eb.fn.count('condition_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('condition_concept_id')
+            .orderBy(({ fn }) => fn.count('condition_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'condition_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
-      getBaseDB()
-        .selectFrom('procedure_occurrence')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 procedure
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('procedure_occurrence')
+            .select(({ eb }) => [
+              eb.ref('procedure_concept_id').as('concept_id'),
+              eb.fn.count('procedure_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('procedure_concept_id')
+            .orderBy(({ fn }) => fn.count('procedure_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'procedure_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
-      getBaseDB()
-        .selectFrom('measurement')
-        .where('person_id', 'in', (eb) =>
-          eb
-            .selectFrom('cohort_detail')
-            .where('cohort_id', '=', id)
-            .select('person_id'),
+      getBaseDB() // top 10 measurement
+        .selectFrom(
+          getBaseDB()
+            .selectFrom('measurement')
+            .select(({ eb }) => [
+              eb.ref('measurement_concept_id').as('concept_id'),
+              eb.fn.count('measurement_concept_id').as('count'),
+            ])
+            .where('person_id', 'in', (eb) =>
+              eb
+                .selectFrom('cohort_detail')
+                .select('person_id')
+                .where('cohort_id', '=', id),
+            )
+            .groupBy('measurement_concept_id')
+            .orderBy(({ fn }) => fn.count('measurement_concept_id'), 'desc')
+            .limit(10)
+            .as('tmp'),
         )
-        .leftJoin('concept', 'measurement_concept_id', 'concept_id')
-        .groupBy('concept_name')
-        .select(({ fn }) => [
-          'concept_name',
-          fn.count('concept_name').as('count'),
-        ])
-        .orderBy(({ fn }) => fn.count('concept_name'), 'desc')
-        .limit(10)
+        .leftJoin('concept', 'concept.concept_id', 'tmp.concept_id')
+        .select(['concept_name', 'count'])
         .execute(),
     ]);
 
+    const gender: { [concept_name: string]: number } = {};
+    for (const { concept_name, count } of genders) {
+      gender[concept_name ?? 'Unknown'] = Number(count);
+    }
     age.sort((a, b) => Number(a.age_start) - Number(b.age_start));
     const age_range: { [age_range: string]: number } = {};
     for (const { age_start, age_end, count } of age) {
@@ -255,11 +279,7 @@ export class CohortService {
     }
 
     return {
-      gender: gender.map((e) => ({
-        concept_id: e.concept_id || '',
-        concept_name: e.concept_name || '',
-        count: Number(e.count),
-      })),
+      gender,
       mortality: {
         alive: Number(mortality?.alive ?? 0),
         deceased: Number(mortality?.deceased ?? 0),
@@ -274,7 +294,7 @@ export class CohortService {
     };
   }
 
-  async getCohort(id: string): Promise<CohortResponse> {
+  async getCohort(id: string): Promise<CohortDetailResponse> {
     const cohort = await getBaseDB()
       .selectFrom('cohort')
       .selectAll()
@@ -285,7 +305,13 @@ export class CohortService {
       throw new NotFoundException('Cohort not found.');
     }
 
-    return cohort;
+    const count = await getBaseDB()
+      .selectFrom('cohort_detail')
+      .select(({ fn }) => [fn.count('person_id').as('count')])
+      .where('cohort_id', '=', id)
+      .executeTakeFirst();
+
+    return { ...cohort, count: Number(count?.count || 0) };
   }
 
   async getCohortPersons(
@@ -355,6 +381,7 @@ export class CohortService {
     }
 
     let containerCounts: number[] = [];
+    const startTime: number = +new Date();
     if (cohortDef) {
       await getBaseDB()
         .connection()
@@ -366,17 +393,6 @@ export class CohortService {
           });
 
           for (const query of queries.flat()) {
-            if (process.env.DEBUG) {
-              let { parameters, sql } = query.compile();
-              for (let i of parameters) {
-                sql = sql.replace(
-                  '?',
-                  typeof i === 'string' ? `'${i}'` : `${i}`,
-                );
-              }
-              console.log(sql);
-            }
-
             const result = await query.execute();
             if ('select' in query) {
               // container person counts
@@ -401,6 +417,7 @@ export class CohortService {
       message: 'Cohort successfully created.',
       cohortId,
       containerCounts,
+      elapsedTime: +new Date() - startTime,
     };
   }
 

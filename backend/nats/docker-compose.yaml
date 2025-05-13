@@ -1,0 +1,10 @@
+services:
+  nats:
+    image: nats:latest
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    env_file: .env
+    command:
+      ["-m", "8222", "-js", "-user", "${NATS_USER}", "-pass", "${NATS_PASS}"]

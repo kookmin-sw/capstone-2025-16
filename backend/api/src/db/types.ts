@@ -10,6 +10,8 @@ export interface Database {
   cohort_detail: CohortDetail;
   cohort_concept: CohortConcept;
   statistics: Statistics;
+  statistics_chart: StatisticsChart;
+  feature_extraction: FeatureExtraction;
 
   condition_era: ConditionEra;
   drug_era: DrugEra;
@@ -97,12 +99,35 @@ export interface Statistics {
   statistics_id: string;
   name: string;
   description: string;
+  person_id?: string;
+  cohort_ids?: string;
+  author: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StatisticsChart {
+  chart_id: string;
+  statistics_id: string;
+  name: string;
+  description: string;
   type: string; // 'bar' | 'boxplot'
-  definition: string; // JSON string: { cohortIds, personId, groups }
+  definition: string; // JSON string: groups
   result: string; // JSON string for chart result
   author: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface FeatureExtraction {
+  cohort_id: string;
+  multiple: string;
+  domain_name: string;
+  rank: string;
+  concept_id: string;
+  influence: number;
+  execution_time: string;
+  avg_f1_score: number;
 }
 
 export interface ConditionEra {

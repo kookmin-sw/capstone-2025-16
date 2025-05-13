@@ -1,0 +1,7 @@
+clickhouse-driver==0.2.9
+python-dotenv==1.1.0
+langchain==0.3.25
+fitz==0.0.1.dev2
+openai==1.77.0
+PyMuPDF==1.25.5
+flask==3.1.0

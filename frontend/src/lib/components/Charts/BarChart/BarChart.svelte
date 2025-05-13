@@ -12,6 +12,7 @@
     let width;
     let height;
     const margin = { top: 30, right: 80, bottom: 10, left: 140 };
+    let tooltip;
 
     $: if (chartContainer && data.length > 0 && width && height) {
         drawChart();
@@ -25,7 +26,7 @@
         drawChart();
       }
     }
-  
+
     function drawChart() {
       if (!chartContainer || !width || !height || data.length === 0) return;
 
@@ -57,8 +58,18 @@
       // Y축
       svg.append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
-        .call(d3.axisLeft(yScale))
-        .call(g => g.selectAll(".domain").remove());
+        .call(g => {
+          const axis = d3.axisLeft(yScale);
+          g.call(axis);
+          g.selectAll(".domain").remove();
+
+          const maxLength = 20;
+          g.selectAll("text")
+            .text(function (d) {
+              return d.length > maxLength ? d.slice(0, maxLength - 1) + "…" : d;
+            })
+        });
+
   
       // Bar
       svg.append("g")
@@ -76,26 +87,61 @@
           d3.select(this)
             .style("stroke", "#666")
             .style("stroke-width", "2px");
+
+          tooltip
+            .style("display", "block")
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px")
+            .html(`
+              <div class="font-semibold">${d.name}</div>
+              <div class="text-gray-600">${d.groupLabel || "Diabetes Group"}: ${d.count}</div>
+            `);
+        })
+        .on("mousemove", function (event) {
+          // 툴팁 위치 계속 업데이트 (스크롤 대응)
+          tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
         })
         .on("mouseout", function (event) {
           onMouseOut(event);
           d3.select(this)
             .style("stroke", "none");
+
+          tooltip.style("display", "none");
         });
     }
   
     onMount(async () => {
       if (browser) {
+        console.log(data);
         handleResize();
         await tick();
         drawChart();
         window.addEventListener("resize", handleResize);
+
+        tooltip = d3.select("body")
+          .append("div")
+          .attr("class", "tooltip")
+          .style("position", "absolute")
+          .style("background", "white")
+          .style("border", "1px solid #eee")
+          .style("border-radius", "4px")
+          .style("padding", "4px 6px")
+          .style("display", "none")
+          .style("pointer-events", "none")
+          .style("z-index", "1000")
+          .style("box-shadow", "0 2px 6px rgba(0,0,0,0.1)")
+          .style("backdrop-filter", "blur(4px)")
+          .style("font-size", "11px");
       }
+
     });
   
     onDestroy(() => {
       if (browser) {
         window.removeEventListener("resize", handleResize);
+        if (tooltip) tooltip.remove();
       }
     });
   

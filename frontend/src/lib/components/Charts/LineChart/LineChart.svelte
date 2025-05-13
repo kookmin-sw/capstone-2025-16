@@ -219,6 +219,11 @@
                 .attr("x", 20)
                 .attr("y", 9.5)
                 .attr("dy", "0.02em")
+                .text(d => {
+                    const maxLength = 18;
+                    return d[0].length > maxLength ? d[0].slice(0, maxLength - 1) + "…" : d[0];
+                })
+                .append("title") // hover 시 전체 이름 표시
                 .text(d => d[0])
                 .style("opacity", d => visibleSeries.has(d[0]) ? 1 : 0.5)
                 .style("cursor", "pointer")

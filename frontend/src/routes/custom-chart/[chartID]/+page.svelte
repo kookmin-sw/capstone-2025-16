@@ -6,6 +6,7 @@
     import GroupedBarChart from '$lib/components/Charts/GroupedBarChart/GroupedBarChart.svelte';
     import { dndzone } from 'svelte-dnd-action';
     import ChartCard from "$lib/components/ChartCard.svelte";
+<<<<<<< HEAD
     import LoadingComponent from "$lib/components/LoadingComponent.svelte";
 	import { utcDay } from "d3";
 
@@ -23,6 +24,230 @@
         isDragging = true;
         customChartData = Array.isArray(detail.items) ? detail.items : customChartData;
         isDragging = false;
+=======
+    import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
+    import domtoimage from 'dom-to-image';
+
+    const targetSetData = {
+        statistics_id: "10001",
+        name: "Custom Target Set 1",
+        description: "Description for Custom Chart Set",
+        cohort_ids: "100001,100002,100003",
+        person_id: null,
+        author : "Dr. Kim",
+        createdAt: "2024/01/10 10:00",
+        updatedAt: "2024/01/10 10:00",
+    }
+
+    // cohort_ids 문자열을 배열로 변환
+    const cohortIds = targetSetData.cohort_ids.split(',');
+    const cohortNames = ["Cohort 1", "Cohort 2", "Cohort 3"]; // API 연동 시 코호트 이름 받아와야 함
+
+    let chartData = {
+        "charts": [
+            {
+                "chart_id": "20002",
+                "statistics_id": "10001",
+                "name": "Custom Chart 2",
+                "description": "Description for Custom Chart 2",
+                "type": "bar",
+                "definition": {
+                    "groups": [
+                        {
+                            "name": "Group 1",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "name": "Group 2",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "result": [
+                    {
+                        "cohortId": "100001",
+                        "values": [10,20]
+                    },
+                    {
+                        "cohortId": "100002",
+                        "values": [30,40]
+                    },
+                    {
+                        "cohortId": "100003",
+                        "values": [50,60]
+                    }
+                ],
+                "author": "Dr. Kim",
+                "created_at": "2024-01-10 10:00:00.000",
+                "updated_at": "2024-01-10 10:00:00.000"
+            },
+            {
+                "chart_id": "20003",
+                "statistics_id": "10001",
+                "name": "Custom Chart 3",
+                "description": "Description for Custom Chart 3",
+                "type": "boxplot",
+                "definition": {
+                    "groups": [
+                        {
+                            "name": "Group 1",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "name": "Group 2",
+                            "definition": {
+                                "conceptsets": [],
+                                "initialGroup": {
+                                    "containers": [
+                                        {
+                                            "name": "Measurement",
+                                            "filters": [
+                                                {
+                                                    "type": "measurement"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "countBy": {
+                        "concept": "21490888"
+                    }
+                },
+                "result": [
+                    {
+                        "cohortId": "100001",
+                        "values": [
+                            [
+                                { "type": "minimum", "value": 1 },
+                                { "type": "maximum", "value": 10 },
+                                { "type": "median", "value": 5 },
+                                { "type": "lower", "value": 3 },
+                                { "type": "upper", "value": 7 },
+                                { "type": "outlier", "value": 0.5 },
+                                { "type": "outlier", "value": 12 }
+                            ],
+                            [
+                                { "type": "minimum", "value": 2 },
+                                { "type": "maximum", "value": 20 },
+                                { "type": "median", "value": 10 },
+                                { "type": "lower", "value": 5 },
+                                { "type": "upper", "value": 15 },
+                                { "type": "outlier", "value": 1 },
+                                { "type": "outlier", "value": 25 }
+                            ],
+                        ]
+                    },
+                    {
+                        "cohortId": "100002",
+                        "values": [
+                            [
+                                { "type": "minimum", "value": 0 },
+                                { "type": "maximum", "value": 5 },
+                                { "type": "median", "value": 2.5 },
+                                { "type": "lower", "value": 1 },
+                                { "type": "upper", "value": 4 },
+                                { "type": "outlier", "value": -1 },
+                                { "type": "outlier", "value": 6 }
+                            ],
+                            [
+                                { "type": "minimum", "value": 3 },
+                                { "type": "maximum", "value": 15 },
+                                { "type": "median", "value": 8 },
+                                { "type": "lower", "value": 5 },
+                                { "type": "upper", "value": 12 },
+                                { "type": "outlier", "value": 2 },
+                                { "type": "outlier", "value": 18 }
+                            ],
+                        ]
+                    },
+                    {
+                        "cohortId": "100003",
+                        "values": [
+                            [
+                                { "type": "minimum", "value": 1 },
+                                { "type": "maximum", "value": 10 },
+                                { "type": "median", "value": 5 },
+                                { "type": "lower", "value": 3 },
+                                { "type": "upper", "value": 7 },
+                                { "type": "outlier", "value": 0.5 },
+                                { "type": "outlier", "value": 12 }
+                            ],
+                            [
+                                { "type": "minimum", "value": 0 },
+                                { "type": "maximum", "value": 5 },
+                                { "type": "median", "value": 2.5 },
+                                { "type": "lower", "value": 1 },
+                                { "type": "upper", "value": 4 },
+                                { "type": "outlier", "value": -1 },
+                                { "type": "outlier", "value": 6 }
+                            ],
+                        ]
+                    }
+                ],
+            }
+        ],
+        "total": 2,
+        "page": 0,
+        "limit": 50
+    }
+    
+    let expandedStates = cohortIds.map(() => false);
+    let chartDefinitionStates = chartData.charts.map(() => false);
+
+    function handleDnd({ detail }) {
+        chartData.charts = detail.items.map(item => {
+        const { id, ...rest } = item;
+        return {
+                ...rest,
+                chart_id: id  // id → chart_id로 복원
+            };
+        });
+>>>>>>> master
     }
 
     async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
@@ -30,6 +255,7 @@
         expandedStates[index] = !expandedStates[index];
         expandedStates = [...expandedStates];
     }
+<<<<<<< HEAD
     
     onMount(async() => {
         try{
@@ -68,6 +294,41 @@
             isLoading = false;
         }
     });
+=======
+
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error('클립보드 복사 실패:', err);
+        }
+    }
+
+    async function exportChartImage(chartId, format = 'png') {
+        const chartElement = document.getElementById(`chart-${chartId}`);
+        if (!chartElement) {
+            console.error(`Chart element not found for id: chart-${chartId}`);
+            return;
+        }
+
+        try {
+            const dataUrl = await domtoimage.toPng(chartElement);
+            const link = document.createElement('a');
+            link.download = `${chartId}.${format}`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Export error:', error);
+        }
+    }
+
+    async function toggleChartDefinition(chartIndex) {
+        await tick();
+        chartDefinitionStates[chartIndex] = !chartDefinitionStates[chartIndex];
+        chartDefinitionStates = [...chartDefinitionStates];
+    }
+
+>>>>>>> master
 </script>
 
 {#if isLoading}
@@ -82,7 +343,11 @@
             </div>
             
             <div class="p-4 overflow-y-auto flex flex-col gap-2">
+<<<<<<< HEAD
                 {#each targetSetData as id, index}
+=======
+                {#each cohortIds as id, index}
+>>>>>>> master
                     <button 
                         class="w-full flex items-center justify-between px-3 py-2 bg-white rounded-lg border hover:bg-blue-50 transition-colors group"
                         onclick={() => goto(`/cohort/${id.cohort_id}`)}
@@ -92,7 +357,11 @@
                                 <span class="text-[10px] font-medium text-gray-400 truncate">{id.cohort_id}</span>
                             </div>
                             <div class="flex items-center gap-1">
+<<<<<<< HEAD
                                 <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{id.name}</div>
+=======
+                                <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohortNames[index]}</div>
+>>>>>>> master
                             </div>
                         </div>
                         <div class="flex items-center text-gray-400 group-hover:text-blue-600">
@@ -109,7 +378,11 @@
                 <div class="flex items-center gap-4">
                     <div class="font-medium">
                         <span class="text-sm text-gray-400">ID</span>
+<<<<<<< HEAD
                         <span class="text-sm text-black-500">{cumtomInfo.statistics_id}</span>
+=======
+                        <span class="text-sm text-black-500">{targetSetData.statistics_id}</span>
+>>>>>>> master
                     </div>
                     <div class="text-blue-600 font-medium">Custom Target Set 1</div>
                 </div>
@@ -119,7 +392,11 @@
                 <div class="grid grid-cols-3 gap-4 text-sm">
                     <div>
                         <p class="text-gray-500">Author</p>
+<<<<<<< HEAD
                         <p class="font-medium">{cumtomInfo.author}</p>
+=======
+                        <p class="font-medium">{targetSetData.author}</p>
+>>>>>>> master
                     </div>
                     <div>
                         <p class="text-gray-500">Created at</p>
@@ -147,38 +424,52 @@
     </div>
 </div>
 
-<div use:dndzone={{ items: customChartData,
+<div use:dndzone={{ items: chartData.charts.map(chart => ({
+                        ...chart,
+                        id: chart.chart_id  // chart_id를 id로 복사
+                    })),
                     flipDurationMs: 300,
                     dropTargetStyle: {
                         backgroundColor: 'transparent',
                         border: 'none'
-                    }
+                    },
                 }}
                 onconsider={handleDnd}
                 onfinalize={handleDnd}
                 class="space-y-2 py-4 px-10"
                 >
-    {#each customChartData as chart, index (chart.id)}
+    {#each chartData.charts as chart, index (chart.chart_id)}
         <div class="border rounded-lg overflow-hidden bg-white">
             <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
                 onclick={() => toggleExpand(index)}
             >
-                <div class="flex items-start gap-2 min-w-0">
+                <div class="flex items-center gap-2">
                     <svg 
-                        class="w-3 h-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-180' : ''}" 
+                        class="w-3 h-3 mr-3 flex-shrink-0 transform transition-transform {expandedStates[index] ? 'rotate-0' : '-rotate-90'}" 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
                     >
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
+<<<<<<< HEAD
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-1">
                             <span class="text-xs font-medium text-gray-400 truncate">{chart.id}</span>
                         </div>
                         <div class="flex items-center gap-1">
                             <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+=======
+                    <div class="flex items-start gap-2 min-w-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1">
+                            <span class="text-xs font-medium text-gray-400 truncate">{chart.chart_id}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="text-sm font-medium text-blue-600 break-words whitespace-normal">{chart.name}</div>
+                            </div>
+>>>>>>> master
                         </div>
                     </div>
                 </div>
@@ -194,12 +485,18 @@
           {#if expandedStates[index]}
             <div class="p-2 border-t text-sm relative" transition:slide>
                 <button 
+                    title="Delete Chart"
                     aria-label="custom chart delete button",
                     class="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
                     onclick={(e) => {
                         e.stopPropagation();
+<<<<<<< HEAD
                         if(!isDragging && confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
                             customChartData = [...customChartData.filter((_, i) => i !== index)];
+=======
+                        if(confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
+                            chartData.charts = chartData.charts.filter((_, i) => i !== index);
+>>>>>>> master
                         }
                     }}
                 >
@@ -207,6 +504,21 @@
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
+                </button>
+                <button 
+                    title="Download Chart Image"
+                    aria-label="export chart image"
+                    class="absolute top-2 right-10 p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                    onclick={(e) => {
+                        e.stopPropagation();
+                        exportChartImage(chart.chart_id, 'png'); // png or 'jpeg'
+                    }}
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
                 </button>
 
                 <div class="space-y-1">
@@ -231,15 +543,64 @@
                 <div class="pt-4 px-2">
                     <ChartCard 
                         title="Custom Chart"
+                        description="Visualize and compare data across different targets and groups"
                         hasXButton = {false}
+                        height="400px"
                     >
+<<<<<<< HEAD
                         <div class="w-full h-full flex items-center justify-center">
                             <GroupedBarChart data={chart.result} />
+=======
+                        <div id={"chart-"+chart.chart_id} class="w-full h-full flex items-center justify-center">
+                            {#if chart.type === "boxplot"}
+                                <BoxPlot data={chart} />
+                            {:else}
+                                <GroupedBarChart data={chart} />
+                            {/if}
+>>>>>>> master
                         </div>
                     </ChartCard>
                 </div>
-                <div class="p-4 border-t">
-                    <p class="text-gray-500">Chart Detail Information will be displayed here.</p>
+                <div class="p-4 border-t mt-5">
+                    <div class="flex justify-start items-center">
+                        <button 
+                            aria-label="toggle chart definition"
+                            class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                            onclick={() => toggleChartDefinition(index)}
+                        >
+                            <svg 
+                                class="w-3 h-3 flex-shrink-0 transform transition-transform {chartDefinitionStates[index] ? 'rotate-0' : '-rotate-90'}" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            <div class="text-md font-medium text-gray-700">Chart Definition</div>
+                        </button>
+                    </div>
+                    {#if chartDefinitionStates[index]}
+                        <div transition:slide>
+                            {#each chart.definition.groups as group, index}
+                                <div class="mb-4 ml-6 last:mb-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
+                                        <button 
+                                            class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors flex items-center gap-1"
+                                            onclick={() => copyToClipboard(JSON.stringify(group.definition, null, 2))}
+                                        >
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <pre class="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(group.definition, null, 2)}</pre>
+                                </div>
+                            {/each}
+                        </div>
+                    {/if}
                 </div>
             </div>
           {/if}

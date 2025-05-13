@@ -1,85 +1,85 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/gFPznrUY)
-# Welcome to GitHub
+# 다학제간캡스톤디자인 16조 - 도시락
 
-캡스톤 팀 생성을 축하합니다.
+**산학 협력 기관**
 
-## 팀소개 및 페이지를 꾸며주세요.
+![서울대학교병원 로고](./Logo/SNUH로고.svg)
 
-- 프로젝트 소개
-  - 프로젝트 설치방법 및 데모, 사용방법, 프리뷰등을 readme.md에 작성.
-  - Api나 사용방법등 내용이 많을경우 wiki에 꾸미고 링크 추가.
+**서울대학교병원 융합의학기술원 (SNUH Institute of Convergence Medicine)**
 
-- 팀페이지 꾸미기
-  - 프로젝트 소개 및 팀원 소개
-  - index.md 예시보고 수정.
+서울대학교병원 융합의학기술원은 2020년 3월 1일 설립되어, 인류의 질병과 장애, 의학적 난제를 해결하기 위한 혁신적인 의료기술을 개발하고 있습니다. 최첨단 연구시설과 융합의학 전문 인력, 그리고 독립적인 조직을 통해 융합의학 연구 역량을 집중시켜 성장을 거듭해 왔습니다.
 
-- GitHub Pages 리파지토리 Settings > Options > GitHub Pages 
-  - Source를 marster branch
-  - Theme Chooser에서 태마선택
-  - 수정후 팀페이지 확인하여 점검.
+---
 
-**팀페이지 주소** -> https://kookmin-sw.github.io/ '{{자신의 리파지토리 아이디}}'
+## 연구자들의 편의를 위한 의료 CDM 데이터 Viewer - **Bento**
 
-**예시)** 2023년 0조  https://kookmin-sw.github.io/capstone-2023-00/
+**Bento**는 일본어로 **도시락**이라는 의미를 가지고 있습니다.  
+저희는 다양한 반찬을 원하는대로 골라 담는 이 도시락처럼, 연구진들이 방대한 의료데이터 속에서 필요한 정보를 쉽고 편리하게 선택하고 조합하여 분석할 수 있도록 돕겠다는 의미를 담아 이 프로젝트명을 **Bento**로 결정했습니다.
 
+---
 
-## 내용에 아래와 같은 내용들을 추가하세요.
+## 1. 프로젝트 소개
+<img src="./Logo/logo_svg.svg" width="100%" height="200" alt="Bento Logo"></img>
 
-### 1. 프로잭트 소개
+Bento는 급격히 증가하는 의료 데이터를 빠르고 효율적으로 탐색 및 시각화하여 연구 기획과 진행 속도를 획기적으로 개선하는 시스템입니다.
 
-프로젝트
+현재 가장 많이 사용하는 Atlas 프로그램보다 **950배 빠른 속도**를 자랑하며, 기본 제공 차트 외에도 사용자가 직접 정의한 통계 지표를 기반으로 원하는 데이터를 자유롭게 그래프로 생성·분석할 수 있습니다.
 
-### 2. 소개 영상
+Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도구를 활용해 연구 설계 단계의 신뢰도와 효율성을 높여 연구 진행 속도를 획기적으로 단축합니다.
 
-프로젝트 소개하는 영상을 추가하세요
+---
 
-### 3. 팀 소개
+## 2. 소개 영상
+_(추가 예정)_
 
-팀을 소개하세요.
+[소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
+---
 
-팀원정보 및 담당이나 사진 및 SNS를 이용하여 소개하세요.
+## 3. 팀 소개
 
-### 4. 사용법
-
-소스코드제출시 설치법이나 사용법을 작성하세요.
-
-### 5. 기타
-
-추가적인 내용은 자유롭게 작성하세요.
+| ![장원준](https://github.com/IamWonILuvWon.png) | ![임혜진](https://github.com/ima9ine4.png) | ![이재영](https://github.com/rktlskan021.png) | ![이수혁](https://github.com/cg10036.png) |
+| :---------------------------------------------: | :---------------------------------------: | :-----------------------------------------: | :-----------------------------------------: |
+| [장원준](https://github.com/IamWonILuvWon)      | [임혜진](https://github.com/ima9ine4)      | [이재영](https://github.com/rktlskan021)    | [이수혁](https://github.com/cg10036)        |
+| PM, AI Engineer                                | FrontEnd                                  | FrontEnd                                    | BackEnd                                    |
+| ![권세건](https://github.com/honeybugs.png)    | ![정채원](https://github.com/chloebh9.png) | ![배진우](https://github.com/bgw4399.png)    |                                             |
+| [권세건](https://github.com/honeybugs)         | [정채원](https://github.com/chloebh9)      | [배진우](https://github.com/bgw4399)         |                                             |
+| FrontEnd                                       | AI Engineer                               | AI Engineer                                 |                                             |
 
 
-## Markdown을 사용하여 내용꾸미기
+---
 
-Markdown은 작문을 스타일링하기위한 가볍고 사용하기 쉬운 구문입니다. 여기에는 다음을위한 규칙이 포함됩니다.
+## 4. 주요 기능
 
-```markdown
-Syntax highlighted code block
+| 기능 | 설명 |
+| :---: | :---: |
+| **코호트 정의** | 드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다.<br>직관적인 UI/UX와 LLM을 활용한 코호트 구성, 쿼리 load/export 기능을 제공합니다. |
+| **통계** | 여러 코호트를 한눈에 비교·분석할 수 있는 그래프를 제공하며, <br>개별 환자의 상세 데이터도 실시간으로 확인할 수있습니다.|
+| **환자군 특징 분석** | AI 분석을 통해 코호트 집단의 특징을 추가적으로 파악하여 연구진에게 제시합니다.<br>이를 통해 연구 계획에 빠진 내용이나 관련된 새로운 특징을 발견할 수 있습니다. |
+| **자동 코호트 생성** | 텍스트 입력, 논문 드래그 앤 드롭 등을 통해 자동으로 코호트를 생성해 줍니다.<br>이를 통해 초보 연구자도 쉽게 사용할 수 있도록 환경을 제공하며, 연구자의 편리성을 높일 수 있습니다. |
 
-# Header 1
-## Header 2
-### Header 3
 
-- Bulleted
-- List
+## 5. 시스템 아키텍처
+![System Architecture](./Logo/Bento.drawio.png)
+---
 
-1. Numbered
-2. List
+## 6. 기술 스택
 
-**Bold** and _Italic_ and `Code` text
+| 포지션 | 스택 |
+| :---: | :---: |
+| **FrontEnd** | ![SvelteKit](https://img.shields.io/badge/SvelteKit-FF3E00?style=for-the-badge&logo=svelte&logoColor=white) ![TailwindCss](https://img.shields.io/badge/TailwindCss-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white) ![D3.js](https://img.shields.io/badge/D3.js-F9A03C?style=for-the-badge&logo=d3&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) |
+| **BackEnd API** | ![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white) ![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=white) ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white) |
+| **AI** | ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white) ![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white) ![Google Gemini](https://img.shields.io/badge/google%20gemini-8E75B2?style=for-the-badge&logo=google%20gemini&logoColor=white) |
+| **Infra** | ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white) ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white) ![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white) |
 
-[Link](url) and ![Image](src)
+
+## 7. 실행방법
+### Common
+
+```bash
+git clone https://github.com/kookmin-sw/capstone-2025-16.git
+cd capstone-2025-16
+docker-compose up -d
 ```
 
-자세한 내용은 [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+###  [FrontEnd](https://github.com/kookmin-sw/capstone-2025-16/blob/master/frontend/README.md)
 
-## Team
-| <img src="https://github.com/ima9ine4.png" width="150" height="150"/> | <img src="https://github.com/cg10036.png" width="150" height="150"/> | <img src="https://github.com/rktlskan021.png" width="150" height="150"/> | <img src="https://github.com/IamWonILuvWon.png" width="150" height="150"/> | <img src="https://github.com/honeybugs.png" width="150" height="150"/> | <img src="https://github.com/chloebh9.png" width="150" height="150"/> | <img src="https://github.com/bgw4399.png" width="150" height="150"/> |
-|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|
-| 임혜진<br/>[@ima9ine4](https://github.com/ima9ine4) | 이수혁<br/>[@cg10036](https://github.com/cg10036) | 이재영<br/>[@rktlskan021](https://github.com/rktlskan021) | 장원준<br/>[@IamWonILuvWon](https://github.com/IamWonILuvWon) | 권세건<br/>[@honeybugs](https://github.com/honeybugs) | 정채원<br/>[@chloebh9](https://github.com/chloebh9) | 배진우<br/>[@bgw4399](https://github.com/bgw4399) |
-
-
-
-
-### Support or Contact
-
-readme 파일 생성에 추가적인 도움이 필요하면 [도움말](https://help.github.com/articles/about-readmes/) 이나 [contact support](https://github.com/contact) 을 이용하세요.
+### [BackEnd](https://github.com/kookmin-sw/capstone-2025-16/blob/master/backend/README.md)

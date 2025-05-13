@@ -8,14 +8,13 @@
     export let cohortColorMap = {};
     export let orderedCohorts = [];
     export let domainKey = '';
-    export let onMouseOver = () => {};
-    export let onMouseOut = () => {};
 
     let chartContainer;
     let width;
     let height;
     const margin = { top: 30, right: 80, bottom: 10, left: 140 };
     let resizeObserver;
+    let tooltip;
 
     // 데이터나 크기가 변경될 때마다 차트 다시 그리기
     $: if (chartContainer && stackData.length > 0 && width && height) {
@@ -73,7 +72,13 @@
         svg.append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
             .call(d3.axisLeft(yScale))
-            .call(g => g.selectAll(".domain").remove());
+            .call(g => {
+                g.selectAll(".domain").remove();
+                
+                const maxLength = 20;
+                g.selectAll("text")
+                    .text(d => d.length > maxLength ? d.slice(0, maxLength - 1) + "…" : d)
+            });
 
         // 스택 막대 그리기
         const groups = svg.append("g")
@@ -92,16 +97,33 @@
             .attr("height", yScale.bandwidth())
             .on("mouseover", function (event, d) {
                 const currentCohort = d3.select(this.parentNode).datum().key;
-                onMouseOver(event, d, currentCohort);
                 d3.select(event.target)
                     .style("stroke", "#666")
                     .style("stroke-width", "2px");
-            })
-            .on("mouseout", (event) => {
-                onMouseOut(event);
+                tooltip
+                    .style("display", "block")
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 40) + "px")
+                    .html(`
+                    <div class="p-1">
+                        <div class="text-[10px] font-semibold mb-0.5">${d.data[domainKey]}</div>
+                        <div class="text-[9px] text-gray-600">
+                        ${currentCohort}:
+                        <span class="ml-0.5 font-medium">${(d.data[currentCohort] || 0).toLocaleString()}</span>
+                        </div>
+                    </div>
+                    `);
+                })
+                .on("mousemove", function (event) {
+                tooltip
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 40) + "px");
+                })
+                .on("mouseout", (event) => {
                 d3.select(event.target)
                     .style("stroke", "none");
-            });
+                tooltip.style("display", "none");
+                });
     }
 
     onMount(async () => {
@@ -114,6 +136,21 @@
                 handleResize();
             });
             resizeObserver.observe(chartContainer);
+
+            tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("position", "fixed")
+                .style("background", "white")
+                .style("border", "1px solid #eee")
+                .style("border-radius", "4px")
+                .style("padding", "1px 2px")
+                .style("display", "none")
+                .style("pointer-events", "none")
+                .style("z-index", "1000")
+                .style("box-shadow", "0 2px 6px rgba(0,0,0,0.1)")
+                .style("backdrop-filter", "blur(4px)")
+                .style("font-size", "10px");
         }
     });
 
@@ -124,7 +161,7 @@
         if (resizeObserver && chartContainer) {
             resizeObserver.unobserve(chartContainer);
         }
-
+        if (tooltip) tooltip.remove();
     });
     
 </script>

@@ -5,6 +5,7 @@
 	export let description = '';
 	export let type = 'full';
 	export let chartId;
+	export let height = '300px';
 
 	export let showSelector = false;
 	export let options = '';
@@ -32,7 +33,8 @@
 
 {#if visible}
 <div 
-	class="flex flex-col h-[300px] bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full"
+	class="flex flex-col bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full"
+	style="height: {height};"
 	class:col-span-6={type === 'full'}
 	class:col-span-3={type === 'half'}
 	class:col-span-2={type === 'third'}>
@@ -106,7 +108,7 @@
 	</div>
 
 	<!-- 차트 컨텐츠 영역 -->
-	<div class="flex-1 overflow-y-auto px-2">
+	<div class="flex-1 overflow-y-auto px-2 pt-2">
 		<div class="h-full overflow-visible">
 		{#if !isTableView}
 			<slot />

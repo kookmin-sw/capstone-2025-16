@@ -14,6 +14,13 @@ import {
   CreateStatisticsResponse,
   UpdateStatisticsResponse,
   DeleteStatisticsResponse,
+  CreateChartDto,
+  UpdateChartDto,
+  ChartResponse,
+  ChartListResponse,
+  CreateChartResponse,
+  UpdateChartResponse,
+  DeleteChartResponse,
 } from './dto/statistics.dto';
 import {
   BarChartCohortDefinition,
@@ -214,9 +221,210 @@ export class StatisticsService {
     const statisticsId = uuidv7();
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
+    // DTO에서 소스 정보만 추출
+    const { name, description, cohortIds, personId } = createStatisticsDto;
+
+    await getBaseDB()
+      .insertInto('statistics')
+      .values({
+        statistics_id: statisticsId,
+        name,
+        description,
+        ...(cohortIds
+          ? { cohort_ids: cohortIds.join(',') }
+          : { person_id: personId }),
+        author: '00000000-0000-0000-0000-000000000000', // TODO: add author
+        created_at: now,
+        updated_at: now,
+      })
+      .execute();
+
+    return {
+      message: 'Statistics created successfully',
+      statisticsId,
+    };
+  }
+
+  async updateStatistics(
+    id: string,
+    updateStatisticsDto: UpdateStatisticsDto,
+  ): Promise<UpdateStatisticsResponse> {
+    const statistics = await getBaseDB()
+      .selectFrom('statistics')
+      .selectAll()
+      .where('statistics_id', '=', id)
+      .executeTakeFirst();
+
+    if (!statistics) {
+      throw new NotFoundException('Statistics not found.');
+    }
+
+    // 업데이트할 필드 구성
+    const updateFields: Record<string, any> = {
+      updated_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
+    let definitionUpdated = false;
+
+    // 이름과 설명 업데이트
+    if (updateStatisticsDto.name !== undefined) {
+      updateFields.name = updateStatisticsDto.name;
+    }
+
+    if (updateStatisticsDto.description !== undefined) {
+      updateFields.description = updateStatisticsDto.description;
+    }
+
+    // DTO에서 소스 정보가 변경되었으면 정의 업데이트
+    if (updateStatisticsDto.cohortIds !== undefined) {
+      updateFields.cohort_ids = updateStatisticsDto.cohortIds.join(',');
+      updateFields.person_id = null; // personId는 null로 설정
+      definitionUpdated = true;
+    } else if (updateStatisticsDto.personId !== undefined) {
+      updateFields.cohort_ids = null; // cohortIds는 null로 설정
+      updateFields.person_id = updateStatisticsDto.personId;
+      definitionUpdated = true;
+    }
+
+    // 데이터베이스 업데이트
+    await getBaseDB()
+      .updateTable('statistics')
+      .set(updateFields)
+      .where('statistics_id', '=', id)
+      .execute();
+
+    return {
+      message: 'Statistics updated successfully',
+    };
+  }
+
+  async deleteStatistics(id: string): Promise<DeleteStatisticsResponse> {
+    const statistics = await getBaseDB()
+      .selectFrom('statistics')
+      .selectAll()
+      .where('statistics_id', '=', id)
+      .executeTakeFirst();
+
+    if (!statistics) {
+      throw new NotFoundException('Statistics not found.');
+    }
+
+    // 통계에 속한 모든 차트도 함께 삭제
+    await getBaseDB()
+      .deleteFrom('statistics_chart')
+      .where('statistics_id', '=', id)
+      .execute();
+
+    await getBaseDB()
+      .deleteFrom('statistics')
+      .where('statistics_id', '=', id)
+      .execute();
+
+    return {
+      message: 'Statistics deleted successfully',
+    };
+  }
+
+  // 통계 차트 관련 메서드
+  async getCharts(
+    statisticsId: string,
+    page: number = 0,
+    limit: number = 50,
+  ): Promise<ChartListResponse> {
+    const offset = page * limit;
+
+    // 통계 존재 여부 확인
+    const statistics = await getBaseDB()
+      .selectFrom('statistics')
+      .selectAll()
+      .where('statistics_id', '=', statisticsId)
+      .executeTakeFirst();
+
+    if (!statistics) {
+      throw new NotFoundException('Statistics not found.');
+    }
+
+    // 차트 목록 조회 쿼리
+    const chartsQuery = getBaseDB()
+      .selectFrom('statistics_chart')
+      .selectAll()
+      .where('statistics_id', '=', statisticsId)
+      .limit(limit)
+      .offset(offset)
+      .orderBy('updated_at', 'desc');
+
+    // 총 결과 수를 계산하기 위한 쿼리
+    const countQuery = getBaseDB()
+      .selectFrom('statistics_chart')
+      .select(({ fn }) => [fn.count('chart_id').as('total')])
+      .where('statistics_id', '=', statisticsId);
+
+    // 두 쿼리를 병렬로 실행
+    const [charts, countResult] = await Promise.all([
+      chartsQuery.execute(),
+      countQuery.executeTakeFirst(),
+    ]);
+
+    return {
+      charts,
+      total: Number(countResult?.total || 0),
+      page,
+      limit,
+    };
+  }
+
+  async getChartById(
+    statisticsId: string,
+    chartId: string,
+  ): Promise<ChartResponse> {
+    // 통계 존재 여부 확인
+    const statistics = await getBaseDB()
+      .selectFrom('statistics')
+      .selectAll()
+      .where('statistics_id', '=', statisticsId)
+      .executeTakeFirst();
+
+    if (!statistics) {
+      throw new NotFoundException('Statistics not found.');
+    }
+
+    const chart = await getBaseDB()
+      .selectFrom('statistics_chart')
+      .selectAll()
+      .where('statistics_id', '=', statisticsId)
+      .where('chart_id', '=', chartId)
+      .executeTakeFirst();
+
+    if (!chart) {
+      throw new NotFoundException('Chart not found.');
+    }
+
+    return chart;
+  }
+
+  async createChart(
+    statisticsId: string,
+    createChartDto: CreateChartDto,
+  ): Promise<CreateChartResponse> {
+    // 통계 존재 여부 확인
+    const statistics = await getBaseDB()
+      .selectFrom('statistics')
+      .selectAll()
+      .where('statistics_id', '=', statisticsId)
+      .executeTakeFirst();
+
+    if (!statistics) {
+      throw new NotFoundException('Statistics not found.');
+    }
+
+    const chartId = uuidv7();
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
     // DTO에서 필요한 필드 추출
-    const { name, description, type, cohortIds, personId, groups, countBy } =
-      createStatisticsDto;
+    const { name, description, type, groups, countBy } = createChartDto;
+
+    // 통계 소스 정보 가져오기
+    const cohortIds = statistics.cohort_ids?.split(',') || undefined;
+    const personId = statistics.person_id || undefined;
 
     let result: any;
     switch (type) {
@@ -249,15 +457,14 @@ export class StatisticsService {
 
     // 데이터베이스에 저장할 definition 객체 생성
     const definition = {
-      cohortIds,
-      personId,
       groups,
       countBy,
     };
 
     await getBaseDB()
-      .insertInto('statistics')
+      .insertInto('statistics_chart')
       .values({
+        chart_id: chartId,
         statistics_id: statisticsId,
         name,
         description,
@@ -271,23 +478,36 @@ export class StatisticsService {
       .execute();
 
     return {
-      message: 'Statistics created successfully',
-      statisticsId,
+      message: 'Chart created successfully',
+      chartId,
     };
   }
 
-  async updateStatistics(
-    id: string,
-    updateStatisticsDto: UpdateStatisticsDto,
-  ): Promise<UpdateStatisticsResponse> {
+  async updateChart(
+    statisticsId: string,
+    chartId: string,
+    updateChartDto: UpdateChartDto,
+  ): Promise<UpdateChartResponse> {
+    // 통계 존재 여부 확인
     const statistics = await getBaseDB()
       .selectFrom('statistics')
       .selectAll()
-      .where('statistics_id', '=', id)
+      .where('statistics_id', '=', statisticsId)
       .executeTakeFirst();
 
     if (!statistics) {
       throw new NotFoundException('Statistics not found.');
+    }
+
+    const chart = await getBaseDB()
+      .selectFrom('statistics_chart')
+      .selectAll()
+      .where('chart_id', '=', chartId)
+      .where('statistics_id', '=', statisticsId)
+      .executeTakeFirst();
+
+    if (!chart) {
+      throw new NotFoundException('Chart not found.');
     }
 
     // 업데이트할 필드 구성
@@ -295,48 +515,42 @@ export class StatisticsService {
       updated_at: moment().format('YYYY-MM-DD HH:mm:ss'),
     };
 
-    // 현재 저장된 데이터
-    const currentDefinition = JSON.parse(statistics.definition || '{}');
+    // 현재 저장된 차트 데이터
+    const currentDefinition: {
+      groups: {
+        name: string;
+        definition: BarChartCohortDefinition | CohortDefinition;
+      }[];
+      countBy?: BoxPlotCountBy;
+    } = JSON.parse(chart.definition || '{}');
     let definitionUpdated = false;
     let resultNeedsUpdate = false;
 
     // 이름과 설명 업데이트 (결과에 영향 없음)
-    if (updateStatisticsDto.name !== undefined) {
-      updateFields.name = updateStatisticsDto.name;
+    if (updateChartDto.name !== undefined) {
+      updateFields.name = updateChartDto.name;
     }
 
-    if (updateStatisticsDto.description !== undefined) {
-      updateFields.description = updateStatisticsDto.description;
+    if (updateChartDto.description !== undefined) {
+      updateFields.description = updateChartDto.description;
     }
 
     // 타입 변경 시 결과 재계산 필요
-    if (updateStatisticsDto.type !== undefined) {
-      updateFields.type = updateStatisticsDto.type;
+    if (updateChartDto.type !== undefined) {
+      updateFields.type = updateChartDto.type;
       resultNeedsUpdate = true;
     }
 
-    // DTO에서 필드가 변경되었으면 정의 업데이트 및 결과 재계산 플래그 설정
-    if (updateStatisticsDto.cohortIds !== undefined) {
-      currentDefinition.cohortIds = updateStatisticsDto.cohortIds;
+    // 그룹 정보 업데이트 시 결과 재계산 필요
+    if (updateChartDto.groups !== undefined) {
+      currentDefinition.groups = updateChartDto.groups;
       definitionUpdated = true;
       resultNeedsUpdate = true;
     }
 
-    if (updateStatisticsDto.personId !== undefined) {
-      currentDefinition.personId = updateStatisticsDto.personId;
-      definitionUpdated = true;
-      resultNeedsUpdate = true;
-    }
-
-    if (updateStatisticsDto.groups !== undefined) {
-      currentDefinition.groups = updateStatisticsDto.groups;
-      definitionUpdated = true;
-      resultNeedsUpdate = true;
-    }
-
-    if (updateStatisticsDto.countBy !== undefined) {
-      currentDefinition.countBy = updateStatisticsDto.countBy;
-      definitionUpdated = true;
+    // countBy 업데이트 시 결과 재계산 필요
+    if (updateChartDto.countBy !== undefined) {
+      updateFields.count_by = JSON.stringify(updateChartDto.countBy);
       resultNeedsUpdate = true;
     }
 
@@ -346,11 +560,15 @@ export class StatisticsService {
 
     // 결과 데이터를 갱신해야 하는 경우
     if (resultNeedsUpdate) {
-      const type = updateStatisticsDto.type || statistics.type;
-      const cohortIds = currentDefinition.cohortIds;
-      const personId = currentDefinition.personId;
+      // 통계 소스 정보 가져오기
+      const cohortIds = statistics.cohort_ids?.split(',') || undefined;
+      const personId = statistics.person_id || undefined;
+
+      const type = updateChartDto.type || chart.type;
       const groups = currentDefinition.groups;
-      const countBy = currentDefinition.countBy;
+      const countBy = updateChartDto.countBy
+        ? updateChartDto.countBy
+        : currentDefinition.countBy;
 
       let result: any;
       switch (type) {
@@ -358,7 +576,7 @@ export class StatisticsService {
           result = await this.processBarChart({
             cohortIds,
             personId,
-            chartCohortDefs: groups,
+            chartCohortDefs: groups.map((e) => e.definition),
           });
           break;
         case 'boxplot':
@@ -371,7 +589,7 @@ export class StatisticsService {
           result = await this.processBoxPlotChart({
             cohortIds,
             personId,
-            chartCohortDefs: groups,
+            chartCohortDefs: groups.map((e) => e.definition),
             countBy,
           });
           break;
@@ -386,34 +604,51 @@ export class StatisticsService {
 
     // 데이터베이스 업데이트
     await getBaseDB()
-      .updateTable('statistics')
+      .updateTable('statistics_chart')
       .set(updateFields)
-      .where('statistics_id', '=', id)
+      .where('chart_id', '=', chartId)
+      .where('statistics_id', '=', statisticsId)
       .execute();
 
     return {
-      message: 'Statistics updated successfully',
+      message: 'Chart updated successfully',
     };
   }
 
-  async deleteStatistics(id: string): Promise<DeleteStatisticsResponse> {
+  async deleteChart(
+    statisticsId: string,
+    chartId: string,
+  ): Promise<DeleteChartResponse> {
+    // 통계 존재 여부 확인
     const statistics = await getBaseDB()
       .selectFrom('statistics')
       .selectAll()
-      .where('statistics_id', '=', id)
+      .where('statistics_id', '=', statisticsId)
       .executeTakeFirst();
 
     if (!statistics) {
       throw new NotFoundException('Statistics not found.');
     }
 
+    const chart = await getBaseDB()
+      .selectFrom('statistics_chart')
+      .selectAll()
+      .where('chart_id', '=', chartId)
+      .where('statistics_id', '=', statisticsId)
+      .executeTakeFirst();
+
+    if (!chart) {
+      throw new NotFoundException('Chart not found.');
+    }
+
     await getBaseDB()
-      .deleteFrom('statistics')
-      .where('statistics_id', '=', id)
+      .deleteFrom('statistics_chart')
+      .where('chart_id', '=', chartId)
+      .where('statistics_id', '=', statisticsId)
       .execute();
 
     return {
-      message: 'Statistics deleted successfully',
+      message: 'Chart deleted successfully',
     };
   }
 }
