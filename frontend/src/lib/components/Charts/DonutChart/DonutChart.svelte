@@ -62,9 +62,34 @@
     $: hoveredSlice = hoveredLabel ? 
         data_ready.find(slice => slice.data[0] === hoveredLabel) : 
         null;
+
+    let tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: '' };
+
+    function showTooltip(event, slice) {
+        const [svgX, svgY] = arc.centroid(slice);
+        const svg = event.target.ownerSVGElement;
+        const pt = svg.createSVGPoint();
+        pt.x = svgX;
+        pt.y = svgY;
+        const screenCTM = svg.getScreenCTM();
+        const { x, y } = pt.matrixTransform(screenCTM);
+
+        tooltip = {
+            show: true,
+            x,
+            y,
+            label: slice.data[0],
+            value: slice.data[1],
+            percent: calculatePercent(slice.data[1])
+        };
+    }
+
+    function hideTooltip() {
+        tooltip.show = false;
+    }
 </script>
 
-<div class="chart-container flex flex-col items-center">
+<div class="chart-container flex flex-col items-center" style="position:relative;">
     {#if processedData.length > 0}
         <svg {width} {height} viewBox="{-width / 2}, {-height / 2}, {width}, {height}" style:max-width="100%" style:height="auto">
             <g class="chart-inner">
@@ -76,24 +101,21 @@
                         class="slice"
                         role="button"
                         tabindex="0"
-                        on:mouseenter={() => hoveredSlice = slice}
-                        on:mouseleave={() => hoveredSlice = null}
+                        on:mouseenter={(e) => { hoveredSlice = slice; showTooltip(e, slice); }}
+                        on:mouseleave={() => { hoveredSlice = null; hideTooltip(); }}
                     />
-                    {/each}
-
-                    {#if hoveredSlice}
-                        <text
-                            transform={`translate(${arc.centroid(hoveredSlice)})`}
-                            text-anchor="middle"
-                            class="value-text"
-                        >
-                            <tspan x="0" dy="-0.5em" class="label">{hoveredSlice.data[0]}</tspan>
-                            <tspan x="0" dy="1.2em" class="value">{hoveredSlice.data[1]}</tspan>
-                            <tspan x="0" dy="1.2em" class="percent">({calculatePercent(hoveredSlice.data[1])})</tspan>
-                        </text>
-                    {/if}
+                {/each}
             </g>
         </svg>
+        {#if tooltip.show}
+            <div
+                class="donut-tooltip"
+                style="position:fixed; left:{tooltip.x}px; top:{tooltip.y}px; pointer-events:none; z-index:9999;"
+            >
+                <div><b>{tooltip.label}</b></div>
+                <div>{tooltip.value} ({tooltip.percent})</div>
+            </div>
+        {/if}
     {:else if processedData.length === 0}
         <p>Currently, no data is available for display.</p>
     {/if}
@@ -121,20 +143,16 @@
     .slice:hover, .slice:focus {
         filter: brightness(1.1);
     }
-
-    .value-text {
-        font-size: 13px;
-        fill: #303030;
-        pointer-events: none;
-    }
-
-    .value-text .label {
-        font-weight: bold;
-        font-size: 10px;
-    }
-
-    .value-text .value,
-    .value-text .percent {
+    
+    .donut-tooltip {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        padding: 2px 4px;
         font-size: 9px;
+        color: #222;
+        pointer-events: none;
+        white-space: nowrap;
     }
 </style>
