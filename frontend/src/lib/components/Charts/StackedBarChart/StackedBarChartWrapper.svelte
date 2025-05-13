@@ -69,12 +69,12 @@
     </div>
 
   <!-- 툴팁 -->
-  {#if tooltipVisible}
+  <!-- {#if tooltipVisible}
     <div bind:this={tooltipElement}
     class="absolute bg-white/95 shadow-sm rounded-md border border-gray-100 z-50 pointer-events-none transition-all duration-75 backdrop-blur-sm"
     style="left: {tooltipX}px; top: {tooltipY}px;"
     >
       {@html tooltipContent}
     </div>
-  {/if}
+  {/if} -->
 </div>
