@@ -1,5 +1,7 @@
 <script>
   export let drugExposure;
+
+  console.log(drugExposure);
 </script>
 
 <div class="flex flex-col bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full">
@@ -32,12 +34,12 @@
       <tbody>
         {#each drugExposure as exposure}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{exposure.drug_concept_id}</td>
+            <td class="px-4 py-2 border-b">{exposure.concept_name}</td>
             <td class="px-4 py-2 border-b">
               {exposure.drug_exposure_start_date} ~ {exposure.drug_exposure_end_date}
             </td>
             <td class="px-4 py-2 border-b">{exposure.quantity}</td>
-            <td class="px-4 py-2 border-b">{exposure.days_supply} days</td>
+            <td class="px-4 py-2 border-b">{exposure.days_supply ? `${exposure.days_supply} days` : 'null' } </td>
           </tr>
         {/each}
       </tbody>
