@@ -14,13 +14,8 @@
     import { onMount, onDestroy, tick } from 'svelte';
     import { page } from '$app/stores';
     import LoadingComponent from "$lib/components/LoadingComponent.svelte";
-    
-    // 백그라운드 작업
-    let worker;
 
-    let chartLoading = true;
     let isLoading = true;
-    let loadingMessage = 'Loading cohort data...';
     let isShapLoading = false;
     let cohortInfo = [];
     let cohortID = $page.params.cohortID;
@@ -299,7 +294,6 @@
         }
     }
 
-
     async function loadAgeDistributionData() {
         try {
             const ageData = [];
@@ -333,56 +327,22 @@
     }
 
     function switchTab(tab) {
-        if(tab === 'charts' && chartLoading){
-            
-        }
         activeTab = tab;
         updateIndicator();
     }
 
-    async function fetchCohortStatistics() {
-        isLoading = true;
-        loadingMessage = 'Loading cohort statistics...';
-        try {
+    onMount(async() => {
+        try{
             const res = await fetch(`/api/cohortstatistics/${cohortID}`);
             if (!res.ok) {
                 throw new Error('Failed to fetch data');
             }
+            
             const data = await res.json();
             if (data.length !== 0) {
                 analysisData = data;
             }
 
-            ageDistributionChartData = await loadAgeDistributionData();
-        } catch (error) {
-            console.error('Error fetching cohort statistics:', error);
-        } finally {
-            isLoading = false;
-        }
-        
-    }
-
-    function startWorker(){
-        console.log("Start Worker");
-        worker = new Worker('/src/lib/fetchCohortStatistics.js', { type: 'module' });
-
-        worker.onmessage = async (event) => {
-            const { success, data } = event.data;
-            if (success) {
-                analysisData = data;
-                ageDistributionChartData = await loadAgeDistributionData();
-                chartLoading = false;
-            } else {
-                console.error('Worker error:', data);
-            }
-        };
-
-        worker.postMessage({ cohortID });
-    }
-
-    onMount(async() => {
-        try{
-            startWorker();
             const res2 = await fetch(`/api/cohortinfo/${cohortID}`);
 			if (!res2.ok) {
 				throw new Error('Failed to fetch data');
@@ -409,14 +369,13 @@
         if (tabContainer) {
             resizeObserver.observe(tabContainer);
         }
+
+        ageDistributionChartData = await loadAgeDistributionData();
     });
 
     onDestroy(() => {
         if (resizeObserver) {
             resizeObserver.disconnect();
-        }
-        if(worker){
-            worker.terminate();
         }
     });
 
@@ -428,7 +387,7 @@
 </script>
 
 {#if isLoading}
-    <LoadingComponent message={loadingMessage} />
+    <LoadingComponent message="Loading cohort data..." />
 {:else}
 <div class="pl-4 pr-4">
     <div class="border rounded-lg overflow-hidden mb-8 mt-3">
@@ -742,7 +701,7 @@
         </div>
     {/if}
 
-    {#if activeTab == 'charts' && !chartLoading}
+    {#if activeTab == 'charts'}
         <div class="w-full">
             <div class="grid grid-cols-6 gap-4">
                 <ChartCard
@@ -966,9 +925,8 @@
                 </ChartCard>
             </div>
         </div>
-    {:else if chartLoading}
-        Please wait...
     {/if}
+
 </div>
 
 <Footer />
