@@ -7,6 +7,9 @@
 	let cohortList = $state([]);
 	let personList = $state([]);
 
+	let selected_Cohorts = $state([]);
+	let selected_Person = $state(null);
+
 	async function getCohortList() {
 		const response = await fetch('https://bento.kookm.in/api/cohort');
 		const data = await response.json();
@@ -47,13 +50,19 @@
 
 {#if show}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300"
 		on:click={handleClickOutside}
 	>
-		<div id="target-set-modal" class="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="text-xl font-bold text-gray-800">Select Target Set</h2>
-				<button class="text-gray-500 hover:text-gray-700" on:click={close}>
+		<div 
+			id="target-set-modal" 
+			class="relative w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl transform transition-all duration-300 scale-100 h-[90vh] overflow-y-auto"
+		>
+			<div class="mb-6 flex items-center justify-between">
+				<h2 class="text-2xl font-bold text-gray-900">Select Target Set</h2>
+				<button 
+					class="text-gray-400 hover:text-gray-600 transition-colors duration-200" 
+					on:click={close}
+				>
 					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							stroke-linecap="round"
@@ -65,19 +74,19 @@
 				</button>
 			</div>
 
-			<div class="mb-6 flex border-b border-gray-200">
+			<div class="mb-8 flex space-x-1 border-b border-gray-200">
 				<button
-					class="px-4 py-2 {activeTab === 'cohort'
-						? 'border-b-2 border-blue-500 text-blue-600'
-						: 'text-gray-600'}"
+					class="px-6 py-3 text-sm font-medium transition-all duration-200 {activeTab === 'cohort'
+						? 'border-b-2 border-indigo-500 text-indigo-600'
+						: 'text-gray-500 hover:text-gray-700'}"
 					on:click={() => changeTab('cohort')}
 				>
 					Cohort
 				</button>
 				<button
-					class="px-4 py-2 {activeTab === 'person'
-						? 'border-b-2 border-blue-500 text-blue-600'
-						: 'text-gray-600'}"
+					class="px-6 py-3 text-sm font-medium transition-all duration-200 {activeTab === 'person'
+						? 'border-b-2 border-indigo-500 text-indigo-600'
+						: 'text-gray-500 hover:text-gray-700'}"
 					on:click={() => changeTab('person')}
 				>
 					Person
@@ -85,31 +94,69 @@
 			</div>
 
 			{#if activeTab === 'cohort'}
-				<div class="max-h-96 overflow-y-auto">
+				<div class="w-full space-y-6">
 					<div>
-						{#each cohortList as cohort}
-							<button
-								class="w-full rounded px-4 py-2 text-left text-sm font-medium text-gray-600 hover:bg-gray-100"
-								on:click={() => {
-									selectedCohort = cohort;
-								}}
-							>
-								<p class="text-lg font-bold">{cohort.name}</p>
-								<p class="text-sm text-gray-500">{cohort.description}</p>
-							</button>
-						{/each}
+						<h3 class="text-lg font-semibold text-gray-900 mb-4">Selected Cohorts</h3>
+						<div class="flex flex-wrap gap-2 min-h-[3rem] p-2 bg-gray-50 rounded-lg">
+							{#each selected_Cohorts as cohort}
+								<button class="group flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1.5 text-sm font-medium text-indigo-700 transition-all duration-200 hover:bg-indigo-200">
+									{cohort.name}
+									<span
+										class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-indigo-200 text-indigo-600 transition-colors duration-200 hover:bg-indigo-300"
+										on:click|stopPropagation={() => {
+											selected_Cohorts = selected_Cohorts.filter((c) => c !== cohort);
+										}}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="h-3 w-3"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M6 18L18 6M6 6l12 12"
+											/>
+										</svg>
+									</span>
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div>
+						<h3 class="text-lg font-semibold text-gray-900 mb-4">Available Cohorts</h3>
+						<div class="max-h-[24rem] overflow-y-auto rounded-lg border border-gray-200">
+							<div class="divide-y divide-gray-100">
+								{#each cohortList as cohort}
+									<button
+										class="w-full px-4 py-4 text-left transition-colors duration-200 hover:bg-gray-50"
+										on:click={() => {
+											selected_Cohorts.push(cohort);
+										}}
+									>
+										<p class="text-base font-medium text-gray-900">{cohort.name}</p>
+										<p class="mt-1 text-sm text-gray-500">{cohort.description}</p>
+									</button>
+								{/each}
+							</div>
+						</div>
 					</div>
 				</div>
 			{/if}
-			<div class="flex justify-end space-x-3">
+
+			<div class="mt-8 flex justify-end space-x-3">
 				<button
-					class="rounded px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+					class="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
 					on:click={close}
 				>
 					Cancel
 				</button>
 				<button
-					class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+					class="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors duration-200"
 					on:click={handleSave}
 				>
 					Apply
