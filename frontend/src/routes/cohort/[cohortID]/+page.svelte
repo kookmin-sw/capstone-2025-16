@@ -207,7 +207,7 @@
                             concept_id: "197320",
                             concept_name: "Acute kidney injury",
                             influence: 59.25,
-                            execution_time: "2024-03-20 12:00:00",
+                            execution_time: "559",
                             avg_f1_score: 0.7245
                         },
                         {
@@ -218,7 +218,7 @@
                             concept_id: "433753",
                             concept_name: "Arteriosclerosis",
                             influence: 18.26,
-                            execution_time: "2024-03-20 12:00:00",
+                            execution_time: "559",
                             avg_f1_score: 0.7245
                         },
                         {
@@ -229,7 +229,7 @@
                             concept_id: "433753",
                             concept_name: "Arteriosclerosis",
                             influence: 18.26,
-                            execution_time: "2024-03-20 12:00:00",
+                            execution_time: "559",
                             avg_f1_score: 0.7245
                         },
                         
@@ -241,7 +241,7 @@
                             concept_id: "4021323",
                             concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard",
                             influence: 56.74,
-                            execution_time: "2024-03-20 12:00:00",
+                            execution_time: "559",
                             avg_f1_score: 0.8245
                         },
                         {
@@ -252,7 +252,7 @@
                             concept_id: "2514402",
                             concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard",
                             influence: 22.34,
-                            execution_time: "2024-03-20 12:00:00",
+                            execution_time: "559",
                             avg_f1_score: 0.8245
                         }
                     ],
@@ -498,7 +498,7 @@
                         {#if featureData.features.features[0].execution_time}
                           <span class="text-sm text-gray-500">
                             <span class="text-gray-500">Execution Time: </span>
-                            <span class="text-zinc-700 font-medium">{featureData.features.features[0].execution_time}</span>
+                            <span class="text-zinc-700 font-medium">{formatExecutionTime(featureData.features.features[0].execution_time)}</span>
                           </span>
                         {/if}
                     </div>
