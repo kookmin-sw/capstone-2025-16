@@ -6,7 +6,6 @@
   import { tick } from "svelte";
   import { slide } from 'svelte/transition';
   import * as d3 from 'd3';
-  import cohortStats from '$lib/data/cohortStats.json';
   import DataTable from '$lib/components/DataTable.svelte';
   import LineChart from "$lib/components/Charts/LineChart/LineChart.svelte";
   import { transformLineChartToTableData } from "$lib/components/Charts/LineChart/lineChartTransformer.js";
@@ -15,8 +14,12 @@
   import StackedBarChartWrapper from "$lib/components/Charts/StackedBarChart/StackedBarChartWrapper.svelte";
   import StackedBarChartTableView from "$lib/components/Charts/StackedBarChart/StackedBarChartTableView.svelte";
   import Footer from '$lib/components/Footer.svelte';
+  import LoadingComponent from "$lib/components/LoadingComponent.svelte";
+
+  let isLoading = true; // 로딩 상태 관리
 
   // 코호트 데이터
+  let cohortStats = [];
   let selectedCohorts = []; // 선택된 코호트들 ID 배열
   let cohortData = []; // 코호트 데이터
   let expandedStates = []; // 코호트 목록 toggle 펼치거나 접기 위한 상태 배열
@@ -64,26 +67,17 @@
     measurements: '',
   };
 
-  let chartData = {
-    drugs: [],
-    conditions: [],
-    procedures: [],
-    measurements: []
-  }
+  let chartData = [];
 
   $: if(selectedCohorts.length > 0){
-    stackedDrugsData = prepareStackedDomainData('drug');
-    stackedConditionsData = prepareStackedDomainData('condition');
-    stackedMeasurementsData = prepareStackedDomainData('measurement');
-    stackedProceduresData = prepareStackedDomainData('procedure');
+    cohortTotalCounts = Object.fromEntries(
+      selectedCohorts
+      .filter(cohortId => cohortStats[cohortId])
+      .map(cohortId => [
+        cohortStats[cohortId].basicInfo.name,
+        cohortStats[cohortId].basicInfo.count
+      ]));
   }
-
-  $: cohortTotalCounts = Object.fromEntries(
-    selectedCohorts.map(cohortId => [
-      cohortStats[cohortId].basicInfo.name,
-      cohortStats[cohortId].totalPatients
-    ])
-  );
 
   // DonutChart와 동일한 색상 매핑 사용
   const color = d3
@@ -132,8 +126,19 @@
     expandedStates = new Array(cohortIds.length).fill(false);
 
     try {
-      cohortData = loadCohortListData(cohortStats, cohortIds);
+      const result = await Promise.all(
+        cohortIds.map(async (id) => {
+          const res = await fetch(`/api/cohortinfo/${id}`);
+          const data = await res.json();
 
+          const res2 = await fetch(`/api/cohortstatistics/${id}`);
+          const data2 = await res2.json();
+
+          return {[id] : {basicInfo:data, statistics:data2}};
+        })
+      );
+      cohortData = Object.assign({}, ...result);
+      cohortStats = cohortData;
       if (selectedCohorts.length > 0) {
         // 코호트별 색상 매핑 초기화
         cohortColorMap = Object.fromEntries(
@@ -155,20 +160,25 @@
             selectedCohortStates[chartType] = selectedCohorts[0];
           }
         });
-
+        stackedDrugsData = prepareStackedDomainData('drug');
+        stackedConditionsData = prepareStackedDomainData('condition');
+        stackedMeasurementsData = prepareStackedDomainData('measurement');
+        stackedProceduresData = prepareStackedDomainData('procedure');
         // 각 차트별 데이터 초기화
-        chartData.drugs = selectedCohorts.map(cohortId => ({
-          cohortName: cohortStats[cohortId].basicInfo.name,
-          drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrugs)
-            .map(([name, count], index) => ({
-              rank: index + 1,
-              name,
-              count
-            }))
-        }));
+        // chartData.drugs = selectedCohorts.map(cohortId => ({
+        //   cohortName: cohortStats[cohortId].basicInfo.name,
+        //   drugs: Object.entries(cohortStats[cohortId].statistics.topTenDrug)
+        //     .map(([name, count], index) => ({
+        //       rank: index + 1,
+        //       name,
+        //       count
+        //     }))
+        // }));
       }
     } catch (error) {
       console.error("Error loading data:", error);
+    } finally {
+      isLoading = false;
     }
   });
 
@@ -177,17 +187,15 @@
       id: id,
       name: cohortStats[id].basicInfo.name,
       description: cohortStats[id].basicInfo.description,
-      author: cohortStats[id].basicInfo.author.name,
-      createdAt: cohortStats[id].basicInfo.createdAt,
-      updatedAt: cohortStats[id].basicInfo.updatedAt,
-      totalPatients: cohortStats[id].totalPatients
+      author: cohortStats[id].basicInfo.author,
+      createdAt: cohortStats[id].basicInfo.created_at,
+      updatedAt: cohortStats[id].basicInfo.updated_at,
+      totalPatients: cohortStats[id].basicInfo.count
     }))
   }
 
-  async function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
-    await tick();
+  function toggleExpand(index) { // 코호트 목록 toggle 펼치거나 접기 위한 함수
     expandedStates[index] = !expandedStates[index];
-    expandedStates = [...expandedStates];
   }
 
   function handleDelete() { // 체크박스 선택한 코호트 삭제 함수
@@ -230,7 +238,7 @@
       const data = selectedCohorts.map((cohortId) => ({
             data: cohortStats[cohortId].statistics.gender,
             cohortName: cohortStats[cohortId].basicInfo.name,
-            totalPatients: cohortStats[cohortId].totalPatients
+            totalPatients: cohortStats[cohortId].basicInfo.count
         }));
         return data;
     } catch (error) {
@@ -240,87 +248,82 @@
   }
 
   async function loadMortalityData() {
-  try {
-    const mortalityData = selectedCohorts.map((cohortId) => ({
-      data: cohortStats[cohortId].statistics.mortality,
-      cohortName: cohortStats[cohortId].basicInfo.name,
-      totalPatients: cohortStats[cohortId].totalPatients
-    }));
-    return mortalityData;
-  } catch (error) {
-      console.error('Error loading mortality data:', error);
-      return [];
+    try {
+      const mortalityData = selectedCohorts.map((cohortId) => ({
+        data: cohortStats[cohortId].statistics.mortality,
+        cohortName: cohortStats[cohortId].basicInfo.name,
+        totalPatients: cohortStats[cohortId].basicInfo.count
+      }));
+      return mortalityData;
+    } catch (error) {
+        console.error('Error loading mortality data:', error);
+        return [];
     }
   }
 
   async function loadVisitTypeData() {
-  try {
-    const visitData = selectedCohorts.map((cohortId) => ({
-      data: cohortStats[cohortId].statistics.visitType,
-      cohortName: cohortStats[cohortId].basicInfo.name,
-      totalPatients: cohortStats[cohortId].totalPatients
-    }));
-    return visitData;
-  } catch (error) {
-      console.error('Error loading visit type data:', error);
-      return [];
+    try {
+      const visitData = selectedCohorts.map((cohortId) => ({
+        data: cohortStats[cohortId].statistics.visitType,
+        cohortName: cohortStats[cohortId].basicInfo.name,
+        totalPatients: cohortStats[cohortId].basicInfo.count
+      }));
+      return visitData;
+    } catch (error) {
+        console.error('Error loading visit type data:', error);
+        return [];
     }
   }
 
   async function loadAgeDistributionData() {
-  try {
-    const ageData = [];
-    const ageGroups = [
-      "0-9", "10-19", "20-29", "30-39", "40-49", 
-      "50-59", "60-69", "70-79", "80-89", "90-99",
-      "100-109", "110-119", "120+"
-    ];
-    
-    selectedCohorts.forEach((cohortId) => {
-      const cohortName = cohortStats[cohortId].basicInfo.name;
-      ageGroups.forEach(ageGroup => {
-        ageData.push({
-          label: ageGroup,
-          value: cohortStats[cohortId].statistics.age[ageGroup],
-          series: cohortName
-        });
+    try {
+      const ageData = [];
+      
+      selectedCohorts.forEach((cohortId) => {
+        const cohortName = cohortStats[cohortId].basicInfo.name;
+        for(const [key, value] of Object.entries(cohortStats[cohortId].statistics.age)){
+          ageData.push({
+            label: key,
+            value: value,
+            series: cohortName
+          });
+        }
       });
-    });
-    
-    return ageData;
-  } catch (error) {
-      console.error('Error loading age distribution data:', error);
-      return [];
+
+      return ageData;
+    } catch (error) {
+        console.error('Error loading age distribution data:', error);
+        return [];
     }
   }
 
   async function loadVisitCountData() {
-  try {
-    const visitData = [];
-    selectedCohorts.forEach((cohortId) => {
-      const cohortName = cohortStats[cohortId].basicInfo.name;
-      Object.entries(cohortStats[cohortId].statistics.visitCount).forEach(([count, value]) => {
-        visitData.push({
-          label: count,
-          value: value,
-          series: cohortName
+    try {
+      const visitData = [];
+      selectedCohorts.forEach((cohortId) => {
+        const cohortName = cohortStats[cohortId].basicInfo.name;
+        Object.entries(cohortStats[cohortId].statistics.visitCount).forEach(([count, value]) => {
+          visitData.push({
+            label: count,
+            value: value,
+            series: cohortName
+          });
         });
       });
-    });
-    return visitData;
-  } catch (error) {
-      console.error('Error loading visit count data:', error);
-      return [];
+      return visitData;
+    } catch (error) {
+        console.error('Error loading visit count data:', error);
+        return [];
     }
   }
 
   function prepareStackedDomainData(domainKey) {
     const result = [];
     const statsFieldMap = {
-      'condition': 'topTenConditions',
-      'drug': 'topTenDrugs',
-      'procedure': 'topTenProcedures',
-      'measurement': 'topTenMeasurements'
+      'condition': 'topTenCondition',
+      'drug': 'topTenDrug',
+      'procedure': 'topTenProcedure',
+      'measurement': 'topTenMeasurement'
     };
     const statsField = statsFieldMap[domainKey];
 
@@ -394,6 +397,9 @@
   }
 </style>
 
+{#if isLoading}
+  <LoadingComponent/>
+{:else}
 <div class="flex h-[calc(100vh-60px)] bg-gray-50">
   <!-- 좌측 사이드바 -->
   <div class="bg-white border-r border-gray-200 flex flex-col h-full sidebar-transition {isSidebarCollapsed ? 'w-[40px]' : 'w-[250px]'}">
@@ -438,6 +444,7 @@
       <div class="h-[calc(100%-4rem)] overflow-y-auto px-4 sidebar-scroll">
         <div class="space-y-2 py-4">
           {#each cohortData as cohort, index}
+            {cohort}
             <div class="border rounded-lg overflow-hidden bg-white">
               <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
@@ -454,7 +461,7 @@
                   </svg>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1">
-                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.id}</span>
+                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.cohort_id}</span>
                     </div>
                     <div class="flex items-center gap-1">
                     <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohort.name}</div>
@@ -863,4 +870,6 @@
     </div>
   </div>
 </div>
+{/if}
+
 <svelte:window on:click={handleClickOutside} /> 

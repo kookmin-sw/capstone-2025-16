@@ -1,37 +1,44 @@
 <script>
     import { page } from '$app/stores';
-    import { get } from 'svelte/store';
+    import { get, writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import { filter } from 'd3';
 	import { onMount, tick } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import analysisData from '$lib/data/singleCohortAnalysisTest.json';
+	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 
-	let { children, data } = $props();
-    const cohortID = $page.params.cohortID;
-	let searchQuery = $state("");
-	let filteredData = $state([]);
-	let itemsPerPage = $state(10);
-	let currentPage = $state(0);
-	let paginatedData = $state([]);
+	let isLoading = true;
+	let cohortInfo = [];
+    let cohortID = $page.params.cohortID;
+
+	let searchQuery = "";
+	let filteredData = [];
+	let itemsPerPage = 10;
+	let currentPage = 0;
+	let paginatedData = [];
+	let userData = [];
+
 	let cohortDiv;
 	let resizeObserver;
-	let currentPersonId = $state(null);
+	let currentPersonId = null;
 
-	const rowHeight = 35;
+	const rowHeight = 35;	
+
 
 	function calculateItemsPerPage() {
+		if(!cohortDiv) return;
 		const availableHeight = cohortDiv.clientHeight - 32;
 		itemsPerPage = Math.floor(availableHeight / rowHeight);
 	}
+
 	// 검색어에 따라 데이터를 필터링
 	function filterData() {
 		if(searchQuery.length === 0){
-			filteredData = data.userData;
+			filteredData = userData.persons;
 			return;	
 		}
 
-		filteredData = data.userData.filter((item) =>
+		filteredData = userData.persons.filter((item) =>
 			item.personid === parseInt(searchQuery)
 		);
 	}
@@ -40,23 +47,44 @@
 		currentPersonId = personid;
 	}
 
-	onMount(async () => {
+	onMount(async() => {
+		try{
+			const res = await fetch(`/api/userdata/${cohortID}`);
+			if (!res.ok) {
+				throw new Error('Failed to fetch data');
+			}
+			const data = await res.json();
 
-		const personIdFromUrl = get(page).params.person;
-		if (personIdFromUrl) {
-			currentPersonId = parseInt(personIdFromUrl);
-		}
+			if (data.persons.length !== 0) {
+				currentPage = 1;
+				filteredData = data.persons;
+				userData = data;
 
-		if (data.userData.length !== 0) {
-			currentPage = 1;
-			filteredData = data.userData;
+				paginatedData = filteredData.slice(
+					(currentPage - 1) * itemsPerPage,
+					currentPage * itemsPerPage
+				);
+			}
+
+			const res2 = await fetch(`/api/cohortinfo/${cohortID}`);
+			if (!res2.ok) {
+				throw new Error('Failed to fetch data');
+			}
+			const data2 = await res2.json();
+			
+			if (data2.length !== 0) {
+				cohortInfo = data2;
+			}
+		}catch (error) {
+			console.error('Error fetching data:', error);
+		} finally {
+			isLoading = false;
 		}
 
 		await tick();
-
 		if (cohortDiv) {
 			calculateItemsPerPage();
-
+			
 			resizeObserver = new ResizeObserver(() => {
 				calculateItemsPerPage();
 			});
@@ -71,21 +99,34 @@
 		};
 	});
 
-	$effect(() => {
+	$: {
 		paginatedData = filteredData.slice(
 			(currentPage - 1) * itemsPerPage,
 			currentPage * itemsPerPage
 		);
-	})
+	}
 
 	function nextPage() {
 		if (currentPage * itemsPerPage < filteredData.length) currentPage++;
+		paginatedData = filteredData.slice(
+			(currentPage - 1) * itemsPerPage,
+			currentPage * itemsPerPage
+		);
+		
 	}
+
 	function prevPage() {
 		if (currentPage > 1) currentPage--;
+		paginatedData = filteredData.slice(
+			(currentPage - 1) * itemsPerPage,
+			currentPage * itemsPerPage
+		);
 	}
 </script>
 
+{#if isLoading}
+	<LoadingComponent message="Loading cohort data...." />
+{:else}
 <div class="fixed left-0 top-[65px] flex h-[calc(100vh-65px)] w-[200px] flex-col border-r border-zinc-200">
 	<div class="px-2 pt-2">
 		<button 
@@ -94,10 +135,10 @@
 		>
 			<div class="flex-1 min-w-0">
 				<div class="flex items-center gap-1">
-					<span class="text-[10px] font-medium text-gray-400 truncate">{analysisData.basicInfo?.id || cohortID}</span>
+					<span class="text-[10px] font-medium text-gray-400 truncate">{cohortID}</span>
 				</div>
 				<div class="flex items-center gap-1">
-					<div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{analysisData.basicInfo?.name || "Cohort"}</div>
+					<div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohortInfo.name}</div>
 				</div>
 			</div>
 			<div class="flex items-center text-gray-400 group-hover:text-blue-600">
@@ -135,19 +176,16 @@
 		<!-- 환자 목록 -->
 		<div class="flex flex-col rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden">
 			{#each paginatedData as user}
-				<a href="/cohort/{cohortID}/{user.personid}"
+				<a href="/cohort/{cohortID}/{user}"
 					class="group transition-colors duration-200 hover:bg-blue-50
-					{currentPersonId === user.personid ? 'bg-blue-100': ''}"
-					onclick={()=> selectUser(user.personid)}>
+					{currentPersonId === user ? 'bg-blue-100': ''}"
+					onclick={()=> selectUser(user)}>
 					<div class="flex items-center justify-between px-4 py-2 border-b border-zinc-100 overflow-hidden h-[33px]">
 						<div class="flex items-center w-full">
-							<span class="text-xs text-zinc-400 w-[70px]">ID {user.personid}</span>
-							<span class="text-xs text-zinc-600">{user.gender}</span>
-							<span class="text-xs text-zinc-300 mx-1">•</span>
-							<span class="text-xs text-zinc-600">{user.age}세</span>
+							<span class="text-xs text-zinc-400 w-[70px]">ID {user}</span>
 						</div>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-							class={`w-3.5 h-3.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity ${currentPersonId === user.personid ? 'opacity-100': 'opacity-0'}`}>
+							class={`w-3.5 h-3.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity ${currentPersonId === user ? 'opacity-100': 'opacity-0'}`}>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
 						</svg>
 					</div>
@@ -187,7 +225,7 @@
 		</div>
 	</div>
 </div>
-
 <div class="relative left-[200px] px-6 w-[calc(100%-206px)]">
-    {@render children()}
+	<slot />
 </div>
+{/if}

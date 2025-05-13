@@ -1,6 +1,8 @@
 <script>
   export let conditionOccurrence;
   export let conditionEra;
+
+  console.log(conditionOccurrence);
 </script>
 
 <div class="flex flex-col bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full">
@@ -22,9 +24,9 @@
           {#each conditionOccurrence as cond}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-2 border-b">Occurrence</td>
-              <td class="px-4 py-2 border-b">{cond.condition_concept_id}</td>
+              <td class="px-4 py-2 border-b">{cond.concept_name}</td>
               <td class="px-4 py-2 border-b">{cond.condition_start_date} ~ {cond.condition_end_date}</td>
-              <td class="px-4 py-2 border-b">{cond.condition_status_source_value}</td>
+              <td class="px-4 py-2 border-b">{cond.condition_status_source_value ? cond.condition_status_source_value : 'null'}</td>
             </tr>
           {/each}
         {/if}
@@ -32,7 +34,7 @@
           {#each conditionEra as era}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-2 border-b">Era</td>
-              <td class="px-4 py-2 border-b">{12345}</td>
+              <td class="px-4 py-2 border-b">{era.concept_name}</td>
               <td class="px-4 py-2 border-b">{era.condition_era_start_date} ~ {era.condition_era_end_date}</td>
               <td class="px-4 py-2 border-b">{era.condition_occurrence_count} times</td>
             </tr>

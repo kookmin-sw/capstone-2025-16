@@ -17,7 +17,7 @@
       <tbody>
         {#each specimen as spec}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{spec.specimen_concept_id}</td>
+            <td class="px-4 py-2 border-b">{spec.concept_name}</td>
             <td class="px-4 py-2 border-b">{spec.specimen_date}</td>
             <td class="px-4 py-2 border-b">{spec.specimen_source_value}</td>
           </tr>

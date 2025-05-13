@@ -17,7 +17,7 @@
       <tbody>
         {#each measurement as measure}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{measure.measurement_concept_id}</td>
+            <td class="px-4 py-2 border-b">{measure.concept_name}</td>
             <td class="px-4 py-2 border-b">{measure.measurement_date}</td>
             <td class="px-4 py-2 border-b">{measure.value_as_number} {measure.unit_source_value}</td>
           </tr>

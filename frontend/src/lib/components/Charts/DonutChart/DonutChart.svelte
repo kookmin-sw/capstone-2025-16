@@ -93,8 +93,8 @@
                     {/if}
             </g>
         </svg>
-    {:else}
-        <p>Loading chart...</p>
+    {:else if processedData.length === 0}
+        <p>Currently, no data is available for display.</p>
     {/if}
 </div>
 

@@ -18,7 +18,7 @@
       <tbody>
         {#each procedureOccurrence as proc}
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-2 border-b">{proc.procedure_concept_id}</td>
+            <td class="px-4 py-2 border-b">{proc.concept_name}</td>
             <td class="px-4 py-2 border-b">{proc.procedure_date}</td>
             <td class="px-4 py-2 border-b">{proc.procedure_source_value}</td>
             <td class="px-4 py-2 border-b">{proc.quantity}</td>

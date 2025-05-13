@@ -1,6 +1,8 @@
 <script>
     import { onMount, onDestroy, tick } from "svelte";
     import { slide } from 'svelte/transition';
+    import { get } from 'svelte/store'
+    import { page } from '$app/stores'
     import CDMInfo from "$lib/components/Table/CDMInfo.svelte";
     import Condition from "$lib/components/Table/Condition.svelte";
     import Drug from "$lib/components/Table/Drug.svelte";
@@ -11,8 +13,7 @@
     import BioSignal from "$lib/components/Table/BioSignal.svelte";
     import * as d3 from "d3";
     import Footer from '$lib/components/Footer.svelte';
-
-    import analysisData from '$lib/data/patientAnalysisTest.json';
+    import LoadingComponent from "$lib/components/LoadingComponent.svelte";
     import ChartCard from '$lib/components/ChartCard.svelte';
     import DataTable from '$lib/components/DataTable.svelte';
     import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
@@ -27,7 +28,14 @@
     let isSelectTableOpen = false;
     let isStatisticsView = false;
     let show = false;
-    export let data;
+    let cohortIdFromUrl;
+    let isLoading = true;
+    $: personID = $page.params.personID;
+
+    let message = ""
+    let personTable = [];
+    let personVisits = [];
+    let personStatistics = [];
 
     let isTableView = {
         visitTypeRatio: false,
@@ -67,54 +75,39 @@
 
     //   데이터 매칭 (각 테이블에 해당하는 props 설정)
     let tableProps = {};
-    let personTable = {
-        "person_id": 1,
-        "gender_concept_id": 8507,
-        "year_of_birth": 1985,
-        "month_of_birth": 6,
-        "day_of_birth": 15,
-        "race_concept_id": 8527,
-        "ethnicity_concept_id": 38003563,
-        "location_id": 101,
-        "provider_id": 201,
-        "care_site_id": 301,
-        "death": {
-            "person_id": 1,
-            "death_date": "2030-07-15",
-            "death_datetime": "2030-07-15T08:42:00",
-            "death_type_concept_id": 38003569,
-            "cause_concept_id": 321042,
-            "cause_source_value": "I21.9",
-            "cause_source_concept_id": 44814645
-        },
-    };
 
     const visitMapping = {
-        9201: [0, "Inpatient", "#FF6B6B"],
-        9202: [1, "Outpatient", "#4ECDC4"],
-        9203: [2, "Emergency Room Visit", "#FFB236"],
-        581477: [3, "Home Visit", "#95A5A6"],
-        44818517: [4, "Other Visit Type", "#BDC3C7"]
+        262: [0, "Emergency Room - Inpatient Visit", "#FF6B6B"],
+        8870: [1, "Emergency Room - Hospital", "#4ECDC4"],
+        8883: [2, "Ambulatory Surgical Center", "#FFB236"],
+        9201: [3, "Inpatient Visit", "#95A5A6"],
+        581385: [4, "Observation Room", "#BDC3C7"],
+        38004207: [5, "Ambulatory Clinic / Center", "#BD12C7"],
     };
 
     async function fetchDataById(id) {
+        isLoading = true;
         isStatisticsView = true;
+        message = "Loading Table...";
         try {
-            const res = await fetch("/cdm_sample_data.json");
+            const res = await fetch(`/api/persontable/${id}`);
             const fullData = await res.json();
-            const visitOccurrenceIdData = fullData[id];
             tableProps = {
-                cdm_info: { careSite: visitOccurrenceIdData.care_site, location: visitOccurrenceIdData.location, visitOccurrence: visitOccurrenceIdData.visit_occurrence },
-                condition: { conditionEra: visitOccurrenceIdData.condition_era, conditionOccurrence: visitOccurrenceIdData.condition_occurrence },
-                drug: { drugExposure: visitOccurrenceIdData.drug_exposure },
-                measurement: { measurement: visitOccurrenceIdData.measurement },
-                observation: { observation: visitOccurrenceIdData.observation },
-                procedure_occurrence: { procedureOccurrence: visitOccurrenceIdData.procedure_occurrence },
-                specimen: { specimen: visitOccurrenceIdData.specimen },
-                bio_signal: { bioSignal: visitOccurrenceIdData.bio_signal }
+                cdm_info: { careSite: fullData?.care_site, location: fullData?.location, visitOccurrence: fullData?.visitInfo },
+                condition: { conditionEra: fullData?.conditionEras, conditionOccurrence: fullData?.conditions },
+                drug: { drugExposure: fullData?.drugs },
+                measurement: { measurement: fullData?.measurements },
+                observation: { observation: fullData?.observations },
+                procedure_occurrence: { procedureOccurrence: fullData?.procedures },
+                specimen: { specimen: fullData?.specimens },
+                bio_signal: { bioSignal: fullData?.bio_signal }
             };
+            console.log("tableProps", tableProps);
         } catch (error) {
             console.error("데이터 로드 실패:", error);
+        } finally{
+            isLoading = false;
+            drawTimeline();
         }
     }
 
@@ -126,9 +119,9 @@
     let xScale, xAxisGroup, innerWidth, innerHeight;
 
     async function drawTimeline() {
-        await tick();
-        if (!timelineContainer || !data?.personVisits) return;
 
+        await tick();
+        if (!timelineContainer || !personVisits) return;
         const width = timelineContainer.clientWidth;
         const height = timelineContainer.clientHeight;
         innerWidth = width - MARGIN.left - MARGIN.right;
@@ -160,8 +153,8 @@
     }
 
     function setupScales(width) {
-        let minStart = new Date(Math.min(...data.personVisits.map(d => new Date(d.visit_start_date))));
-        let maxEnd = new Date(Math.max(...data.personVisits.map(d => new Date(d.visit_end_date))));
+        let minStart = new Date(Math.min(...personVisits.map(d => new Date(d.visit_start_date))));
+        let maxEnd = new Date(Math.max(...personVisits.map(d => new Date(d.visit_end_date))));
         minStart.setDate(minStart.getDate() - 360);
         minStart.setHours(0, 0, 0, 0);
         maxEnd.setHours(23, 59, 59, 999);
@@ -169,18 +162,18 @@
 
         return d3.scaleTime()
             .domain([minStart, maxEnd])
-            .range([MARGIN.left, width - MARGIN.right]);
+            .range([MARGIN.left, width - MARGIN.right - 50]);
     }
 
     function setupClipPath(svg) {
         svg.append("defs")
-                .append("clipPath")
-                .attr("id", "clip-timeline")
-                .append("rect")
-                .attr("x", MARGIN.left)
-                .attr("y", 0)
-                .attr("width", innerWidth)
-                .attr("height", innerHeight);
+            .append("clipPath")
+            .attr("id", "clip-timeline")
+            .append("rect")
+            .attr("x", MARGIN.left + 50)
+            .attr("y", 0)
+            .attr("width", innerWidth)
+            .attr("height", innerHeight);
     }
 
     function setupTooltip() {
@@ -203,7 +196,7 @@
     function drawYAxis(svg) {
         const entries = Object.entries(visitMapping);
         const labelGroup = svg.append("g")
-            .attr("transform", `translate(${MARGIN.left - 10}, ${MARGIN.top})`);
+            .attr("transform", `translate(${MARGIN.left+50}, ${MARGIN.top})`);
 
         labelGroup.selectAll("text")
             .data(entries)
@@ -223,7 +216,7 @@
             .data(entries)
             .enter()
             .append("line")
-            .attr("x1", MARGIN.left)
+            .attr("x1", MARGIN.left + 50)
             .attr("x2", innerWidth + MARGIN.left)
             .attr("y1", ([id]) => visitMapping[id][0] * ROW_GAP - 2.5)
             .attr("y2", ([id]) => visitMapping[id][0] * ROW_GAP - 2.5)
@@ -234,7 +227,7 @@
     function drawXAxis(svg) {
         const axis = d3.axisBottom(xScale).ticks(10);
         xAxisGroup = svg.append("g")
-            .attr("transform", `translate(0,${innerHeight})`)
+            .attr("transform", `translate(50,${innerHeight})`)
             .call(axis);
     }
 
@@ -252,7 +245,7 @@
             .attr("transform", `translate(0,${MARGIN.top})`)
             .attr("clip-path", "url(#clip-timeline)");
 
-        const grouped = groupOverlappingVisits(data.personVisits);
+        const grouped = groupOverlappingVisits(personVisits);
 
         // Death bar
         if (personTable.death) {
@@ -301,10 +294,10 @@
                 const visit = d.items[0];
                 const len = d.items.length;
                 if(len == 1){
-                    showTooltip(event, tooltip, `Visit ID: ${visit.visit_concept_id}\nStart: ${visit.visit_start_date}\nEnd: ${visit.visit_end_date}\nCount: ${len}`);
+                    showTooltip(event, tooltip, `Start: ${visit.visit_start_date}\nEnd: ${visit.visit_end_date}\nCount: ${len}`);
                 } else{
                     const visit2 = d.items[len-1];
-                    showTooltip(event, tooltip, `Visit ID: ${visit.visit_concept_id}\nStart: ${visit.visit_start_date}\nEnd: ${visit2.visit_end_date}\nCount: ${len}`);
+                    showTooltip(event, tooltip, `Start: ${visit.visit_start_date}\nEnd: ${visit2.visit_end_date}\nCount: ${len}`);
                 }
             })
             .on("mousemove", (event, d) => {
@@ -359,7 +352,7 @@
                 .attr("width", d => Math.max(newXScale(new Date(d.end)) - newXScale(new Date(d.start)), 5));
 
             d3.selectAll(".death-bar")
-                .attr("x", newXScale(new Date(personTable.death.death_date)))
+                .attr("x", newXScale(new Date(personTable.death?.death_date)))
                 .attr("width", DEATH_BAR_WIDTH);
             });
 
@@ -418,8 +411,42 @@
         return groups;
     }
 
-    onMount(() => {
-        drawTimeline();
+    async function fetchData(){
+        isLoading = true;
+        message = "Loading data...";
+        try{
+            const res = await fetch(`/api/persondata/${personID}`);
+            if (!res.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            personTable = await res.json();
+            
+            const res2 = await fetch(`/api/visitdata/${personID}`);
+            if (!res2.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            personVisits = await res2.json();
+
+            const res3 = await fetch(`/api/personstatistics/${personID}`)
+            if (!res3.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            personStatistics = await res3.json();
+        }
+        catch (error) {
+            console.error("데이터 로드 실패:", error);
+        }
+        finally {
+            isLoading = false;
+            drawTimeline();
+        }
+    }
+
+    onMount(async() => {
+        await fetchData();
+        await tick();
+        cohortIdFromUrl = get(page).params.cohortID;
+
 
         const handleResize = () => {
             // 기존 svg 강제 삭제 후 다시 그리기
@@ -429,13 +456,13 @@
         };
 
         window.addEventListener("resize", handleResize);
-        onDestroy(() => window.removeEventListener("resize", handleResize));
     });
 
-    // ✅ 데이터 변경 시마다 실행
-    $: if (data) {
-        tick().then(() => drawTimeline());
-        tableProps = {};
+    $: if (personID) {
+        (async () => {
+            await fetchData();
+            tableProps = {};
+        })();
     }
 
     onDestroy(() => {
@@ -445,19 +472,31 @@
     });
 </script>
 
-<header class="my-4 bg-white border-b w-full">
-    <div class="flex justify-between py-2">
+
+{#if isLoading}
+    <LoadingComponent message={message}/>
+{:else}
+<header class="py-4 bg-white border-b w-full">
+    <div class="flex justify-between items-center py-2">
         <div class="flex items-center px-[10px] py-[5px] whitespace-nowrap">
+            <a href="/cohort/{cohortIdFromUrl}" aria-label="go back">
+                <button class="flex items-center pr-[10px]" aria-label="go back">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-gray-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            </a>
             <span class="text-sm text-gray-400">ID</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.person_id}</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.person_id}</span>
             <span class="text-gray-200 mx-3">|</span>
             <span class="text-sm text-gray-400">Gender</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[personTable.gender_concept_id]}</span>
+            <span class="text-sm font-medium text-gray-900 ml-1">{genderCodes[personTable.info.gender_concept_id]}</span>
             <span class="text-gray-200 mx-3">|</span>
-            <span class="text-sm text-gray-400">Birth</span>
-            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.year_of_birth}.{personTable.month_of_birth}.{personTable.day_of_birth}</span>
+            <span class="text-sm text-gray-400">Birth(Year)</span>
+            <!-- <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}.{personTable.info.month_of_birth}.{personTable.info.day_of_birth}</span> -->
+            <span class="text-sm font-medium text-gray-900 ml-1">{personTable.info.year_of_birth}</span>
         </div>
-        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 mx-3">
+        <div class="flex rounded-full border border-gray-200 p-0.5 bg-gray-50 mr-2 h-fit">
             <button 
                 class="px-2 py-0.5 text-xs rounded-full transition-colors
                     {!isStatisticsView ? 
@@ -470,8 +509,8 @@
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
     <div class="flex gap-4">
-        <div class="w-4/5 h-[200px] min-w-[850px]" bind:this={timelineContainer}></div>
-        <div class="w-1/5 border rounded-lg p-4 bg-white shadow-md h-[200px] overflow-y-auto">
+        <div class="w-4/5 h-[220px] min-w-[850px]" bind:this={timelineContainer}></div>
+        <div class="w-1/5 border rounded-lg p-4 bg-white shadow-md h-[220px] overflow-y-auto">
             <h2 class="text-lg font-bold mb-2">Overlapping Visits</h2>
             {#if selectedGroup}
                 <ul class="space-y-2">
@@ -500,17 +539,17 @@
                     description="The ratio of visits by visit type."
                     type="half"
                     hasTableView={true}
-                    isTableView={isTableView.visitTypeRatio}
                     hasXButton={false}
+                    isTableView={isTableView.visitTypeRatio}
                     on:toggleView={({ detail }) => isTableView.visitTypeRatio = detail}
                 >
-                    <SingleDonutChartWrapper data={analysisData.statistics.visitType} />
+                    <SingleDonutChartWrapper data={personStatistics.visitType} />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <DataTable
                                 data={transformDonutChartToTableData({
-                                    data: analysisData.statistics.visitType,
+                                    data: personStatistics.visitType,
                                 })}
                             />
                         </div>
@@ -522,17 +561,17 @@
                     description="The ratio of visits by department."
                     type="half"
                     hasTableView={true}
-                    isTableView={isTableView.departmentVisits}
                     hasXButton={false}
+                    isTableView={isTableView.departmentVisits}
                     on:toggleView={({ detail }) => isTableView.departmentVisits = detail}
                 >
-                    <SingleDonutChartWrapper data={analysisData.statistics.departmentVisits} />
+                    <SingleDonutChartWrapper data={personStatistics.departmentVisit} />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <DataTable
                                 data={transformDonutChartToTableData({
-                                    data: analysisData.statistics.departmentVisits,
+                                    data: personStatistics.departmentVisit,
                                 })}
                             />
                         </div>
@@ -544,18 +583,18 @@
                     description= "The list of the top 10 most frequently prescribed medications."
                     type="half"
                     hasTableView={true}
-                    isTableView={isTableView.topTenDrugs}
                     hasXButton={false}
+                    isTableView={isTableView.topTenDrugs}
                     on:toggleView={({ detail }) => isTableView.topTenDrugs = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenDrug).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenDrugs).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenDrug).map(([name, count]) => ({ name, count }))}
                                 domainKey="drug"
                             />
                         </div>
@@ -567,18 +606,18 @@
                     description="The list of the top 10 most frequently diagnosed medical conditions."
                     type="half"
                     hasTableView={true}
-                    isTableView={isTableView.topTenConditions}
                     hasXButton={false}
+                    isTableView={isTableView.topTenConditions}
                     on:toggleView={({ detail }) => isTableView.topTenConditions = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
                     />
                 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenConditions).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenCondition).map(([name, count]) => ({ name, count }))}
                                 domainKey="condition"
                             />
                         </div>
@@ -590,18 +629,18 @@
                     description="The list of the top 10 most frequently performed procedures and medical tests."
                     type="half"
                     hasTableView={true}
-                    isTableView={isTableView.topTenProcedures}
                     hasXButton={false}
+                    isTableView={isTableView.topTenProcedures}
                     on:toggleView={({ detail }) => isTableView.topTenProcedures = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenProcedures).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenProcedure).map(([name, count]) => ({ name, count }))}
                                 domainKey="procedure"
                             />
                         </div>
@@ -613,18 +652,18 @@
                     description="The list of the top 10 most frequently recorded clinical measurements."
                     type="half"
                     hasTableView={true}
-                    isTableView={isTableView.topTenMeasurements}
                     hasXButton={false}
+                    isTableView={isTableView.topTenMeasurements}
                     on:toggleView={({ detail }) => isTableView.topTenMeasurements = detail}
                 >
                     <BarChartWrapper
-                        data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                        data={Object.entries(personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
                     />
 
                     <div slot="table" class="w-full h-full flex flex-col p-4 overflow-auto">
                         <div class="flex-1 overflow-x-auto overflow-y-auto">
                             <BarChartTableView
-                                data={Object.entries(analysisData.statistics.topTenMeasurements).map(([name, count]) => ({ name, count }))}
+                                data={Object.entries(personStatistics.topTenMeasurement).map(([name, count]) => ({ name, count }))}
                                 domainKey="measurement"
                             />
                         </div>
@@ -669,3 +708,4 @@
     {/if}
     <Footer />
 </div>
+{/if}

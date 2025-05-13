@@ -1,30 +1,22 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import LoadingComponent from "$lib/components/LoadingComponent.svelte";
   import Footer from '$lib/components/Footer.svelte';
+	import { filter } from "d3";
 
   let searchQuery = "";
   let searchInput = "";
   let errorMessage = "";
+  let isLoading = true;
 
   // 페이지네이션 관련 변수
   let currentPage = 1;
   const itemsPerPage = 10;
   let totalPages = 0;
 
-  let chartData = [
-    {
-      id: "",
-      name: "",
-      description: "",
-      author: "",
-      createdAt: "",
-      chartType:"",
-
-    },
-  ];
-
-  let filteredData = [...chartData];
+  let chartData = [];
+  let filteredData = [];
   let selectedItems = {};
 
   // 현재 페이지의 데이터만 반환하는 함수
@@ -45,23 +37,13 @@
     }
   }
 
-  async function loadData() {
-    try {
-      const response = await fetch('/custom-chart-list-testdata.json'); // JSON 파일 경로
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      chartData = await response.json(); // 데이터를 배열로 변환
-      filteredData = [...chartData]; // 초기 데이터 설정
-    } catch (error) {
-      console.error("Error loading data:", error);
-    }
-  }
-
   function filterData() {
-    if (!chartData.length) return;
+    if (!searchQuery) {
+      filteredData = chartData.statistics; // 검색어가 없으면 전체 데이터로 초기화
+      return;
+    }
 
-    filteredData = chartData.filter(
+    filteredData = chartData.statistics.filter(
       (item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,18 +57,26 @@
     filterData();
   }
 
-  $: {
-    if (!searchInput) {
-      searchQuery = "";
-      filteredData = [...chartData];
+  onMount(async() => {
+    try{
+      const res = await fetch('/api/customlistdata/');
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      chartData = await res.json();
+      filteredData = chartData.statistics; // 초기 데이터 설정
+    } catch(error) {
+      console.error("Error loading data:", error);
+      errorMessage = "Failed to load data. Please try again later.";
+    } finally {
+      isLoading = false;
     }
-  }
-
-  onMount(() => {
-    loadData();
   });
 </script>
 
+{#if isLoading}
+  <LoadingComponent />
+{:else}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
@@ -101,6 +91,11 @@
             <input
               type="text"
               bind:value={searchInput}
+              on:keydown={event => {
+                if (event.key === 'Enter') {
+                  handleSearch();
+                }
+              }}
               placeholder="Search charts by name, description, or author"
               class="w-full pl-10 pr-24 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -134,12 +129,12 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            {#each paginatedData as item (item.id)}
+            {#each paginatedData as item (item.statistics_id)}
               <tr class="hover:bg-gray-50 transition-colors cursor-pointer group">
-                <td class="py-3 px-4 text-sm text-gray-500">{item.id}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.statistics_id}</td>
                 <td class="py-3 px-4">
                   <a 
-                    href={`/custom-chart/${item.id}`} 
+                    href={`/custom-chart/${item.statistics_id}`} 
                     class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                   >
                     {item.name}
@@ -147,7 +142,7 @@
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.createdAt}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{item.created_at}</td>
               </tr>
             {/each}
           </tbody>
@@ -214,3 +209,5 @@
   {/if}
   <Footer />
 </div>
+
+{/if}
