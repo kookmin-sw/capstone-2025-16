@@ -109,6 +109,31 @@
             hasPreviousAnalysis = false;
         }
     }
+
+    function exportToCSV(data, filename) {
+        if (!data || data.length === 0) {
+            alert("No data to export.");
+            return;
+        }
+
+        const headers = Object.keys(data[0]);
+        const rows = data.map(row =>
+            headers.map(field => `"${(row[field] ?? '').toString().replace(/"/g, '""')}"`).join(',')
+        );
+
+        const csvContent = [headers.join(','), ...rows].join('\r\n');
+
+        // BOM 추가 (엑셀 한글 깨짐 방지)
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
     
     // 페이지 로드 시 이전 분석 결과 확인
     onMount(() => {
@@ -163,7 +188,7 @@
             // 테스트 데이터 설정
             featureData = {
                 condition: [
-                    { rank: 1,  concept_id: 197320,  concept_name: "Kidney injury", influence: 59.25 },
+                    { rank: 1,  concept_id: 197320,  concept_name: "Acute kidney injury", influence: 59.25 },
                     { rank: 2,  concept_id: 433753,  concept_name: "Arteriosclerosis", influence: 18.26 },
                     { rank: 3,  concept_id: 432867,  concept_name: "Hypertension", influence: 5.91 },
                     { rank: 4,  concept_id: 317576,  concept_name: "Hyperlipidemia", influence: 4.72 },
@@ -175,8 +200,8 @@
                     { rank: 10, concept_id: 4113821, concept_name: "Anxiety", influence: 0.56 }
                 ],
                 procedure: [
-                    { rank: 1,  concept_id: 4021323,  concept_name: "Observation std A", influence: 56.74 },  // standard, A코드
-                    { rank: 2,  concept_id: 2514402,  concept_name: "Observation std B", influence: 22.34 },  // standard, B코드
+                    { rank: 1,  concept_id: 4021323,  concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or ", influence: 56.74 },  // standard, A코드
+                    { rank: 2,  concept_id: 2514402,  concept_name: "Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or ", influence: 22.34 },  // standard, B코드
                     { rank: 3,  concept_id: 40756852, concept_name: "Non-coronary angioplasty", influence: 10.96 },
                     { rank: 4,  concept_id: 2514401,  concept_name: "Facial fracture repair", influence: 9.35 },
                     { rank: 5,  concept_id: 2767062,  concept_name: "Respiratory measurement", influence: 0.18 },
@@ -439,14 +464,27 @@
                           <span class="text-gray-500">Procedure Model F1 Score: </span>
                           <span class="text-zinc-700 font-medium">{featureData.procedure_f1_score}</span>
                         </span>
-                      </div>
+                    </div>
                       
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
                         <!-- Procedure Column -->
                         <div>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Procedure</h4>
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-semibold text-gray-700">Procedure</h4>
+                                <button 
+                                    title="Download CSV"
+                                    aria-label="export csv"
+                                    class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                                    onclick={() => exportToCSV([...featureData.procedure], 'procedure_features.csv')}
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </button>
+                            </div>
                             {#if featureData.procedure.length > 0}
                                 <div class="border rounded-lg overflow-hidden shadow-sm">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
@@ -463,7 +501,9 @@
                                                 <tr>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
-                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.concept_name}</td>
+                                                    <td class="px-3 py-1.5 text-gray-700 font-medium truncate max-w-[200px]" title={feature.concept_name}>
+                                                        {feature.concept_name}
+                                                    </td>  
                                                     <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
                                                 </tr>
                                             {/each}
@@ -479,29 +519,45 @@
 
                         <!-- Condition Column -->
                         <div>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Condition</h4>
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-sm font-semibold text-gray-700">Condition</h4>
+                                <button 
+                                    title="Download CSV"
+                                    aria-label="export csv"
+                                    class="p-1.5 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors"
+                                    onclick={() => exportToCSV([...featureData.condition], 'condition_features.csv')}
+                                >
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </button>
+                            </div>
                             {#if featureData.condition.length > 0}
                                 <div class="border rounded-lg overflow-hidden shadow-sm">
-                                        <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                            <thead class="bg-gray-50 sticky top-0 z-10">
-                                            <tr>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
-                                                <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-gray-200">
-                                                {#each featureData.condition as feature}
-                                                    <tr>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-700 font-medium">{feature.concept_name}</td>
-                                                        <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
-                                                    </tr>
-                                                {/each}
-                                            </tbody>
-                                        </table>
+                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                        <thead class="bg-gray-50 sticky top-0 z-10">
+                                        <tr>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Id</th>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Concept Name</th>
+                                            <th scope="col" class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Influence</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            {#each featureData.condition as feature}
+                                                <tr>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.rank}</td>
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.concept_id}</td>
+                                                    <td class="px-3 py-1.5 text-gray-700 font-medium truncate max-w-[200px]" title={feature.concept_name}>
+                                                        {feature.concept_name}
+                                                    </td>                                                    
+                                                    <td class="px-3 py-1.5 whitespace-nowrap text-gray-500">{feature.influence}%</td>
+                                                </tr>
+                                            {/each}
+                                        </tbody>
+                                    </table>
                                 </div>
                             {:else}
                                 <div class="border rounded-lg shadow-sm flex items-center justify-center p-4 text-center text-gray-500 text-xs h-[250px]">
