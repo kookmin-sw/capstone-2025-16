@@ -42,6 +42,7 @@
 	function handleCohortAISubmit(data: any) {
 		console.log('AI Cohort Data:', data);
 		cohortDefinition = data;
+		getCohortCounts();
 		// Here you would process the AI-generated cohort definition
 		// and update the cohortDefinition state
 	}
@@ -467,7 +468,7 @@
 
 		// 상태 초기화
 		resetFilterValues();
-		getCohortCounts()
+		getCohortCounts();
 	}
 
 	// 필터 수정 함수
@@ -488,7 +489,6 @@
 		// 기존 값 로드
 		currentFilterValues = { ...filter } as FilterValues;
 		delete currentFilterValues.type; // type 속성 제외
-
 	}
 
 	// 필터 삭제 함수
@@ -498,7 +498,7 @@
 		filterIndex: number
 	) {
 		cohortDefinition[groupType].containers[containerIndex].filters.splice(filterIndex, 1);
-		getCohortCounts()
+		getCohortCounts();
 	}
 
 	// 조건 타입 이름 표시 함수
@@ -536,7 +536,7 @@
 		}
 
 		cohortDefinition[groupType].containers.splice(containerIndex, 1);
-		getCohortCounts()
+		getCohortCounts();
 	}
 
 	// 컨테이너 이름 변경 함수
@@ -697,7 +697,7 @@
 		});
 
 		const data = await response.json();
-		getCohortCounts()
+		getCohortCounts();
 		setTimeout(() => {
 			isUpdating = false;
 		}, 500);
