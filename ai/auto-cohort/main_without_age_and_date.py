@@ -1,13 +1,12 @@
 import cohort_json_schema
 from pdf_to_text import extract_cohort_definition_from_pdf
-from get_omop_concept_id import get_concept_ids
+from get_omop_concept_id import get_concept_ids, FORM_INSTRUCTIONS
 
 import os
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
-import re
 
 load_dotenv()
 openai_api_key = os.environ.get('OPENROUTER_API_KEY')
@@ -109,7 +108,9 @@ Strict requirements:
      * Example: "serum creatinine ≥ 1.5 mg/dL within 48 hours" → keep "serum creatinine ≥ 1.5 mg/dL"
      * Example: "urine volume < 0.5 mL/(kg·h) for ≥ 6 h" → keep "urine volume < 0.5 mL/(kg·h)"
 
-8. NEVER include:
+8. {FORM_INSTRUCTIONS}
+
+9. NEVER include:
    - Complex logic
    - Non-implementable criteria
    - Criteria without clear OMOP CDM mappings
@@ -421,7 +422,6 @@ def main():
     # filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
     # undergoing long-term dialysis treatment were excluded.
     # """
-
 
     # implementable_text = """
     # We conducted this retrospective cohort study based on a US publicdatabase: Medical Information Mart for Intensive Care IV (MIMIC-IV)Database.
