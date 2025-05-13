@@ -7,6 +7,9 @@
     import ChartCard from "$lib/components/ChartCard.svelte";
     import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
     import domtoimage from 'dom-to-image';
+    
+    const { data } = $props();
+    const { statistics_id } = data;
 
     const targetSetData = {
         statistics_id: "10001",

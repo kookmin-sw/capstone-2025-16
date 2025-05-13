@@ -1,6 +1,6 @@
 export async function load({ params }) {
 
     return {
-        statistics_id: params.chartID,
+        statistics_id: params.statisticsId,
     };
 }
