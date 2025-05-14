@@ -456,7 +456,7 @@
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
-							viewBox="0 0 24 24"
+							viewBox="0 -1 24 24"
 							stroke-width="1.5"
 							stroke="currentColor"
 							class="h-7 w-6 text-blue-600 hover:text-blue-800"
@@ -477,6 +477,9 @@
 					<!-- 코호트 복제 버튼 -->
 					<button
 						onclick={async () => {
+							const confirmDuplicate = confirm("Do you want to create a duplicate of this cohort?");
+							if (!confirmDuplicate) return;
+
 							await fetch('https://bento.kookm.in/api/cohort', {
 								method: 'POST',
 								headers: {
@@ -500,7 +503,7 @@
 							xmlns="http://www.w3.org/2000/svg"
 							width="24"
 							height="24"
-							viewBox="0 0 20 20"
+							viewBox="0 -1 20 20"
 							fill="none"
 							stroke="#4CAF50"
 							stroke-linecap="round"
@@ -528,6 +531,9 @@
 					<!-- 코호트 삭제 버튼 -->
 					<button
 						onclick={async () => {
+							const confirmDelete = confirm("Are you sure you want to delete this cohort? This action cannot be undone.");
+							if (!confirmDelete) return;
+
 							await fetch(`https://bento.kookm.in/api/cohort/${cohortID}`, {
 								method: 'DELETE'
 							})
@@ -538,18 +544,22 @@
 									console.error('Error deleting cohort:', error);
 								});
 						}}
-						class="group relative flex items-center justify-center"
+						class="group relative flex items-center justify-center transition-colors hover:bg-red-50 hover:text-red-500"
 					>
 						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke-width="1.5"
-							stroke="currentColor"
-							class="h-5 w-5 text-red-600 hover:text-red-800"
-						>
-							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-						</svg>
+								class="h-5 w-5"
+								viewBox="0 1 24 24"
+								fill="none"
+								stroke="red"
+								stroke-width="1"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<polyline points="3 6 5 6 21 6"></polyline>
+								<path
+									d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+								></path>
+							</svg>
 						<span
 							class="absolute left-1/2 top-full mt-2 -translate-x-1/2 transform rounded bg-white p-1 text-xs text-gray-700 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
 						>
