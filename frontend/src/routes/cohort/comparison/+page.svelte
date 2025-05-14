@@ -120,6 +120,64 @@
     isSidebarCollapsed = !isSidebarCollapsed;
   }
 
+  function transformMultiCohortVisitCountToBins(visitCountsByCohort, cohortNameMap) {
+    const allCounts = [];
+
+    // 1. 전체 cohort에서 모든 key 수집
+    for (const cohortId in visitCountsByCohort) {
+      const countKeys = Object.keys(visitCountsByCohort[cohortId]).map(Number).filter(n => !isNaN(n));
+      allCounts.push(...countKeys);
+    }
+
+    if (allCounts.length === 0) return [];
+
+    const min = Math.min(...allCounts);
+    const max = Math.max(...allCounts);
+    const range = max - min + 1;
+
+    // 2. binCount와 binSize 계산 (최대 15개 bin)
+    const binCount = range <= 10 ? range : Math.min(15, Math.ceil(range / 5));
+    const binSize = Math.max(1, Math.ceil(range / binCount));
+
+    // 3. 모든 bin 구간 label 만들기
+    const binLabels = [];
+    for (let i = min; i <= max; i += binSize) {
+      const start = i;
+      const end = Math.min(i + binSize - 1, max);
+      binLabels.push(`${start}-${end}`);
+    }
+
+    // 4. 결과 데이터 생성
+    const result = [];
+
+    for (const cohortId in visitCountsByCohort) {
+      const cohortName = cohortNameMap[cohortId];
+      const data = visitCountsByCohort[cohortId];
+
+      const binMap = new Map(binLabels.map(label => [label, 0]));
+
+      for (const [key, value] of Object.entries(data)) {
+        const count = parseInt(key);
+        if (isNaN(count)) continue;
+
+        const binStart = Math.floor((count - min) / binSize) * binSize + min;
+        const binEnd = Math.min(binStart + binSize - 1, max);
+        const label = `${binStart}-${binEnd}`;
+        binMap.set(label, (binMap.get(label) || 0) + value);
+      }
+
+      for (const [label, value] of binMap.entries()) {
+        result.push({
+          label,
+          value,
+          series: cohortName
+        });
+      }
+    }
+
+    return result;
+  }
+
   onMount(async () => {
     const cohortIds = $page.url.searchParams.get('cohorts')?.split(',') || [];
     selectedCohorts = cohortIds;
@@ -299,21 +357,21 @@
 
   async function loadVisitCountData() {
     try {
-      const visitData = [];
+      const visitCountsByCohort = {};
+      const cohortNameMap = {};
+
+      // 각 코호트의 visitCount 데이터를 모음
       selectedCohorts.forEach((cohortId) => {
-        const cohortName = cohortStats[cohortId].basicInfo.name;
-        Object.entries(cohortStats[cohortId].statistics.visitCount).forEach(([count, value]) => {
-          visitData.push({
-            label: count,
-            value: value,
-            series: cohortName
-          });
-        });
+        visitCountsByCohort[cohortId] = cohortStats[cohortId].statistics.visitCount;
+        cohortNameMap[cohortId] = cohortStats[cohortId].basicInfo.name;
       });
-      return visitData;
+
+      // 변환 함수
+      return transformMultiCohortVisitCountToBins(visitCountsByCohort, cohortNameMap);
+
     } catch (error) {
-        console.error('Error loading visit count data:', error);
-        return [];
+      console.error('Error loading visit count data:', error);
+      return [];
     }
   }
 
