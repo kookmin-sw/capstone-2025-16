@@ -51,7 +51,7 @@
     <!-- 페이지네이션 컨트롤 -->
     <div class="flex justify-between items-center mt-4">
       <button class="px-3 py-1 bg-gray-200 rounded" on:click={prevPage}>Previous</button>
-      <p class="text-sm">Page {currentPage} of {Math.ceil(drugExposure.length / itemsPerPage)}</p>
+      <p class="text-sm">Page <input bind:value={currentPage} on:input={(e) => goToPage(e.target.value)} class="border-none w-10 p-0 text-center" /> of {Math.ceil(drugExposure.length / itemsPerPage)}</p>
       <button class="px-3 py-1 bg-gray-200 rounded" on:click={nextPage}>Next</button>
     </div>
 
