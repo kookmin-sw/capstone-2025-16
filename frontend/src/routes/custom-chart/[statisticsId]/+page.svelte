@@ -171,7 +171,7 @@
 									<span class="truncate text-[10px] font-medium text-gray-400">{id.cohort_id}</span>
 								</div>
 								<div class="flex items-center gap-1">
-									<div class="truncate text-[10px] whitespace-normal text-xs font-medium text-blue-600">
+									<div class="truncate text-xs font-medium text-blue-600">
 										{id.name}
 									</div>
 								</div>

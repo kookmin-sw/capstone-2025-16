@@ -138,7 +138,7 @@
 					<span class="text-[10px] font-medium text-gray-400 truncate">{cohortID}</span>
 				</div>
 				<div class="flex items-center gap-1">
-					<div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohortInfo.name}</div>
+					<div class="truncate text-xs font-medium text-blue-600">{cohortInfo.name}</div>
 				</div>
 			</div>
 			<div class="flex items-center text-gray-400 group-hover:text-blue-600">

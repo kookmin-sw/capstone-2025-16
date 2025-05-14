@@ -521,7 +521,7 @@
                       <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.basicInfo.cohort_id}</span>
                     </div>
                     <div class="flex items-center gap-1">
-                    <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohort.basicInfo.name}</div>
+                    <div class="truncate text-xs font-medium text-blue-600">{cohort.basicInfo.name}</div>
                     </div>
                     <div class="flex items-center gap-1 mt-0.5">
                     </div>
