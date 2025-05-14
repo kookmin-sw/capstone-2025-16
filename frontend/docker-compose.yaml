@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - '2999:3000'
+    restart: unless-stopped
+    volumes:
+      - .env:/usr/src/app/.env
