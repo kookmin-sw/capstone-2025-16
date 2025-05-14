@@ -533,10 +533,15 @@
                               </p>
                             </div>
                             <button
-                              class="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
+                              class="rounded bg-blue-100 px-2 py-1 text-xs font-medium {editingConceptSet.items.some((item: any) => item.concept_id === concept.concept_id) ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'text-blue-600 hover:bg-blue-200'}"
                               on:click={() => addConcept(concept)}
+                              disabled={editingConceptSet.items.some((item: any) => item.concept_id === concept.concept_id)}
                             >
+                            {#if editingConceptSet.items.some((item: any) => item.concept_id === concept.concept_id)}
+                              Added
+                            {:else}
                               Add
+                            {/if}
                             </button>
                           </div>
                         </li>
