@@ -169,7 +169,6 @@
   
   // Search for concepts
   async function searchConcepts() {
-    if (!searchQuery.trim()) return;
     
     isSearching = true;
     currentPage;
