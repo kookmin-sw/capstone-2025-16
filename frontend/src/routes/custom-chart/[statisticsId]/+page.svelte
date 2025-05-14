@@ -17,7 +17,8 @@
 	let cumtomInfo = [];
 	let targetSetData = [];
 	let customChartData = [];
-	let expandedStates = [];
+	let expandedStates = []; // 차트 별 토글 상태
+	let chartDefinitionStates = []; // 차트 내 chart definition 토글 상태
 
 	function handleDnd({ detail }) {
 		isDragging = true;
@@ -31,6 +32,13 @@
 		expandedStates[index] = !expandedStates[index];
 		expandedStates = [...expandedStates];
 	}
+
+	async function toggleChartDefinition(chartIndex) {
+        await tick();
+        chartDefinitionStates[chartIndex] = !chartDefinitionStates[chartIndex];
+        chartDefinitionStates = [...chartDefinitionStates];
+		console.log(chartDefinitionStates);
+    }
 
 	onMount(async () => {
 		if (statisticsID !== 'new') {
@@ -65,6 +73,8 @@
 				console.log(customChartData[0].result);
 				targetSetData = result;
 				expandedStates = targetID.map(() => false);
+				chartDefinitionStates = customChartData.map(() => false);
+
 			} catch (error) {
 				console.error('Error loading data:', error);
 			} finally {
@@ -320,7 +330,7 @@
 									onclick={() => toggleChartDefinition(index)}
 								>
 									<svg
-										class="h-3 w-3 flex-shrink-0 transform transition-transform {expandedStates[
+										class="h-3 w-3 flex-shrink-0 transform transition-transform {chartDefinitionStates[
 											index
 										]
 											? 'rotate-0'
@@ -339,9 +349,9 @@
 									<div class="text-md font-medium text-gray-700">Chart Definition</div>
 								</button>
 							</div>
-							{#if expandedStates[index]}
+							{#if chartDefinitionStates[index]}
 								<div transition:slide>
-									{#each JSON.parse(chart.definition).groups as group, index}
+									{#each JSON.parse(chart.definition).groups as group}
 										<div class="mb-4 ml-6 last:mb-0">
 											<div class="mb-2 flex items-center justify-between">
 												<h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
