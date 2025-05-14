@@ -99,8 +99,8 @@
 
 		try {
 			let requestsBody: StatisticsRequest = {
-				name: statisticsName.trim() ? statisticsName : 'Custom Statistics',
-				description: statisticsDescription.trim() ? statisticsDescription : 'custom Statistics description'
+				name: statisticsName.trim() ? statisticsName : 'Custom Target Set',
+				description: statisticsDescription.trim() ? statisticsDescription : ''
 			};
 			
 			if (activeTab === 'cohort') {
@@ -298,10 +298,10 @@
 			{/if}
 
 			<div class="mb-4 mt-4">
-				<label class="block text-sm font-medium text-gray-700 mb-1">Statistics Name</label>
-				<input type="text" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2" bind:value={statisticsName} placeholder="Enter statistics name" />
-				<label class="block text-sm font-medium text-gray-700 mb-1 mt-2">Statistics Description</label>
-				<textarea class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" bind:value={statisticsDescription} placeholder="Enter statistics description" rows="2"></textarea>
+				<label class="block text-sm font-medium text-gray-700 mb-1">Target Set Name</label>
+				<input type="text" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2" bind:value={statisticsName} placeholder="Enter target set name" />
+				<label class="block text-sm font-medium text-gray-700 mb-1 mt-2">Target Set Description</label>
+				<textarea class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" bind:value={statisticsDescription} placeholder="Enter target set description" rows="2"></textarea>
 			</div>
 
 			<div class="mt-8 flex justify-end space-x-3">
