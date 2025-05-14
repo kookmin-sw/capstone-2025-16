@@ -303,7 +303,12 @@
 								height="400px"
 							>
 								<div class="flex h-full w-full items-center justify-center">
-									<GroupedBarChart data={chart.result} />
+									<GroupedBarChart
+										data={{
+										definition: JSON.parse(chart.definition),
+										result: JSON.parse(chart.result)
+										}}
+								  />
 								</div>
 							</ChartCard>
 						</div>
@@ -336,7 +341,7 @@
 							</div>
 							{#if expandedStates[index]}
 								<div transition:slide>
-									{#each chart.definition.groups as group, index}
+									{#each JSON.parse(chart.definition).groups as group, index}
 										<div class="mb-4 ml-6 last:mb-0">
 											<div class="mb-2 flex items-center justify-between">
 												<h5 class="text-sm font-medium text-blue-600">{group.name}</h5>
