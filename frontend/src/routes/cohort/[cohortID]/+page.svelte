@@ -1038,58 +1038,30 @@
 								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
 								showLegend={false}
 							/>
-						</div>
-					</ChartCard>
 
-					<ChartCard
-						title="Distribution of First Occurrence Age"
-						description="The age distribution of patients at the time of their first medical visit during the cohort period."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.age}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.age = detail)}
-					>
-						<LineChart
-							data={ageDistributionChartData}
-							cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
-							showLegend={false}
-						/>
+							<div slot="table" class="flex h-full w-full flex-col p-4">
+								<DataTable data={transformLineChartToTableData(ageDistributionChartData)} />
+							</div>
+						</ChartCard>
 
-						<div slot="table" class="flex h-full w-full flex-col p-4">
-							<DataTable data={transformLineChartToTableData(ageDistributionChartData)} />
-						</div>
-					</ChartCard>
-
-					<ChartCard
-						title="Distribution of Visit Count"
-						description="The distribution of the total number of medical visits made by patients during the cohort period."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.visitCount}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.visitCount = detail)}
-					>
-						<LineChart
-							data={visitCountChartData}
-							cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
-							showLegend={false}
-						/>
-
-						<div slot="table" class="flex h-full w-full flex-col p-4">
-							<DataTable
-								data={transformLineChartToTableData(visitCountChartData)}
+						<ChartCard
+							title="Distribution of Visit Count"
+							description="The distribution of the total number of medical visits made by patients during the cohort period."
+							type="half"
+							hasTableView={true}
+							isTableView={isTableView.visitCount}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.visitCount = detail)}
+						>
+							<LineChart
+								data={visitCountChartData}
+								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
+								showLegend={false}
 							/>
 
 							<div slot="table" class="flex h-full w-full flex-col p-4">
 								<DataTable
-									data={transformLineChartToTableData(
-										Object.entries(analysisData.visitCount).map(([count, value]) => ({
-											label: count,
-											value: value,
-											series: cohortInfo.name
-										}))
-									)}
+									data={transformLineChartToTableData(visitCountChartData)}
 								/>
 							</div>
 						</ChartCard>
