@@ -5,9 +5,9 @@ services:
       - nats
       - feature-extraction
       - auto-cohort
-  # frontend:
-  #   depends_on:
-  #     - api
+  frontend:
+    depends_on:
+      - api
   # clickhouse:
   #   volumes:
   #     - ./data:/var/lib/clickhouse # volume override
