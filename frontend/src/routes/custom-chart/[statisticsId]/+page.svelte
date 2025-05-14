@@ -379,25 +379,40 @@
 								hasXButton={false}
 								height="400px"
 							>
-								<div id={"chart-" + chart.chart_id} class="flex h-full w-full items-center justify-center">
-									{#if chart.type === 'bar'}
-										<GroupedBarChart
-											data={{
-											definition: JSON.parse(chart.definition),
-											result: JSON.parse(chart.result)
-											}}
-										/>
-									{:else if chart.type === 'boxplot'}
-										<BoxPlot
-											data={{
-											definition: JSON.parse(chart.definition),
-											result: JSON.parse(chart.result)
-											}}
-										/>
-									{:else}
-										<p>No chart type selected</p>
-									{/if}
-								</div>
+							<div id={"chart-" + chart.chart_id} class="flex h-full w-full items-center justify-center">
+								{#if chart.type === 'bar'}
+									<GroupedBarChart
+										data={{
+										definition: JSON.parse(chart.definition),
+										result: JSON.parse(chart.result),
+										targetNames: targetSetData.reduce((acc, target) => {
+											if (target.cohort_id) {
+												acc[target.cohort_id] = target.name;
+											} else if (target.person_id) {
+												acc[target.person_id] = target.name;
+											}
+											return acc;
+										}, {})
+										}}
+									/>
+								{:else if chart.type === 'boxplot'}
+									<BoxPlot
+										data={{
+										definition: JSON.parse(chart.definition),
+										result: JSON.parse(chart.result),
+										targetNames: targetSetData.reduce((acc, target) => {
+											if (target.cohort_id) {
+												acc[target.cohort_id] = target.name;
+											} else if (target.person_id) {
+												acc[target.person_id] = target.name;
+											}
+											return acc;
+										}, {})
+										}}
+									/>
+								{:else}
+									<p>No chart type selected</p>
+								{/if}
 							</ChartCard>
 						</div>
 						<div class="mt-5 border-t p-4">

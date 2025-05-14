@@ -35,6 +35,10 @@
   let svgContainer;
   let resizeObserver;
 
+  function getTargetName(id) {
+    return data.targetNames && data.targetNames[id] ? data.targetNames[id] : id;
+  } 
+
   onMount(() => {
     drawChart();
     
@@ -103,7 +107,7 @@
         const targetId = cohort.cohortId ?? cohort.personId;
         const groupData = {
           group: groupNames[groupIndex],
-          target: targetId,
+          target: getTargetName(targetId),
           color: colors[data.result.findIndex(d => (d.cohortId ?? d.personId) === targetId) % colors.length],
           outliers: []
         };
