@@ -12,7 +12,8 @@
     let radius = Math.min(width, height) / 2 - margin;
 
     // 데이터가 유효한지 확인하고 처리
-    $: processedData = data && Object.keys(data).length > 0 ? Object.entries(data) : [];
+    $: processedData = typeof data === 'object' && data !== null ? Object.entries(data) : [];
+
     $: color = d3
         .scaleOrdinal()
         .domain([
@@ -90,7 +91,7 @@
 </script>
 
 <div class="chart-container flex flex-col items-center" style="position:relative;">
-    {#if processedData.length > 0}
+    {#if processedData.length > 0 && total > 0}
         <svg {width} {height} viewBox="{-width / 2}, {-height / 2}, {width}, {height}" style:max-width="100%" style:height="auto">
             <g class="chart-inner">
                 {#each data_ready as slice}
@@ -116,7 +117,7 @@
                 <div>{tooltip.value} ({tooltip.percent})</div>
             </div>
         {/if}
-    {:else if processedData.length === 0}
+    {:else}
         <div class="flex items-center justify-center h-[150px] w-full">
             <div class="text-center text-xs text-gray-500">
             <p>Currently, no data is available for display.</p>
