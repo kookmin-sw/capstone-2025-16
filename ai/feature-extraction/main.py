@@ -91,7 +91,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
         df_target, df_comparator_origin, k=k, normalize=True)
     procedure_importances_all_runs = []
     condition_importances_all_runs = []
-    epochs = 100
+    epochs = 50
     procedure_importances_list = []
     condition_importances_list = []
     for i in range(epochs):

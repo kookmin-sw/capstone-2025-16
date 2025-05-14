@@ -1,5 +1,31 @@
 <script>
   export let observation;
+
+  let currentPage = 1;
+  let itemsPerPage = 10;
+
+  // 페이지네이션 함수
+  function getPaginatedObservationData() {
+    if (!observation) return [];
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return observation.slice(start, end);
+  }
+
+  function nextPage() {
+    if (currentPage * itemsPerPage < observation.length) currentPage++;
+  }
+
+  function prevPage() {
+    if (currentPage > 1) currentPage--;
+  }
+
+  function goToPage(page) {
+    const totalPages = Math.ceil(observation.length / itemsPerPage);
+    if (page >= 1 && page <= totalPages) {
+      currentPage = page;
+    }
+  }
 </script>
 
 <div class="flex flex-col bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full">
@@ -15,7 +41,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each observation as obs}
+        {#each getPaginatedObservationData() as obs}
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-2 border-b">{obs.concept_name}</td>
             <td class="px-4 py-2 border-b">{obs.observation_date}</td>
@@ -26,6 +52,13 @@
         {/each}
       </tbody>
     </table>
+
+    <!-- 페이지네이션 컨트롤 -->
+    <div class="flex justify-between items-center mt-4">
+      <button class="px-3 py-1 bg-gray-200 rounded" on:click={prevPage}>Previous</button>
+      <p class="text-sm">Page <input bind:value={currentPage} on:input={(e) => goToPage(e.target.value)} class="border-none w-10 p-0 text-center" /> of {Math.ceil(observation.length / itemsPerPage)}</p>
+      <button class="px-3 py-1 bg-gray-200 rounded" on:click={nextPage}>Next</button>
+    </div>
   {:else}
     <p class="text-gray-500 text-sm mb-6">No observation data available.</p>
   {/if}

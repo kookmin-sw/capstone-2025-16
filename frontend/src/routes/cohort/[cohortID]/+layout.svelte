@@ -39,7 +39,7 @@
 		}
 
 		filteredData = userData.persons.filter((item) =>
-			item.personid === parseInt(searchQuery)
+			item.trim() === searchQuery.trim()
 		);
 	}
 

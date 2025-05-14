@@ -23,7 +23,6 @@ export async function GET({ fetch, params }) {
 export async function POST({ fetch, params, request }) {
     const { cohortid } = params;
     const { k } = await request.json();
-
     const res = await fetch(`${API_ADDRESS}/feature/${cohortid}/`, {
         method: 'POST',
         headers: {
@@ -40,10 +39,8 @@ export async function POST({ fetch, params, request }) {
             headers: { "Content-Type": "application/json" }
         });
     }
-
-    const data = await res.json();
-
-    return new Response(JSON.stringify(data), {
+    return new Response({
+        status: res.status,
         headers: { "Content-Type": "application/json" }
     });
 }

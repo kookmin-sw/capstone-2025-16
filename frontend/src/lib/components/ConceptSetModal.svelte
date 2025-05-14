@@ -17,7 +17,7 @@
     importConceptSetFromJson,
     type ConceptSet,
     type Concept
-  } from '../models/ConceptSet';
+  } from '$lib/models/ConceptSet';
   
   // 인터페이스 정의
   export let show = false;
@@ -34,6 +34,26 @@
   let searchQuery = '';
   let searchResults: Concept[] = [];
   let isSearching = false;
+  let selectedDomain = ''; // For domain filtering
+  
+  // Pagination state
+  let currentPage = 0;
+  let pageSize = 50;
+  let totalResults = 0;
+  let totalPages = 0;
+
+  // Available domains for filtering
+  const availableDomains = [
+    '', 'Measurement', 'Drug', 'Observation', 'Note', 'Procedure', 
+    'Meas Value', 'Device', 'Condition', 'Metadata', 'Spec Anatomic Site', 
+    'Specimen', 'Type Concept', 'Unit', 'Provider', 'Race', 'Relationship', 
+    'Geography', 'Route', 'Language', 'Visit', 'Plan', 'Sponsor', 'Payer', 
+    'Plan Stop Reason', 'Gender', 'Cost', 'Episode', 'Revenue Code', 
+    'Condition Status', 'Regimen', 'Condition/Procedure', 'Condition/Obs', 
+    'Obs/Procedure', 'Currency', 'Ethnicity', 'Meas/Procedure', 
+    'Meas Value Operator', 'Condition/Meas', 'Device/Procedure', 
+    'Drug/Procedure', 'Device/Drug', 'Place of Service', 'Condition/Device'
+  ];
   
   // 탭 변경 함수
   function changeTab(tab: string) {
@@ -67,22 +87,45 @@
   
   // 개념 검색
   async function searchConcepts() {
-    if (!searchQuery.trim()) return;
     
     isSearching = true;
-      // 실제 서비스에서는 API 호출로 구현
-      // 예제에서는 더미 데이터 반환
-      await fetch(`https://bento.kookm.in/api/concept/search?query=${searchQuery}&page=0&limit=100`)
-      .then(response => response.json())
-      .then(data => {
-        searchResults = data.concepts;
-      })
-      .catch(error => {
-        console.error('Error searching concepts:', error);
-      })
-      .finally(() => {
-        isSearching = false;
-      });
+    
+    // 실제 서비스에서는 API 호출로 구현
+    // Add domain parameter to query if a domain is selected
+    const domainParam = selectedDomain ? `&domain=${encodeURIComponent(selectedDomain)}` : '';
+    
+    await fetch(`https://bento.kookm.in/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`)
+    .then(response => response.json())
+    .then(data => {
+      searchResults = data.concepts;
+      totalResults = data.total || data.concepts.length;
+      totalPages = Math.ceil(totalResults / pageSize);
+    })
+    .catch(error => {
+      console.error('Error searching concepts:', error);
+      searchResults = [];
+      totalResults = 0;
+      totalPages = 0;
+    })
+    .finally(() => {
+      isSearching = false;
+    });
+  }
+  
+  // Navigate to next page
+  function nextPage() {
+    if (currentPage < totalPages - 1) {
+      currentPage++;
+      searchConcepts();
+    }
+  }
+  
+  // Navigate to previous page
+  function prevPage() {
+    if (currentPage > 0) {
+      currentPage--;
+      searchConcepts();
+    }
   }
   
   // 개념 집합에 개념 추가
@@ -430,20 +473,37 @@
           <div class="grid grid-cols-1 gap-6">
             <div>
               <h3 class="mb-3 text-base font-medium text-gray-700">Search Concepts</h3>
-              <div class="flex items-center space-x-2">
-                <input
-                  type="text"
-                  placeholder="Search by concept name, code, etc."
-                  class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                  bind:value={searchQuery}
-                />
-                <button
-                  class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                  on:click={searchConcepts}
-                  disabled={isSearching}
-                >
-                  {isSearching ? 'Searching...' : 'Search'}
-                </button>
+              <div class="flex flex-col space-y-2">
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Search by concept name, code, etc."
+                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    bind:value={searchQuery}
+                  />
+                  <button
+                    class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    on:click={() => searchConcepts()}
+                    disabled={isSearching}
+                  >
+                    {isSearching ? 'Searching...' : 'Search'}
+                  </button>
+                </div>
+                
+                <!-- Domain filter dropdown -->
+                <div class="flex items-center space-x-2">
+                  <label for="domain-filter-modal" class="text-sm font-medium text-gray-700">Domain:</label>
+                  <select 
+                    id="domain-filter-modal"
+                    class="flex-1 rounded-md border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    bind:value={selectedDomain}
+                    on:change={() => { currentPage = 0; searchResults = []; totalResults = 0; totalPages = 0; }}
+                  >
+                    {#each availableDomains as domain}
+                      <option value={domain}>{domain || 'All Domains'}</option>
+                    {/each}
+                  </select>
+                </div>
               </div>
             </div>
             
@@ -473,15 +533,44 @@
                               </p>
                             </div>
                             <button
-                              class="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
+                              class="rounded bg-blue-100 px-2 py-1 text-xs font-medium {editingConceptSet.items.some((item: any) => item.concept_id === concept.concept_id) ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'text-blue-600 hover:bg-blue-200'}"
                               on:click={() => addConcept(concept)}
+                              disabled={editingConceptSet.items.some((item: any) => item.concept_id === concept.concept_id)}
                             >
+                            {#if editingConceptSet.items.some((item: any) => item.concept_id === concept.concept_id)}
+                              Added
+                            {:else}
                               Add
+                            {/if}
                             </button>
                           </div>
                         </li>
                       {/each}
                     </ul>
+                  </div>
+                  
+                  <!-- Pagination controls -->
+                  <div class="mt-3 flex items-center justify-between border-t border-gray-200 pt-3">
+                    <div class="text-xs text-gray-500">
+                      Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, totalResults)} of {totalResults} results
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <button
+                        class="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:opacity-50"
+                        on:click={prevPage}
+                        disabled={currentPage === 0 || isSearching}
+                      >
+                        Previous
+                      </button>
+                      <span class="text-xs text-gray-500">Page {currentPage + 1} of {totalPages || 1}</span>
+                      <button
+                        class="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:opacity-50"
+                        on:click={nextPage}
+                        disabled={currentPage >= totalPages - 1 || isSearching}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 </div>
               {:else if searchQuery}

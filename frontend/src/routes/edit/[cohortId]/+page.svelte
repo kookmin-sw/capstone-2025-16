@@ -4,7 +4,7 @@
 
 <script lang="ts">
 	import { page } from '$app/state';
-	import ConceptSetModal from './components/ConceptSetModal.svelte';
+	import ConceptSetModal from '$lib/components/ConceptSetModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
 
 	// 연산자 컴포넌트 가져오기
@@ -37,7 +37,7 @@
 	 * - 각 컨셉셋은 해당 도메인의 표준 개념들을 포함
 	 */
 	let cohortDefinition = $state<CohortDefinition>(cohort.cohort_definition);
-
+	convertCohortDefinitionToObject();
 	// Handle AI generated cohort
 	function handleCohortAISubmit(data: any) {
 		console.log('AI Cohort Data:', data);
@@ -702,6 +702,38 @@
 			isUpdating = false;
 		}, 500);
 	}
+
+
+	function convertContainerFiltersToObject(container) {
+		container.filters.forEach((filter) => {
+			const keys = Object.keys(filter).filter((key) => key !== 'type');
+			keys.forEach((key) => {
+				const value = filter[key];
+				if (typeof value === 'string' || typeof value === 'number') {
+					filter[key] = { eq: value };
+				}
+				if (typeof value === 'object' && Object.keys(value).length === 0) {
+					delete filter[key];
+				}
+			});
+		});
+	}
+
+	function convertCohortDefinitionToObject() {
+		cohortDefinition.initialGroup.containers.forEach((container) => {
+			convertContainerFiltersToObject(container);
+		});
+		cohortDefinition.comparisonGroup.containers.forEach((container) => {
+			convertContainerFiltersToObject(container);
+		});
+	}
+
+	$effect(() => {
+		if (cohortDefinition) {
+			convertCohortDefinitionToObject();
+			console.log("cohort definition 최적화");
+		}
+	});
 </script>
 
 <!-- Left Sidebar -->
@@ -901,7 +933,7 @@
 							<ContainerHeader
 								name={container.name}
 								operator={container.operator || 'AND'}
-								patientCount={containerCounts[containerIndex] || null}
+								patientCount={containerCounts[containerIndex] || 0}
 								canRemove={containerIndex > 0 ||
 									cohortDefinition.initialGroup.containers.length > 1}
 								isFirstContainer={containerIndex === 0}
@@ -1022,7 +1054,7 @@
 									operator={container.operator || 'AND'}
 									patientCount={containerCounts[
 										containerIndex + cohortDefinition.initialGroup.containers.length
-									] || null}
+									] || 0}
 									canRemove={containerIndex > 0 ||
 										cohortDefinition.comparisonGroup.containers.length > 1}
 									isFirstContainer={containerIndex === 0}
