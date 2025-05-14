@@ -205,84 +205,17 @@
 		}
 
 		try {
-			// 임시 비동기 처리 및 더미 데이터 설정
-			await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 딜레이 시뮬레이션
+			const res = await fetch(`/api/feature/${cohortID}/`, {
+				method: 'POST',
+				body: JSON.stringify({
+					k: size
+				})
+			});
 
-			// 테스트 데이터 설정
-			featureData = {
-				cohort_id: '0196815f-1e2d-7db9-b630-a747f8393a2d',
-				status: 'completed',
-				features: {
-					features: [
-						{
-							cohort_id: '0196815f-1e2d-7db9-b630-a747f8393a2d',
-							multiple: '30',
-							domain_name: 'Condition',
-							rank: '1',
-							concept_id: '197320',
-							concept_name: 'Acute kidney injury',
-							influence: 59.25,
-							execution_time: '559',
-							avg_f1_score: 0.7245
-						},
-						{
-							cohort_id: '0196815f-1e2d-7db9-b630-a747f8393a2d',
-							multiple: '30',
-							domain_name: 'Procedure',
-							rank: '1',
-							concept_id: '433753',
-							concept_name: 'Arteriosclerosis',
-							influence: 18.26,
-							execution_time: '559',
-							avg_f1_score: 0.7245
-						},
-						{
-							cohort_id: '0196815f-1e2d-7db9-b630-a747f8393a2d',
-							multiple: '30',
-							domain_name: 'Condition',
-							rank: '2',
-							concept_id: '433753',
-							concept_name: 'Arteriosclerosis',
-							influence: 18.26,
-							execution_time: '559',
-							avg_f1_score: 0.7245
-						},
+			if (!res.ok) {
+				throw new Error('Failed to fetch SHAP analysis data');
+			}
 
-						{
-							cohort_id: '0196815f-1e2d-7db9-b630-a747f8393a2d',
-							multiple: '30',
-							domain_name: 'Procedure',
-							rank: '2',
-							concept_id: '4021323',
-							concept_name:
-								'Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard',
-							influence: 56.74,
-							execution_time: '559',
-							avg_f1_score: 0.8245
-						},
-						{
-							cohort_id: '0196815f-1e2d-7db9-b630-a747f8393a2d',
-							multiple: '30',
-							domain_name: 'Procedure',
-							rank: '3',
-							concept_id: '2514402',
-							concept_name:
-								'Initial observation care, per day, for the evaluation and management of a patient which requires these 3 key components: A detailed or comprehensive history; A detailed or comprehensive examination; and Medical decision making that is straightforward or standard',
-							influence: 22.34,
-							execution_time: '559',
-							avg_f1_score: 0.8245
-						}
-					],
-					total: 150,
-					page: 0,
-					limit: 100
-				}
-			};
-
-			// 분석 결과 저장
-			saveAnalysisResult(featureData);
-			hasPreviousAnalysis = true;
-			previousAnalysisTime = formatDateTime(new Date().getTime());
 		} catch (error) {
 			console.error('SHAP analysis error:', error);
 			analysisError =
@@ -298,8 +231,32 @@
 					limit: 100
 				}
 			}; // 에러 발생 시 기존 결과 초기화
-		} finally {
-			isShapLoading = false;
+		}
+	}
+
+	async function loadFeatureData() {
+		try {
+			const res = await fetch(`/api/feature/${cohortID}`);
+			if (!res.ok) {
+				throw new Error('Failed to fetch feature data');
+			}
+			const data = await res.json();
+			if (data.status === 'completed' && data.features.features.length > 0) {
+				featureData = data;
+				shapFeatures = data.features.features;
+				saveAnalysisResult(data);
+				isShapLoading = false;
+			} else if(data.status === 'completed' && data.features.features.length === 0) {
+				shapFeatures = [];
+				isShapLoading = false;
+			} else if (data.status === 'running') {
+				isShapLoading = true;
+			} else if (data.status === 'pending'){
+				analysisError = 'Analysis is still pending. Please check back later.';
+			}
+
+		} catch (error) {
+			console.error('Error loading feature data:', error);
 		}
 	}
 
@@ -336,6 +293,9 @@
 	}
 
 	function switchTab(tab) {
+		if(tab === 'features' && isShapLoading) {
+			loadFeatureData();
+		}
 		activeTab = tab;
 		updateIndicator();
 	}
@@ -359,6 +319,7 @@
     }
 
 	onMount(async () => {
+		loadFeatureData();
 		try {
 			startWorker();
 
@@ -695,11 +656,11 @@
 
 				{#if !isShapLoading && !analysisError && shapFeatures.length > 0}
 					{@const procedureFeatures = shapFeatures
-						.filter((f) => f.domain === 'Procedure')
+						.filter((f) => f.domain === 'procedure')
 						.sort((a, b) => b.influence - a.influence)
 						.slice(0, 10)}
 					{@const conditionFeatures = shapFeatures
-						.filter((f) => f.domain === 'Condition')
+						.filter((f) => f.domain === 'condition')
 						.sort((a, b) => b.influence - a.influence)
 						.slice(0, 10)}
 
@@ -709,10 +670,10 @@
 								<span class="text-sm text-gray-600">
 									<span class="text-gray-500">Comparison Size (people): </span>
 									<span class="font-medium text-zinc-700"
-										>{analysisData.totalPatients * featureData.features.features[0].multiple}</span
+										>{cohortInfo.count * featureData.features.features[0].multiple}</span
 									>
 									<span class="font-medium text-zinc-700">
-										({featureData.features.features[0].multiple} x {analysisData.totalPatients})</span
+										({featureData.features.features[0].multiple} x {cohortInfo.count})</span
 									>
 								</span>
 							{:else}
@@ -730,21 +691,21 @@
 						</div>
 
 						<div class="mb-5 flex items-center justify-start gap-3">
-							{#if featureData.features.features.find((f) => f.domain_name === 'Condition')}
+							{#if featureData.features.features.find((f) => f.domain_name === 'condition')}
 								<span class="text-sm text-gray-600">
 									<span class="text-gray-500">Condition Model F1 Score: </span>
 									<span class="font-medium text-zinc-700"
-										>{featureData.features.features.find((f) => f.domain_name === 'Condition')
+										>{featureData.features.features.find((f) => f.domain_name === 'condition')
 											.avg_f1_score}</span
 									>
 								</span>
 							{/if}
-							{#if featureData.features.features.find((f) => f.domain_name === 'Procedure')}
+							{#if featureData.features.features.find((f) => f.domain_name === 'procedure')}
 								<span class="text-sm text-gray-500">|</span>
 								<span class="text-sm text-gray-600">
 									<span class="text-gray-500">Procedure Model F1 Score: </span>
 									<span class="font-medium text-zinc-700"
-										>{featureData.features.features.find((f) => f.domain_name === 'Procedure')
+										>{featureData.features.features.find((f) => f.domain_name === 'procedure')
 											.avg_f1_score}</span
 									>
 								</span>
@@ -762,7 +723,7 @@
 										class="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-500"
 										onclick={() =>
 											exportToCSV(
-												featureData.features.features.filter((f) => f.domain_name === 'Condition'),
+												featureData.features.features.filter((f) => f.domain_name === 'condition'),
 												'condition_features.csv'
 											)}
 									>
@@ -781,7 +742,7 @@
 										</svg>
 									</button>
 								</div>
-								{#if featureData.features.features.filter((f) => f.domain_name === 'Condition').length > 0}
+								{#if featureData.features.features.filter((f) => f.domain_name === 'condition').length > 0}
 									<div class="overflow-hidden rounded-lg border shadow-sm">
 										<table class="min-w-full divide-y divide-gray-200 text-xs">
 											<thead class="sticky top-0 z-10 bg-gray-50">
@@ -809,7 +770,7 @@
 												</tr>
 											</thead>
 											<tbody class="divide-y divide-gray-200 bg-white">
-												{#each featureData.features.features.filter((f) => f.domain_name === 'Condition') as feature}
+												{#each featureData.features.features.filter((f) => f.domain_name === 'condition') as feature}
 													<tr>
 														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
 															>{feature.rank}</td
@@ -849,7 +810,7 @@
 										class="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-500"
 										onclick={() =>
 											exportToCSV(
-												featureData.features.features.filter((f) => f.domain_name === 'Procedure'),
+												featureData.features.features.filter((f) => f.domain_name === 'procedure'),
 												'procedure_features.csv'
 											)}
 									>
@@ -868,7 +829,7 @@
 										</svg>
 									</button>
 								</div>
-								{#if featureData.features.features.filter((f) => f.domain_name === 'Procedure').length > 0}
+								{#if featureData.features.features.filter((f) => f.domain_name === 'procedure').length > 0}
 									<div class="overflow-hidden rounded-lg border shadow-sm">
 										<table class="min-w-full divide-y divide-gray-200 text-xs">
 											<thead class="sticky top-0 z-10 bg-gray-50">
@@ -896,7 +857,7 @@
 												</tr>
 											</thead>
 											<tbody class="divide-y divide-gray-200 bg-white">
-												{#each featureData.features.features.filter((f) => f.domain_name === 'Procedure') as feature}
+												{#each featureData.features.features.filter((f) => f.domain_name === 'procedure') as feature}
 													<tr>
 														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
 															>{feature.rank}</td
