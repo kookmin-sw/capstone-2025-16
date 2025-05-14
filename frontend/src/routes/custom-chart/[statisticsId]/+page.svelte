@@ -198,7 +198,8 @@
 					<div class="grid grid-cols-3 gap-4 text-sm">
 						<div>
 							<p class="text-gray-500">Author</p>
-							<p class="font-medium">{cumtomInfo.author}</p>
+							<!-- <p class="font-medium">{cumtomInfo.author}</p> -->
+							<p class="font-medium">anonymous</p>
 						</div>
 						<div>
 							<p class="text-gray-500">Created at</p>
@@ -354,7 +355,8 @@
 						<div class="space-y-1">
 							<div>
 								<span class="text-gray-500">Author:</span>
-								<span class="font-regular">{chart.author}</span>
+								<!-- <span class="font-regular">{chart.author}</span> -->
+								<span class="font-regular">anonymous</span>
 							</div>
 							<div>
 								<span class="text-gray-500">Created at:</span>

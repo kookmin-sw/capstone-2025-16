@@ -534,7 +534,8 @@
                   <div class="space-y-1">
                     <div>
                       <span class="text-gray-500">Author:</span>
-                      <span class="font-regular">{cohort.basicInfo.author}</span>
+                      <span class="font-regular">anonymous</span>
+                      <!-- <span class="font-regular">{cohort.basicInfo.author}</span> -->
                     </div>
                     <div>
                       <span class="text-gray-500">Total Patients:</span>

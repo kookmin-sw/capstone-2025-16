@@ -603,7 +603,8 @@
 				<div class="grid grid-cols-2 gap-4 text-sm">
 					<div>
 						<p class="text-gray-500">Author</p>
-						<p class="font-medium">{cohortInfo.author}</p>
+						<p class="font-medium">anonymous</p>
+						<!-- <p class="font-medium">{cohortInfo.author}</p> -->
 						<!--  ({analysisData.basicInfo.author.department}) -->
 					</div>
 					<div>

@@ -314,7 +314,7 @@
                   </a>
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">anonymous</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.created_at}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.updated_at}</td>
               </tr>
