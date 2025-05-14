@@ -14,8 +14,7 @@
 	import DateOperator from '$lib/components/operators/DateOperator.svelte';
 	import IdentifierOperator from '$lib/components/operators/IdentifierOperator.svelte';
 	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
-import SingleConceptSelectorWrapper from '$lib/components/operators/SingleConceptSelectorWrapper.svelte';
-import DirectConceptSelectorWrapper from '$lib/components/operators/DirectConceptSelectorWrapper.svelte';
+	import DirectConceptSelectorWrapper from '$lib/components/operators/DirectConceptSelectorWrapper.svelte';
 
 	const { data } = $props();
 
