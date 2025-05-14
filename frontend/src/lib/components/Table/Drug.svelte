@@ -1,26 +1,29 @@
 <script>
   export let drugExposure;
 
-  console.log(drugExposure);
+  let currentPage = 1;
+  let itemsPerPage = 10;
+
+  // 페이지네이션 함수
+  function getPaginatedDrugData() {
+    if (!drugExposure) return [];
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return drugExposure.slice(start, end);
+  }
+
+  function nextPage() {
+    if (currentPage * itemsPerPage < drugExposure.length) currentPage++;
+  }
+
+  function prevPage() {
+    if (currentPage > 1) currentPage--;
+  }
 </script>
 
 <div class="flex flex-col bg-white border border-gray-300 rounded-lg shadow-md p-6 relative mb-1 w-full">
   <h2 class="title">Drug Information</h2>
 
-  <!-- Drug Era (약물 복용 기록) -->
-  <!-- {#each drugEra as era}
-    <div class="drug-row">
-      <span class="info"><strong>Drug Era ID:</strong> {era.drug_era_id}</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Duration:</strong> {era.drug_era_start_date} ~ {era.drug_era_end_date}</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Exposure Count:</strong> {era.drug_exposure_count}회</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Gap Days:</strong> {era.gap_days}일</span>
-    </div>
-  {/each} -->
-
-  <!-- Drug Exposure (약물 투여 기록) -->
   {#if drugExposure && drugExposure.length > 0}
     <table class="drug-table w-full border border-gray-200 text-sm text-left">
       <thead class="bg-gray-100">
@@ -32,32 +35,29 @@
         </tr>
       </thead>
       <tbody>
-        {#each drugExposure as exposure}
+        {#each getPaginatedDrugData() as exposure}
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-2 border-b">{exposure.concept_name}</td>
             <td class="px-4 py-2 border-b">
               {exposure.drug_exposure_start_date} ~ {exposure.drug_exposure_end_date}
             </td>
             <td class="px-4 py-2 border-b">{exposure.quantity}</td>
-            <td class="px-4 py-2 border-b">{exposure.days_supply ? `${exposure.days_supply} days` : 'null' } </td>
+            <td class="px-4 py-2 border-b">{exposure.days_supply ? `${exposure.days_supply} days` : 'null' }</td>
           </tr>
         {/each}
       </tbody>
     </table>
+
+    <!-- 페이지네이션 컨트롤 -->
+    <div class="flex justify-between items-center mt-4">
+      <button class="px-3 py-1 bg-gray-200 rounded" on:click={prevPage}>Previous</button>
+      <p class="text-sm">Page {currentPage} of {Math.ceil(drugExposure.length / itemsPerPage)}</p>
+      <button class="px-3 py-1 bg-gray-200 rounded" on:click={nextPage}>Next</button>
+    </div>
+
   {:else}
     <p class="text-gray-500 text-sm">No drug exposure data available.</p>
   {/if}
-
-  <!-- Drug Strength (약물 성분 및 용량) -->
-  <!-- {#each drugStrength as strength}
-    <div class="drug-row strength">
-      <span class="info"><strong>Ingredient ID:</strong> {strength.ingredient_concept_id}</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Total Amount:</strong> {strength.amount_value} mg</span>
-      <span class="divider">|</span>
-      <span class="info"><strong>Concentration:</strong> {strength.numerator_value} / {strength.denominator_value}</span>
-    </div>
-  {/each} -->
 </div>
 
 <style>
