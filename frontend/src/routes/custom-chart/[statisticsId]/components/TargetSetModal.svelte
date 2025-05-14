@@ -32,6 +32,10 @@
 	let isLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
 
+	function close() {
+		goto('/custom-chart');
+	}
+
 	async function verifyPersonId() {
 		if (!selected_Person) return;
 
