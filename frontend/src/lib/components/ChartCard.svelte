@@ -44,7 +44,7 @@
 		<span class="text-sm font-semibold">{title}</span>
 		<div class="group relative">
 			<span class="text-sm text-gray-400 cursor-pointer">ⓘ</span>
-			<div class="absolute bottom-full mb-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+			<div class="absolute top-full mt-2 left-0 w-48 bg-gray-700 text-white text-xs rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
 				{description}
 			</div>
 		</div>

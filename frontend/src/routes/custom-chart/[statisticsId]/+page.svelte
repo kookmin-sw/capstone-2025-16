@@ -4,11 +4,13 @@
 	import { page } from '$app/stores';
 	import { slide } from 'svelte/transition';
 	import GroupedBarChart from '$lib/components/Charts/GroupedBarChart/GroupedBarChart.svelte';
+	import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import ChartCard from '$lib/components/ChartCard.svelte';
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 	import { utcDay } from 'd3';
 	import TargetSetModal from './components/TargetSetModal.svelte';
+	import domtoimage from 'dom-to-image';
 
 	let isLoading = true;
 	let statisticsID = $page.params.statisticsId;
@@ -17,11 +19,19 @@
 	let cumtomInfo = [];
 	let targetSetData = [];
 	let customChartData = [];
-	let expandedStates = [];
+	let expandedStates = []; // 차트 별 토글 상태
+	let chartDefinitionStates = []; // 차트 내 chart definition 토글 상태
 
 	function handleDnd({ detail }) {
 		isDragging = true;
-		customChartData = Array.isArray(detail.items) ? detail.items : customChartData;
+		customChartData = detail.items.map(item => {
+			const { id, ...rest } = item;
+			return {
+				...rest,
+				chart_id: id,
+				id
+			};
+		});
 		isDragging = false;
 	}
 
@@ -32,6 +42,38 @@
 		expandedStates = [...expandedStates];
 	}
 
+	async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error('클립보드 복사 실패:', err);
+        }
+    }
+
+    async function exportChartImage(chartId, format = 'png') {
+        const chartElement = document.getElementById(`chart-${chartId}`);
+        if (!chartElement) {
+            console.error(`Chart element not found for id: chart-${chartId}`);
+            return;
+        }
+
+        try {
+            const dataUrl = await domtoimage.toPng(chartElement);
+            const link = document.createElement('a');
+            link.download = `${chartId}.${format}`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Export error:', error);
+        }
+    }
+
+	async function toggleChartDefinition(chartIndex) {
+        await tick();
+        chartDefinitionStates[chartIndex] = !chartDefinitionStates[chartIndex];
+        chartDefinitionStates = [...chartDefinitionStates];
+    }
+
 	onMount(async () => {
 		if (statisticsID !== 'new') {
 			try {
@@ -41,30 +83,55 @@
 				}
 				const data = await res.json();
 				cumtomInfo = data;
-				const targetID = data.cohort_ids.split(',');
-				const result = await Promise.all(
-					targetID.map(async (element) => {
-						const res2 = await fetch(`/api/cohortinfo/${element}`);
-						if (!res2.ok) {
+
+				let targetIDList = [];
+				let isPerson = false;
+
+				// 대상 ID 파악
+				if(data.cohort_ids){
+					targetIDList = data.cohort_ids.split(',');
+				}else if(data.person_id){
+					targetIDList = [data.person_id];
+					isPerson = true;
+				} else{
+					throw new Error('No cohort_ids or person_id found');
+				}
+
+				let result = [];
+
+				// Cohort 타겟일 경우 정보 요청 (Person 타겟일 경우 생략)
+				if(!isPerson) {
+					result = await Promise.all(
+						targetIDList.map(async (id) => {
+							const res2 = await fetch(`/api/cohortinfo/${id}`);
+							if (!res2.ok) {
 							throw new Error('Failed to fetch data');
 						}
 						return res2.json();
-					})
-				);
+						})
+					)
+				}else{
+					result = targetIDList.map(id => ({
+						person_id: id,
+						name: id
+					}))
+				}
 
+				// 차트 정보 요청
 				const res3 = await fetch(`/api/customchart/${statisticsID}`);
 				if (!res3.ok) {
 					throw new Error('Failed to fetch data');
 				}
 				const data3 = await res3.json();
-
 				customChartData = data3.charts.map((chart) => ({
 					...chart,
 					id: chart.chart_id
 				}));
-				console.log(customChartData[0].result);
+				chartDefinitionStates = customChartData.map(() => false);
+
+				// 공통 상태 설정
 				targetSetData = result;
-				expandedStates = targetID.map(() => false);
+				expandedStates = targetIDList.map(() => false);
 			} catch (error) {
 				console.error('Error loading data:', error);
 			} finally {
@@ -91,14 +158,20 @@
 					{#each targetSetData as id, index}
 						<button
 							class="group flex w-full items-center justify-between rounded-lg border bg-white px-3 py-2 transition-colors hover:bg-blue-50"
-							onclick={() => goto(`/cohort/${id.cohort_id}`)}
+							onclick={() => {
+								if (id.cohort_id){
+									goto(`/cohort/${id.cohort_id}`)
+								} else {
+									goto(`/person/${id.person_id}`)
+								}
+							}}
 						>
 							<div class="min-w-0 flex-1">
 								<div class="flex items-center gap-1">
 									<span class="truncate text-[10px] font-medium text-gray-400">{id.cohort_id}</span>
 								</div>
 								<div class="flex items-center gap-1">
-									<div class="whitespace-normal break-words text-xs font-medium text-blue-600">
+									<div class="truncate text-[10px] whitespace-normal text-xs font-medium text-blue-600">
 										{id.name}
 									</div>
 								</div>
@@ -148,6 +221,7 @@
 				<div class="text-[14px] text-gray-500">Add a new chart for this target</div>
 				<button
 					class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-xl font-medium text-white shadow transition hover:bg-blue-700"
+					onclick={() => goto(`/custom-chart/${cumtomInfo.statistics_id}/chart`)}
 				>
 					+
 				</button>
@@ -163,8 +237,9 @@
 			})),
 			flipDurationMs: 300,
 			dropTargetStyle: {
+				outline: '1px dashed rgba(100, 116, 139, 0.3)',
+				outlineOffset: '-4px',
 				backgroundColor: 'transparent',
-				border: 'none'
 			}
 		}}
 		onconsider={handleDnd}
@@ -302,8 +377,24 @@
 								hasXButton={false}
 								height="400px"
 							>
-								<div class="flex h-full w-full items-center justify-center">
-									<GroupedBarChart data={chart.result} />
+								<div id={"chart-" + chart.chart_id} class="flex h-full w-full items-center justify-center">
+									{#if chart.type === 'bar'}
+										<GroupedBarChart
+											data={{
+											definition: JSON.parse(chart.definition),
+											result: JSON.parse(chart.result)
+											}}
+										/>
+									{:else if chart.type === 'boxplot'}
+										<BoxPlot
+											data={{
+											definition: JSON.parse(chart.definition),
+											result: JSON.parse(chart.result)
+											}}
+										/>
+									{:else}
+										<p>No chart type selected</p>
+									{/if}
 								</div>
 							</ChartCard>
 						</div>
@@ -315,7 +406,7 @@
 									onclick={() => toggleChartDefinition(index)}
 								>
 									<svg
-										class="h-3 w-3 flex-shrink-0 transform transition-transform {expandedStates[
+										class="h-3 w-3 flex-shrink-0 transform transition-transform {chartDefinitionStates[
 											index
 										]
 											? 'rotate-0'
@@ -334,9 +425,9 @@
 									<div class="text-md font-medium text-gray-700">Chart Definition</div>
 								</button>
 							</div>
-							{#if expandedStates[index]}
+							{#if chartDefinitionStates[index]}
 								<div transition:slide>
-									{#each chart.definition.groups as group, index}
+									{#each JSON.parse(chart.definition).groups as group}
 										<div class="mb-4 ml-6 last:mb-0">
 											<div class="mb-2 flex items-center justify-between">
 												<h5 class="text-sm font-medium text-blue-600">{group.name}</h5>

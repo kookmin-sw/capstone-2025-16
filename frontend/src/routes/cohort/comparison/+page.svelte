@@ -443,8 +443,7 @@
     {#if !isSidebarCollapsed}
       <div class="h-[calc(100%-4rem)] overflow-y-auto px-4 sidebar-scroll">
         <div class="space-y-2 py-4">
-          {#each cohortData as cohort, index}
-            {cohort}
+          {#each Object.entries(cohortData) as [id, cohort], index}
             <div class="border rounded-lg overflow-hidden bg-white">
               <button 
                 class="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition-colors"
@@ -461,10 +460,10 @@
                   </svg>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1">
-                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.cohort_id}</span>
+                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.basicInfo.cohort_id}</span>
                     </div>
                     <div class="flex items-center gap-1">
-                    <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohort.name}</div>
+                    <div class="text-xs font-medium text-blue-600 break-words whitespace-normal">{cohort.basicInfo.name}</div>
                     </div>
                     <div class="flex items-center gap-1 mt-0.5">
                     </div>
@@ -477,15 +476,15 @@
                   <div class="space-y-1">
                     <div>
                       <span class="text-gray-500">Author:</span>
-                      <span class="font-regular">{cohort.author}</span>
+                      <span class="font-regular">{cohort.basicInfo.author}</span>
                     </div>
                     <div>
                       <span class="text-gray-500">Total Patients:</span>
-                      <span class="font-regular">{cohort.totalPatients}</span>
+                      <span class="font-regular">{cohort.basicInfo.count}</span>
                     </div>
                     <div>
                       <span class="text-gray-500">Description:</span>
-                      <span class="font-regular">{cohort.description}</span>
+                      <span class="font-regular">{cohort.basicInfo.description}</span>
                     </div>
                   </div>
                 </div>

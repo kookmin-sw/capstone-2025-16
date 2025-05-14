@@ -100,10 +100,11 @@
     data.result.forEach(cohort => {
       cohort.values.forEach((groupValues, groupIndex) => {
         // 각 그룹별 데이터 객체 생성
+        const targetId = cohort.cohortId ?? cohort.personId;
         const groupData = {
           group: groupNames[groupIndex],
-          target: cohort.cohortId,
-          color: colors[data.result.findIndex(d => d.cohortId === cohort.cohortId) % colors.length],
+          target: targetId,
+          color: colors[data.result.findIndex(d => (d.cohortId ?? d.personId) === targetId) % colors.length],
           outliers: []
         };
         

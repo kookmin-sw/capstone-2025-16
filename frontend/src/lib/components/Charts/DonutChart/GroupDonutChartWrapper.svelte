@@ -9,20 +9,38 @@
 
     const colorScale = d3.scaleOrdinal()
         .domain([
-          "Male", "Female", "Unknown",
-          "Alive", "Deceased",
-          "Inpatient", "Outpatient", "Emergency Room Visit", "Home Visit", "Other Visit Type"
+          "MALE", "FEMALE", "UNKNOWN",
+          "alive", "deceased",
+          "Inpatient Visit", "Ambulatory Surgical Center", "Emergency Room and Inpatient Visit", "Emergency Room - Hospital", "Observation Room", "Ambulatory Clinic / Center"
         ])
         .range([
           "#3498db", "#F9A7B0", "#808080",
           "#4CAF50", "#5E6C7F",
-          "#FF6B6B", "#4ECDC4", "#FFB236", "#95A5A6", "#BDC3C7"
+          "#4F8EF7", "#F78CA2", "#FFD166", "#06D6A0", "#9B5DE5",
+          "#F46036", "#43AA8B", "#FF61A6", "#3A86FF", "#FFBE0B"
         ]);
     
     $: processedData = data?.map(cohort => ({
         name: cohort.cohortName,
         data: cohort.data
     })) || [];
+
+    $: allUniqueData = processedData.reduce((acc, cohort) => {
+        if (cohort.data && typeof cohort.data === 'object') {
+            Object.entries(cohort.data).forEach(([label, value]) => {
+                if (!acc.find(d => d.label === label)) {
+                    acc.push({ label, value });
+                }
+            });
+        }
+        return acc;
+    }, []);
+
+    $: legendData = allUniqueData.reduce((acc, item) => {
+        acc[item.label] = item.value;
+        return acc;
+    }, {});
+
 </script>
 
 <div class="flex flex-col items-center justify-center w-full">
@@ -45,7 +63,7 @@
     {#if processedData.length > 0}
         <div class="mt-4">
             <Legend 
-                data={processedData[0].data} 
+                data={legendData} 
                 bind:hoveredLabel
             />
         </div>

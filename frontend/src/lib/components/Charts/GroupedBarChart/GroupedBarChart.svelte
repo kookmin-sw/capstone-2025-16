@@ -18,7 +18,7 @@
             result.values.forEach((value, index) => {
                 transformedData.push({
                     group: groups[index],
-                    target: result.cohortId,
+                    target: result.cohortId ?? result.personId,
                     value: value
                 });
             });
@@ -77,7 +77,8 @@
         .paddingInner(Math.min(0.2, 0.2 + (1 / dataCount)))
         .paddingOuter(0.05);
   
-      const targets = data.result.map(r => r.cohortId);
+      const targets = data.result.map(r => r.cohortId ?? r.personId);
+      console.log('targets', targets);
   
       const x = d3.scaleBand()
         .domain(targets)
