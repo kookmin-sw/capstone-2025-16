@@ -21,6 +21,10 @@
         drawChart();
     }
 
+    $: hasAnyValue = stackData.some(item =>
+        orderedCohorts.some(cohort => +item[cohort] > 0)
+    );
+
     function handleResize() {
         if (chartContainer) {
             const containerRect = chartContainer.getBoundingClientRect();
@@ -32,7 +36,7 @@
 
     // 차트 그리기 함수
     function drawChart() {
-        if (!chartContainer || !width || !height || stackData.length === 0) return;
+        if (!chartContainer || !width || !height || stackData.length === 0 || !hasAnyValue) return;
 
         // 기존 SVG 초기화
         d3.select(chartContainer).selectAll("*").remove();
@@ -166,4 +170,14 @@
     
 </script>
 
-<div bind:this={chartContainer} class="w-full h-full"></div>
+<div class="relative w-full h-full">
+    {#if stackData.length > 0 && !hasAnyValue}
+        <div class="absolute inset-0 flex items-center justify-center">
+        <p class="text-xs text-gray-500 text-center">
+            Currently, no data is available for display.
+        </p>
+        </div>
+    {/if}
+
+    <div bind:this={chartContainer} class="w-full h-full"></div>
+</div>
