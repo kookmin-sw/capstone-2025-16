@@ -24,7 +24,14 @@
 
 	function handleDnd({ detail }) {
 		isDragging = true;
-		customChartData = Array.isArray(detail.items) ? detail.items : customChartData;
+		customChartData = detail.items.map(item => {
+			const { id, ...rest } = item;
+			return {
+				...rest,
+				chart_id: id,
+				id
+			};
+		});
 		isDragging = false;
 	}
 
@@ -199,8 +206,9 @@
 			})),
 			flipDurationMs: 300,
 			dropTargetStyle: {
+				outline: '1px dashed rgba(100, 116, 139, 0.3)',
+				outlineOffset: '-4px',
 				backgroundColor: 'transparent',
-				border: 'none'
 			}
 		}}
 		onconsider={handleDnd}
