@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { Concept } from '../../../routes/custom-chart/[chartID]/chart/[chartID]/models/ConceptSet';
+  import type { Concept } from '$lib/models/ConceptSet';
   
   // Operator type definition
   type ConceptOperatorType = {
