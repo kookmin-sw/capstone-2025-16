@@ -7,6 +7,11 @@
     let svgContainer;
     let resizeObserver;
   
+    // data.targetNames 객체를 사용하여 id를 name으로 변환하는 함수
+    function getTargetName(id) {
+        return data.targetNames && data.targetNames[id] ? data.targetNames[id] : id;
+    }
+  
     // 데이터 변환 함수
     function transformData(chartData) {
         if (!chartData || !chartData.definition || !chartData.result) return [];
@@ -18,7 +23,7 @@
             result.values.forEach((value, index) => {
                 transformedData.push({
                     group: groups[index],
-                    target: result.cohortId ?? result.personId,
+                    target: getTargetName(result.cohortId ?? result.personId),
                     value: value
                 });
             });
@@ -77,8 +82,7 @@
         .paddingInner(Math.min(0.2, 0.2 + (1 / dataCount)))
         .paddingOuter(0.05);
   
-      const targets = data.result.map(r => r.cohortId ?? r.personId);
-      console.log('targets', targets);
+      const targets = data.result.map(r => getTargetName(r.cohortId ?? r.personId));
   
       const x = d3.scaleBand()
         .domain(targets)

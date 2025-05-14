@@ -171,7 +171,7 @@
 									<span class="truncate text-[10px] font-medium text-gray-400">{id.cohort_id}</span>
 								</div>
 								<div class="flex items-center gap-1">
-									<div class="truncate text-[10px] whitespace-normal text-xs font-medium text-blue-600">
+									<div class="truncate text-xs font-medium text-blue-600">
 										{id.name}
 									</div>
 								</div>
@@ -198,7 +198,8 @@
 					<div class="grid grid-cols-3 gap-4 text-sm">
 						<div>
 							<p class="text-gray-500">Author</p>
-							<p class="font-medium">{cumtomInfo.author}</p>
+							<!-- <p class="font-medium">{cumtomInfo.author}</p> -->
+							<p class="font-medium">anonymous</p>
 						</div>
 						<div>
 							<p class="text-gray-500">Created at</p>
@@ -354,7 +355,8 @@
 						<div class="space-y-1">
 							<div>
 								<span class="text-gray-500">Author:</span>
-								<span class="font-regular">{chart.author}</span>
+								<!-- <span class="font-regular">{chart.author}</span> -->
+								<span class="font-regular">anonymous</span>
 							</div>
 							<div>
 								<span class="text-gray-500">Created at:</span>
@@ -377,25 +379,40 @@
 								hasXButton={false}
 								height="400px"
 							>
-								<div id={"chart-" + chart.chart_id} class="flex h-full w-full items-center justify-center">
-									{#if chart.type === 'bar'}
-										<GroupedBarChart
-											data={{
-											definition: JSON.parse(chart.definition),
-											result: JSON.parse(chart.result)
-											}}
-										/>
-									{:else if chart.type === 'boxplot'}
-										<BoxPlot
-											data={{
-											definition: JSON.parse(chart.definition),
-											result: JSON.parse(chart.result)
-											}}
-										/>
-									{:else}
-										<p>No chart type selected</p>
-									{/if}
-								</div>
+							<div id={"chart-" + chart.chart_id} class="flex h-full w-full items-center justify-center">
+								{#if chart.type === 'bar'}
+									<GroupedBarChart
+										data={{
+										definition: JSON.parse(chart.definition),
+										result: JSON.parse(chart.result),
+										targetNames: targetSetData.reduce((acc, target) => {
+											if (target.cohort_id) {
+												acc[target.cohort_id] = target.name;
+											} else if (target.person_id) {
+												acc[target.person_id] = target.name;
+											}
+											return acc;
+										}, {})
+										}}
+									/>
+								{:else if chart.type === 'boxplot'}
+									<BoxPlot
+										data={{
+										definition: JSON.parse(chart.definition),
+										result: JSON.parse(chart.result),
+										targetNames: targetSetData.reduce((acc, target) => {
+											if (target.cohort_id) {
+												acc[target.cohort_id] = target.name;
+											} else if (target.person_id) {
+												acc[target.person_id] = target.name;
+											}
+											return acc;
+										}, {})
+										}}
+									/>
+								{:else}
+									<p>No chart type selected</p>
+								{/if}
 							</ChartCard>
 						</div>
 						<div class="mt-5 border-t p-4">

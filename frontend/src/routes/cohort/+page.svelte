@@ -37,18 +37,6 @@
   }
 
   function handleCheckboxChange(id) {
-    const currentSelectedCount = Object.values(selectedItems).filter(Boolean).length;
-    
-    if (!selectedItems[id]) {
-      if (currentSelectedCount >= 5) {
-        errorMessage = "You can select up to 5 cohorts for comparison.";
-        setTimeout(() => {
-          errorMessage = "";
-        }, 5000);
-        return;
-      }
-    }
-    
     selectedItems[id] = !selectedItems[id];
     errorMessage = "";
   }
@@ -70,9 +58,16 @@
 
   function handleComparison() {
     const selectedCount = Object.values(selectedItems).filter(Boolean).length;
-    
+
     if (selectedCount < 2) {
       errorMessage = "Please select at least 2 cohorts to compare.";
+      setTimeout(() => {
+        errorMessage = "";
+      }, 5000);
+      return;
+    }
+    if (selectedCount > 5) {
+      errorMessage = "You can select up to 5 cohorts for comparison.";
       setTimeout(() => {
         errorMessage = "";
       }, 5000);
@@ -91,6 +86,58 @@
   function handleSearch() {
     searchQuery = searchInput;
     filterData();
+  }
+
+  async function handleDelete() {
+    const selectedCount = Object.values(selectedItems).filter(Boolean).length;
+    if (selectedCount === 0) return;
+
+    // 선택된 코호트들의 ID 배열
+    const selectedCohorts = Object.entries(selectedItems)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([id]) => id);
+
+    // 확인 알림
+    if (!confirm(`Are you sure you want to delete the selected ${selectedCount} cohorts? This action cannot be undone.`)) {
+      return;
+    }
+
+    loading = true;
+    let deleteError = false;
+
+    // 여러 코호트 삭제 요청
+    for (const cohortID of selectedCohorts) {
+      try {
+        const res = await fetch(`https://bento.kookm.in/api/cohort/${cohortID}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) {
+          deleteError = true;
+        }
+      } catch (e) {
+        deleteError = true;
+      }
+    }
+
+    // 삭제 후 목록 갱신
+    try {
+      const res = await fetch('/api/cohortlistdata');
+      if (!res.ok) throw new Error();
+      const cohortListData = await res.json();
+      cohortList = cohortListData.cohorts;
+      filterData();
+      selectedItems = {};
+    } catch (e) {
+      errorMessage = "Failed to refresh cohort list.";
+      setTimeout(() => { errorMessage = ""; }, 5000);
+    } finally {
+      loading = false;
+    }
+
+    if (deleteError) {
+      errorMessage = "Failed to delete some cohorts.";
+      setTimeout(() => { errorMessage = ""; }, 5000);
+    }
   }
 
   onMount(async() => {
@@ -160,20 +207,25 @@
         
         <button 
           class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors border"
-          class:bg-blue-50={Object.values(selectedItems).filter(Boolean).length >= 2}
+          class:bg-blue-50={Object.values(selectedItems).filter(Boolean).length >= 2 && Object.values(selectedItems).filter(Boolean).length <= 5}
           class:bg-white={Object.values(selectedItems).filter(Boolean).length < 2}
+          class:bg-red-50={Object.values(selectedItems).filter(Boolean).length > 5}
           class:border-gray-300={Object.values(selectedItems).filter(Boolean).length < 2}
-          class:border-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2}
+          class:border-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2 && Object.values(selectedItems).filter(Boolean).length <= 5}
+          class:border-red-600={Object.values(selectedItems).filter(Boolean).length > 5}
           class:text-gray-500={Object.values(selectedItems).filter(Boolean).length < 2}
-          class:text-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2}
+          class:text-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2 && Object.values(selectedItems).filter(Boolean).length <= 5}
+          class:text-red-600={Object.values(selectedItems).filter(Boolean).length > 5}
           class:hover:bg-gray-50={Object.values(selectedItems).filter(Boolean).length < 2}
-          class:hover:bg-blue-100={Object.values(selectedItems).filter(Boolean).length >= 2}
+          class:hover:bg-blue-100={Object.values(selectedItems).filter(Boolean).length >= 2 && Object.values(selectedItems).filter(Boolean).length <= 5}
+          class:hover:bg-red-100={Object.values(selectedItems).filter(Boolean).length > 5}
           on:click={handleComparison}
         >
           <span>Compare</span>
           <span class="flex items-center justify-center rounded-full w-5 h-5 text-xs"
             class:bg-blue-100={Object.values(selectedItems).filter(Boolean).length < 2}
-            class:bg-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2}
+            class:bg-blue-600={Object.values(selectedItems).filter(Boolean).length >= 2 && Object.values(selectedItems).filter(Boolean).length <= 5}
+            class:bg-red-600={Object.values(selectedItems).filter(Boolean).length > 5}
             class:text-blue-400={Object.values(selectedItems).filter(Boolean).length < 2}
             class:text-white={Object.values(selectedItems).filter(Boolean).length >= 2}
           >
@@ -187,6 +239,35 @@
         >
           New Cohort
         </a>
+        <button 
+          aria-label="Delete Cohorts"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors border"
+          class:bg-red-50={Object.values(selectedItems).filter(Boolean).length > 0}
+          class:bg-white={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:border-gray-300={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:border-red-600={Object.values(selectedItems).filter(Boolean).length > 0}
+          class:text-gray-500={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:text-red-600={Object.values(selectedItems).filter(Boolean).length > 0}
+          class:hover:bg-gray-50={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:hover:bg-red-100={Object.values(selectedItems).filter(Boolean).length > 0}
+          on:click={handleDelete}
+          disabled={Object.values(selectedItems).filter(Boolean).length === 0}
+        >
+          <svg
+            class="h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path
+              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+            ></path>
+          </svg>
+        </button>
       </div>
       
       <div class="overflow-x-auto">
@@ -233,7 +314,7 @@
                   </a>
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">anonymous</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.created_at}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.updated_at}</td>
               </tr>
@@ -241,65 +322,22 @@
           </tbody>
         </table>
       </div>
-
-      <!-- 페이지네이션 UI -->
-      {#if totalPages > 1}
-        <div class="flex items-center justify-center space-x-2 mt-6">
-          <button
-            class="p-2 text-sm font-medium rounded-md transition-colors"
-            class:text-gray-400={currentPage === 1}
-            class:text-blue-600={currentPage !== 1}
-            class:hover:text-blue-800={currentPage !== 1}
-            disabled={currentPage === 1}
-            on:click={() => changePage(currentPage - 1)}
-            aria-label="Previous page"
-          >
-            ‹
-          </button>
-
-          {#each pageNumbers as page}
-            <button
-              class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
-              class:bg-blue-600={currentPage === page}
-              class:text-white={currentPage === page}
-              class:text-gray-600={currentPage !== page}
-              class:hover:bg-blue-100={currentPage !== page}
-              on:click={() => changePage(page)}
-            >
-              {page}
-            </button>
-          {/each}
-
-          <button
-            class="p-2 text-sm font-medium rounded-md transition-colors"
-            class:text-gray-400={currentPage === totalPages}
-            class:text-blue-600={currentPage !== totalPages}
-            class:hover:text-blue-800={currentPage !== totalPages}
-            disabled={currentPage === totalPages}
-            on:click={() => changePage(currentPage + 1)}
-            aria-label="Next page"
-          >
-            ›
-          </button>
-        </div>
-      {/if}
     </div>
   </div>
-
-  <!-- Error Message -->
-  {#if errorMessage}
-    <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-      <div class="bg-red-50 border border-red-200 rounded-md shadow-lg px-6 py-3 text-sm text-red-600 flex items-center">
-        <span>{errorMessage}</span>
-        <button 
-          class="ml-4 text-red-400 hover:text-red-600"
-          on:click={() => errorMessage = ""}
-        >
-          ×
-        </button>
-      </div>
-    </div>
-  {/if}
-  <Footer />
 </div>
+
+<!-- 중앙 하단에만 에러메시지 표시 -->
+{#if errorMessage}
+  <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+    <div class="bg-red-50 border border-red-200 rounded-md shadow-lg px-6 py-3 text-sm text-red-600 flex items-center">
+      <span>{errorMessage}</span>
+      <button 
+        class="ml-4 text-red-400 hover:text-red-600"
+        on:click={() => errorMessage = ""}
+      >
+        ×
+      </button>
+    </div>
+  </div>
+{/if}
 {/if}

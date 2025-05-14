@@ -178,6 +178,7 @@
 	// 통계관련
 	let analysisData = [];
 	let ageDistributionChartData = [];
+	let visitCountChartData = [];
 
 	// SHAP 분석 시작 함수 (백엔드 연동 필요)
 	async function startAnalysis() {
@@ -280,6 +281,59 @@
 		}
 	}
 
+	function estimateBinCount(min, max, uniqueCount) {
+		const range = max - min + 1;
+
+		// 값이 10개 미만이면 1개씩 구분
+		if (range <= 10 || uniqueCount <= 10) return range;
+
+		return 10;
+	}
+
+	function binVisitCountDataDynamic(visitCountData, cohortName = '') {
+		const numericCounts = Object.keys(visitCountData)
+			.map((c) => parseInt(c))
+			.filter((c) => !isNaN(c));
+
+		if (numericCounts.length === 0) return [];
+
+		const min = Math.min(...numericCounts);
+		const max = Math.max(...numericCounts);
+		const uniqueCount = numericCounts.length;
+
+		// binCount 자동 계산
+		const binCount = estimateBinCount(min, max, uniqueCount);
+		const binSize = Math.max(1, Math.ceil((max - min + 1) / binCount));
+
+		const binned = new Map();
+
+		// 모든 구간 미리 세팅 (빈칸 없이)
+		for (let i = min; i <= max; i += binSize) {
+			const start = i;
+			const end = Math.min(i + binSize - 1, max);
+			const label = `${start}-${end}`;
+			binned.set(label, 0);
+		}
+
+		// 값 누적
+		for (const [key, value] of Object.entries(visitCountData)) {
+			const count = parseInt(key);
+			if (isNaN(count)) continue;
+
+			const binStart = Math.floor((count - min) / binSize) * binSize + min;
+			const binEnd = Math.min(binStart + binSize - 1, max);
+			const label = `${binStart}-${binEnd}`;
+			binned.set(label, (binned.get(label) || 0) + value);
+		}
+
+		// 결과 반환
+		return Array.from(binned.entries()).map(([label, value]) => ({
+			label,
+			value,
+			series: cohortName
+		}));
+	}
+
 	function updateIndicator() {
 		if (!tabElements || tabElements.length === 0) return;
 		const activeElement = tabElements.find((el) => el?.dataset.key === activeTab);
@@ -309,6 +363,12 @@
             if (success) {
                 analysisData = data;
                 ageDistributionChartData = await loadAgeDistributionData();
+
+				visitCountChartData = binVisitCountDataDynamic(
+					analysisData.visitCount,
+					cohortInfo.name,
+				);
+
                 chartLoading = false;
             } else {
                 console.error('Worker error:', data);
@@ -504,7 +564,8 @@
 				<div class="grid grid-cols-2 gap-4 text-sm">
 					<div>
 						<p class="text-gray-500">Author</p>
-						<p class="font-medium">{cohortInfo.author}</p>
+						<p class="font-medium">anonymous</p>
+						<!-- <p class="font-medium">{cohortInfo.author}</p> -->
 						<!--  ({analysisData.basicInfo.author.department}) -->
 					</div>
 					<div>
@@ -977,29 +1038,47 @@
 								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
 								showLegend={false}
 							/>
+						</div>
+					</ChartCard>
 
-							<div slot="table" class="flex h-full w-full flex-col p-4">
-								<DataTable data={transformLineChartToTableData(ageDistributionChartData)} />
-							</div>
-						</ChartCard>
+					<ChartCard
+						title="Distribution of First Occurrence Age"
+						description="The age distribution of patients at the time of their first medical visit during the cohort period."
+						type="half"
+						hasTableView={true}
+						isTableView={isTableView.age}
+						hasXButton={false}
+						on:toggleView={({ detail }) => (isTableView.age = detail)}
+					>
+						<LineChart
+							data={ageDistributionChartData}
+							cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
+							showLegend={false}
+						/>
 
-						<ChartCard
-							title="Distribution of Visit Count"
-							description="The distribution of the total number of medical visits made by patients during the cohort period."
-							type="half"
-							hasTableView={true}
-							isTableView={isTableView.visitCount}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.visitCount = detail)}
-						>
-							<LineChart
-								data={Object.entries(analysisData.visitCount).map(([count, value]) => ({
-									label: count,
-									value: value,
-									series: cohortInfo.name
-								}))}
-								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
-								showLegend={false}
+						<div slot="table" class="flex h-full w-full flex-col p-4">
+							<DataTable data={transformLineChartToTableData(ageDistributionChartData)} />
+						</div>
+					</ChartCard>
+
+					<ChartCard
+						title="Distribution of Visit Count"
+						description="The distribution of the total number of medical visits made by patients during the cohort period."
+						type="half"
+						hasTableView={true}
+						isTableView={isTableView.visitCount}
+						hasXButton={false}
+						on:toggleView={({ detail }) => (isTableView.visitCount = detail)}
+					>
+						<LineChart
+							data={visitCountChartData}
+							cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
+							showLegend={false}
+						/>
+
+						<div slot="table" class="flex h-full w-full flex-col p-4">
+							<DataTable
+								data={transformLineChartToTableData(visitCountChartData)}
 							/>
 
 							<div slot="table" class="flex h-full w-full flex-col p-4">

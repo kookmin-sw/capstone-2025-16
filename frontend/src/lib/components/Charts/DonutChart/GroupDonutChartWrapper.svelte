@@ -55,7 +55,13 @@
                         width={150}
                         height={150}
                     />
-                    <span class="text-sm font-medium text-gray-600">{chart.name}</span>
+                    <span
+                        class="break-words text-center text-sm font-medium text-gray-600"
+                        style="max-width: 160px; display: inline-block; word-break: break-all; white-space: normal; overflow-wrap: break-word;"
+                        title={chart.name}
+                    >
+                        {chart.name}
+                    </span>
                 </div>
             {/each}
         </div>
