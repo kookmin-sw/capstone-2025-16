@@ -94,7 +94,9 @@
             .style("top", (event.pageY - 10) + "px")
             .html(`
               <div class="font-semibold">${d.name}</div>
-              <div class="text-gray-600">${d.groupLabel || "Diabetes Group"}: ${d.count}</div>
+              <div class="text-gray-600">
+                ${d.groupLabel ? `${d.groupLabel}: ${d.count}` : `${d.count}`}
+              </div>
             `);
         })
         .on("mousemove", function (event) {
