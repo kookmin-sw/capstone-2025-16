@@ -932,254 +932,256 @@
 			</div>
 		{/if}
 
-		{#if activeTab == 'charts' && !chartLoading}
-			<div class="w-full">
-				<div class="grid grid-cols-6 gap-4">
-					<ChartCard
-						title="Gender Ratio"
-						description="The ratio of genders within the cohort."
-						type="third"
-						hasTableView={true}
-						isTableView={isTableView.gender}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.gender = detail)}
-					>
-						<SingleDonutChartWrapper data={analysisData.gender} />
+		{#if activeTab == 'charts'}
+			{#if !chartLoading}
+				<div class="w-full">
+					<div class="grid grid-cols-6 gap-4">
+						<ChartCard
+							title="Gender Ratio"
+							description="The ratio of genders within the cohort."
+							type="third"
+							hasTableView={true}
+							isTableView={isTableView.gender}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.gender = detail)}
+						>
+							<SingleDonutChartWrapper data={analysisData.gender} />
 
-						<div slot="table" class="flex h-full w-full flex-col pt-2">
-							<DataTable
-								data={transformDonutChartToTableData({
-									cohortName: cohortInfo.name,
-									data: analysisData.gender,
-									totalPatients: cohortInfo.count
-								})}
+							<div slot="table" class="flex h-full w-full flex-col pt-2">
+								<DataTable
+									data={transformDonutChartToTableData({
+										cohortName: cohortInfo.name,
+										data: analysisData.gender,
+										totalPatients: cohortInfo.count
+									})}
+								/>
+							</div>
+						</ChartCard>
+
+						<ChartCard
+							title="Mortality"
+							description="The percentage of patients within the cohort who have died."
+							type="third"
+							hasTableView={true}
+							isTableView={isTableView.mortality}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.mortality = detail)}
+						>
+							<SingleDonutChartWrapper data={analysisData.mortality} />
+
+							<div slot="table" class="flex h-full w-full flex-col pt-2">
+								<DataTable
+									data={transformDonutChartToTableData({
+										cohortName: cohortInfo.name,
+										data: analysisData.mortality,
+										totalPatients: cohortInfo.count
+									})}
+								/>
+							</div>
+						</ChartCard>
+
+						<ChartCard
+							title="Visit Type Ratio"
+							description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
+							type="third"
+							hasTableView={true}
+							isTableView={isTableView.visitTypeRatio}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.visitTypeRatio = detail)}
+						>
+							<SingleDonutChartWrapper data={analysisData.visitType} />
+
+							<div slot="table" class="flex h-full w-full flex-col pt-2">
+								<DataTable
+									data={transformDonutChartToTableData({
+										cohortName: cohortInfo.name,
+										data: analysisData.visitType,
+										totalPatients: cohortInfo.count
+									})}
+								/>
+							</div>
+						</ChartCard>
+
+						<ChartCard
+							title="Distribution of First Occurrence Age"
+							description="The age distribution of patients at the time of their first medical visit during the cohort period."
+							type="half"
+							hasTableView={true}
+							isTableView={isTableView.age}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.age = detail)}
+						>
+							<LineChart
+								data={ageDistributionChartData}
+								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
+								showLegend={false}
 							/>
-						</div>
-					</ChartCard>
 
-					<ChartCard
-						title="Mortality"
-						description="The percentage of patients within the cohort who have died."
-						type="third"
-						hasTableView={true}
-						isTableView={isTableView.mortality}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.mortality = detail)}
-					>
-						<SingleDonutChartWrapper data={analysisData.mortality} />
+							<div slot="table" class="flex h-full w-full flex-col p-4">
+								<DataTable data={transformLineChartToTableData(ageDistributionChartData)} />
+							</div>
+						</ChartCard>
 
-						<div slot="table" class="flex h-full w-full flex-col pt-2">
-							<DataTable
-								data={transformDonutChartToTableData({
-									cohortName: cohortInfo.name,
-									data: analysisData.mortality,
-									totalPatients: cohortInfo.count
-								})}
+						<ChartCard
+							title="Distribution of Visit Count"
+							description="The distribution of the total number of medical visits made by patients during the cohort period."
+							type="half"
+							hasTableView={true}
+							isTableView={isTableView.visitCount}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.visitCount = detail)}
+						>
+							<LineChart
+								data={Object.entries(analysisData.visitCount).map(([count, value]) => ({
+									label: count,
+									value: value,
+									series: cohortInfo.name
+								}))}
+								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
+								showLegend={false}
 							/>
-						</div>
-					</ChartCard>
 
-					<ChartCard
-						title="Visit Type Ratio"
-						description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
-						type="third"
-						hasTableView={true}
-						isTableView={isTableView.visitTypeRatio}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.visitTypeRatio = detail)}
-					>
-						<SingleDonutChartWrapper data={analysisData.visitType} />
+							<div slot="table" class="flex h-full w-full flex-col p-4">
+								<DataTable
+									data={transformLineChartToTableData(
+										Object.entries(analysisData.visitCount).map(([count, value]) => ({
+											label: count,
+											value: value,
+											series: cohortInfo.name
+										}))
+									)}
+								/>
+							</div>
+						</ChartCard>
 
-						<div slot="table" class="flex h-full w-full flex-col pt-2">
-							<DataTable
-								data={transformDonutChartToTableData({
-									cohortName: cohortInfo.name,
-									data: analysisData.visitType,
-									totalPatients: cohortInfo.count
-								})}
-							/>
-						</div>
-					</ChartCard>
-
-					<ChartCard
-						title="Distribution of First Occurrence Age"
-						description="The age distribution of patients at the time of their first medical visit during the cohort period."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.age}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.age = detail)}
-					>
-						<LineChart
-							data={ageDistributionChartData}
-							cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
-							showLegend={false}
-						/>
-
-						<div slot="table" class="flex h-full w-full flex-col p-4">
-							<DataTable data={transformLineChartToTableData(ageDistributionChartData)} />
-						</div>
-					</ChartCard>
-
-					<ChartCard
-						title="Distribution of Visit Count"
-						description="The distribution of the total number of medical visits made by patients during the cohort period."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.visitCount}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.visitCount = detail)}
-					>
-						<LineChart
-							data={Object.entries(analysisData.visitCount).map(([count, value]) => ({
-								label: count,
-								value: value,
-								series: cohortInfo.name
-							}))}
-							cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
-							showLegend={false}
-						/>
-
-						<div slot="table" class="flex h-full w-full flex-col p-4">
-							<DataTable
-								data={transformLineChartToTableData(
-									Object.entries(analysisData.visitCount).map(([count, value]) => ({
-										label: count,
-										value: value,
-										series: cohortInfo.name
-									}))
-								)}
-							/>
-						</div>
-					</ChartCard>
-
-					<ChartCard
-						title="Top 10 Drugs"
-						description="The list of the top 10 most frequently prescribed medications for patients in the cohort."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.topTenDrugs}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.topTenDrugs = detail)}
-					>
-						<BarChartWrapper
-							data={Object.entries(analysisData.topTenDrug).map(([name, count]) => ({
-								name,
-								count
-							}))}
-							cohortName={cohortInfo.name}
-							cohortTotalCount={cohortInfo.count}
-						/>
-
-						<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-							<BarChartTableView
+						<ChartCard
+							title="Top 10 Drugs"
+							description="The list of the top 10 most frequently prescribed medications for patients in the cohort."
+							type="half"
+							hasTableView={true}
+							isTableView={isTableView.topTenDrugs}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.topTenDrugs = detail)}
+						>
+							<BarChartWrapper
 								data={Object.entries(analysisData.topTenDrug).map(([name, count]) => ({
 									name,
 									count
 								}))}
-								domainKey="drug"
 								cohortName={cohortInfo.name}
 								cohortTotalCount={cohortInfo.count}
 							/>
-						</div>
-					</ChartCard>
 
-					<ChartCard
-						title="Top 10 Conditions"
-						description="The list of the top 10 most frequently diagnosed medical conditions among patients in the cohort."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.topTenConditions}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.topTenConditions = detail)}
-					>
-						<BarChartWrapper
-							data={Object.entries(analysisData.topTenCondition).map(([name, count]) => ({
-								name,
-								count
-							}))}
-							cohortName={cohortInfo.name}
-							cohortTotalCount={cohortInfo.count}
-						/>
+							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
+								<BarChartTableView
+									data={Object.entries(analysisData.topTenDrug).map(([name, count]) => ({
+										name,
+										count
+									}))}
+									domainKey="drug"
+									cohortName={cohortInfo.name}
+									cohortTotalCount={cohortInfo.count}
+								/>
+							</div>
+						</ChartCard>
 
-						<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-							<BarChartTableView
+						<ChartCard
+							title="Top 10 Conditions"
+							description="The list of the top 10 most frequently diagnosed medical conditions among patients in the cohort."
+							type="half"
+							hasTableView={true}
+							isTableView={isTableView.topTenConditions}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.topTenConditions = detail)}
+						>
+							<BarChartWrapper
 								data={Object.entries(analysisData.topTenCondition).map(([name, count]) => ({
 									name,
 									count
 								}))}
-								domainKey="condition"
 								cohortName={cohortInfo.name}
 								cohortTotalCount={cohortInfo.count}
 							/>
-						</div>
-					</ChartCard>
 
-					<ChartCard
-						title="Top 10 Procedures"
-						description="The list of the top 10 most frequently performed procedures and medical tests on patients in the cohort."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.topTenProcedures}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.topTenProcedures = detail)}
-					>
-						<BarChartWrapper
-							data={Object.entries(analysisData.topTenProcedure).map(([name, count]) => ({
-								name,
-								count
-							}))}
-							cohortName={cohortInfo.name}
-							cohortTotalCount={cohortInfo.count}
-						/>
+							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
+								<BarChartTableView
+									data={Object.entries(analysisData.topTenCondition).map(([name, count]) => ({
+										name,
+										count
+									}))}
+									domainKey="condition"
+									cohortName={cohortInfo.name}
+									cohortTotalCount={cohortInfo.count}
+								/>
+							</div>
+						</ChartCard>
 
-						<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-							<BarChartTableView
+						<ChartCard
+							title="Top 10 Procedures"
+							description="The list of the top 10 most frequently performed procedures and medical tests on patients in the cohort."
+							type="half"
+							hasTableView={true}
+							isTableView={isTableView.topTenProcedures}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.topTenProcedures = detail)}
+						>
+							<BarChartWrapper
 								data={Object.entries(analysisData.topTenProcedure).map(([name, count]) => ({
 									name,
 									count
 								}))}
-								domainKey="procedure"
 								cohortName={cohortInfo.name}
 								cohortTotalCount={cohortInfo.count}
 							/>
-						</div>
-					</ChartCard>
 
-					<ChartCard
-						title="Top 10 Measurements"
-						description="The list of the top 10 most frequently recorded clinical measurements within the cohort."
-						type="half"
-						hasTableView={true}
-						isTableView={isTableView.topTenMeasurements}
-						hasXButton={false}
-						on:toggleView={({ detail }) => (isTableView.topTenMeasurements = detail)}
-					>
-						<BarChartWrapper
-							data={Object.entries(analysisData.topTenMeasurement).map(([name, count]) => ({
-								name,
-								count
-							}))}
-							cohortName={cohortInfo.name}
-							cohortTotalCount={cohortInfo.count}
-						/>
+							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
+								<BarChartTableView
+									data={Object.entries(analysisData.topTenProcedure).map(([name, count]) => ({
+										name,
+										count
+									}))}
+									domainKey="procedure"
+									cohortName={cohortInfo.name}
+									cohortTotalCount={cohortInfo.count}
+								/>
+							</div>
+						</ChartCard>
 
-						<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-							<BarChartTableView
+						<ChartCard
+							title="Top 10 Measurements"
+							description="The list of the top 10 most frequently recorded clinical measurements within the cohort."
+							type="half"
+							hasTableView={true}
+							isTableView={isTableView.topTenMeasurements}
+							hasXButton={false}
+							on:toggleView={({ detail }) => (isTableView.topTenMeasurements = detail)}
+						>
+							<BarChartWrapper
 								data={Object.entries(analysisData.topTenMeasurement).map(([name, count]) => ({
 									name,
 									count
 								}))}
-								domainKey="measurement"
 								cohortName={cohortInfo.name}
 								cohortTotalCount={cohortInfo.count}
 							/>
-						</div>
-					</ChartCard>
+
+							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
+								<BarChartTableView
+									data={Object.entries(analysisData.topTenMeasurement).map(([name, count]) => ({
+										name,
+										count
+									}))}
+									domainKey="measurement"
+									cohortName={cohortInfo.name}
+									cohortTotalCount={cohortInfo.count}
+								/>
+							</div>
+						</ChartCard>
+					</div>
 				</div>
-			</div>
-		{:else}
-			Please wait...
+			{:else}
+				Please wait...
+			{/if}
 		{/if}
 	</div>
 
