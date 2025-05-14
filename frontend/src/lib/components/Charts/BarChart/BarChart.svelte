@@ -116,7 +116,6 @@
   
     onMount(async () => {
       if (browser) {
-        console.log(data);
         handleResize();
         await tick();
         drawChart();
