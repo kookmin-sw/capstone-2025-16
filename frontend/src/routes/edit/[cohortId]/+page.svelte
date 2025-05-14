@@ -1054,7 +1054,7 @@
 									operator={container.operator || 'AND'}
 									patientCount={containerCounts[
 										containerIndex + cohortDefinition.initialGroup.containers.length
-									] || null}
+									] || 0}
 									canRemove={containerIndex > 0 ||
 										cohortDefinition.comparisonGroup.containers.length > 1}
 									isFirstContainer={containerIndex === 0}
