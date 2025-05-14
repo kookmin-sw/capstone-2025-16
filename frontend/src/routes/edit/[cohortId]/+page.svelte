@@ -712,6 +712,9 @@
 				if (typeof value === 'string' || typeof value === 'number') {
 					filter[key] = { eq: value };
 				}
+				if (typeof value === 'object' && Object.keys(value).length === 0) {
+					delete filter[key];
+				}
 			});
 		});
 	}
