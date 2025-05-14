@@ -45,10 +45,14 @@ export const buildQuery = (
       true,
     );
     queries.push(
-      db.insertInto('temp_cohort_detail').values(({ eb }) => ({
-        person_id: eb.fn<any>('_to_int64', [eb.val(personId)]),
-        cohort_id: eb.val<any>(1),
-      })),
+      db
+        .insertInto('temp_cohort_detail')
+        .expression(
+          db.selectNoFrom(({ eb }) => [
+            eb.val(1).as('cohort_id'),
+            eb.fn<any>('_to_int64', [eb.val(personId)]).as('person_id'),
+          ]),
+        ),
     );
     return { queries, cleanupQueries, containerCount: 1 };
   }
