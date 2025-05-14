@@ -57,6 +57,59 @@
     filterData();
   }
 
+  function handleCheckboxChange(id) {
+    selectedItems[id] = !selectedItems[id];
+    errorMessage = "";
+  }
+
+  async function handleDelete() {
+    const selectedCount = Object.values(selectedItems).filter(Boolean).length;
+    if (selectedCount === 0) return;
+
+    const selectedCharts = Object.entries(selectedItems)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([id]) => id);
+
+    if (!confirm(`Are you sure you want to delete the selected ${selectedCount} chart pages? This action cannot be undone.`)) {
+      return;
+    }
+
+    isLoading = true;
+    let deleteError = false;
+
+    for (const statistics_id of selectedCharts) {
+      try {
+        const res = await fetch(`https://bento.kookm.in/api/statistics/${statistics_id}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) {
+          deleteError = true;
+        }
+      } catch (e) {
+        deleteError = true;
+      }
+    }
+
+    // 목록 갱신
+    try {
+      const res = await fetch('/api/customlistdata/');
+      if (!res.ok) throw new Error();
+      chartData = await res.json();
+      filteredData = chartData.statistics;
+      selectedItems = {};
+    } catch (e) {
+      errorMessage = "Failed to refresh chart list.";
+      setTimeout(() => { errorMessage = ""; }, 5000);
+    } finally {
+      isLoading = false;
+    }
+
+    if (deleteError) {
+      errorMessage = "Failed to delete some charts.";
+      setTimeout(() => { errorMessage = ""; }, 5000);
+    }
+  }
+
   onMount(async() => {
     try{
       const res = await fetch('/api/customlistdata/');
@@ -115,22 +168,68 @@
         >
           + New Chart Page
         </a>
+        <button 
+          aria-label="Delete Charts"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors border"
+          class:bg-red-50={Object.values(selectedItems).filter(Boolean).length > 0}
+          class:bg-white={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:border-gray-300={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:border-red-600={Object.values(selectedItems).filter(Boolean).length > 0}
+          class:text-gray-500={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:text-red-600={Object.values(selectedItems).filter(Boolean).length > 0}
+          class:hover:bg-gray-50={Object.values(selectedItems).filter(Boolean).length === 0}
+          class:hover:bg-red-100={Object.values(selectedItems).filter(Boolean).length > 0}
+          on:click={handleDelete}
+          disabled={Object.values(selectedItems).filter(Boolean).length === 0}
+        >
+          <svg
+            class="h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path
+              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+            ></path>
+          </svg>
+        </button>
       </div>
       
       <div class="overflow-x-auto">
         <table class="min-w-full">
           <thead>
             <tr class="bg-gray-50 text-left">
-                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-                <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+              <th class="w-10 py-3 px-4">
+                  <span class="sr-only">Select</span>
+              </th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             {#each paginatedData as item (item.statistics_id)}
-              <tr class="hover:bg-gray-50 transition-colors cursor-pointer group">
+              <tr class="hover:bg-gray-50 transition-colors cursor-pointer group"
+                class:bg-blue-50={selectedItems[item.statistics_id]}
+                on:click={() => handleCheckboxChange(item.statistics_id)}>
+                <td class="py-3 px-4">
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 border-2 flex items-center justify-center transition-colors"
+                      class:border-blue-600={selectedItems[item.statistics_id]}
+                      class:border-gray-300={!selectedItems[item.statistics_id]}
+                    >
+                      {#if selectedItems[item.statistics_id]}
+                        <div class="w-2 h-2 bg-blue-600"></div>
+                      {/if}
+                    </div>
+                  </div>
+                </td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.statistics_id}</td>
                 <td class="py-3 px-4">
                   <a 
