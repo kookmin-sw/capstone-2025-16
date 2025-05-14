@@ -140,8 +140,11 @@
 		});
 
 		// 차트 생성
-		await fetch(`/api/statistics/${statistics_id}/chart`, {
+		await fetch(`https://bento.kookm.in/api/statistics/${statistics_id}/chart`, {
 			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
 			body: JSON.stringify({
 				name: chartName,
 				description: chartDescription,

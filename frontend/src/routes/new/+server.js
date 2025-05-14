@@ -33,5 +33,5 @@ export async function GET({ fetch }) {
         })
     }).then(res => res.json());
     console.log(response);
-    return redirect(302, '/edit/' + response.cohort_id);
+    return redirect(302, '/edit/' + response.cohortId);
 }
