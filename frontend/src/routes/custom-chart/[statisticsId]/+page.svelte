@@ -4,6 +4,7 @@
 	import { page } from '$app/stores';
 	import { slide } from 'svelte/transition';
 	import GroupedBarChart from '$lib/components/Charts/GroupedBarChart/GroupedBarChart.svelte';
+	import BoxPlot from '$lib/components/Charts/BoxPlot/BoxPlot.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import ChartCard from '$lib/components/ChartCard.svelte';
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
@@ -64,7 +65,6 @@
         await tick();
         chartDefinitionStates[chartIndex] = !chartDefinitionStates[chartIndex];
         chartDefinitionStates = [...chartDefinitionStates];
-		console.log(chartDefinitionStates);
     }
 
 	onMount(async () => {
@@ -97,7 +97,6 @@
 					...chart,
 					id: chart.chart_id
 				}));
-				console.log(customChartData[0].result);
 				targetSetData = result;
 				expandedStates = targetID.map(() => false);
 				chartDefinitionStates = customChartData.map(() => false);
@@ -340,12 +339,23 @@
 								height="400px"
 							>
 								<div id={"chart-" + chart.chart_id} class="flex h-full w-full items-center justify-center">
-									<GroupedBarChart
-										data={{
-										definition: JSON.parse(chart.definition),
-										result: JSON.parse(chart.result)
-										}}
-								  />
+									{#if chart.type === 'bar'}
+										<GroupedBarChart
+											data={{
+											definition: JSON.parse(chart.definition),
+											result: JSON.parse(chart.result)
+											}}
+										/>
+									{:else if chart.type === 'boxplot'}
+										<BoxPlot
+											data={{
+											definition: JSON.parse(chart.definition),
+											result: JSON.parse(chart.result)
+											}}
+										/>
+									{:else}
+										<p>No chart type selected</p>
+									{/if}
 								</div>
 							</ChartCard>
 						</div>
