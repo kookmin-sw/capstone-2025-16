@@ -117,7 +117,11 @@
             </div>
         {/if}
     {:else if processedData.length === 0}
-        <p>Currently, no data is available for display.</p>
+        <div class="flex items-center justify-center h-[150px] w-full">
+            <div class="text-center text-xs text-gray-500">
+            <p>Currently, no data is available for display.</p>
+            </div>
+        </div>
     {/if}
 </div>
 
