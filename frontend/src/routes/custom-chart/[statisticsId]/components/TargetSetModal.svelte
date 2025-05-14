@@ -32,6 +32,10 @@
 	let isLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
 
+	function close() {
+		goto('/custom-chart');
+	}
+
 	async function verifyPersonId() {
 		if (!selected_Person) return;
 
@@ -75,12 +79,6 @@
 		}
 	}
 
-	function handleClickOutside(event: MouseEvent) {
-		const modal = document.getElementById('target-set-modal');
-		if (modal && !modal.contains(event.target as Node)) {
-			close();
-		}
-	}
 
 	let activeTab = $state<'cohort' | 'person'>('cohort');
 	getCohortList();
@@ -102,16 +100,17 @@
 				name: 'Statistics name',
 				description: 'Statistics description'
 			};
-
+			
 			if (activeTab === 'cohort') {
 				requestsBody = {
 					...requestsBody,
-					cohortIds: selected_Cohorts.map((cohort) => cohort.cohortId)
+					cohortIds: selected_Cohorts.map((cohort) => cohort.cohort_id)
 				};
 			} else if (selected_Person) {
 				requestsBody = { ...requestsBody, personId: selected_Person };
 			}
 
+			console.log(requestsBody);
 			const response = await fetch('https://bento.kookm.in/api/statistics', {
 				method: 'POST',
 				headers: {
@@ -121,8 +120,8 @@
 			});
 
 			const { statisticsId } = await response.json();
-			await goto(`/custom-chart/${statisticsId}/chart`);
-			close();
+			goto(`/custom-chart/${statisticsId}/chart`);
+			
 		} catch (error) {
 			errorMessage = 'Failed to create statistics';
 		} finally {
@@ -134,7 +133,6 @@
 {#if show}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-		on:click={handleClickOutside}
 		transition:fade={{ duration: 200 }}
 	>
 		<div

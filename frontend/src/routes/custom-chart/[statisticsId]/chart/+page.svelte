@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import ConceptSetModal from './components/ConceptSetModal.svelte';
+	import ConceptSetModal from '$lib/components/ConceptSetModal.svelte';
 	import ChartTypeModal from './components/ChartTypeModal.svelte';
 
 	// 연산자 컴포넌트 가져오기
@@ -14,6 +14,7 @@
 	import DateOperator from '$lib/components/operators/DateOperator.svelte';
 	import IdentifierOperator from '$lib/components/operators/IdentifierOperator.svelte';
 	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
+	import DirectConceptSelectorWrapper from '$lib/components/operators/DirectConceptSelectorWrapper.svelte';
 
 	const { data } = $props();
 
@@ -481,6 +482,7 @@
 	// Count By 설정 저장 함수
 	function saveCountBySettings() {
 		countBy = { ...currentCountByValues };
+		console.log(countBy);
 		resetFilterValues();
 	}
 
@@ -726,7 +728,7 @@
 
 	// 개념 ID로 개념 찾기
 	function findConceptById(conceptId: string): { id: string; name: string } | undefined {
-		for (const conceptSet of cohortDefinition.conceptsets) {
+		for (const conceptSet of conceptsets) {
 			for (const item of conceptSet.items) {
 				if (item.concept_id === conceptId) {
 					return {
@@ -755,7 +757,7 @@
 
 	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
 	function getConceptsByDomain(domainId: string): { id: string; name: string }[] {
-		return cohortDefinition.conceptsets.flatMap((cs) =>
+		return conceptsets.flatMap((cs) =>
 			cs.items
 				.filter((item) => item.domain_id === domainId)
 				.map((item) => ({
@@ -767,7 +769,7 @@
 
 	// 특정 컨셉셋 ID의 개념들을 가져오는 함수
 	function getConceptsBySetId(conceptsetId: string): { id: string; name: string }[] {
-		const conceptSet = cohortDefinition.conceptsets.find((cs) => cs.conceptset_id === conceptsetId);
+		const conceptSet = conceptsets.find((cs) => cs.conceptset_id === conceptsetId);
 		if (!conceptSet) return [];
 
 		return conceptSet.items.map((item) => ({
@@ -1271,9 +1273,9 @@
 			<!-- Concept Setting -->
 			<div class="mb-3">
 				<label class="mb-1 block text-sm font-medium text-gray-700">Concept</label>
-				<ConceptSelectorWrapper
+				<DirectConceptSelectorWrapper
 					value={currentCountByValues.concept || {}}
-					placeholder="Select concept"
+					placeholder="Search for concept"
 					on:change={(e) => updateCountByValue('concept', e.detail)}
 				/>
 			</div>
