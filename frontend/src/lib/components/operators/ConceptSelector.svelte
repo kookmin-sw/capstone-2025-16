@@ -20,6 +20,7 @@
   export let value: ConceptOperatorType = {};
   export let label: string = "Select Concept";
   export let placeholder: string = "Search for concepts";
+  export let singleModeOnly: boolean = false; // New prop to force single concept selection mode
   
   // Available operators
   const availableOperators = [
@@ -80,21 +81,42 @@
       const val = value[op.type];
       if (val) {
         if (Array.isArray(val)) {
-          isMultipleMode = true;
-          // For now, just set the IDs - names will be loaded when searched
-          for (const id of val) {
-            if (!selectedConcepts.some(c => c.concept_id === id)) {
-              selectedConcepts.push({
-                concept_id: id,
-                concept_name: getConceptNameById(id) || id,
-                domain_id: '',
-                vocabulary_id: '',
-                concept_class_id: '',
-                standard_concept: '',
-                concept_code: '',
-                valid_start_date: '',
-                valid_end_date: ''
-              });
+          // When singleModeOnly is true, we only take the first concept from arrays
+          if (singleModeOnly) {
+            isMultipleMode = false;
+            if (val.length > 0) {
+              const id = val[0];
+              if (!selectedConcepts.some(c => c.concept_id === id)) {
+                selectedConcepts = [{
+                  concept_id: id,
+                  concept_name: getConceptNameById(id) || id,
+                  domain_id: '',
+                  vocabulary_id: '',
+                  concept_class_id: '',
+                  standard_concept: '',
+                  concept_code: '',
+                  valid_start_date: '',
+                  valid_end_date: ''
+                }];
+              }
+            }
+          } else {
+            isMultipleMode = true;
+            // For now, just set the IDs - names will be loaded when searched
+            for (const id of val) {
+              if (!selectedConcepts.some(c => c.concept_id === id)) {
+                selectedConcepts.push({
+                  concept_id: id,
+                  concept_name: getConceptNameById(id) || id,
+                  domain_id: '',
+                  vocabulary_id: '',
+                  concept_class_id: '',
+                  standard_concept: '',
+                  concept_code: '',
+                  valid_start_date: '',
+                  valid_end_date: ''
+                });
+              }
             }
           }
         } else {
@@ -117,6 +139,11 @@
         selectedOperator = op.type;
         break;
       }
+    }
+    
+    // When singleModeOnly is true, force isMultipleMode to false
+    if (singleModeOnly) {
+      isMultipleMode = false;
     }
   }
   
@@ -148,7 +175,12 @@
   
   // Toggle multiple mode
   function toggleMultipleMode() {
-    isMultipleMode = !isMultipleMode;
+    // If singleModeOnly is true, we shouldn't be able to enter multiple mode
+    if (singleModeOnly) {
+      isMultipleMode = false;
+    } else {
+      isMultipleMode = !isMultipleMode;
+    }
     
     // Update the value object accordingly
     updateValue();
@@ -162,9 +194,22 @@
   
   // Add concept
   function addConcept(concept: Concept) {
-    // Check if concept is already selected
+    // For single mode only, replace the current selection
+    if (singleModeOnly) {
+      selectedConcepts = [concept];
+      updateValue();
+      return;
+    }
+    
+    // For regular mode, check if concept is already selected
     if (!selectedConcepts.some(c => c.concept_id === concept.concept_id)) {
-      selectedConcepts = [...selectedConcepts, concept];
+      // In single mode, replace the current selection
+      if (!isMultipleMode) {
+        selectedConcepts = [concept];
+      } else {
+        // In multiple mode, add to the selection
+        selectedConcepts = [...selectedConcepts, concept];
+      }
       updateValue();
     }
   }
@@ -180,10 +225,10 @@
     let newValue: ConceptOperatorType = {};
     
     if (selectedConcepts.length > 0) {
-      if (isMultipleMode) {
+      if (isMultipleMode && !singleModeOnly) {
         newValue[selectedOperator] = selectedConcepts.map(c => c.concept_id);
       } else {
-        // In single mode, just use the first concept
+        // In single mode or when singleModeOnly is true, just use the first concept
         newValue[selectedOperator] = selectedConcepts[0].concept_id;
       }
     }
@@ -236,14 +281,16 @@
             {/each}
           </select>
           
-          <!-- Multiple/single toggle -->
-          <button 
-            type="button"
-            class="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
-            on:click={toggleMultipleMode}
-          >
-            {isMultipleMode ? 'Multiple' : 'Single'}
-          </button>
+          <!-- Multiple/single toggle, hidden when singleModeOnly is true -->
+          {#if !singleModeOnly}
+            <button 
+              type="button"
+              class="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
+              on:click={toggleMultipleMode}
+            >
+              {isMultipleMode ? 'Multiple' : 'Single'}
+            </button>
+          {/if}
         </div>
       </div>
       
