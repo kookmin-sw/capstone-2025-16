@@ -127,7 +127,6 @@
 					...chart,
 					id: chart.chart_id
 				}));
-				console.log('data3', data3);
 				chartDefinitionStates = customChartData.map(() => false);
 
 				// 공통 상태 설정
