@@ -9,9 +9,7 @@ export class VisitService {
     const visitInfo = await getBaseDB()
       .selectFrom('visit_occurrence')
       .selectAll('visit_occurrence')
-      .where('visit_occurrence_id', '=', ({ eb }) =>
-        eb.fn<any>('_to_int64', [eb.val(visitId)]),
-      )
+      .where('visit_occurrence_id', '=', ({ eb }) => eb.val(visitId))
       .leftJoin('concept', 'visit_concept_id', 'concept_id')
       .select('concept_name')
       .executeTakeFirst();
@@ -25,7 +23,7 @@ export class VisitService {
           .selectFrom('care_site')
           .selectAll()
           .where('care_site_id', '=', ({ eb }) =>
-            eb.fn<any>('_to_int64', [eb.val(visitInfo.care_site_id)]),
+            eb.val(visitInfo.care_site_id),
           )
           .executeTakeFirst()
       : undefined;
@@ -47,9 +45,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('person')
         .selectAll()
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitInfo.person_id)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(visitInfo.person_id))
         .executeTakeFirst(),
 
       // 제공자(의사) 정보
@@ -58,7 +54,7 @@ export class VisitService {
             .selectFrom('provider')
             .selectAll()
             .where('provider_id', '=', ({ eb }) =>
-              eb.fn<any>('_to_int64', [eb.val(visitInfo.provider_id)]),
+              eb.val(visitInfo.provider_id),
             )
             .executeTakeFirst()
         : undefined,
@@ -68,9 +64,7 @@ export class VisitService {
         ? getBaseDB()
             .selectFrom('location')
             .selectAll()
-            .where('location_id', '=', ({ eb }) =>
-              eb.fn<any>('_to_int64', [eb.val(careSite.location_id)]),
-            )
+            .where('location_id', '=', ({ eb }) => eb.val(careSite.location_id))
             .executeTakeFirst()
         : undefined,
 
@@ -78,9 +72,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('condition_occurrence')
         .selectAll('condition_occurrence')
-        .where('visit_occurrence_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitId)]),
-        )
+        .where('visit_occurrence_id', '=', ({ eb }) => eb.val(visitId))
         .leftJoin('concept', 'condition_concept_id', 'concept_id')
         .select('concept_name')
         .execute(),
@@ -89,9 +81,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('condition_era')
         .selectAll('condition_era')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitInfo.person_id)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(visitInfo.person_id))
         .where('condition_era_start_date', '<=', ({ eb }) =>
           eb.fn<any>('_to_date', [eb.val(visitInfo.visit_end_date)]),
         )
@@ -106,9 +96,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('drug_exposure')
         .selectAll('drug_exposure')
-        .where('visit_occurrence_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitId)]),
-        )
+        .where('visit_occurrence_id', '=', ({ eb }) => eb.val(visitId))
         .leftJoin('concept', 'drug_concept_id', 'concept_id')
         .select('concept_name')
         .execute(),
@@ -117,9 +105,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('procedure_occurrence')
         .selectAll('procedure_occurrence')
-        .where('visit_occurrence_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitId)]),
-        )
+        .where('visit_occurrence_id', '=', ({ eb }) => eb.val(visitId))
         .leftJoin('concept', 'procedure_concept_id', 'concept_id')
         .select('concept_name')
         .execute(),
@@ -128,9 +114,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('measurement')
         .selectAll('measurement')
-        .where('visit_occurrence_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitId)]),
-        )
+        .where('visit_occurrence_id', '=', ({ eb }) => eb.val(visitId))
         .leftJoin('concept', 'measurement_concept_id', 'concept_id')
         .select('concept_name')
         .execute(),
@@ -139,9 +123,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('observation')
         .selectAll('observation')
-        .where('visit_occurrence_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitId)]),
-        )
+        .where('visit_occurrence_id', '=', ({ eb }) => eb.val(visitId))
         .leftJoin('concept', 'observation_concept_id', 'concept_id')
         .select('concept_name')
         .execute(),
@@ -150,9 +132,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('specimen')
         .selectAll('specimen')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitInfo.person_id)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(visitInfo.person_id))
         .where((eb) =>
           eb.and([
             eb('specimen_date', '>=', ({ eb }) =>
@@ -171,9 +151,7 @@ export class VisitService {
       getBaseDB()
         .selectFrom('device_exposure')
         .selectAll('device_exposure')
-        .where('visit_occurrence_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(visitId)]),
-        )
+        .where('visit_occurrence_id', '=', ({ eb }) => eb.val(visitId))
         .leftJoin('concept', 'device_concept_id', 'concept_id')
         .select('concept_name')
         .execute(),

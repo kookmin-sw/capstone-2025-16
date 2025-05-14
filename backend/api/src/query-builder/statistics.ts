@@ -50,7 +50,7 @@ export const buildQuery = (
         .expression(
           db.selectNoFrom(({ eb }) => [
             eb.val(1).as('cohort_id'),
-            eb.fn<any>('_to_int64', [eb.val(personId)]).as('person_id'),
+            eb.val(personId).as('person_id'),
           ]),
         ),
     );
@@ -156,7 +156,7 @@ export const buildBoxPlotQuery = (
     measurementQuery = measurementQuery.where(
       'measurement.measurement_concept_id',
       '=',
-      ({ eb }) => eb.fn('_to_int64', [eb.val(countBy.concept)]),
+      ({ eb }) => eb.val(countBy.concept),
     );
   }
 

@@ -12,9 +12,7 @@ export class PersonService {
     let info = await getBaseDB()
       .selectFrom('person')
       .selectAll()
-      .where('person_id', '=', ({ eb }) =>
-        eb.fn<any>('_to_int64', [eb.val(personId)]),
-      )
+      .where('person_id', '=', ({ eb }) => eb.val(personId))
       .executeTakeFirst();
     if (!info) {
       throw new NotFoundException('Person not found');
@@ -23,9 +21,7 @@ export class PersonService {
     let death = await getBaseDB()
       .selectFrom('death')
       .selectAll()
-      .where('person_id', '=', ({ eb }) =>
-        eb.fn<any>('_to_int64', [eb.val(personId)]),
-      )
+      .where('person_id', '=', ({ eb }) => eb.val(personId))
       .executeTakeFirst();
 
     return {
@@ -39,9 +35,7 @@ export class PersonService {
       !(await getBaseDB()
         .selectFrom('person')
         .select('person_id')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(personId)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(personId))
         .executeTakeFirst())
     ) {
       throw new NotFoundException('Person not found');
@@ -50,9 +44,7 @@ export class PersonService {
     let visits = await getBaseDB()
       .selectFrom('visit_occurrence')
       .selectAll()
-      .where('person_id', '=', ({ eb }) =>
-        eb.fn<any>('_to_int64', [eb.val(personId)]),
-      )
+      .where('person_id', '=', ({ eb }) => eb.val(personId))
       .execute();
 
     return visits;
@@ -65,9 +57,7 @@ export class PersonService {
       !(await getBaseDB()
         .selectFrom('person')
         .select('person_id')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(personId)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(personId))
         .executeTakeFirst())
     ) {
       throw new NotFoundException('Person not found');
@@ -82,9 +72,7 @@ export class PersonService {
     ] = await Promise.all([
       getBaseDB()
         .selectFrom('visit_occurrence')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(personId)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(personId))
         .leftJoin('concept', 'visit_concept_id', 'concept_id')
         .groupBy('concept_name')
         .select(({ fn }) => [
@@ -94,9 +82,7 @@ export class PersonService {
         .execute(),
       getBaseDB()
         .selectFrom('drug_exposure')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(personId)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(personId))
         .leftJoin('concept', 'drug_concept_id', 'concept_id')
         .groupBy('concept_name')
         .select(({ fn }) => [
@@ -108,9 +94,7 @@ export class PersonService {
         .execute(),
       getBaseDB()
         .selectFrom('condition_occurrence')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(personId)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(personId))
         .leftJoin('concept', 'condition_concept_id', 'concept_id')
         .groupBy('concept_name')
         .select(({ fn }) => [
@@ -122,9 +106,7 @@ export class PersonService {
         .execute(),
       getBaseDB()
         .selectFrom('procedure_occurrence')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(personId)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(personId))
         .leftJoin('concept', 'procedure_concept_id', 'concept_id')
         .groupBy('concept_name')
         .select(({ fn }) => [
@@ -136,9 +118,7 @@ export class PersonService {
         .execute(),
       getBaseDB()
         .selectFrom('measurement')
-        .where('person_id', '=', ({ eb }) =>
-          eb.fn<any>('_to_int64', [eb.val(personId)]),
-        )
+        .where('person_id', '=', ({ eb }) => eb.val(personId))
         .leftJoin('concept', 'measurement_concept_id', 'concept_id')
         .groupBy('concept_name')
         .select(({ fn }) => [
