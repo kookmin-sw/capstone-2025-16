@@ -88,7 +88,7 @@
     try {
       // Add domain parameter to query if a domain is selected
       const domainParam = selectedDomain ? `&domain=${encodeURIComponent(selectedDomain)}` : '';
-      const response = await fetch(`https://bento.kookm.in/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${page}&limit=${pageSize}`);
+      const response = await fetch(`https://bento.kookm.in/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`);
       const data = await response.json();
       
       searchResults = data.concepts;
