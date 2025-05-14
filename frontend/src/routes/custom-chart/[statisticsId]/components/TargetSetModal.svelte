@@ -106,16 +106,17 @@
 				name: 'Statistics name',
 				description: 'Statistics description'
 			};
-
+			
 			if (activeTab === 'cohort') {
 				requestsBody = {
 					...requestsBody,
-					cohortIds: selected_Cohorts.map((cohort) => cohort.cohortId)
+					cohortIds: selected_Cohorts.map((cohort) => cohort.cohort_id)
 				};
 			} else if (selected_Person) {
 				requestsBody = { ...requestsBody, personId: selected_Person };
 			}
 
+			console.log(requestsBody);
 			const response = await fetch('https://bento.kookm.in/api/statistics', {
 				method: 'POST',
 				headers: {
@@ -125,8 +126,8 @@
 			});
 
 			const { statisticsId } = await response.json();
-			await goto(`/custom-chart/${statisticsId}/chart`);
-			close();
+			goto(`/custom-chart/${statisticsId}/chart`);
+			
 		} catch (error) {
 			errorMessage = 'Failed to create statistics';
 		} finally {
