@@ -9,6 +9,7 @@
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 	import { utcDay } from 'd3';
 	import TargetSetModal from './components/TargetSetModal.svelte';
+	import domtoimage from 'dom-to-image';
 
 	let isLoading = true;
 	let statisticsID = $page.params.statisticsId;
@@ -38,6 +39,24 @@
             await navigator.clipboard.writeText(text);
         } catch (err) {
             console.error('클립보드 복사 실패:', err);
+        }
+    }
+
+    async function exportChartImage(chartId, format = 'png') {
+        const chartElement = document.getElementById(`chart-${chartId}`);
+        if (!chartElement) {
+            console.error(`Chart element not found for id: chart-${chartId}`);
+            return;
+        }
+
+        try {
+            const dataUrl = await domtoimage.toPng(chartElement);
+            const link = document.createElement('a');
+            link.download = `${chartId}.${format}`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Export error:', error);
         }
     }
 
