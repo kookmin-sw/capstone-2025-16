@@ -17,7 +17,7 @@
     importConceptSetFromJson,
     type ConceptSet,
     type Concept
-  } from '../models/ConceptSet';
+  } from '$lib/models/ConceptSet';
   
   // 인터페이스 정의
   export let show = false;
@@ -35,6 +35,12 @@
   let searchResults: Concept[] = [];
   let isSearching = false;
   let selectedDomain = ''; // For domain filtering
+  
+  // Pagination state
+  let currentPage = 0;
+  let pageSize = 50;
+  let totalResults = 0;
+  let totalPages = 0;
 
   // Available domains for filtering
   const availableDomains = [
@@ -81,24 +87,45 @@
   
   // 개념 검색
   async function searchConcepts() {
-    if (!searchQuery.trim()) return;
     
     isSearching = true;
-      // 실제 서비스에서는 API 호출로 구현
-      // Add domain parameter to query if a domain is selected
-      const domainParam = selectedDomain ? `&domain=${selectedDomain}` : '';
-      
-      await fetch(`https://bento.kookm.in/api/concept/search?query=${searchQuery}${domainParam}&page=0&limit=100`)
-      .then(response => response.json())
-      .then(data => {
-        searchResults = data.concepts;
-      })
-      .catch(error => {
-        console.error('Error searching concepts:', error);
-      })
-      .finally(() => {
-        isSearching = false;
-      });
+    
+    // 실제 서비스에서는 API 호출로 구현
+    // Add domain parameter to query if a domain is selected
+    const domainParam = selectedDomain ? `&domain=${encodeURIComponent(selectedDomain)}` : '';
+    
+    await fetch(`https://bento.kookm.in/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`)
+    .then(response => response.json())
+    .then(data => {
+      searchResults = data.concepts;
+      totalResults = data.total || data.concepts.length;
+      totalPages = Math.ceil(totalResults / pageSize);
+    })
+    .catch(error => {
+      console.error('Error searching concepts:', error);
+      searchResults = [];
+      totalResults = 0;
+      totalPages = 0;
+    })
+    .finally(() => {
+      isSearching = false;
+    });
+  }
+  
+  // Navigate to next page
+  function nextPage() {
+    if (currentPage < totalPages - 1) {
+      currentPage++;
+      searchConcepts();
+    }
+  }
+  
+  // Navigate to previous page
+  function prevPage() {
+    if (currentPage > 0) {
+      currentPage--;
+      searchConcepts();
+    }
   }
   
   // 개념 집합에 개념 추가
@@ -456,7 +483,7 @@
                   />
                   <button
                     class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                    on:click={searchConcepts}
+                    on:click={() => searchConcepts()}
                     disabled={isSearching}
                   >
                     {isSearching ? 'Searching...' : 'Search'}
@@ -470,6 +497,7 @@
                     id="domain-filter-modal"
                     class="flex-1 rounded-md border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     bind:value={selectedDomain}
+                    on:change={() => { currentPage = 0; searchResults = []; totalResults = 0; totalPages = 0; }}
                   >
                     {#each availableDomains as domain}
                       <option value={domain}>{domain || 'All Domains'}</option>
@@ -514,6 +542,30 @@
                         </li>
                       {/each}
                     </ul>
+                  </div>
+                  
+                  <!-- Pagination controls -->
+                  <div class="mt-3 flex items-center justify-between border-t border-gray-200 pt-3">
+                    <div class="text-xs text-gray-500">
+                      Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, totalResults)} of {totalResults} results
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <button
+                        class="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:opacity-50"
+                        on:click={prevPage}
+                        disabled={currentPage === 0 || isSearching}
+                      >
+                        Previous
+                      </button>
+                      <span class="text-xs text-gray-500">Page {currentPage + 1} of {totalPages || 1}</span>
+                      <button
+                        class="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:opacity-50"
+                        on:click={nextPage}
+                        disabled={currentPage >= totalPages - 1 || isSearching}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 </div>
               {:else if searchQuery}

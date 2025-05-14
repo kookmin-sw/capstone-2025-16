@@ -4,7 +4,7 @@
 
 <script lang="ts">
 	import { page } from '$app/state';
-	import ConceptSetModal from './components/ConceptSetModal.svelte';
+	import ConceptSetModal from '$lib/components/ConceptSetModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
 
 	// 연산자 컴포넌트 가져오기

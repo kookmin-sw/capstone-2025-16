@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import ConceptSetModal from './components/ConceptSetModal.svelte';
+	import ConceptSetModal from '$lib/components/ConceptSetModal.svelte';
 	import ChartTypeModal from './components/ChartTypeModal.svelte';
 
 	// 연산자 컴포넌트 가져오기
