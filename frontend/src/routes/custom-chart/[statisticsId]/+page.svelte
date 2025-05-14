@@ -33,6 +33,14 @@
 		expandedStates = [...expandedStates];
 	}
 
+	async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error('클립보드 복사 실패:', err);
+        }
+    }
+
 	async function toggleChartDefinition(chartIndex) {
         await tick();
         chartDefinitionStates[chartIndex] = !chartDefinitionStates[chartIndex];
@@ -312,7 +320,7 @@
 								hasXButton={false}
 								height="400px"
 							>
-								<div class="flex h-full w-full items-center justify-center">
+								<div id={"chart-" + chart.chart_id} class="flex h-full w-full items-center justify-center">
 									<GroupedBarChart
 										data={{
 										definition: JSON.parse(chart.definition),
