@@ -16,6 +16,8 @@ export class ConceptService {
   ): Promise<ConceptSearchResponseDto> {
     const offset = page * limit;
 
+    query = query?.trim() || '';
+
     let conceptQuery = getBaseDB()
       .selectFrom('concept')
       .select([
@@ -30,8 +32,6 @@ export class ConceptService {
       conceptQuery = conceptQuery.where('domain_id', '=', domain);
     }
 
-    query = query?.trim() || '';
-
     // 검색어가 있는 경우에만 검색 조건 추가
     if (query) {
       conceptQuery = conceptQuery.where(
@@ -45,6 +45,10 @@ export class ConceptService {
     let countQuery = getBaseDB()
       .selectFrom('concept')
       .select(({ fn }) => [fn.count('concept_id').as('total')]);
+
+    if (domain) {
+      countQuery = countQuery.where('domain_id', '=', domain);
+    }
 
     if (query) {
       countQuery = countQuery.where(
