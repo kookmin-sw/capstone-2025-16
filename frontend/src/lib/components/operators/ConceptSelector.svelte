@@ -38,6 +38,20 @@
   let selectedOperator = 'eq'; // Default operator
   let isMultipleMode = false;
   let selectedConcepts: Concept[] = [];
+  let selectedDomain = ''; // For domain filtering
+
+  // Available domains for filtering
+  const availableDomains = [
+    '', 'Measurement', 'Drug', 'Observation', 'Note', 'Procedure', 
+    'Meas Value', 'Device', 'Condition', 'Metadata', 'Spec Anatomic Site', 
+    'Specimen', 'Type Concept', 'Unit', 'Provider', 'Race', 'Relationship', 
+    'Geography', 'Route', 'Language', 'Visit', 'Plan', 'Sponsor', 'Payer', 
+    'Plan Stop Reason', 'Gender', 'Cost', 'Episode', 'Revenue Code', 
+    'Condition Status', 'Regimen', 'Condition/Procedure', 'Condition/Obs', 
+    'Obs/Procedure', 'Currency', 'Ethnicity', 'Meas/Procedure', 
+    'Meas Value Operator', 'Condition/Meas', 'Device/Procedure', 
+    'Drug/Procedure', 'Device/Drug', 'Place of Service', 'Condition/Device'
+  ];
   
   // Filter display values
   let displayValue = '';
@@ -154,7 +168,9 @@
     isSearching = true;
     
     try {
-      const response = await fetch(`https://bento.kookm.in/api/concept/search?query=${searchQuery}&page=0&limit=100`);
+      // Add domain parameter to query if a domain is selected
+      const domainParam = selectedDomain ? `&domain=${selectedDomain}` : '';
+      const response = await fetch(`https://bento.kookm.in/api/concept/search?query=${searchQuery}${domainParam}&page=0&limit=100`);
       const data = await response.json();
       searchResults = data.concepts;
     } catch (error) {
@@ -294,23 +310,39 @@
         </div>
       </div>
       
-      <!-- Search input -->
-      <div class="mb-3 flex items-center space-x-2">
-        <input
-          type="text"
-          placeholder={placeholder}
-          class="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          bind:value={searchQuery}
-          on:keydown={(e) => e.key === 'Enter' && searchConcepts()}
-        />
-        <button
-          type="button"
-          class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          on:click={searchConcepts}
-          disabled={isSearching}
-        >
-          {isSearching ? 'Searching...' : 'Search'}
-        </button>
+      <!-- Search input and domain filter -->
+      <div class="mb-3 flex flex-col space-y-2">
+        <div class="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder={placeholder}
+            class="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            bind:value={searchQuery}
+            on:keydown={(e) => e.key === 'Enter' && searchConcepts()}
+          />
+          <button
+            type="button"
+            class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            on:click={searchConcepts}
+            disabled={isSearching}
+          >
+            {isSearching ? 'Searching...' : 'Search'}
+          </button>
+        </div>
+        
+        <!-- Domain filter dropdown -->
+        <div class="flex items-center space-x-2">
+          <label for="domain-filter" class="text-sm font-medium text-gray-700">Domain:</label>
+          <select 
+            id="domain-filter"
+            class="flex-1 rounded-md border border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            bind:value={selectedDomain}
+          >
+            {#each availableDomains as domain}
+              <option value={domain}>{domain || 'All Domains'}</option>
+            {/each}
+          </select>
+        </div>
       </div>
       
       <!-- Selected concepts -->

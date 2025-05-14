@@ -34,6 +34,20 @@
   let searchQuery = '';
   let searchResults: Concept[] = [];
   let isSearching = false;
+  let selectedDomain = ''; // For domain filtering
+
+  // Available domains for filtering
+  const availableDomains = [
+    '', 'Measurement', 'Drug', 'Observation', 'Note', 'Procedure', 
+    'Meas Value', 'Device', 'Condition', 'Metadata', 'Spec Anatomic Site', 
+    'Specimen', 'Type Concept', 'Unit', 'Provider', 'Race', 'Relationship', 
+    'Geography', 'Route', 'Language', 'Visit', 'Plan', 'Sponsor', 'Payer', 
+    'Plan Stop Reason', 'Gender', 'Cost', 'Episode', 'Revenue Code', 
+    'Condition Status', 'Regimen', 'Condition/Procedure', 'Condition/Obs', 
+    'Obs/Procedure', 'Currency', 'Ethnicity', 'Meas/Procedure', 
+    'Meas Value Operator', 'Condition/Meas', 'Device/Procedure', 
+    'Drug/Procedure', 'Device/Drug', 'Place of Service', 'Condition/Device'
+  ];
   
   // 탭 변경 함수
   function changeTab(tab: string) {
@@ -71,8 +85,10 @@
     
     isSearching = true;
       // 실제 서비스에서는 API 호출로 구현
-      // 예제에서는 더미 데이터 반환
-      await fetch(`https://bento.kookm.in/api/concept/search?query=${searchQuery}&page=0&limit=100`)
+      // Add domain parameter to query if a domain is selected
+      const domainParam = selectedDomain ? `&domain=${selectedDomain}` : '';
+      
+      await fetch(`https://bento.kookm.in/api/concept/search?query=${searchQuery}${domainParam}&page=0&limit=100`)
       .then(response => response.json())
       .then(data => {
         searchResults = data.concepts;
@@ -430,20 +446,36 @@
           <div class="grid grid-cols-1 gap-6">
             <div>
               <h3 class="mb-3 text-base font-medium text-gray-700">Search Concepts</h3>
-              <div class="flex items-center space-x-2">
-                <input
-                  type="text"
-                  placeholder="Search by concept name, code, etc."
-                  class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                  bind:value={searchQuery}
-                />
-                <button
-                  class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                  on:click={searchConcepts}
-                  disabled={isSearching}
-                >
-                  {isSearching ? 'Searching...' : 'Search'}
-                </button>
+              <div class="flex flex-col space-y-2">
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Search by concept name, code, etc."
+                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    bind:value={searchQuery}
+                  />
+                  <button
+                    class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    on:click={searchConcepts}
+                    disabled={isSearching}
+                  >
+                    {isSearching ? 'Searching...' : 'Search'}
+                  </button>
+                </div>
+                
+                <!-- Domain filter dropdown -->
+                <div class="flex items-center space-x-2">
+                  <label for="domain-filter-modal" class="text-sm font-medium text-gray-700">Domain:</label>
+                  <select 
+                    id="domain-filter-modal"
+                    class="flex-1 rounded-md border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    bind:value={selectedDomain}
+                  >
+                    {#each availableDomains as domain}
+                      <option value={domain}>{domain || 'All Domains'}</option>
+                    {/each}
+                  </select>
+                </div>
               </div>
             </div>
             
