@@ -347,10 +347,27 @@
 							aria-label="custom chart delete button"
 							,
 							class="absolute right-2 top-2 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-							onclick={(e) => {
+							onclick={async (e) => {
 								e.stopPropagation();
-								if (!isDragging && confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
-									customChartData = [...customChartData.filter((_, i) => i !== index)];
+
+								if(isDragging) return;
+								const confirmed = confirm(`Are you sure you want to delete "${chart.name}"? This action cannot be undone.`);
+								if(!confirmed) return;
+
+								try {
+									const res = await fetch(`https://bento.kookm.in/api/statistics/${chart.statistics_id}/chart/${chart.chart_id}`, {
+									method: 'DELETE',
+									});
+
+									if (!res.ok) {
+									throw new Error('Failed to delete chart');
+									}
+
+									// 삭제 성공 시 UI에서 제거
+									customChartData = customChartData.filter((_, i) => i !== index);
+								} catch (error) {
+									console.error(error);
+									alert('Failed to delete the chart. Please try again.');
 								}
 							}}
 						>
