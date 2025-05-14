@@ -190,7 +190,7 @@
 							<span class="text-sm text-gray-400">ID</span>
 							<span class="text-black-500 text-sm">{cumtomInfo.statistics_id}</span>
 						</div>
-						<div class="font-medium text-blue-600">Custom Target Set 1</div>
+						<div class="font-medium text-blue-600">{cumtomInfo.name}</div>
 					</div>
 				</div>
 
