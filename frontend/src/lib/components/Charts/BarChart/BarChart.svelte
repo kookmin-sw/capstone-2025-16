@@ -17,6 +17,8 @@
     $: if (chartContainer && data.length > 0 && width && height) {
         drawChart();
     }
+
+    $: total = data?.reduce((sum, d) => sum + (d?.count || 0), 0) || 0;
     
     function handleResize() {
       if (chartContainer) {
@@ -146,9 +148,17 @@
       }
     });
   
-    $: if (chartContainer && data.length > 0 && width && height) {
+    $: if (chartContainer && data.length > 0 && width && height && total > 0) {
       drawChart();
     }
 </script>
   
-<div bind:this={chartContainer} class="w-full h-full"></div>
+<div class="relative w-full h-full">
+  {#if !data || data.length === 0 || total === 0}
+    <div class="absolute inset-0 flex items-center justify-center">
+      <p class="text-xs text-gray-500 text-center">Currently, no data is available for display.</p>
+    </div>
+  {/if}
+
+  <div bind:this={chartContainer} class="w-full h-full"></div>
+</div>

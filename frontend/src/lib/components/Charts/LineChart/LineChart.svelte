@@ -21,6 +21,8 @@
         visibleSeries = new Set(Object.keys(cohortColorMap));
     }
 
+    $: total = data?.reduce((sum, d) => sum + (d?.value || 0), 0) || 0;
+
     function handleResize() {
         if (chartContainer) {
             const containerRect = chartContainer.getBoundingClientRect();
@@ -72,7 +74,7 @@
     }
 
     function drawChart() {
-        if (!chartContainer || !width || !height || !data || data.length === 0) return;
+        if (!chartContainer || !width || !height || !data || data.length === 0 || total === 0) return;
 
         const svg = d3
             .select(chartContainer)
@@ -250,4 +252,12 @@
     }
 </script>
 
-<div bind:this={chartContainer} class="w-full h-full [&>svg]:max-w-full [&>svg]:h-auto"></div>
+<div class="relative w-full h-full">
+    {#if !data || data.length === 0 || total === 0}
+        <div class="absolute inset-0 flex items-center justify-center">
+        <p class="text-xs text-gray-500 text-center">Currently, no data is available for display.</p>
+        </div>
+    {/if}
+
+    <div bind:this={chartContainer} class="w-full h-full [&>svg]:max-w-full [&>svg]:h-auto"></div>
+</div>  
