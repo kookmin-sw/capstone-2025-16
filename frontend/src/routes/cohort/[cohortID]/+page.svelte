@@ -431,7 +431,7 @@
 							})
 								.then((res) => res.json())
 								.then((data) => {
-									goto(`/edit/${data.cohort_id}`);
+									goto(`/edit/${data.cohortId}`);
 								});
 						}}
 						class="group relative flex items-center justify-center"
