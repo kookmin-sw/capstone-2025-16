@@ -221,6 +221,7 @@
 				<div class="text-[14px] text-gray-500">Add a new chart for this target</div>
 				<button
 					class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-xl font-medium text-white shadow transition hover:bg-blue-700"
+					onclick={() => goto(`/custom-chart/${cumtomInfo.statistics_id}/chart`)}
 				>
 					+
 				</button>
