@@ -366,6 +366,7 @@
             id="domain-filter"
             class="flex-1 rounded-md border border-gray-300 bg-white py-1.5 pl-3 pr-8 text-sm shadow-sm transition-all hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             bind:value={selectedDomain}
+            on:change={() => { currentPage = 0; searchResults = []; totalResults = 0; totalPages = 0; }}
           >
             {#each availableDomains as domain}
               <option value={domain}>{domain || 'All Domains'}</option>
