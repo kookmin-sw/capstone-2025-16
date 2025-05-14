@@ -933,7 +933,7 @@
 							<ContainerHeader
 								name={container.name}
 								operator={container.operator || 'AND'}
-								patientCount={containerCounts[containerIndex] || null}
+								patientCount={containerCounts[containerIndex] || 0}
 								canRemove={containerIndex > 0 ||
 									cohortDefinition.initialGroup.containers.length > 1}
 								isFirstContainer={containerIndex === 0}
