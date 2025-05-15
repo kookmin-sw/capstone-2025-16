@@ -443,10 +443,6 @@
 			<!-- 상단 정보 -->
 			<div class="flex w-full items-center justify-between bg-gray-50 p-3">
 				<div class="flex items-center gap-4">
-					<div class="font-medium">
-						<span class="text-sm text-gray-400">ID </span>
-						<span class="text-black-500 text-sm">{cohortInfo.cohort_id}</span>
-					</div>
 					<div class="font-medium text-blue-600">{cohortInfo.name}</div>
 					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs">
 						<span class="text-gray-600">Total patients:</span>
@@ -582,6 +578,10 @@
 			<div class="border-t p-4">
 				<div class="grid grid-cols-2 gap-4 text-sm">
 					<div>
+						<p class="text-gray-500">ID</p>
+						<p class="font-medium">{cohortInfo.cohort_id}</p>
+					</div>
+					<div>
 						<p class="text-gray-500">Author</p>
 						<p class="font-medium">anonymous</p>
 						<!-- <p class="font-medium">{cohortInfo.author}</p> -->
@@ -590,6 +590,10 @@
 					<div>
 						<p class="text-gray-500">Created at</p>
 						<p class="font-medium">{new Date(cohortInfo.created_at).toLocaleString()}</p>
+					</div>
+					<div>
+						<p class="text-gray-500">Updated at</p>
+						<p class="font-medium">{new Date(cohortInfo.updated_at).toLocaleString()}</p>
 					</div>
 					<div class="col-span-2">
 						<p class="text-gray-500">Description</p>
