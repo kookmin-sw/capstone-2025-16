@@ -30,11 +30,11 @@
               { title: "Definition 탭 클릭", content: "Definition 탭에서 코호트가 어떻게 정의되어 있는지를 json 형식으로 확인할 수 있습니다." }
             ] },
             { title: "코호트 내 주요 Feature 확인하기", steps: [
-              { title: "Features 탭 클릭", content: "Features 탭에서 코호트 내 주요 Feature를 확인할 수 있습니다." },
-              { title: "학습에 사용할 환자 배수 입력", content: "학습에 사용할 환자 배수 k를 입력합니다. 현재 코호트 내 환자수의 k배만큼 환자를 뽑아 학습에 사용합니다." },
-              { title: "분석 시작 버튼 클릭", content: "분석 시작 버튼을 클릭하여 학습을 시작합니다." },
-              { title: "분석 완료 후 결과 확인", content: "분석 완료 후 결과를 확인합니다. Condition과 Procedure 도메인에 대해 influence 값이 높은 top 10 Concept을 확인할 수 있습니다." },
-              { title: "분석 결과 다운로드", content: "분석 결과를 다운로드 합니다. 다운로드 파일은 코호트 이름과 날짜를 포함한 파일명으로 한 csv 파일로 저장됩니다. 가장 최근의 분석 결과만 기록되기에 이전 분석 기록은 확인할 수 없으므로 필요시 다운로드를 받아야 합니다." }
+              { title: "1단계: Features 탭 클릭", content: "단일 코호트 페이지에서 Features 탭을 클릭합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-1.png" },
+              { title: "2단계: 학습에 사용할 환자 배수 입력", content: "주요 Feature를 분석하기 위한 학습에 사용할 환자 배수 k를 입력합니다. 코호트 환자 수의 k배에 해당하는 비교군 환자를 PSM으로 나이와 성별이 비슷한 환자들을 구성해 학습에 사용합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-2.png" },
+              { title: "3단계: 분석 시작 버튼 클릭", content: "분석 시작 버튼을 클릭하여 학습을 시작합니다. 페이지를 나가도 학습은 계속 진행됩니다.\n준비된 데이터를 랜덤하게 학습/검증용으로 나누어 분류 모델을 학습하고, Shap를 적용해 각 피처의 중요도를 계산합니다. 이 과정을 여러 번 반복해 나온 SHAP 값들의 평균을 내 분석합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-3.png" },
+              { title: "4단계: 결과 확인", content: "학습이 완료되면 결과가 표로 나옵니다. Condition과 Procedure 도메인에 대해 influence 값이 높은 top 10 Concept을 확인할 수 있습니다. 각 도메인에 사용된 모델의 F1 Score도 제공됩니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-4.png" },
+              { title: "5단계: 분석 결과 다운로드", content: "분석 결과를 다운로드 합니다. 다운로드 파일은 코호트 이름과 날짜를 포함한 파일명으로 한 csv 파일로 저장됩니다. 가장 최근의 분석 결과만 기록되기에 이전 분석 기록은 확인할 수 없으므로 필요시 다운로드를 받아야 합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-5.png" }
             ] },
             { title: "코호트 기본 통계 확인하기", steps: [
               { title: "1단계: Charts 탭 이동", content: "Charts 탭을 클릭합니다." }
