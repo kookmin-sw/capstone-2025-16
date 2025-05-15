@@ -271,18 +271,18 @@
       </div>
       
       <div class="overflow-x-auto">
-        <table class="min-w-full">
+        <table class="table-fixed w-full">
           <thead>
             <tr class="bg-gray-50 text-left">
-              <th class="w-10 py-3 px-4">
+              <th class="w-[5%] py-3 px-4">
                 <span class="sr-only">Select</span>
               </th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+              <th class="w-[5%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
+              <th class="w-[25%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th class="w-[35%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
