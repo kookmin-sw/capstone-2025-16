@@ -304,7 +304,7 @@
                     </div>
                   </div>
                 </td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.cohort_id}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{filteredData.length - ((currentPage - 1) * itemsPerPage + paginatedData.indexOf(item)) - 1 + 1}</td>
                 <td class="py-3 px-4">
                   <a 
                     href={`/cohort/${item.cohort_id}`} 
