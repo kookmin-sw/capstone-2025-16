@@ -695,7 +695,7 @@
 				temporary: true
 			})
 		});
-		counts = await response.json();
+		const counts = await response.json();
 		containerCounts = counts.containerCounts;
 		isPatientCountUpdating = false;
 	}
