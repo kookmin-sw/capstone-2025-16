@@ -177,7 +177,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
       <h1 class="text-2xl font-bold text-gray-900 mb-2">Cohort List</h1>
-      <p class="text-gray-600">Manage and compare your cohorts</p>
+      <p class="text-gray-600">You can create and manage cohorts, and access each cohort by clicking its name. You can compare and analyze up to five cohorts simultaneously, and search by cohort name, description, or author.</p>
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
