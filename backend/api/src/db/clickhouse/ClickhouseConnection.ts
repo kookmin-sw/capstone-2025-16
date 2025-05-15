@@ -23,8 +23,8 @@ export class ClickhouseConnection implements DatabaseConnection {
       http_agent: new http.Agent({
         keepAlive: true,
         keepAliveMsecs: 2500,
-        maxSockets: 100,
-        maxFreeSockets: 100,
+        maxSockets: 1000,
+        maxFreeSockets: 1000,
       }),
       session_id: randomUUID(),
     })
