@@ -666,10 +666,15 @@
 				<h2 class="text-xl font-semibold text-gray-800">
 					Cohort Feature Importance Analysis (SHAP)
 				</h2>
-				<p class="text-sm text-gray-600">
-					Enter the size of the comparison group to analyze the top features influencing this cohort
-					using the SHAP algorithm.
-				</p>
+				<div class="mb-4">
+					<p class="text-sm text-gray-600">
+						Enter the size of the comparison group to analyze the top features influencing this cohort
+						using the SHAP algorithm.
+					</p>
+					<p class="text-sm text-gray-600">
+						During model training, concept IDs used for patient cohort classification are excluded, and the model is built solely based on other clinical variables.
+					</p>
+				</div>
 
 				<div class="flex items-end space-x-4">
 					<div class="max-w-xs flex-grow">
