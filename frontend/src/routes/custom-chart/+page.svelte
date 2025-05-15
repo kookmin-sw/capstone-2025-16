@@ -200,17 +200,17 @@
       </div>
       
       <div class="overflow-x-auto">
-        <table class="min-w-full">
+        <table class="table-fixed min-w-full">
           <thead>
             <tr class="bg-gray-50 text-left">
-              <th class="w-10 py-3 px-4">
+              <th class="w-[5%] py-3 px-4">
                   <span class="sr-only">Select</span>
               </th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-              <th class="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+              <th class="w-[5%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">No.</th>
+              <th class="w-[30%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Name</th>
+              <th class="w-[40%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Description</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Author</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Created At</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -230,7 +230,7 @@
                     </div>
                   </div>
                 </td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.statistics_id}</td>
+                <td class="py-3 px-4 text-sm text-gray-500">{filteredData.length - ((currentPage - 1) * itemsPerPage + paginatedData.indexOf(item)) - 1 + 1}</td>
                 <td class="py-3 px-4">
                   <a 
                     href={`/custom-chart/${item.statistics_id}`} 
@@ -239,10 +239,14 @@
                     {item.name}
                   </a>
                 </td>
-                <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
+                <td class="py-3 px-4 text-sm text-gray-900">
+                  <div class="line-clamp-2 whitespace-pre-line">
+                    {item.description}
+                  </div>
+                </td>
                 <!-- <td class="py-3 px-4 text-sm text-gray-500">{item.author}</td> -->
                 <td class="py-3 px-4 text-sm text-gray-500">anonymous</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.created_at}</td>
+                <td class="py-3 px-4 text-sm text-gray-500 text-center">{item.created_at.slice(0,16)}</td>
               </tr>
             {/each}
           </tbody>
