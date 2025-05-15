@@ -378,6 +378,14 @@
         worker.postMessage({ cohortID });
     }
 
+	async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error('클립보드 복사 실패:', err);
+        }
+    }
+
 	onMount(async () => {
 		loadFeatureData();
 		try {
@@ -440,8 +448,9 @@
 						<span class="text-black-500 text-sm">{cohortInfo.cohort_id}</span>
 					</div>
 					<div class="font-medium text-blue-600">{cohortInfo.name}</div>
-					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
-						{cohortInfo.count}
+					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs">
+						<span class="text-gray-600">Total patients:</span>
+						<span class="text-blue-800">{cohortInfo.count}</span>
 					</span>
 				</div>
 
@@ -616,12 +625,34 @@
 			<div class="p-3">
 				<!-- Cohort JSON display (for debugging) -->
 				<div class="rounded-lg border border-gray-200 p-4">
-					<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON</h3>
+					<div class="mb-2 flex items-center justify-between">
+						<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON</h3>
+						<button
+							class="flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-200"
+							onclick={() => copyToClipboard(JSON.stringify(cohortInfo.cohort_definition, null, 2))}
+						>
+							<svg
+								class="h-3 w-3"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+								></path>
+							</svg>
+							Copy
+						</button>
+					</div>
 					<pre class="rounded-md bg-gray-100 p-2 text-xs">{JSON.stringify(
 							JSON.parse(cohortInfo.cohort_definition),
 							null,
 							2
-						)}</pre>
+						)}
+					</pre>
 				</div>
 			</div>
 		{/if}
