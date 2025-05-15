@@ -381,7 +381,7 @@ export class CohortService {
     }
 
     let containerCounts: number[] = [];
-    const startTime: number = +new Date();
+    const startTime: number = performance.now();
     if (cohortDef) {
       await getBaseDB()
         .connection()
@@ -417,7 +417,7 @@ export class CohortService {
       message: 'Cohort successfully created.',
       cohortId,
       containerCounts,
-      elapsedTime: +new Date() - startTime,
+      elapsedTime: Math.floor(performance.now() - startTime),
     };
   }
 
@@ -451,7 +451,7 @@ export class CohortService {
       .execute();
 
     let containerCounts: number[] = [];
-    const startTime: number = +new Date();
+    const startTime: number = performance.now();
     if (cohortDef) {
       await getBaseDB()
         .deleteFrom('cohort_detail')
@@ -492,7 +492,7 @@ export class CohortService {
       message: 'Cohort successfully updated.',
       cohortId,
       containerCounts,
-      elapsedTime: +new Date() - startTime,
+      elapsedTime: Math.floor(performance.now() - startTime),
     };
   }
 
