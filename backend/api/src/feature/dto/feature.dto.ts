@@ -34,6 +34,12 @@ export class FeatureExtractionDto {
   concept_id: string;
 
   @ApiProperty({
+    description: 'Concept name',
+    example: 'Hypertension',
+  })
+  concept_name: string | null;
+
+  @ApiProperty({
     description: 'Influence value',
     example: 0.85,
   })
