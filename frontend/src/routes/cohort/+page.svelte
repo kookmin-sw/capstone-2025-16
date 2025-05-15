@@ -322,6 +322,48 @@
           </tbody>
         </table>
       </div>
+
+      <!-- 페이지네이션 UI -->
+      {#if totalPages > 1}
+        <div class="flex items-center justify-center space-x-2 mt-6">
+          <button
+            class="p-2 text-sm font-medium rounded-md transition-colors"
+            class:text-gray-400={currentPage === 1}
+            class:text-blue-600={currentPage !== 1}
+            class:hover:text-blue-800={currentPage !== 1}
+            disabled={currentPage === 1}
+            on:click={() => changePage(currentPage - 1)}
+            aria-label="Previous page"
+          >
+            ‹
+          </button>
+
+          {#each pageNumbers as page}
+            <button
+              class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
+              class:bg-blue-600={currentPage === page}
+              class:text-white={currentPage === page}
+              class:text-gray-600={currentPage !== page}
+              class:hover:bg-blue-100={currentPage !== page}
+              on:click={() => changePage(page)}
+            >
+              {page}
+            </button>
+          {/each}
+
+          <button
+            class="p-2 text-sm font-medium rounded-md transition-colors"
+            class:text-gray-400={currentPage === totalPages}
+            class:text-blue-600={currentPage !== totalPages}
+            class:hover:text-blue-800={currentPage !== totalPages}
+            disabled={currentPage === totalPages}
+            on:click={() => changePage(currentPage + 1)}
+            aria-label="Next page"
+          >
+            ›
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
