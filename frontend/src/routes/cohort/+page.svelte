@@ -313,7 +313,11 @@
                     {item.name}
                   </a>
                 </td>
-                <td class="py-3 px-4 text-sm text-gray-900">{item.description}</td>
+                <td class="py-3 px-4 text-sm text-gray-900">
+                  <div class="line-clamp-2 whitespace-pre-line">
+                    {item.description}
+                  </div>
+                </td>
                 <td class="py-3 px-4 text-sm text-gray-500">anonymous</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.created_at}</td>
                 <td class="py-3 px-4 text-sm text-gray-500">{item.updated_at}</td>
