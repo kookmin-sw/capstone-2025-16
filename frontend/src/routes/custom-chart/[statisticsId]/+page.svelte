@@ -168,9 +168,6 @@
 						>
 							<div class="min-w-0 flex-1">
 								<div class="flex items-center gap-1">
-									<span class="truncate text-[10px] font-medium text-gray-400">{id.cohort_id}</span>
-								</div>
-								<div class="flex items-center gap-1">
 									<div class="truncate text-xs font-medium text-blue-600">
 										{id.name}
 									</div>
@@ -186,10 +183,6 @@
 			<div class="flex w-[80%] flex-col">
 				<div class="flex items-center justify-between border-b bg-gray-50 p-3">
 					<div class="flex items-center gap-4">
-						<div class="font-medium">
-							<span class="text-sm text-gray-400">ID</span>
-							<span class="text-black-500 text-sm">{cumtomInfo.statistics_id}</span>
-						</div>
 						<div class="font-medium text-blue-600">{cumtomInfo.name}</div>
 					</div>
 					<div class="flex items-center gap-4">
@@ -237,6 +230,10 @@
 
 				<div class="overflow-y-auto p-4">
 					<div class="grid grid-cols-3 gap-4 text-sm">
+						<div>
+							<p class="text-gray-500">ID</p>
+							<p class="font-medium">{cumtomInfo.statistics_id}</p>
+						</div>
 						<div>
 							<p class="text-gray-500">Author</p>
 							<!-- <p class="font-medium">{cumtomInfo.author}</p> -->
@@ -314,10 +311,7 @@
 						</svg>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center gap-1">
-								<span class="truncate text-xs font-medium text-gray-400">{chart.id}</span>
-							</div>
-							<div class="flex items-center gap-1">
-								<div class="whitespace-normal break-words text-sm font-medium text-blue-600">
+								<div class="whitespace-normal break-words text-m font-medium text-blue-600">
 									{chart.name}
 								</div>
 							</div>
@@ -412,6 +406,10 @@
 
 						<div class="space-y-1">
 							<div>
+								<span class="text-gray-500">ID:</span>
+								<span class="font-regular">{chart.chart_id}</span>
+							</div>
+							<div>
 								<span class="text-gray-500">Author:</span>
 								<!-- <span class="font-regular">{chart.author}</span> -->
 								<span class="font-regular">anonymous</span>
@@ -421,12 +419,12 @@
 								<span class="font-regular">{chart.created_at}</span>
 							</div>
 							<div>
-								<span class="text-gray-500">Description:</span>
-								<span class="font-regular">{chart.description}</span>
-							</div>
-							<div>
 								<span class="text-gray-500">Chart Type:</span>
 								<span class="font-regular">{chart.type}</span>
+							</div>
+							<div>
+								<span class="text-gray-500">Description:</span>
+								<span class="font-regular">{chart.description}</span>
 							</div>
 						</div>
 						<!-- 차트 및 설명 영역 추가 -->

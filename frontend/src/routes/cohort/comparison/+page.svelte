@@ -518,9 +518,6 @@
                   </svg>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1">
-                      <span class="text-[10px] font-medium text-gray-400 truncate">{cohort.basicInfo.cohort_id}</span>
-                    </div>
-                    <div class="flex items-center gap-1">
                     <div class="truncate text-xs font-medium text-blue-600">{cohort.basicInfo.name}</div>
                     </div>
                     <div class="flex items-center gap-1 mt-0.5">
@@ -533,6 +530,10 @@
                 <div class="p-2 border-t text-xs" transition:slide>
                   <div class="space-y-1">
                     <div>
+                      <span class="text-gray-500">ID:</span>
+                      <span class="font-regular">{cohort.basicInfo.cohort_id}</span>
+                    </div>
+                    <div>
                       <span class="text-gray-500">Author:</span>
                       <span class="font-regular">anonymous</span>
                       <!-- <span class="font-regular">{cohort.basicInfo.author}</span> -->
@@ -543,7 +544,7 @@
                     </div>
                     <div>
                       <span class="text-gray-500">Description:</span>
-                      <span class="font-regular">{cohort.basicInfo.description}</span>
+                      <span class="font-regular break-words">{cohort.basicInfo.description}</span>
                     </div>
                   </div>
                 </div>

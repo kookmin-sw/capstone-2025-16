@@ -135,9 +135,6 @@
 		>
 			<div class="flex-1 min-w-0">
 				<div class="flex items-center gap-1">
-					<span class="text-[10px] font-medium text-gray-400 truncate">{cohortID}</span>
-				</div>
-				<div class="flex items-center gap-1">
 					<div class="truncate text-xs font-medium text-blue-600">{cohortInfo.name}</div>
 				</div>
 			</div>
