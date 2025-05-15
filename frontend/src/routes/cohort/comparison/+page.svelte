@@ -544,7 +544,7 @@
                     </div>
                     <div>
                       <span class="text-gray-500">Description:</span>
-                      <span class="font-regular">{cohort.basicInfo.description}</span>
+                      <span class="font-regular break-words">{cohort.basicInfo.description}</span>
                     </div>
                   </div>
                 </div>
