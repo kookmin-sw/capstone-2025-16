@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { getBaseDB } from '../query-builder/base';
 import {
   ConceptResponseDto,
@@ -18,15 +18,7 @@ export class ConceptService {
 
     query = query?.trim() || '';
 
-    let conceptQuery = getBaseDB()
-      .selectFrom('concept')
-      .select([
-        'concept_id',
-        'concept_name',
-        'concept_code',
-        'vocabulary_id',
-        'domain_id',
-      ]);
+    let conceptQuery = getBaseDB().selectFrom('concept').selectAll();
 
     if (domain) {
       conceptQuery = conceptQuery.where('domain_id', '=', domain);
@@ -76,5 +68,19 @@ export class ConceptService {
       page: page,
       limit: limit,
     };
+  }
+
+  async getConceptById(conceptId: string): Promise<ConceptResponseDto> {
+    const concept = await getBaseDB()
+      .selectFrom('concept')
+      .selectAll()
+      .where('concept_id', '=', conceptId)
+      .executeTakeFirst();
+
+    if (!concept) {
+      throw new NotFoundException(`Concept with ID ${conceptId} not found`);
+    }
+
+    return concept;
   }
 }
