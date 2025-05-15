@@ -19,6 +19,9 @@ export class ClickhouseConnection implements DatabaseConnection {
         ...config.options?.clickhouse_settings,
         date_time_input_format: 'best_effort',
       },
+      keep_alive: {
+        enabled: false,
+      },
       session_id: randomUUID(),
     })
   }
