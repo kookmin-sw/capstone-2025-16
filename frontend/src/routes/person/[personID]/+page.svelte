@@ -509,7 +509,7 @@
     </div>
     <!-- 🔹 타임라인을 렌더링할 컨테이너 -->
     <div class="flex gap-4">
-        <div class="w-4/5 h-[220px] min-w-[850px]" bind:this={timelineContainer}></div>
+        <div class="w-4/5 h-[220px] min-w-[850px] relative" bind:this={timelineContainer}></div>
         <div class="w-1/5 border rounded-lg p-4 bg-white shadow-md h-[220px] overflow-y-auto">
             <h2 class="text-lg font-bold mb-2">Overlapping Visits</h2>
             {#if selectedGroup}
