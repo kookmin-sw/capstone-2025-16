@@ -440,8 +440,9 @@
 						<span class="text-black-500 text-sm">{cohortInfo.cohort_id}</span>
 					</div>
 					<div class="font-medium text-blue-600">{cohortInfo.name}</div>
-					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
-						{cohortInfo.count}
+					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs">
+						<span class="text-gray-600">Patient count:</span>
+						<span class="text-blue-800">{cohortInfo.count}</span>
 					</span>
 				</div>
 
