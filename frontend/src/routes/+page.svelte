@@ -50,7 +50,7 @@
       </a>
 
       <!-- CDM Viewer Card -->
-      <a href="/concept-set" class="group">
+      <a href="/cohort" class="group">
         <div class="bg-white rounded-lg shadow-md p-6 h-full hover:shadow-lg transition-shadow border border-gray-100">
           <div class="text-4xl mb-4">
             🔍
@@ -65,19 +65,45 @@
       </a>
 
       <!-- Cohort Statistics Card -->
-      <a href="/cohort/comparison" class="group">
+      <a href="/custom-chart" class="group">
         <div class="bg-white rounded-lg shadow-md p-6 h-full hover:shadow-lg transition-shadow border border-gray-100">
           <div class="text-4xl mb-4">
             📊
           </div>
           <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-            Cohort Statistics
+            Custom Chart
           </h3>
           <p class="text-gray-600">
-            Compare and analyze cohort statistics with interactive visualizations. Get insights into demographics, conditions, drugs, and more.
+            Create and manage custom charts with an intuitive interface. Visualize and compare medical data across different cohorts, and export chart results as images.
           </p>
         </div>
       </a>
+    </div>
+
+    <!-- Info and Guide Section -->
+    <div class="mt-20 text-center">
+      <h2 class="text-xl font-semibold text-gray-600 mb-8">Need more information?</h2>
+      <div class="flex flex-col md:flex-row gap-6 justify-center">
+        <a href="https://kookmin-sw.github.io/capstone-2025-16" class="group relative inline-flex items-center justify-center px-8 py-3 overflow-hidden rounded-full bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105">
+          <span class="relative flex items-center gap-2">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            About Bento
+          </span>
+        </a>
+        <a href="/guide" class="group relative inline-flex items-center justify-center px-8 py-3 overflow-hidden rounded-full bg-white border border-blue-200 text-blue-600 shadow-lg transition-all duration-300 hover:shadow-xl hover:border-blue-300 hover:scale-105">
+          <span class="relative flex items-center gap-2">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            User Guide
+          </span>
+        </a>
+      </div>
     </div>
   </div>
 </div>
