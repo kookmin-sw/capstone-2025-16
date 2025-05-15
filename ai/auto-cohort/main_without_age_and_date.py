@@ -41,11 +41,12 @@ Strict requirements:
        * In all other cases, do not include the first field
 
 3. [CRITICAL] Logical Operators (AND/OR):
-   - If conditions are connected with "AND" in the text, use operator: "AND"
-   - If conditions are connected with "OR" in the text, use operator: "OR"
+   - If conditions are connected with "and" in the text, use operator: "AND"
+   - If conditions are connected with "or" in the text, use operator: "OR"
    - If no operator is specified, use operator: "AND" as default
-   - Example: "Diagnosed with sepsis-3 AND ARDS" → operator: "AND"
-   - Example: "Serum creatinine ≥ 1.5 mg/dL OR increase of ≥ 0.3 mg/dL" → operator: "OR"
+   [ABSOLUTELY MANDATORY] When text says "A or B", create ONE container(B) with operator: "OR"
+   - Example: "Diagnosed with sepsis-3 and ARDS" → operator: "AND"
+   - ***Example: "Serum creatinine ≥ 1.5 mg/dL or increase of ≥ 0.3 mg/dL" → operator: "OR"***
    - Example: "First ICU admission" (no operator) → operator: "AND" (default)
 
 4. For Measurement criteria:
@@ -153,7 +154,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "procedure_occurrence",
-            first: true,
             conceptset: "0",
           }
         ]
@@ -164,7 +164,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "drug_exposure",
-            first: true,
             conceptset: "1",
           }
         ]
@@ -175,7 +174,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "condition_era",
-            first: true,
             conceptset: "2",
           }
         ]
@@ -203,7 +201,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "measurement",
-            first: true,
             measurementType: { eq: "234567" },
             valueAsNumber: { lte: 13 }, // hemoglobin > 13 g/dL를 제외해야하니 13 g/dL 이하로 설정.
             conceptset: "4"
@@ -216,7 +213,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "procedure_occurrence",
-            first: true,
             conceptset: {
               neq: "5",
             },
@@ -224,12 +220,11 @@ const cohortExample: CohortDefinition = {
         ]
       },
       {
-        operator: "AND",
+        operator: "OR", // 이 부분 주의
         name: "not sepsis or active infections",
         filters: [
           {
             type: "condition_era",
-            first: true,
             conceptset: {
               neq: "6",
             },
@@ -407,26 +402,34 @@ def main():
     # print("\n[Implementable Criteria 부분만]:")
     # print(implementable_text)
 
-    implementable_text = """
-    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
-    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
-    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
-    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
-    stay duration of less than 24 h.
-    # """
-    
     # implementable_text = """
-    # This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
-    # to 2019. Patients with severe chronic kidney disease
-    # (CKD), defined as CKD stage ≥ 4 or estimated glomerular
-    # filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
-    # undergoing long-term dialysis treatment were excluded.
-    # """
+    # Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    # external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    # 2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    # diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    # stay duration of less than 24 h.
+    # # """
+    
+    implementable_text = """
+    This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
+    to 2019. Patients with severe chronic kidney disease
+    (CKD), defined as CKD stage ≥ 4 or estimated glomerular
+    filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
+    undergoing long-term dialysis treatment were excluded.
+    """
 
     # implementable_text = """
     # We conducted this retrospective cohort study based on a US publicdatabase: Medical Information Mart for Intensive Care IV (MIMIC-IV)Database.
     # 11–13 All sepsis patients with sepsis 3.0 criteria were in-cluded.14 Exclusion criteria were as follows: (1) Without records ofFBG and TG in 24 h after admission; (2) Age less than 18-year-old;
     # (3) Diabetes and patients with antidiabetic treatment (insulin or oralantidiabetics); (4) Died within 48 h after admission; (5) Patients withacute pancreatitis; (6) Patients with dyslipidemia and patients withreceiving lipid-lowering drugs.
+    # """
+
+    # implementable_text = """
+    # A total of 76,540 admissions were admitted to the ICU in the MIMIC-IV database, of which 53,150 were admitted to the ICU for the first time.
+    # According to the Kidney Disease: Improving Global Outcomes (KDIGO)­ guidelines20, AKI was diagnosed as follows: serum creatinine ≥ 1.5 times baseline or increase of ≥ 0.3 mg/dL within any 48 h period,
+    # or urine volume < 0.5 mL/(kg·h) for ≥ 6 h. All participants were required to meet the following inclusion criteria: (a) diagnosed AKI within 48 h of admission; (b) patients admitted to the ICU for
+    # the first time; and (c) aged ≥ 18 years.
+    # Exclusion criteria included: (a) BG records less than 3 times during the first day of ICU admission; (b) stayed < 24 h in the ICU. Ultimately, 6777 patients with AKI were included in the study (Fig. 1).
     # """
 
     # 2. 텍스트에서 COHORT JSON 추출
