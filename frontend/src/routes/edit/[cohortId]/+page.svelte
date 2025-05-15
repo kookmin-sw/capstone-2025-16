@@ -3,7 +3,6 @@
 -->
 
 <script lang="ts">
-	import { page } from '$app/state';
 	import ConceptSetModal from '$lib/components/ConceptSetModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
 
@@ -14,15 +13,35 @@
 	import IdentifierOperator from '$lib/components/operators/IdentifierOperator.svelte';
 	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
 	import ContainerHeader from './components/ContainerHeader.svelte';
-
+	import { onMount } from 'svelte';
 	const { data } = $props();
-	let { cohort, counts } = data;
+	let { cohort } = data;
+
+	onMount(() => {
+		getCohortCounts();
+	});
+
+	let containerCounts = $state([ ]);
 	console.log('data : ', data);
 	console.log(cohort);
+	console.log(cohort.cohort_definition.initialGroup.containers.length + cohort.cohort_definition.comparisonGroup.containers.length)
 	console.log(cohort.cohort_definition);
-	console.log(counts.containerCounts);
 
-	let containerCounts = $state(counts.containerCounts);
+	let concepts_id_to_name = $state<Record<string, string>>({});
+
+
+	async function getConceptName(concept_id: string) {
+		if (concepts_id_to_name[concept_id]) {
+			return concepts_id_to_name[concept_id];
+		}
+		fetch(`https://bento.kookm.in/api/concept/${encodeURIComponent(concept_id)}`)
+		.then(response => response.json())
+		.then(data => {
+			concepts_id_to_name[concept_id] = data.concept_name;
+		});
+		return concept_id;
+	}
+
 	let isUpdating = $state(false);
 	let isPatientCountUpdating = $state(false);
 
