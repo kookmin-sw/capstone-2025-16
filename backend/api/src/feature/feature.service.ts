@@ -155,7 +155,13 @@ export class FeatureService {
     const featuresQuery = getBaseDB()
       .selectFrom('feature_extraction')
       .where('cohort_id', '=', cohortId)
-      .selectAll()
+      .selectAll('feature_extraction')
+      .leftJoin(
+        'concept',
+        'feature_extraction.concept_id',
+        'concept.concept_id',
+      )
+      .select('concept.concept_name')
       .limit(limit)
       .offset(offset)
       .orderBy('rank');

@@ -127,11 +127,7 @@ export const buildCreateCohortQuery = (
               .selectFrom('temp_cohort_detail')
               .select('person_id')
               .where(({ eb }) =>
-                eb(
-                  'cohort_id',
-                  '=',
-                  eb.fn<any>('_to_int64', [eb.val(containerCount)]),
-                ),
+                eb('cohort_id', '=', eb.val<any>(containerCount)),
               )
               .as('tmp'),
           )

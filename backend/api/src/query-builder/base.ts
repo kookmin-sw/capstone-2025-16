@@ -78,11 +78,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
       eb
         .selectFrom('codesets')
         .select('concept_id')
-        .where(
-          'codeset_id',
-          '=',
-          eb.fn<any>('_to_int64', [eb.val(conceptSet)]),
-        ),
+        .where('codeset_id', '=', eb.val(conceptSet)),
     );
   }
 
@@ -97,7 +93,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
           .where(
             'codeset_id',
             'in',
-            conceptSet.eq.map((e) => eb.fn<any>('_to_int64', [eb.val(e)])),
+            conceptSet.eq.map((e) => eb.val(e)),
           ),
       );
     } else {
@@ -107,11 +103,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
         eb
           .selectFrom('codesets')
           .select('concept_id')
-          .where(
-            'codeset_id',
-            '=',
-            eb.fn<any>('_to_int64', [eb.val(conceptSet.eq)]),
-          ),
+          .where('codeset_id', '=', eb.val(conceptSet.eq)),
       );
     }
   }
@@ -127,7 +119,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
           .where(
             'codeset_id',
             'in',
-            conceptSet.neq.map((e) => eb.fn<any>('_to_int64', [eb.val(e)])),
+            conceptSet.neq.map((e) => eb.val(e)),
           ),
       );
     } else {
@@ -137,11 +129,7 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
         eb
           .selectFrom('codesets')
           .select('concept_id')
-          .where(
-            'codeset_id',
-            '=',
-            eb.fn<any>('_to_int64', [eb.val(conceptSet.neq)]),
-          ),
+          .where('codeset_id', '=', eb.val(conceptSet.neq)),
       );
     }
   }
@@ -504,7 +492,7 @@ export const handleIdentifierWithOperator = <DB, TB extends keyof DB, O>(
   const eb = getExpressionBuilder(query);
 
   if (typeof operator === 'string') {
-    return query.where(column, '=', eb.fn('_to_int64', [eb.val(operator)]));
+    return query.where(column, '=', eb.val(operator));
   }
 
   if (operator.neq) {
@@ -512,14 +500,10 @@ export const handleIdentifierWithOperator = <DB, TB extends keyof DB, O>(
       query = query.where(
         column,
         'not in',
-        operator.neq.map((e) => eb.fn('_to_int64', [eb.val(e)])),
+        operator.neq.map((e) => eb.val(e)),
       );
     } else {
-      query = query.where(
-        column,
-        '!=',
-        eb.fn('_to_int64', [eb.val(operator.neq)]),
-      );
+      query = query.where(column, '!=', eb.val(operator.neq));
     }
   }
 
@@ -528,14 +512,10 @@ export const handleIdentifierWithOperator = <DB, TB extends keyof DB, O>(
       query = query.where(
         column,
         'in',
-        operator.eq.map((e) => eb.fn('_to_int64', [eb.val(e)])),
+        operator.eq.map((e) => eb.val(e)),
       );
     } else {
-      query = query.where(
-        column,
-        '=',
-        eb.fn('_to_int64', [eb.val(operator.eq)]),
-      );
+      query = query.where(column, '=', eb.val(operator.eq));
     }
   }
 
@@ -560,7 +540,7 @@ export const buildConceptQuery = (
       eb(
         'concept.concept_id',
         'in',
-        concepts.map((e) => eb.fn<any>('_to_int64', [eb.val(e.concept_id)])),
+        concepts.map((e) => eb.val(e.concept_id)),
       ),
     );
 
@@ -581,9 +561,7 @@ export const buildConceptQuery = (
               eb(
                 'concept_ancestor.ancestor_concept_id',
                 'in',
-                descendant.map((e) =>
-                  eb.fn<any>('_to_int64', [eb.val(e.concept_id)]),
-                ),
+                descendant.map((e) => eb.val(e.concept_id)),
               ),
               eb('concept.invalid_reason', 'is', null),
             ]),
@@ -728,9 +706,7 @@ export const buildBaseQuery = (
                   .as('final_codesets'),
               )
               .select(({ eb }) => [
-                eb
-                  .fn<any>('_to_int64', [eb.val(e.conceptset_id)])
-                  .as('codeset_id'),
+                eb.val(e.conceptset_id).as('codeset_id'),
                 'concept_id',
               ]),
           ),
@@ -770,27 +746,21 @@ export const buildBaseQuery = (
         query = db
           .selectFrom('temp_cohort_detail')
           .select('person_id')
-          .where(({ eb }) =>
-            eb('cohort_id', '=', eb.fn<any>('_to_int64', [eb.val(i)])),
-          )
+          .where(({ eb }) => eb('cohort_id', '=', eb.val<any>(i)))
           .where('person_id', 'in', query);
         break;
       case 'OR':
         query = db
           .selectFrom('temp_cohort_detail')
           .select('person_id')
-          .where(({ eb }) =>
-            eb('cohort_id', '=', eb.fn<any>('_to_int64', [eb.val(i)])),
-          )
+          .where(({ eb }) => eb('cohort_id', '=', eb.val<any>(i)))
           .union(query);
         break;
       case 'NOT':
         query = db
           .selectFrom('temp_cohort_detail')
           .select('person_id')
-          .where(({ eb }) =>
-            eb('cohort_id', '=', eb.fn<any>('_to_int64', [eb.val(i)])),
-          )
+          .where(({ eb }) => eb('cohort_id', '=', eb.val<any>(i)))
           .except(query);
         break;
       default:
@@ -801,10 +771,7 @@ export const buildBaseQuery = (
       db.insertInto('temp_cohort_detail').expression(
         db
           .selectFrom(query.as('tmp'))
-          .select(({ eb }) => [
-            eb.fn<any>('_to_int64', [eb.val(i + 1)]).as('cohort_id'),
-            'person_id',
-          ])
+          .select(({ eb }) => [eb.val(i + 1).as('cohort_id'), 'person_id'])
           .distinct(),
       ),
     );
@@ -847,9 +814,7 @@ export const buildBaseQuery = (
               eb(
                 'cohort_id',
                 '=',
-                eb.fn<any>('_to_int64', [
-                  eb.val(initialGroup.containers.length + i),
-                ]),
+                eb.val<any>(initialGroup.containers.length + i),
               ),
             )
             .where('person_id', 'in', query);
@@ -862,9 +827,7 @@ export const buildBaseQuery = (
               eb(
                 'cohort_id',
                 '=',
-                eb.fn<any>('_to_int64', [
-                  eb.val(initialGroup.containers.length + i),
-                ]),
+                eb.val<any>(initialGroup.containers.length + i),
               ),
             )
             .union(
@@ -875,9 +838,7 @@ export const buildBaseQuery = (
                   eb(
                     'cohort_id',
                     '=',
-                    eb.fn<any>('_to_int64', [
-                      eb.val(initialGroup.containers.length),
-                    ]),
+                    eb.val<any>(initialGroup.containers.length),
                   ),
                 )
                 .where('person_id', 'in', query),
@@ -891,9 +852,7 @@ export const buildBaseQuery = (
               eb(
                 'cohort_id',
                 '=',
-                eb.fn<any>('_to_int64', [
-                  eb.val(initialGroup.containers.length + i),
-                ]),
+                eb.val<any>(initialGroup.containers.length + i),
               ),
             )
             .except(query);
@@ -903,13 +862,7 @@ export const buildBaseQuery = (
             .selectFrom('temp_cohort_detail')
             .select('person_id')
             .where(({ eb }) =>
-              eb(
-                'cohort_id',
-                '=',
-                eb.fn<any>('_to_int64', [
-                  eb.val(initialGroup.containers.length),
-                ]),
-              ),
+              eb('cohort_id', '=', eb.val<any>(initialGroup.containers.length)),
             )
             .where('person_id', 'in', query);
           break;
@@ -920,11 +873,7 @@ export const buildBaseQuery = (
           db
             .selectFrom(query.as('tmp'))
             .select(({ eb }) => [
-              eb
-                .fn<any>('_to_int64', [
-                  eb.val(initialGroup.containers.length + i + 1),
-                ])
-                .as('cohort_id'),
+              eb.val(initialGroup.containers.length + i + 1).as('cohort_id'),
               'person_id',
             ])
             .distinct(),

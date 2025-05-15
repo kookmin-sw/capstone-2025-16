@@ -159,7 +159,7 @@ export const getQuery = (
           'measurement.value_as_concept_id',
           'in',
           // @ts-ignore
-          ['4155142', '4155143'].map((e) => eb.fn('_to_int64', [eb.val(e)])),
+          [4155142, 4155143].map((e) => eb.val(e)),
         ),
       ]),
     );
