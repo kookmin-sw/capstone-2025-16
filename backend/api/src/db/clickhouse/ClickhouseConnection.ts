@@ -8,6 +8,7 @@ import { createClient } from '@clickhouse/client'
 import { ClickhouseDialectConfig } from '.';
 import { NodeClickHouseClient } from '@clickhouse/client/dist/client';
 import { randomUUID } from 'node:crypto';
+import * as http from 'node:http';
 
 export class ClickhouseConnection implements DatabaseConnection {
   #client: NodeClickHouseClient
@@ -19,9 +20,12 @@ export class ClickhouseConnection implements DatabaseConnection {
         ...config.options?.clickhouse_settings,
         date_time_input_format: 'best_effort',
       },
-      keep_alive: {
-        enabled: false,
-      },
+      http_agent: new http.Agent({
+        keepAlive: true,
+        keepAliveMsecs: 2500,
+        maxSockets: 100,
+        maxFreeSockets: 100,
+      }),
       session_id: randomUUID(),
     })
   }
