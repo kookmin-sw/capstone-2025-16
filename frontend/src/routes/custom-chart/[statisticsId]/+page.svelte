@@ -190,7 +190,48 @@
 							<span class="text-sm text-gray-400">ID</span>
 							<span class="text-black-500 text-sm">{cumtomInfo.statistics_id}</span>
 						</div>
-						<div class="font-medium text-blue-600">Custom Target Set 1</div>
+						<div class="font-medium text-blue-600">{cumtomInfo.name}</div>
+					</div>
+					<div class="flex items-center gap-4">
+						<!-- 커스텀 차트 페이지 삭제 버튼 -->
+						<button
+							onclick={async () => {
+								const confirmDelete = confirm("Are you sure you want to delete this custom chart set? This action cannot be undone.");
+								if (!confirmDelete) return;
+
+								await fetch(`https://bento.kookm.in/api/statistics/${cumtomInfo.statistics_id}`, {
+									method: 'DELETE'
+								})
+									.then(() => {
+										goto('/custom-chart');
+									})
+									.catch((error) => {
+										console.error('Error deleting custom target set:', error);
+									});
+							}}
+							class="group relative flex items-center justify-center transition-colors hover:bg-red-50 hover:text-red-500"
+							title= "Delete Target Set"
+						>
+							<svg
+								class="h-4 w-4"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<polyline points="3 6 5 6 21 6"></polyline>
+								<path
+								d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+								></path>
+							</svg>
+							<span
+								class="absolute left-1/2 top-full mt-2 -translate-x-1/2 transform rounded bg-white p-1 text-xs text-gray-700 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
+							>
+								Delete
+							</span>
+						</button>
 					</div>
 				</div>
 
@@ -306,10 +347,27 @@
 							aria-label="custom chart delete button"
 							,
 							class="absolute right-2 top-2 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-							onclick={(e) => {
+							onclick={async (e) => {
 								e.stopPropagation();
-								if (!isDragging && confirm(`"${chart.name}" 차트를 삭제하시겠습니까?`)) {
-									customChartData = [...customChartData.filter((_, i) => i !== index)];
+
+								if(isDragging) return;
+								const confirmed = confirm(`Are you sure you want to delete "${chart.name}"? This action cannot be undone.`);
+								if(!confirmed) return;
+
+								try {
+									const res = await fetch(`https://bento.kookm.in/api/statistics/${chart.statistics_id}/chart/${chart.chart_id}`, {
+									method: 'DELETE',
+									});
+
+									if (!res.ok) {
+									throw new Error('Failed to delete chart');
+									}
+
+									// 삭제 성공 시 UI에서 제거
+									customChartData = customChartData.filter((_, i) => i !== index);
+								} catch (error) {
+									console.error(error);
+									alert('Failed to delete the chart. Please try again.');
 								}
 							}}
 						>
