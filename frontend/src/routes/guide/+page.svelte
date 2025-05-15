@@ -81,8 +81,10 @@
       name: "환자 검색하기",
       children: [
         { guides: [ { title: "검색하기", steps: [
-          { title: "1단계: 검색창에 환자의 ID 입력", content: "검색창에 환자의 ID를 입력하세요." },
-          { title: "2단계: 결과 확인", content: "검색 결과를 확인하세요." }
+          { title: "1단계: 검색창에 환자의 ID 입력", content: "Person Search 페이지에서 검색창에 환자의 ID를 입력하세요.", image: "guide_images/person-search/person-search-1.png" },
+          { title: "2단계: 검색", content: "검색 버튼을 누르면 해당 환자의 정보가 표시됩니다.", image: "guide_images/person-search/person-search-2.png" },
+          { title: "3단계: 단일 환자 통계 확인", content: "해당 환자의 타임라인과 기본 통계를 확인할 수 있습니다.", image: "guide_images/person-search/person-search-3.png" },
+          { title: "4단계: 개별 CDM 확인", content: "타임라인에서 하나의 방문 기록을 누르면 해당 방문 기록에 해당하는 데이터를 확인할 수 있습니다.", image: "guide_images/person-search/person-search-4.png" }
         ] } ] }
       ]
     },
