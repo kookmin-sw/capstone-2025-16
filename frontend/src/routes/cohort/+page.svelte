@@ -277,12 +277,12 @@
               <th class="w-[5%] py-3 px-4">
                 <span class="sr-only">Select</span>
               </th>
-              <th class="w-[5%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
-              <th class="w-[25%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="w-[35%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+              <th class="w-[5%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">No.</th>
+              <th class="w-[25%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Name</th>
+              <th class="w-[35%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Description</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Author</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Created</th>
+              <th class="w-[10%] py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Updated</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -319,8 +319,8 @@
                   </div>
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-500">anonymous</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.created_at}</td>
-                <td class="py-3 px-4 text-sm text-gray-500">{item.updated_at}</td>
+                <td class="py-3 px-4 text-sm text-gray-500 text-center">{item.created_at.slice(0,16)}</td>
+                <td class="py-3 px-4 text-sm text-gray-500 text-center">{item.updated_at.slice(0,16)}</td>
               </tr>
             {/each}
           </tbody>
