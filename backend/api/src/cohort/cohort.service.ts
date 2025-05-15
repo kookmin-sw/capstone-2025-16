@@ -392,21 +392,25 @@ export class CohortService {
             database: process.env.DB_TYPE,
           });
 
-          for (const query of queries.flat()) {
-            const result = await query.execute();
-            if ('select' in query) {
-              // container person counts
-              containerCounts = Array(
-                cohortDef.initialGroup.containers.length +
-                  (cohortDef.comparisonGroup?.containers.length ?? 0),
-              ).fill(0);
+          for (let query of queries) {
+            if (!Array.isArray(query)) {
+              query = [query];
+            }
+            let results = await Promise.all(query.map((q) => q.execute()));
+            for (let i = 0; i < query.length; i++) {
+              if ('select' in query[i]) {
+                containerCounts = Array(
+                  cohortDef.initialGroup.containers.length +
+                    (cohortDef.comparisonGroup?.containers.length ?? 0),
+                ).fill(0);
 
-              for (const { container_id, count } of result as {
-                container_id: string;
-                count: string;
-              }[]) {
-                containerCounts[Number.parseInt(container_id) - 1] =
-                  Number.parseInt(count);
+                for (const { container_id, count } of results[i] as {
+                  container_id: string;
+                  count: string;
+                }[]) {
+                  containerCounts[Number.parseInt(container_id) - 1] =
+                    Number.parseInt(count);
+                }
               }
             }
           }
@@ -467,21 +471,25 @@ export class CohortService {
             database: process.env.DB_TYPE,
           });
 
-          for (const query of queries.flat()) {
-            const result = await query.execute();
-            if ('select' in query) {
-              // container person counts
-              containerCounts = Array(
-                cohortDef.initialGroup.containers.length +
-                  (cohortDef.comparisonGroup?.containers.length ?? 0),
-              ).fill(0);
+          for (let query of queries) {
+            if (!Array.isArray(query)) {
+              query = [query];
+            }
+            let results = await Promise.all(query.map((q) => q.execute()));
+            for (let i = 0; i < query.length; i++) {
+              if ('select' in query[i]) {
+                containerCounts = Array(
+                  cohortDef.initialGroup.containers.length +
+                    (cohortDef.comparisonGroup?.containers.length ?? 0),
+                ).fill(0);
 
-              for (const { container_id, count } of result as {
-                container_id: string;
-                count: string;
-              }[]) {
-                containerCounts[Number.parseInt(container_id) - 1] =
-                  Number.parseInt(count);
+                for (const { container_id, count } of results[i] as {
+                  container_id: string;
+                  count: string;
+                }[]) {
+                  containerCounts[Number.parseInt(container_id) - 1] =
+                    Number.parseInt(count);
+                }
               }
             }
           }
