@@ -25,11 +25,11 @@
 	let cohortInfo = [];
 	let cohortID = $page.params.cohortID;
 
-	let activeTab = 'definition';
+	let activeTab = 'charts';
 	const tabs = [
-		{ key: 'definition', label: 'Definition' },
+		{ key: 'charts', label: 'Charts' },
 		{ key: 'features', label: 'Features' },
-		{ key: 'charts', label: 'Charts' }
+		{ key: 'definition', label: 'Definition' },
 	];
 
 	let isTableView = {
