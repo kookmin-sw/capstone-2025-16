@@ -62,7 +62,11 @@
 			</h4>
 			{#if patientCount !== null}
 				<div class="mt-1 flex items-center">
-					<span class="flex items-center rounded-full px-2 py-0.5 text-xs font-medium {isLoading ? 'text-gray-800 bg-gray-100' : 'text-green-800 bg-green-100'}">
+					<span
+						class="flex items-center rounded-full px-2 py-0.5 text-xs font-medium {isLoading
+							? 'bg-gray-100 text-gray-800'
+							: 'bg-green-100 text-green-800'}"
+					>
 						<svg
 							class="-ml-0.5 mr-1 inline h-2 w-2 {isLoading ? 'text-gray-400' : 'text-green-400'}"
 							fill="currentColor"
@@ -107,13 +111,11 @@
 		>
 			Add Filter
 		</button>
-		{#if canRemove}
-			<button
-				class="text-sm text-red-500 hover:text-red-700"
-				on:click={() => onRemove(groupType, containerIndex)}
-			>
-				Remove
-			</button>
-		{/if}
+		<button
+			class="text-sm text-red-500 hover:text-red-700"
+			on:click={() => onRemove(groupType, containerIndex)}
+		>
+			Remove
+		</button>
 	</div>
 </div>

@@ -549,10 +549,7 @@
 
 	// 컨테이너 삭제 함수
 	function removeContainer(groupType, containerIndex) {
-		// 첫 번째 컨테이너는 삭제 불가 (FirstContainer 타입)
-		if (containerIndex === 0 && cohortDefinition[groupType].containers.length === 1) {
-			return;
-		}
+		
 
 		cohortDefinition[groupType].containers.splice(containerIndex, 1);
 		getCohortCounts();
