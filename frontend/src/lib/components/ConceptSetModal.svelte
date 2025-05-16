@@ -63,6 +63,7 @@
   // 새 개념 집합 생성
   function createNewConceptSet() {
     const newSet = createConceptSet({
+      conceptset_id: `${conceptSets.length + 1}`,
       name: `Concept Set ${conceptSets.length + 1}`,
       items: []
     });
@@ -331,7 +332,6 @@
                 bind:value={editingConceptSet.name}
             />
           </div>
-          
             <!-- 개념 목록 테이블 -->
             <div>
               <h3 class="mb-3 text-base font-medium text-gray-700">Included Concepts</h3>
