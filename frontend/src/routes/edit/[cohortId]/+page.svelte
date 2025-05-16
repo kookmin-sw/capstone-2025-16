@@ -759,7 +759,7 @@
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<h3 class="mb-3 text-sm font-bold text-gray-700">Initial Group</h3>
 		{#if cohortDefinition.initialGroup.containers.length === 0}
-			<p class="mb-2 ml-2 text-xs italic text-gray-500">No initial filters defined</p>
+			<p class="mb-2 ml-2 text-xs italic text-gray-500">No initial containers defined</p>
 		{:else}
 			{#each cohortDefinition.initialGroup.containers as container}
 				<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
@@ -773,7 +773,7 @@
 		<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 			<h3 class="mb-3 text-sm font-bold text-gray-700">Comparison Group</h3>
 			{#if cohortDefinition.comparisonGroup.containers.length === 0}
-				<p class="mb-2 ml-2 text-xs italic text-gray-500">No comparison filters defined</p>
+				<p class="mb-2 ml-2 text-xs italic text-gray-500">No comparison containers defined</p>
 			{:else}
 				{#each cohortDefinition.comparisonGroup.containers as container}
 					<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
