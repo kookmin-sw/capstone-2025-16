@@ -30,7 +30,7 @@
               { title: "2단계: 코호트 기본 정보 확인", content: "코호트 상세 페이지의 상단에서 코호트의 기본 정보를 확인할 수 있습니다." }
             ] },
             { title: "코호트 정의 내용 확인하기", steps: [
-              { title: "Definition 탭 클릭", content: "Definition 탭에서 코호트가 어떻게 정의되어 있는지를 json 형식으로 확인할 수 있습니다." }
+              { title: "코호트 정의 내용 확인하기", content: "Definition 탭에서 코호트가 어떻게 정의되어 있는지를 json 형식으로 확인할 수 있습니다. 우측 상단의 Copy 버튼을 누르면 json이 복사됩니다.", image: "guide_images/cohort/cohort-definition.png" }
             ] },
             { title: "코호트 내 주요 Feature 확인하기", steps: [
               { title: "1단계: Features 탭 클릭", content: "단일 코호트 페이지에서 Features 탭을 클릭합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-1.png" },
