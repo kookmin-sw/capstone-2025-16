@@ -118,6 +118,13 @@ export class PaginationQuery {
   limit?: number;
 }
 
+export class PaginationSearchQuery extends PaginationQuery {
+  @ApiPropertyOptional({ description: 'Search query', example: 'Cohort name' })
+  @IsString()
+  @IsOptional()
+  query?: string;
+}
+
 export class CohortResponse {
   @ApiProperty({
     description: 'Cohort ID',

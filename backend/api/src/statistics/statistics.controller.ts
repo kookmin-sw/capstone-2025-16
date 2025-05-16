@@ -40,6 +40,7 @@ import {
   CreateChartResponse,
   UpdateChartResponse,
   DeleteChartResponse,
+  PaginationSearchQuery,
 } from './dto/statistics.dto';
 
 @ApiTags('Statistics')
@@ -72,9 +73,7 @@ export class StatisticsController {
     type: StatisticsListResponse,
   })
   @Get()
-  async getStatistics(
-    @Query() { page, limit, query }: PaginationQuery & { query?: string },
-  ) {
+  async getStatistics(@Query() { page, limit, query }: PaginationSearchQuery) {
     return await this.statisticsService.getStatistics(page, limit, query);
   }
 

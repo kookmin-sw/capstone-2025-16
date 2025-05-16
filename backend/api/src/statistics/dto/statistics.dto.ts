@@ -263,6 +263,16 @@ export class PaginationQuery {
   limit?: number;
 }
 
+export class PaginationSearchQuery extends PaginationQuery {
+  @ApiPropertyOptional({
+    description: 'Search query',
+    example: 'Statistics name',
+  })
+  @IsString()
+  @IsOptional()
+  query?: string;
+}
+
 export class StatisticsResponse {
   @ApiProperty({
     description: 'Statistics ID',

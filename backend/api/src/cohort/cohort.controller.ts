@@ -35,6 +35,7 @@ import {
   CohortListResponse,
   CohortPersonsResponse,
   CohortDetailResponse,
+  PaginationSearchQuery,
 } from './dto/cohort.dto';
 
 @ApiTags('Cohort')
@@ -67,9 +68,7 @@ export class CohortController {
     type: CohortListResponse,
   })
   @Get()
-  async getCohorts(
-    @Query() { page, limit, query }: PaginationQuery & { query?: string },
-  ) {
+  async getCohorts(@Query() { page, limit, query }: PaginationSearchQuery) {
     return await this.cohortService.getCohorts(page, limit, query);
   }
 
