@@ -92,15 +92,20 @@ export class StatisticsService {
             ...id,
             chartCohortDef,
           });
-          for (let query of queries.flat()) {
-            const result = await query.execute();
-            if ('select' in query) {
-              let cnt = (
-                result as {
-                  count: number;
-                }[]
-              ).at(0)?.count;
-              values.push(Number(cnt || 0));
+          for (let query of queries) {
+            if (!Array.isArray(query)) {
+              query = [query];
+            }
+            let results = await Promise.all(query.map((q) => q.execute()));
+            for (let i = 0; i < query.length; i++) {
+              if ('select' in query[i]) {
+                let cnt = (
+                  results[i] as {
+                    count: number;
+                  }[]
+                ).at(0)?.count;
+                values.push(Number(cnt || 0));
+              }
             }
           }
         }
@@ -159,14 +164,19 @@ export class StatisticsService {
             countBy: countBy,
             database: process.env.DB_TYPE,
           });
-          for (let query of queries.flat()) {
-            const result = await query.execute();
-            if ('select' in query) {
-              values.push(
-                (result as { type: string; value: number }[]).map(
-                  ({ type, value }) => ({ type, value: Number(value) }),
-                ),
-              );
+          for (let query of queries) {
+            if (!Array.isArray(query)) {
+              query = [query];
+            }
+            let results = await Promise.all(query.map((q) => q.execute()));
+            for (let i = 0; i < query.length; i++) {
+              if ('select' in query[i]) {
+                values.push(
+                  (results[i] as { type: string; value: number }[]).map(
+                    ({ type, value }) => ({ type, value: Number(value) }),
+                  ),
+                );
+              }
             }
           }
         }

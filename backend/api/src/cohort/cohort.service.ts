@@ -381,7 +381,7 @@ export class CohortService {
     }
 
     let containerCounts: number[] = [];
-    const startTime: number = +new Date();
+    const startTime: number = performance.now();
     if (cohortDef) {
       await getBaseDB()
         .connection()
@@ -392,21 +392,25 @@ export class CohortService {
             database: process.env.DB_TYPE,
           });
 
-          for (const query of queries.flat()) {
-            const result = await query.execute();
-            if ('select' in query) {
-              // container person counts
-              containerCounts = Array(
-                cohortDef.initialGroup.containers.length +
-                  (cohortDef.comparisonGroup?.containers.length ?? 0),
-              ).fill(0);
+          for (let query of queries) {
+            if (!Array.isArray(query)) {
+              query = [query];
+            }
+            let results = await Promise.all(query.map((q) => q.execute()));
+            for (let i = 0; i < query.length; i++) {
+              if ('select' in query[i]) {
+                containerCounts = Array(
+                  cohortDef.initialGroup.containers.length +
+                    (cohortDef.comparisonGroup?.containers.length ?? 0),
+                ).fill(0);
 
-              for (const { container_id, count } of result as {
-                container_id: string;
-                count: string;
-              }[]) {
-                containerCounts[Number.parseInt(container_id) - 1] =
-                  Number.parseInt(count);
+                for (const { container_id, count } of results[i] as {
+                  container_id: string;
+                  count: string;
+                }[]) {
+                  containerCounts[Number.parseInt(container_id) - 1] =
+                    Number.parseInt(count);
+                }
               }
             }
           }
@@ -417,7 +421,7 @@ export class CohortService {
       message: 'Cohort successfully created.',
       cohortId,
       containerCounts,
-      elapsedTime: +new Date() - startTime,
+      elapsedTime: Math.floor(performance.now() - startTime),
     };
   }
 
@@ -451,7 +455,7 @@ export class CohortService {
       .execute();
 
     let containerCounts: number[] = [];
-    const startTime: number = +new Date();
+    const startTime: number = performance.now();
     if (cohortDef) {
       await getBaseDB()
         .deleteFrom('cohort_detail')
@@ -467,21 +471,25 @@ export class CohortService {
             database: process.env.DB_TYPE,
           });
 
-          for (const query of queries.flat()) {
-            const result = await query.execute();
-            if ('select' in query) {
-              // container person counts
-              containerCounts = Array(
-                cohortDef.initialGroup.containers.length +
-                  (cohortDef.comparisonGroup?.containers.length ?? 0),
-              ).fill(0);
+          for (let query of queries) {
+            if (!Array.isArray(query)) {
+              query = [query];
+            }
+            let results = await Promise.all(query.map((q) => q.execute()));
+            for (let i = 0; i < query.length; i++) {
+              if ('select' in query[i]) {
+                containerCounts = Array(
+                  cohortDef.initialGroup.containers.length +
+                    (cohortDef.comparisonGroup?.containers.length ?? 0),
+                ).fill(0);
 
-              for (const { container_id, count } of result as {
-                container_id: string;
-                count: string;
-              }[]) {
-                containerCounts[Number.parseInt(container_id) - 1] =
-                  Number.parseInt(count);
+                for (const { container_id, count } of results[i] as {
+                  container_id: string;
+                  count: string;
+                }[]) {
+                  containerCounts[Number.parseInt(container_id) - 1] =
+                    Number.parseInt(count);
+                }
               }
             }
           }
@@ -492,7 +500,7 @@ export class CohortService {
       message: 'Cohort successfully updated.',
       cohortId,
       containerCounts,
-      elapsedTime: +new Date() - startTime,
+      elapsedTime: Math.floor(performance.now() - startTime),
     };
   }
 
