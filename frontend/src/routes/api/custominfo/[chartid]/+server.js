@@ -1,9 +1,9 @@
-import { API_ADDRESS } from '$env/static/private';
+import { PUBLIC_API_URI } from '$env/static/public';
 
 export async function GET({ fetch, params }) {
     const { chartid } = params;
     
-    const res = await fetch(`${API_ADDRESS}/statistics/${chartid}/`);
+    const res = await fetch(`${PUBLIC_API_URI}/statistics/${chartid}/`);
     if (!res.ok) {
         return new Response(JSON.stringify({ error: "Failed to load data" }), {
             status: 500,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { fade, fly } from 'svelte/transition';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
 	interface Cohort {
 		cohort_id: string;
 		name: string;
@@ -58,7 +58,7 @@
 		errorMessage = null;
 
 		try {
-			const response = await fetch(`https://bento.kookm.in/api/person/${selected_Person}`);
+			const response = await fetch(`${PUBLIC_API_URI}/api/person/${selected_Person}`);
 			const data = await response.json();
 			isPersonIdValid = !data.error;
 			if (data.error) {
@@ -85,7 +85,7 @@
 				queryParams.set('query', search);
 			}
 
-			const response = await fetch(`https://bento.kookm.in/api/cohort?${queryParams.toString()}`);
+			const response = await fetch(`${PUBLIC_API_URI}/api/cohort?${queryParams.toString()}`);
 			const data = await response.json() as PaginationResponse;
 			
 			cohortList = data.cohorts;
@@ -162,7 +162,7 @@
 			}
 
 			console.log(requestsBody);
-			const response = await fetch('https://bento.kookm.in/api/statistics', {
+			const response = await fetch(`${PUBLIC_API_URI}/api/statistics`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

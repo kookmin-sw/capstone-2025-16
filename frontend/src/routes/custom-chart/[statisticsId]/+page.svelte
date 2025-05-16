@@ -11,7 +11,7 @@
 	import { utcDay } from 'd3';
 	import TargetSetModal from './components/TargetSetModal.svelte';
 	import domtoimage from 'dom-to-image';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
 	let isLoading = true;
 	let statisticsID = $page.params.statisticsId;
 	let isDragging = false;
@@ -192,7 +192,7 @@
 								const confirmDelete = confirm("Are you sure you want to delete this custom chart set? This action cannot be undone.");
 								if (!confirmDelete) return;
 
-								await fetch(`https://bento.kookm.in/api/statistics/${cumtomInfo.statistics_id}`, {
+								await fetch(`${PUBLIC_API_URI}/api/statistics/${cumtomInfo.statistics_id}`, {
 									method: 'DELETE'
 								})
 									.then(() => {
@@ -349,7 +349,7 @@
 								if(!confirmed) return;
 
 								try {
-									const res = await fetch(`https://bento.kookm.in/api/statistics/${chart.statistics_id}/chart/${chart.chart_id}`, {
+									const res = await fetch(`${PUBLIC_API_URI}/api/statistics/${chart.statistics_id}/chart/${chart.chart_id}`, {
 									method: 'DELETE',
 									});
 

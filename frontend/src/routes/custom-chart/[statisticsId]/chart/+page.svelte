@@ -15,7 +15,7 @@
 	import IdentifierOperator from '$lib/components/operators/IdentifierOperator.svelte';
 	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
 	import DirectConceptSelectorWrapper from '$lib/components/operators/DirectConceptSelectorWrapper.svelte';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
 	const { data } = $props();
 
 	const { statistics_id } = data;
@@ -139,7 +139,7 @@
 		});
 
 		// 차트 생성
-		await fetch(`https://bento.kookm.in/api/statistics/${statistics_id}/chart`, {
+		await fetch(`${PUBLIC_API_URI}/api/statistics/${statistics_id}/chart`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -763,7 +763,7 @@
 		if (conceptNameSet[conceptId]) {
 			return conceptNameSet[conceptId];
 		} else {
-			fetch(`https://bento.kookm.in/api/concept/${conceptId}`)
+			fetch(`${PUBLIC_API_URI}/api/concept/${conceptId}`)
 				.then((res) => res.json())
 				.then((concept) => {
 					console.log(concept);

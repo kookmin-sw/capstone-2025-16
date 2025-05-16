@@ -3,7 +3,7 @@
   import { goto } from "$app/navigation";
   import LoadingComponent from "$lib/components/LoadingComponent.svelte";
   import Footer from '$lib/components/Footer.svelte';
-
+  import { PUBLIC_API_URI } from '$env/static/public';
   let loading = true;
   let searchQuery = "";
   let searchInput = "";
@@ -108,7 +108,7 @@
     // 여러 코호트 삭제 요청
     for (const cohortID of selectedCohorts) {
       try {
-        const res = await fetch(`https://bento.kookm.in/api/cohort/${cohortID}`, {
+        const res = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}`, {
           method: 'DELETE'
         });
         if (!res.ok) {

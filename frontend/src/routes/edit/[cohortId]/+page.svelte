@@ -5,7 +5,7 @@
 <script lang="ts">
 	import ConceptSetModal from '$lib/components/ConceptSetModal.svelte';
 	import CohortAIModal from './components/CohortAIModal.svelte';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
 	// 연산자 컴포넌트 가져오기
 	import NumberOperator from '$lib/components/operators/NumberOperator.svelte';
 	import StringOperator from '$lib/components/operators/StringOperator.svelte';
@@ -37,7 +37,7 @@
 		if (concepts_id_to_name[concept_id]) {
 			return concepts_id_to_name[concept_id];
 		}
-		fetch(`https://bento.kookm.in/api/concept/${encodeURIComponent(concept_id)}`)
+		fetch(`${PUBLIC_API_URI}/api/concept/${encodeURIComponent(concept_id)}`)
 			.then((response) => response.json())
 			.then((data) => {
 				concepts_id_to_name[concept_id] = data.concept_name;
@@ -671,7 +671,7 @@
 		if (conceptNameSet[conceptId]) {
 			return conceptNameSet[conceptId];
 		} else {
-			fetch(`https://bento.kookm.in/api/concept/${conceptId}`)
+			fetch(`${PUBLIC_API_URI}/api/concept/${conceptId}`)
 				.then((res) => res.json())
 				.then((concept) => {
 					console.log(concept);
@@ -706,7 +706,7 @@
 
 	async function getCohortCounts() {
 		isPatientCountUpdating = true;
-		const response = await fetch(`https://bento.kookm.in/api/cohort`, {
+		const response = await fetch(`${PUBLIC_API_URI}/api/cohort`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -726,7 +726,7 @@
 	async function updateCohortDefinition() {
 		isUpdating = true;
 
-		const response = await fetch(`https://bento.kookm.in/api/cohort/${cohort.cohort_id}`, {
+		const response = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohort.cohort_id}`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'

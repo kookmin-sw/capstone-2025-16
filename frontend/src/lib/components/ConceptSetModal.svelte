@@ -18,6 +18,7 @@
 		type ConceptSet,
 		type Concept
 	} from '$lib/models/ConceptSet';
+	import { PUBLIC_API_URI } from '$env/static/public';
 
 	// 인터페이스 정의
 	export let show = false;
@@ -130,7 +131,7 @@
 		const domainParam = selectedDomain ? `&domain=${encodeURIComponent(selectedDomain)}` : '';
 
 		await fetch(
-			`https://bento.kookm.in/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`
+			`${PUBLIC_API_URI}/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`
 		)
 			.then((response) => response.json())
 			.then((data) => {

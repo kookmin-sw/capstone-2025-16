@@ -15,7 +15,7 @@
 	import { page } from '$app/stores';
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 	import { goto } from '$app/navigation';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
 	let worker;
 	let chartLoading = true;
 	let loadingMessage = 'Loading chart data...';
@@ -27,7 +27,7 @@
 
 	let activeTab = 'charts';
 	const tabs = [
-		{ key: 'charts', label: 'Charts' },
+		{ key: 'charts', label: 'Charts' }
 		{ key: 'features', label: 'Features' },
 		{ key: 'definition', label: 'Definition' },
 	];
@@ -485,7 +485,7 @@
 							const confirmDuplicate = confirm("Do you want to create a duplicate of this cohort?");
 							if (!confirmDuplicate) return;
 
-							await fetch('https://bento.kookm.in/api/cohort', {
+							await fetch(`${PUBLIC_API_URI}/api/cohort`, {
 								method: 'POST',
 								headers: {
 									'Content-Type': 'application/json'
@@ -539,7 +539,7 @@
 							const confirmDelete = confirm("Are you sure you want to delete this cohort? This action cannot be undone.");
 							if (!confirmDelete) return;
 
-							await fetch(`https://bento.kookm.in/api/cohort/${cohortID}`, {
+							await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}`, {
 								method: 'DELETE'
 							})
 								.then(() => {

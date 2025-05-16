@@ -1,4 +1,5 @@
 <script>
+	import { PUBLIC_API_URI } from '$env/static/public';
 	export let show = false;
 
 	// Callback functions
@@ -44,7 +45,7 @@
 
 		const formData = new FormData();
 		formData.append('pdf', files[0]);
-		await fetch('https://bento.kookm.in/api/autocohort/pdf', {
+		await fetch(`${PUBLIC_API_URI}/api/autocohort/pdf`, {
 			method: 'POST',
 			body: formData
 		})
@@ -71,7 +72,7 @@
 		// Simulate cohort creation process
 		generatedCohort = true;
 		generationStep = 'generating';
-		await fetch('https://bento.kookm.in/api/autocohort/text', {
+		await fetch(`${PUBLIC_API_URI}/api/autocohort/text`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
