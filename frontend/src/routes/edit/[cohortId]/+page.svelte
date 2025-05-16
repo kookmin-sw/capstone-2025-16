@@ -14,6 +14,7 @@
 	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
 	import ContainerHeader from './components/ContainerHeader.svelte';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	const { data } = $props();
 	let { cohort } = data;
 
@@ -21,24 +22,26 @@
 		getCohortCounts();
 	});
 
-	let containerCounts = $state([ ]);
+	let containerCounts = $state([]);
 	console.log('data : ', data);
 	console.log(cohort);
-	console.log(cohort.cohort_definition.initialGroup.containers.length + cohort.cohort_definition.comparisonGroup.containers.length)
+	console.log(
+		cohort.cohort_definition.initialGroup.containers.length +
+			cohort.cohort_definition.comparisonGroup.containers.length
+	);
 	console.log(cohort.cohort_definition);
 
 	let concepts_id_to_name = $state<Record<string, string>>({});
-
 
 	async function getConceptName(concept_id: string) {
 		if (concepts_id_to_name[concept_id]) {
 			return concepts_id_to_name[concept_id];
 		}
 		fetch(`https://bento.kookm.in/api/concept/${encodeURIComponent(concept_id)}`)
-		.then(response => response.json())
-		.then(data => {
-			concepts_id_to_name[concept_id] = data.concept_name;
-		});
+			.then((response) => response.json())
+			.then((data) => {
+				concepts_id_to_name[concept_id] = data.concept_name;
+			});
 		return concept_id;
 	}
 
@@ -140,11 +143,21 @@
 					const opValue = value[op];
 					if (Array.isArray(opValue)) {
 						// 다중 값 처리
-						const formattedValues = opValue.map((v) => formatValue(v, type));
-						parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+						if (type === 'conceptset') {
+							const formattedValues = opValue.map((v) => findConceptSetById(v).name).join(', ');
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues})`);
+						} else {
+							const formattedValues = opValue.map((v) => formatValue(v, type));
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+						}
 					} else {
 						// 단일 값 처리
-						parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+						if (type === 'conceptset') {
+							const formattedValue = findConceptSetById(opValue).name;
+							parts.push(`${operatorDisplayConfig[op].label} ${formattedValue}`);
+						} else {
+							parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+						}
 					}
 				}
 			}
@@ -159,20 +172,11 @@
 	// 값 포맷팅 함수
 	function formatValue(value: any, type?: string): string {
 		// 개념 또는 개념 세트 타입 처리
-		if (type === 'concept' || type === 'conceptset') {
-			if (Array.isArray(value)) {
-				// 다중 개념 ID 처리
-				return value
-					.map((id) => {
-						const concept = findConceptById(id);
-						return concept ? concept.name : id;
-					})
-					.join(', ');
-			} else {
-				// 단일 개념 ID 처리
-				const concept = findConceptById(value);
-				return concept ? concept.name : value.toString();
-			}
+		if (type === 'conceptset') {
+			return findConceptSetById(value).name;
+		}
+		if (type === 'concept') {
+			return getConceptNameById(value);
 		}
 
 		// 날짜 타입 처리
@@ -549,11 +553,6 @@
 
 	// 컨테이너 삭제 함수
 	function removeContainer(groupType, containerIndex) {
-		// 첫 번째 컨테이너는 삭제 불가 (FirstContainer 타입)
-		if (containerIndex === 0 && cohortDefinition[groupType].containers.length === 1) {
-			return;
-		}
-
 		cohortDefinition[groupType].containers.splice(containerIndex, 1);
 		getCohortCounts();
 	}
@@ -612,6 +611,15 @@
 		return undefined;
 	}
 
+	function findConceptSetById(conceptSetId: string): ConceptSet | undefined {
+		for (const conceptSet of cohortDefinition.conceptsets) {
+			if (conceptSet.conceptset_id === conceptSetId) {
+				return conceptSet;
+			}
+		}
+		return undefined;
+	}
+
 	// 컨테이너 순서 변경 함수
 	function handleContainerReorder(groupType, draggedIndex, targetIndex) {
 		if (draggedIndex === targetIndex) return;
@@ -656,6 +664,21 @@
 		}
 
 		cohortDefinition[groupType].containers = containers;
+	}
+
+	let conceptNameSet = $state({});
+	function getConceptNameById(conceptId: string): Promise<string> {
+		if (conceptNameSet[conceptId]) {
+			return conceptNameSet[conceptId];
+		} else {
+			fetch(`https://bento.kookm.in/api/concept/${conceptId}`)
+				.then((res) => res.json())
+				.then((concept) => {
+					console.log(concept);
+					conceptNameSet[conceptId] = concept.concept_name;
+				});
+			return conceptId;
+		}
 	}
 
 	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
@@ -719,9 +742,9 @@
 		getCohortCounts();
 		setTimeout(() => {
 			isUpdating = false;
+			goto(`/cohort/${cohort.cohort_id}`);
 		}, 500);
 	}
-
 
 	function convertContainerFiltersToObject(container) {
 		container.filters.forEach((filter) => {
@@ -750,7 +773,7 @@
 	$effect(() => {
 		if (cohortDefinition) {
 			convertCohortDefinitionToObject();
-			console.log("cohort definition 최적화");
+			console.log('cohort definition 최적화');
 		}
 	});
 </script>
@@ -759,10 +782,38 @@
 <div
 	class="fixed left-0 top-[60px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-auto border-r border-gray-300 bg-gray-50"
 >
+	<button
+		on:click={updateCohortDefinition}
+		class="relative mx-3 my-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:from-blue-600 hover:to-blue-700"
+		disabled={isUpdating}
+	>
+		<span class="relative z-10 flex items-center justify-center gap-2">
+			{#if isUpdating}
+				<div
+					class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+				></div>
+				updating...
+			{:else}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-4 w-4"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+				Save Cohort
+			{/if}
+		</span>
+	</button>
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<h3 class="mb-3 text-sm font-bold text-gray-700">Initial Group</h3>
 		{#if cohortDefinition.initialGroup.containers.length === 0}
-			<p class="mb-2 ml-2 text-xs italic text-gray-500">No initial filters defined</p>
+			<p class="mb-2 ml-2 text-xs italic text-gray-500">No initial containers defined</p>
 		{:else}
 			{#each cohortDefinition.initialGroup.containers as container}
 				<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
@@ -776,7 +827,7 @@
 		<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 			<h3 class="mb-3 text-sm font-bold text-gray-700">Comparison Group</h3>
 			{#if cohortDefinition.comparisonGroup.containers.length === 0}
-				<p class="mb-2 ml-2 text-xs italic text-gray-500">No comparison filters defined</p>
+				<p class="mb-2 ml-2 text-xs italic text-gray-500">No comparison containers defined</p>
 			{:else}
 				{#each cohortDefinition.comparisonGroup.containers as container}
 					<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
@@ -1004,7 +1055,7 @@
 												{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 													<div>
 														<span class="font-medium">{property}:</span>
-														{displayPropertyValue(value, property)}
+														{displayPropertyValue(value, domainProperties[filter.type].find((filter) => filter.name === property)?.type || '')}
 													</div>
 												{/each}
 											</div>
@@ -1128,14 +1179,11 @@
 													{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 														<div>
 															<span class="font-medium">{property}:</span>
-															{displayPropertyValue(
-																value,
-																property === 'gender' ||
-																	property === 'raceType' ||
-																	property === 'ethnicityType'
-																	? 'concept'
-																	: undefined
-															)}
+															{#if domainTypes.find((domain) => domain.type === filter.type)?.type === 'concept'}
+																{displayPropertyValue(value, 'concept')}
+															{:else}
+																{displayPropertyValue(value, property)}
+															{/if}
 														</div>
 													{/each}
 												</div>
@@ -1154,37 +1202,6 @@
 				<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON (Developer)</h3>
 				<pre
 					class="h-60 overflow-auto rounded-md bg-gray-100 p-2 text-xs">{getCohortDefinitionJSON()}</pre>
-			</div>
-
-			<div class="flex justify-center p-12">
-				<button
-					on:click={updateCohortDefinition}
-					class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:before:opacity-10 active:scale-95"
-					disabled={isUpdating}
-				>
-					<span class="relative z-10 flex items-center justify-center gap-2">
-						{#if isUpdating}
-							<div
-								class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-							></div>
-							Updating...
-						{:else}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="h-4 w-4"
-								viewBox="0 0 20 20"
-								fill="currentColor"
-							>
-								<path
-									fill-rule="evenodd"
-									d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-									clip-rule="evenodd"
-								/>
-							</svg>
-							Update Cohort
-						{/if}
-					</span>
-				</button>
 			</div>
 		</div>
 	</div>

@@ -84,6 +84,10 @@
 	$: centers = ORGANIZATION_AFFILIATIONS?.[selectedOrg] || [];
 </script>
 
+<svelte:head>
+	<title>Register - Bento</title>
+</svelte:head>
+
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
 	<form on:submit|preventDefault={handleSubmit} class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 		<h1 class="text-3xl font-bold mb-4">Register</h1>
@@ -129,7 +133,7 @@
 				bind:value={advisor}
 				disabled={selectedOrg === '개인연구자'}
 				class="border p-2 mt-1 w-full border-gray-300 rounded-md"
-				placeholder="Enter your advisor’s name"
+				placeholder="Enter your advisor's name"
 			/>
 		</div>
 

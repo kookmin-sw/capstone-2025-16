@@ -3,7 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 
 	interface Cohort {
-		cohortId: string;
+		cohort_id: string;
 		name: string;
 		description: string;
 	}
@@ -20,11 +20,24 @@
 		personId?: string;
 	}
 
+	interface PaginationResponse {
+		cohorts: Cohort[];
+		total: number;
+		page: number;
+		limit: number;
+	}
+
 	let { show } = $props<{ show?: boolean }>();
 	if (show == undefined) {
 		show = true;
 	}
 
+	let page = $state(0); // API가 0부터 시작하는 페이지 인덱스를 사용
+	let limit = $state(10); // 한 페이지당 표시할 항목 수
+	let search = $state('');
+	let totalItems = $state(0);
+	let totalPages = $state(0);
+	
 	let cohortList = $state<Cohort[]>([]);
 	let selected_Cohorts = $state<Cohort[]>([]);
 	let selected_Person = $state<string | null>(null);
@@ -64,9 +77,20 @@
 		errorMessage = null;
 
 		try {
-			const response = await fetch('https://bento.kookm.in/api/cohort');
-			const data = await response.json();
+			// 페이지네이션 및 검색 쿼리 매개변수 추가
+			const queryParams = new URLSearchParams();
+			queryParams.set('page', page.toString());
+			queryParams.set('limit', limit.toString());
+			if (search.trim()) {
+				queryParams.set('query', search);
+			}
+
+			const response = await fetch(`https://bento.kookm.in/api/cohort?${queryParams.toString()}`);
+			const data = await response.json() as PaginationResponse;
+			
 			cohortList = data.cohorts;
+			totalItems = data.total;
+			totalPages = Math.ceil(data.total / limit);
 		} catch (error) {
 			errorMessage = 'Failed to load cohorts';
 		} finally {
@@ -81,6 +105,31 @@
 		}
 	}
 
+	function nextPage() {
+		if (page < totalPages - 1) {
+			page++;
+			getCohortList();
+		}
+	}
+
+	function prevPage() {
+		if (page > 0) {
+			page--;
+			getCohortList();
+		}
+	}
+
+	function goToPage(pageNum: number) {
+		if (pageNum >= 0 && pageNum < totalPages) {
+			page = pageNum;
+			getCohortList();
+		}
+	}
+
+	function handleSearch() {
+		page = 0; // 검색 시 첫 페이지로 이동
+		getCohortList();
+	}
 
 	let activeTab = $state<'cohort' | 'person'>('cohort');
 	getCohortList();
@@ -184,6 +233,13 @@
 				</button>
 			</div>
 
+			<div class="mb-4 mt-4">
+				<label class="block text-sm font-medium text-gray-700 mb-1">Target Set Name</label>
+				<input type="text" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2" bind:value={statisticsName} placeholder="Enter target set name" />
+				<label class="block text-sm font-medium text-gray-700 mb-1 mt-2">Target Set Description</label>
+				<textarea class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" bind:value={statisticsDescription} placeholder="Enter target set description" rows="2"></textarea>
+			</div>
+
 			{#if isLoading}
 				<div class="flex h-32 items-center justify-center">
 					<div
@@ -193,7 +249,7 @@
 			{:else if activeTab === 'cohort'}
 				<div class="w-full space-y-6">
 					<div>
-						<h3 class="mb-4 text-lg font-semibold text-gray-900">Selected Cohorts</h3>
+						<h3 class="mb-4 text-base font-semibold text-gray-900">Selected Cohorts</h3>
 						<div class="flex min-h-[3rem] flex-wrap gap-2 rounded-lg bg-gray-50 p-2">
 							{#each selected_Cohorts as cohort}
 								<button
@@ -228,12 +284,25 @@
 					</div>
 
 					<div>
-						<h3 class="mb-4 text-lg font-semibold text-gray-900">Available Cohorts</h3>
+						<h3 class="mb-4 text-base font-semibold text-gray-900">Available Cohorts</h3>
+						<div class="flex gap-2 mb-2">
+							<input 
+                                type="text" 
+                                class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                                placeholder="Enter search term" 
+                                bind:value={search}
+                                on:keypress={(e) => e.key === 'Enter' && handleSearch()}
+                            />
+							<button 
+                                class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-indigo-700 disabled:opacity-50"
+                                on:click={handleSearch}
+                            >Search</button>
+						</div>
 						<div class="max-h-[24rem] overflow-y-auto rounded-lg border border-gray-200">
 							<div class="divide-y divide-gray-100">
-								{#each cohortList.filter((cohort) => !selected_Cohorts.includes(cohort)) as cohort}
+								{#each cohortList.filter((cohort) => !selected_Cohorts.some(sc => sc.cohort_id === cohort.cohort_id)) as cohort}
 									<button
-										class="w-full px-4 py-4 text-left transition-colors duration-200 hover:bg-gray-50"
+										class="w-full px-4 py-2 text-left transition-colors duration-200 hover:bg-gray-50"
 										on:click={() => {
 											selected_Cohorts = [...selected_Cohorts, cohort];
 										}}
@@ -242,14 +311,89 @@
 										<p class="mt-1 text-sm text-gray-500">{cohort.description}</p>
 									</button>
 								{/each}
+                                {#if cohortList.length === 0}
+                                    <div class="px-4 py-6 text-center text-gray-500">
+                                        No search results.
+                                    </div>
+                                {/if}
 							</div>
+                            
+                            {#if totalPages > 1}
+                                <div class="flex items-center justify-center py-4 bg-gray-50 border-t border-gray-200">
+                                    <div class="flex space-x-1">
+                                        <button 
+                                            class="px-3 py-1 text-sm rounded-md {page === 0 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-200'}"
+                                            on:click={prevPage}
+                                            disabled={page === 0}
+                                        >
+                                            Previous
+                                        </button>
+                                        
+                                        {#if totalPages <= 7}
+                                            {#each Array(totalPages) as _, i}
+                                                <button 
+                                                    class="px-3 py-1 text-sm rounded-md {page === i ? 'bg-indigo-100 text-indigo-600 font-medium' : 'text-gray-700 hover:bg-gray-200'}"
+                                                    on:click={() => goToPage(i)}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            {/each}
+                                        {:else}
+                                            {#if page > 2}
+                                                <button 
+                                                    class="px-3 py-1 text-sm rounded-md text-gray-700 hover:bg-gray-200"
+                                                    on:click={() => goToPage(0)}
+                                                >
+                                                    1
+                                                </button>
+                                                {#if page > 3}
+                                                    <span class="px-2 py-1 text-gray-500">...</span>
+                                                {/if}
+                                            {/if}
+                                            
+                                            {#each Array(Math.min(5, totalPages)).filter((_,i) => {
+                                                const pageNum = page - 2 + i;
+                                                return pageNum >= 0 && pageNum < totalPages;
+                                            }) as _, i}
+                                                {@const pageNum = page - 2 + i}
+                                                <button 
+                                                    class="px-3 py-1 text-sm rounded-md {page === pageNum ? 'bg-indigo-100 text-indigo-600 font-medium' : 'text-gray-700 hover:bg-gray-200'}"
+                                                    on:click={() => goToPage(pageNum)}
+                                                >
+                                                    {pageNum + 1}
+                                                </button>
+                                            {/each}
+                                            
+                                            {#if page < totalPages - 3}
+                                                {#if page < totalPages - 4}
+                                                    <span class="px-2 py-1 text-gray-500">...</span>
+                                                {/if}
+                                                <button 
+                                                    class="px-3 py-1 text-sm rounded-md text-gray-700 hover:bg-gray-200"
+                                                    on:click={() => goToPage(totalPages - 1)}
+                                                >
+                                                    {totalPages}
+                                                </button>
+                                            {/if}
+                                        {/if}
+                                        
+                                        <button 
+                                            class="px-3 py-1 text-sm rounded-md {page === totalPages - 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-200'}"
+                                            on:click={nextPage}
+                                            disabled={page === totalPages - 1}
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            {/if}
 						</div>
 					</div>
 				</div>
 			{:else if activeTab === 'person'}
 				<div class="space-y-6">
 					<div>
-						<h3 class="mb-4 text-lg font-semibold text-gray-900">Person ID</h3>
+						<h3 class="mb-4 text-base font-semibold text-gray-900">Person ID</h3>
 						<div class="flex min-h-[3rem] flex-wrap gap-4 rounded-lg bg-gray-50 p-4">
 							<div class="flex-1">
 								<input
@@ -296,13 +440,6 @@
 					</div>
 				</div>
 			{/if}
-
-			<div class="mb-4 mt-4">
-				<label class="block text-sm font-medium text-gray-700 mb-1">Target Set Name</label>
-				<input type="text" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2" bind:value={statisticsName} placeholder="Enter target set name" />
-				<label class="block text-sm font-medium text-gray-700 mb-1 mt-2">Target Set Description</label>
-				<textarea class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" bind:value={statisticsDescription} placeholder="Enter target set description" rows="2"></textarea>
-			</div>
 
 			<div class="mt-8 flex justify-end space-x-3">
 				<button

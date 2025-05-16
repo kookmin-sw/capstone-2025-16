@@ -3,6 +3,10 @@
   import Footer from "$lib/components/Footer.svelte";
 </script>
 
+<svelte:head>
+  <title>Bento - Medical Data Analytics</title>
+</svelte:head>
+
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-[80px] relative overflow-hidden">
   <!-- 배경 로고 -->
   <div class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] opacity-[0.05] pointer-events-none">

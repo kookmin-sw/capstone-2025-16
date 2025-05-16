@@ -119,6 +119,18 @@
     }
   ];
 
+  // 카테고리 이름 영어 매핑
+  const categoryTitleMap = {
+    "코호트 정의하기": "Define Cohort",
+    "단일 코호트 보기": "View Single Cohort",
+    "다중 코호트 비교하기": "Compare Multiple Cohorts",
+    "환자 검색하기": "Search Patients",
+    "커스텀 차트 사용하기": "Use Custom Charts",
+    "코호트 내 환자 CDM 보기": "View Patient CDM in Cohort",
+    "커스텀 차트 정의하기": "Define Custom Charts",
+    "정의된 커스텀 차트 보기": "View Defined Custom Charts"
+  };
+
   // 네비게이션 토글 상태
   let openCategoryIndexes = new Set();
   let openSubIndexes = new Map(); // 카테고리별로 따로 관리
@@ -176,7 +188,15 @@
     }
   }
 
+  // 페이지 타이틀 관리
+  $: pageTitle = selectedSub 
+    ? `${selectedSub.name ? categoryTitleMap[selectedSub.name] || selectedSub.name : categoryTitleMap[categories[selectedCategoryIdx].name] || categories[selectedCategoryIdx].name} - User Guide` 
+    : 'User Guide';
 </script>
+
+<svelte:head>
+  <title>{pageTitle}</title>
+</svelte:head>
 
 <div class="flex h-screen bg-gray-50 flex-col md:flex-row">
   <!-- 좌측 네비게이션 -->

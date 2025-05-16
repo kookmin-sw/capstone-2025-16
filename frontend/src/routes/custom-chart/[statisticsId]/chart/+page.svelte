@@ -133,10 +133,8 @@
 	}
 
 	async function createChart() {
-
-
 		// concept sets 연결
-		groups.forEach(group => {
+		groups.forEach((group) => {
 			group.definition.conceptsets = conceptsets;
 		});
 
@@ -399,7 +397,12 @@
 			{ name: 'ethnicityType', label: 'Ethnicity', type: 'concept' }
 		]
 	};
-
+	const countByProperties = {
+		concept: "concept",
+		age: "numberrange",
+		date: "daterange",
+		value: "numberrange"
+	};
 	// 편집 관련 상태 변수
 	let selectedDomainType = $state<DomainType | null>(null); // 선택된 도메인 타입
 	let editingFilterIndex = $state<number | null>(null); // 편집할 필터 인덱스
@@ -681,6 +684,7 @@
 						parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
 					} else {
 						// 단일 값 처리
+
 						parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
 					}
 				}
@@ -696,20 +700,11 @@
 	// 값 포맷팅 함수
 	function formatValue(value: any, type?: string): string {
 		// 개념 또는 개념 세트 타입 처리
-		if (type === 'concept' || type === 'conceptset') {
-			if (Array.isArray(value)) {
-				// 다중 개념 ID 처리
-				return value
-					.map((id) => {
-						const concept = findConceptById(id);
-						return concept ? concept.name : id;
-					})
-					.join(', ');
-			} else {
-				// 단일 개념 ID 처리
-				const concept = findConceptById(value);
-				return concept ? concept.name : value.toString();
-			}
+		if (type === 'conceptset') {
+			return findConceptSetById(value).name;
+		}
+		if (type === 'concept') {
+			return getConceptNameById(value);
 		}
 
 		// 날짜 타입 처리
@@ -738,6 +733,14 @@
 				}
 			}
 		}
+	}
+
+	function findConceptSetById(conceptSetId: string): ConceptSet | undefined {
+		for (const conceptSet of conceptsets) {
+			if (conceptSet.conceptset_id === conceptSetId) {
+				return conceptSet;
+			}
+		}
 		return undefined;
 	}
 
@@ -754,6 +757,22 @@
 
 		groups = groups_temp;
 	}
+
+	let conceptNameSet = $state({});
+	function getConceptNameById(conceptId: string): Promise<string> {
+		if (conceptNameSet[conceptId]) {
+			return conceptNameSet[conceptId];
+		} else {
+			fetch(`https://bento.kookm.in/api/concept/${conceptId}`)
+				.then((res) => res.json())
+				.then((concept) => {
+					console.log(concept);
+					conceptNameSet[conceptId] = concept.concept_name;
+				});
+			return conceptId;
+		}
+	}
+
 
 	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
 	function getConceptsByDomain(domainId: string): { id: string; name: string }[] {
@@ -777,6 +796,34 @@
 			name: item.concept_name
 		}));
 	}
+
+	function convertContainerFiltersToObject(container) {
+		container.filters.forEach((filter) => {
+			const keys = Object.keys(filter).filter((key) => key !== 'type');
+			keys.forEach((key) => {
+				const value = filter[key];
+				if (typeof value === 'string' || typeof value === 'number') {
+					filter[key] = { eq: value };
+				}
+				if (typeof value === 'object' && Object.keys(value).length === 0) {
+					delete filter[key];
+				}
+			});
+		});
+	}
+
+	function convertCohortDefinitionToObject() {
+		groups.forEach((group) => {
+			convertContainerFiltersToObject(group.definition.initialGroup.containers[0]);
+		});
+	}
+
+	$effect(() => {
+		if (groups) {
+			convertCohortDefinitionToObject();
+			console.log('cohort definition 최적화');
+		}
+	});
 </script>
 
 <!-- Left Sidebar -->
@@ -989,7 +1036,7 @@
 								{#each Object.entries(countBy).filter(([key, value]) => value !== undefined) as [property, value]}
 									<div>
 										<span class="font-medium">{property}:</span>
-										{displayPropertyValue(value, property === 'concept' ? 'concept' : undefined)}
+										{displayPropertyValue(value, countByProperties[property])}
 									</div>
 								{/each}
 							</div>
@@ -1043,9 +1090,9 @@
 							}}
 						>
 							<div class="mb-4 flex items-center justify-between">
-								<div class="flex items-center">
-									<div>
-										<h4 class="flex items-center text-lg font-medium text-blue-600">
+								<div class="flex w-full space-x-8">
+									<div class="flex w-full flex-col">
+										<div class="flex w-full items-center text-lg font-medium text-blue-600">
 											<svg
 												class="h-4 w-4 text-gray-400"
 												xmlns="http://www.w3.org/2000/svg"
@@ -1066,32 +1113,32 @@
 												value={group.name}
 												on:change={(e) => onGroupNameChange(containerIndex, e.target.value)}
 											/>
-										</h4>
+										</div>
 									</div>
-								</div>
-								<div class="flex space-x-2">
-									<button
-										class="text-sm text-blue-500 hover:text-blue-700"
-										on:click={() => onAddFilter(containerIndex)}
-									>
-										Add Filter
-									</button>
-									{#if group.definition.data !== undefined}
+									<div class="flex space-x-2">
 										<button
-											class="text-sm text-blue-500 hover:text-blue-700"
-											on:click={() => onAddData(containerIndex)}
+											class="whitespace-nowrap text-sm text-blue-500 hover:text-blue-700"
+											on:click={() => onAddFilter(containerIndex)}
 										>
-											Add Data
+											Add Filter
 										</button>
-									{/if}
-									{#if groups.length > 1}
-										<button
-											class="text-sm text-red-500 hover:text-red-700"
-											on:click={() => onGroupRemove(containerIndex)}
-										>
-											Remove
-										</button>
-									{/if}
+										{#if group.definition.data !== undefined}
+											<button
+												class="whitespace-nowrap text-sm text-blue-500 hover:text-blue-700"
+												on:click={() => onAddData(containerIndex)}
+											>
+												Add Data
+											</button>
+										{/if}
+										{#if groups.length > 1}
+											<button
+												class="whitespace-nowrap text-sm text-red-500 hover:text-red-700"
+												on:click={() => onGroupRemove(containerIndex)}
+											>
+												Remove
+											</button>
+										{/if}
+									</div>
 								</div>
 							</div>
 
@@ -1130,14 +1177,7 @@
 												{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 													<div>
 														<span class="font-medium">{property}:</span>
-														{displayPropertyValue(
-															value,
-															property === 'gender' ||
-																property === 'raceType' ||
-																property === 'ethnicityType'
-																? 'concept'
-																: undefined
-														)}
+														{displayPropertyValue(value, domainProperties[filter.type].find((filter) => filter.name === property)?.type || '')}
 													</div>
 												{/each}
 											</div>
@@ -1204,14 +1244,7 @@
 													{#each Object.entries(group.definition.data).filter(([key]) => key !== 'type') as [property, value]}
 														<div>
 															<span class="font-medium">{property}:</span>
-															{displayPropertyValue(
-																value,
-																property === 'gender' ||
-																	property === 'raceType' ||
-																	property === 'ethnicityType'
-																	? 'concept'
-																	: undefined
-															)}
+															{displayPropertyValue(value, domainProperties[filter.type].find((filter) => filter.name === property)?.type || '')}
 														</div>
 													{/each}
 												</div>

@@ -169,6 +169,9 @@
   });
 </script>
 
+<svelte:head>
+  <title>Cohort List - Bento</title>
+</svelte:head>
 
 {#if loading}
   <LoadingComponent message="Loading cohort data..." />

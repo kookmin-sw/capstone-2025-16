@@ -25,11 +25,11 @@
 	let cohortInfo = [];
 	let cohortID = $page.params.cohortID;
 
-	let activeTab = 'definition';
+	let activeTab = 'charts';
 	const tabs = [
-		{ key: 'definition', label: 'Definition' },
+		{ key: 'charts', label: 'Charts' },
 		{ key: 'features', label: 'Features' },
-		{ key: 'charts', label: 'Charts' }
+		{ key: 'definition', label: 'Definition' },
 	];
 
 	let isTableView = {
@@ -446,7 +446,7 @@
 					<div class="font-medium text-blue-600">{cohortInfo.name}</div>
 					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs">
 						<span class="text-gray-600">Total patients:</span>
-						<span class="text-blue-800">{cohortInfo.count}</span>
+						<span class="text-blue-800">{Number(cohortInfo.count).toLocaleString()}</span>
 					</span>
 				</div>
 

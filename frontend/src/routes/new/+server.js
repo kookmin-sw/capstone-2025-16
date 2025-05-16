@@ -14,18 +14,10 @@ export async function GET({ fetch }) {
                 conceptsets: [],
                 initialGroup: {
                   containers: [
-                    {
-                      name: "Container 1",
-                      filters: []
-                    }
                   ]
                 },
                 comparisonGroup: {
                   containers: [
-                    {
-                      name: "Container 1",
-                      filters: []
-                    }
                   ]
                 }
               },
