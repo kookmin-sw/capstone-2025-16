@@ -175,22 +175,22 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         COALESCE(pc.parent_count, 0) AS parent_count,
         COALESCE(cc.child_count, 0) AS child_count,
         CASE %(domain_id)s
-            WHEN 'Condition' THEN CASE WHEN ac.concept_id IN (SELECT condition_concept_id FROM condition_occurrence) THEN 1 ELSE 0 END
-            WHEN 'Drug' THEN CASE WHEN ac.concept_id IN (SELECT drug_concept_id FROM drug_exposure) THEN 1 ELSE 0 END
-            WHEN 'Measurement' THEN CASE WHEN ac.concept_id IN (SELECT measurement_concept_id FROM measurement) THEN 1 ELSE 0 END
-            WHEN 'Observation' THEN CASE WHEN ac.concept_id IN (SELECT observation_concept_id FROM observation) THEN 1 ELSE 0 END
-            WHEN 'Procedure' THEN CASE WHEN ac.concept_id IN (SELECT procedure_concept_id FROM procedure_occurrence) THEN 1 ELSE 0 END
-            WHEN 'Visit' THEN CASE WHEN ac.concept_id IN (SELECT visit_concept_id FROM visit_occurrence) THEN 1 ELSE 0 END
-            WHEN 'Device' THEN CASE WHEN ac.concept_id IN (SELECT device_concept_id FROM device_exposure) THEN 1 ELSE 0 END
-            WHEN 'Death' THEN CASE WHEN ac.concept_id IN (SELECT cause_concept_id FROM death) THEN 1 ELSE 0 END
-            WHEN 'Specimen' THEN CASE WHEN ac.concept_id IN (SELECT specimen_concept_id FROM specimen) THEN 1 ELSE 0 END
-            WHEN 'Location' THEN CASE WHEN ac.concept_id IN (SELECT country_concept_id FROM location) THEN 1 ELSE 0 END
+            WHEN 'Condition' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT condition_concept_id FROM condition_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Drug' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT drug_concept_id FROM drug_exposure) THEN 1 ELSE 0 END
+            WHEN 'Measurement' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT measurement_concept_id FROM measurement) THEN 1 ELSE 0 END
+            WHEN 'Observation' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT observation_concept_id FROM observation) THEN 1 ELSE 0 END
+            WHEN 'Procedure' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT procedure_concept_id FROM procedure_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Visit' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT visit_concept_id FROM visit_occurrence) THEN 1 ELSE 0 END
+            WHEN 'Device' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT device_concept_id FROM device_exposure) THEN 1 ELSE 0 END
+            WHEN 'Death' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT cause_concept_id FROM death) THEN 1 ELSE 0 END
+            WHEN 'Specimen' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT specimen_concept_id FROM specimen) THEN 1 ELSE 0 END
+            WHEN 'Location' THEN CASE WHEN ac.concept_id IN (SELECT DISTINCT country_concept_id FROM location) THEN 1 ELSE 0 END
             WHEN 'Demographic' THEN CASE WHEN ac.concept_id IN (
-                SELECT gender_concept_id FROM person
+                SELECT DISTINCT gender_concept_id FROM person
                 UNION
-                SELECT race_concept_id FROM person
+                SELECT DISTINCT race_concept_id FROM person
                 UNION
-                SELECT ethnicity_concept_id FROM person
+                SELECT DISTINCT ethnicity_concept_id FROM person
             ) THEN 1 ELSE 0 END
             ELSE 1
         END as is_used
@@ -220,10 +220,15 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         GROUP BY ancestor_concept_id
     ) AS cc ON ac.concept_id = cc.concept_id
     ORDER BY 
+        is_used DESC,
         child_count DESC,
         parent_count ASC
     LIMIT %(limit)s
     """
+    
+    # 실제 쿼리 출력
+    print("\n[실행될 쿼리]:")
+    print(query.replace('%(term)s', f"'%{cleaned_term}%'").replace('%(domain_id)s', f"'{domain_id}'").replace('%(limit)s', str(limit)))
     
     results = clickhouse_client.execute(query, {
         'term': f'%{cleaned_term}%',
@@ -402,11 +407,14 @@ if __name__ == "__main__":
     print("===== 검색 테스트 =====")
     
     # 일반 검색 테스트
-    test_concept_search("Sepsis", "Condition")
+    # test_concept_search("Sepsis", "Condition")
     
-    # 검색 결과가 없는 경우
-    test_concept_search("ARDS", "Condition")
-    test_concept_search("T2DM", "Condition") 
+    # # 검색 결과가 없는 경우
+    # test_concept_search("ARDS", "Condition")
+    # test_concept_search("T2DM", "Condition") 
+
+    test_concept_search("insulin", "Drug")
+    test_concept_search("Aspirin", "Drug")
     
     # 구체적인 표현 -> 일반 표현
     # test_concept_search("Hemoglobin level over 13 g/dL", "Measurement") 

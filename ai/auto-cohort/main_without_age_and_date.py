@@ -417,13 +417,13 @@ def main():
     # stay duration of less than 24 h.
     # # """
     
-    implementable_text = """
-    This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
-    to 2019. Patients with severe chronic kidney disease
-    (CKD), defined as CKD stage ≥ 4 or estimated glomerular
-    filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
-    undergoing long-term dialysis treatment were excluded.
-    """
+    # implementable_text = """
+    # This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
+    # to 2019. Patients with severe chronic kidney disease
+    # (CKD), defined as CKD stage ≥ 4 or estimated glomerular
+    # filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
+    # undergoing long-term dialysis treatment were excluded.
+    # """
 
     # implementable_text = """
     # We conducted this retrospective cohort study based on a US publicdatabase: Medical Information Mart for Intensive Care IV (MIMIC-IV)Database.
@@ -440,17 +440,14 @@ def main():
     # """
 
     # implementable_text = """
-    # Patients with intracranial injuries were identified in the
-    # MIMIC-IV (version 2.2) database using International
-    # Classification of Diseases (ICD) codes ICD-9:85 and ICD10:S06.14 3942 patients with intracranial injury admitted
-    # to the ICU were screened. Patients who met any of the
-    # following criteria were excluded: (1) age <18or >90 years
-    # old; (2) not the first admission to the ICU; (3) ICU stay
-    # less than 1day and (4) death within 3days after ICU
-    # admission. 1780 eligible patients were included in this
-    # study and randomly assigned to training set and development set in a 7:3 ratio. The patient selection process is
-    # plotted in figure 1.
+    # Patients diagnosed with sepsis based on Sepsis-3 criteria were included.
+    # Exclusion criteria were: 1) ICU length of stay <24 h due to discharge or death; 2) Age <18 years; and 3) Diagnosis of acquired immunodeficiency syndrome (AIDS).
+    # For patients with multiple ICU admissions, only the first admission was analyzed.
+    # Patients who received administration of calcineurin inhibitors (CNIs), including cyclosporin A (CsA) or tacrolimus (FK506), during their ICU stay were defined as the CNIs group.
+    # The remaining patients who did not receive CNIs were defined as the control group.
     # """
+
+    implementable_text = """Insulin"""
 
     # 2. 텍스트에서 COHORT JSON 추출
     cohort_json = text_to_json(implementable_text)
