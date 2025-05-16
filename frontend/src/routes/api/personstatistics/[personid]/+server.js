@@ -3,7 +3,7 @@ import { PUBLIC_API_URI } from '$env/static/public';
 export async function GET({ fetch, params }) {
     const { personid } = params;
     
-    const res = await fetch(`${PUBLIC_API_URI}/person/${personid}/statistics/`);
+    const res = await fetch(`${PUBLIC_API_URI}/api/person/${personid}/statistics/`);
     if (!res.ok) {
         return new Response(JSON.stringify({ error: "Failed to load data" }), {
             status: 500,

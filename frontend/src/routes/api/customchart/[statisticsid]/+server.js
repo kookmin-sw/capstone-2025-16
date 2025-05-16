@@ -3,7 +3,7 @@ import { PUBLIC_API_URI } from '$env/static/public';
 export async function GET({ fetch, params }) {
     const { statisticsid } = params;
     
-    const res = await fetch(`${PUBLIC_API_URI}/statistics/${statisticsid}/chart/`);
+    const res = await fetch(`${PUBLIC_API_URI}/api/statistics/${statisticsid}/chart/`);
     if (!res.ok) {
         return new Response(JSON.stringify({ error: "Failed to load data" }), {
             status: 500,
