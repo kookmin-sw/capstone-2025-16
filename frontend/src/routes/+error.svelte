@@ -1,7 +1,10 @@
 <script>
   import { page } from '$app/state';
-
 </script>
+
+<svelte:head>
+  <title>Error - Bento</title>
+</svelte:head>
 
 <div class="flex h-full w-full flex-col items-center justify-center">
   {#if page.status === 404}

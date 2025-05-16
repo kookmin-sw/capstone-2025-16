@@ -127,6 +127,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Custom Chart - Bento</title>
+</svelte:head>
+
 {#if isLoading}
   <LoadingComponent />
 {:else}

@@ -15,6 +15,10 @@
 	}
 </script>
 
+<svelte:head>
+  <title>Login - Bento</title>
+</svelte:head>
+
 <div class="flex items-center justify-center">
     <div class="flex items-center justify-center min-h-[calc(100vh-60px)] w-[50vw] bg-gradient-to-b from-white to-blue-50 ">
     	<!-- Header with Logo and Slogan -->

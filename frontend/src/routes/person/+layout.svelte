@@ -46,6 +46,10 @@
     }
 </script>
 
+<svelte:head>
+  <title>Patient CDM - Bento</title>
+</svelte:head>
+
 <div>
     <div class="w-full bg-gray-50">
         <!-- Search Section -->
