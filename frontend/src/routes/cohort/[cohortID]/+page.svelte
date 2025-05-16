@@ -27,7 +27,7 @@
 
 	let activeTab = 'charts';
 	const tabs = [
-		{ key: 'charts', label: 'Charts' }
+		{ key: 'charts', label: 'Charts' },
 		{ key: 'features', label: 'Features' },
 		{ key: 'definition', label: 'Definition' },
 	];
