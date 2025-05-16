@@ -795,6 +795,34 @@
 			name: item.concept_name
 		}));
 	}
+
+	function convertContainerFiltersToObject(container) {
+		container.filters.forEach((filter) => {
+			const keys = Object.keys(filter).filter((key) => key !== 'type');
+			keys.forEach((key) => {
+				const value = filter[key];
+				if (typeof value === 'string' || typeof value === 'number') {
+					filter[key] = { eq: value };
+				}
+				if (typeof value === 'object' && Object.keys(value).length === 0) {
+					delete filter[key];
+				}
+			});
+		});
+	}
+
+	function convertCohortDefinitionToObject() {
+		groups.forEach((group) => {
+			convertContainerFiltersToObject(group.definition.initialGroup.containers[0]);
+		});
+	}
+
+	$effect(() => {
+		if (groups) {
+			convertCohortDefinitionToObject();
+			console.log('cohort definition 최적화');
+		}
+	});
 </script>
 
 <!-- Left Sidebar -->
