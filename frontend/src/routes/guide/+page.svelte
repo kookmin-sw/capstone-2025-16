@@ -39,8 +39,8 @@
               { title: "4단계: 결과 확인", content: "학습이 완료되면 결과가 표로 나옵니다. Condition과 Procedure 도메인에 대해 influence 값이 높은 top 10 Concept을 확인할 수 있습니다. 각 도메인에 사용된 모델의 F1 Score도 제공됩니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-4.png" },
               { title: "5단계: 분석 결과 다운로드", content: "분석 결과를 다운로드 합니다. 다운로드 파일은 코호트 이름과 날짜를 포함한 파일명으로 한 csv 파일로 저장됩니다. 가장 최근의 분석 결과만 기록되기에 이전 분석 기록은 확인할 수 없으므로 필요시 다운로드를 받아야 합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-5.png" }
             ] },
-            { title: "코호트 기본 통계 확인하기", steps: [
-              { title: "1단계: Charts 탭 이동", content: "Charts 탭을 클릭합니다." }
+            { title: "코호트 기본 통계 보기", steps: [
+              { title: "기본 통계 보기", content: "단일 코호트 페이지에서 Charts 탭을 클릭하면 코호트 기본 통계가 표시됩니다. 차트 혹은 테이블로 확인할 수 있습니다.", image: "guide_images/cohort/cohort-chart.png" },
             ] },
             { title: "코호트 수정하기", steps: [
               { title: "1단계: 우측 상단의 수정 버튼 클릭", content: "우측 상단의 수정 버튼을 클릭합니다.", image: "guide_images/cohort/cohort-edit-1.png" },
