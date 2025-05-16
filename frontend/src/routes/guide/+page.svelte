@@ -7,13 +7,13 @@
       name: "코호트 정의하기",
       children: [
         { guides: [ { title: "코호트 정의하기", steps: [
-          { title: "1단계: 코호트 이름 입력", content: "코호트의 이름을 입력하세요.", image: "/dummy/step1.png" },
-          { title: "2단계: 조건 추가", content: "필요한 조건을 추가하세요.", image: "/dummy/step2.png" }
+          { title: "1단계: 코호트 이름 및 설명 입력", content: "코호트의 이름과 설명을 입력하세요." },
+          { title: "2단계: 조건 추가", content: "필요한 조건을 추가하세요."}
         ] } ] },
         { guides: [ { title: "Cohort AI로 코호트 자동 정의하기", steps: [
           { title: "1단계: Cohort AI 버튼 클릭", content: "코호트 정의 페이지 내 우측 상단에 위치한 Cohort AI 버튼을 클릭하세요. 정의하고자 하는 코호트가 실린 논문을 넣으면 자동으로 코호트 정의를 할 수 있습니다.", image: "/guide_images/cohort/cohort-ai-1.png" },
           { title: "2단계: 논문 Text 입력 혹은 논문 PDF 첨부", content: "Input Text 탭에서 코호트 정의 부분을 Text로 입력하거나 Upload PDF 탭에서 논문 PDF를 그대로 첨부할 수 있습니다.", image: "/guide_images/cohort/cohort-ai-2.png" },
-          { title: "3단계: 코호트 생성 시작", content: "모달 내 우측 하단의 Generate Cohort 버튼을 클릭하세요. 몇 초 후에 코호트 정의가 완료됩니다.", image: "/guide_images/cohort/cohort-ai-3.png" },
+          { title: "3단계: 코호트 생성 시작", content: "모달 내 우측 하단의 Generate Cohort 버튼을 클릭하세요. 잠시 기다리면 코호트 정의가 완료됩니다.", image: "/guide_images/cohort/cohort-ai-3.png" },
           { title: "4단계: 생성된 코호트 정의 적용", content: "AI로 생성된 코호트 정의를 json으로 확인 후 우측 상단의 Apply 버튼을 클릭하세요.", image: "/guide_images/cohort/cohort-ai-4.png" },
           { title: "5단계: 결과 확인", content: "AI가 제안한 코호트 조건이 추가된 내용을 코호트 정의 페이지에서 확인하세요.", image: "/guide_images/cohort/cohort-ai-5.png" }
         ] } ] },
@@ -44,7 +44,7 @@
             ] },
             { title: "코호트 수정하기", steps: [
               { title: "1단계: 우측 상단의 수정 버튼 클릭", content: "우측 상단의 수정 버튼을 클릭합니다.", image: "guide_images/cohort/cohort-edit-1.png" },
-              { title: "2단계: 코호트 편집 페이지로 이동", content: "코호트 편집 페이지로 이동하여 코호트 정의를 수정합니다. 완료 시 다시 코호트 상세 페이지로 이동합니다.", image: "guide_images/cohort/cohort-edit-2.png" },
+              { title: "2단계: 코호트 정의 페이지로 이동", content: "코호트 정의 페이지로 이동하여 코호트 정의를 수정합니다. 완료 시 다시 코호트 상세 페이지로 이동합니다.", image: "guide_images/cohort/cohort-edit-2.png" },
             ] },
             { title: "코호트 복제하기", steps: [
               { title: "1단계: 우측 상단의 복제 버튼 클릭", content: "우측 상단의 복제 버튼을 클릭합니다.", image: "guide_images/cohort/cohort-duplicate-1.png" },
@@ -62,9 +62,6 @@
               { title: "1단계: 환자 ID 선택", content: "코포트 페이지 내 좌측 사이드바의 환자 목록 중 환자 ID를 선택해 환자 통계 페이지로 이동합니다.", image: "guide_images/cohort/cohort-person-select.png" },
               { title: "2단계: 환자 통계 확인", content: "클릭한 ID에 해당하는 환자의 통계를 확인할 수 있습니다.", image: "guide_images/cohort/cohort-person-statistics.png" },
               { title: "3단계: 환자의 특정 CDM 데이터 확인", content: "상단 타임라인에서 특정 방문 기록을 선택하면 해당 방문 기록에 해당하는 CDM 데이터를 확인할 수 있습니다." },
-            ] },
-            { title: "CDM 데이터 읽기", steps: [
-              { title: "1단계: CDM 데이터 탭 이동", content: "CDM 데이터 탭을 클릭합니다." }
             ] }
           ]
         }
@@ -100,9 +97,6 @@
         {
           name: "정의된 커스텀 차트 보기",
           guides: [
-            { title: "타겟 세트 확인하기", steps: [
-              { title: "1단계: 타겟 세트 탭 이동", content: "타겟 세트 탭을 클릭합니다." }
-            ] },
             {
               title: "커스텀 차트 보기",
               steps: [
