@@ -16,9 +16,10 @@
 저희는 다양한 반찬을 원하는대로 골라 담는 이 도시락처럼, 연구진들이 방대한 의료데이터 속에서 필요한 정보를 쉽고 편리하게 선택하고 조합하여 분석할 수 있도록 돕겠다는 의미를 담아 이 프로젝트명을 **Bento**로 결정했습니다.
 
 ---
+![readme-logo대지 1](https://github.com/user-attachments/assets/e1a5798c-f354-4169-a9e4-207da1829d1e)
+
 
 ## 1. 프로젝트 소개
-<img src="./Logo/logo_svg.svg" width="100%" height="200" alt="Bento Logo"></img>
 
 Bento는 급격히 증가하는 의료 데이터를 빠르고 효율적으로 탐색 및 시각화하여 연구 기획과 진행 속도를 획기적으로 개선하는 시스템입니다.
 
