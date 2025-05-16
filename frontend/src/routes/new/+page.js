@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { PUBLIC_API_URI } from '$env/static/public';
-export async function GET({ fetch }) {
+export async function load({ fetch }) {
 
     const response = await fetch(`${PUBLIC_API_URI}/api/cohort`, {
         method: 'POST',

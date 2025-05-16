@@ -22,7 +22,7 @@
     import BarChart from "$lib/components/Charts/BarChart/BarChart.svelte"
     import BarChartWrapper from "$lib/components/Charts/BarChart/BarChartWrapper.svelte"
     import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
-
+    import { PUBLIC_API_URI } from '$env/static/public';
     let timelineContainer;
     let selectedGroup = null;
     let isSelectTableOpen = false;
@@ -90,7 +90,7 @@
         isStatisticsView = true;
         message = "Loading Table...";
         try {
-            const res = await fetch(`/api/persontable/${id}`);
+            const res = await fetch(`${PUBLIC_API_URI}/api/visit/${id}/`);
             const fullData = await res.json();
             tableProps = {
                 cdm_info: { careSite: fullData?.care_site, location: fullData?.location, visitOccurrence: fullData?.visitInfo },
@@ -415,19 +415,19 @@
         isLoading = true;
         message = "Loading data...";
         try{
-            const res = await fetch(`/api/persondata/${personID}`);
+            const res = await fetch(`${PUBLIC_API_URI}/api/person/${personID}/`);
             if (!res.ok) {
                 throw new Error('Failed to fetch data');
             }
             personTable = await res.json();
             
-            const res2 = await fetch(`/api/visitdata/${personID}`);
+            const res2 = await fetch(`${PUBLIC_API_URI}/api/person/${personID}/visit/`);
             if (!res2.ok) {
                 throw new Error('Failed to fetch data');
             }
             personVisits = await res2.json();
 
-            const res3 = await fetch(`/api/personstatistics/${personID}`)
+            const res3 = await fetch(`${PUBLIC_API_URI}/api/person/${personID}/statistics/`)
             if (!res3.ok) {
                 throw new Error('Failed to fetch data');
             }

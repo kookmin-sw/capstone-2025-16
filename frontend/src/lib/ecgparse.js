@@ -1,3 +1,4 @@
+
 export async function xmlParseToJson(path) {
     const response = await fetch(path);
     const text = await response.text();

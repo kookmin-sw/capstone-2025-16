@@ -1,6 +1,6 @@
 <script>
     import { goto } from "$app/navigation";
-
+    import { PUBLIC_API_URI } from '$env/static/public';
     export let children;
 
     let searchInput = null;
@@ -17,7 +17,7 @@
         loading = true;
 
         try {
-            const response = await fetch(`/api/persondata/${searchInput}`);
+            const response = await fetch(`${PUBLIC_API_URI}/api/person/${searchInput}/`);
             if(!response.ok){
                 error = 'Patient ID not found';
                 personData = null;

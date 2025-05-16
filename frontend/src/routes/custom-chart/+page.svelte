@@ -93,7 +93,7 @@
 
     // 목록 갱신
     try {
-      const res = await fetch('/api/customlistdata/');
+      const res = await fetch(`${PUBLIC_API_URI}/api/statistics/`);
       if (!res.ok) throw new Error();
       chartData = await res.json();
       filteredData = chartData.statistics;
@@ -113,7 +113,7 @@
 
   onMount(async() => {
     try{
-      const res = await fetch('/api/customlistdata/');
+      const res = await fetch(`${PUBLIC_API_URI}/api/statistics/`);
       if (!res.ok) {
         throw new Error("Failed to fetch data");
       }

@@ -77,7 +77,7 @@
 	onMount(async () => {
 		if (statisticsID !== 'new') {
 			try {
-				const res = await fetch(`/api/custominfo/${statisticsID}`);
+				const res = await fetch(`${PUBLIC_API_URI}/api/statistics/${statisticsID}/`);
 				if (!res.ok) {
 					throw new Error('Failed to fetch data');
 				}
@@ -103,7 +103,7 @@
 				if(!isPerson) {
 					result = await Promise.all(
 						targetIDList.map(async (id) => {
-							const res2 = await fetch(`/api/cohortinfo/${id}`);
+							const res2 = await fetch(`${PUBLIC_API_URI}/api/cohort/${id}/`);
 							if (!res2.ok) {
 							throw new Error('Failed to fetch data');
 						}
@@ -118,7 +118,7 @@
 				}
 
 				// 차트 정보 요청
-				const res3 = await fetch(`/api/customchart/${statisticsID}`);
+				const res3 = await fetch(`${PUBLIC_API_URI}/api/statistics/${statisticsID}/chart/`);
 				if (!res3.ok) {
 					throw new Error('Failed to fetch data');
 				}

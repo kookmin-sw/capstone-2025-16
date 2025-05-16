@@ -121,7 +121,7 @@
 
     // 삭제 후 목록 갱신
     try {
-      const res = await fetch('/api/cohortlistdata');
+      const res = await fetch(`${PUBLIC_API_URI}/api/cohort/`);
       if (!res.ok) throw new Error();
       const cohortListData = await res.json();
       cohortList = cohortListData.cohorts;
@@ -142,7 +142,7 @@
 
   onMount(async() => {
     try{
-      const res = await fetch('/api/cohortlistdata');
+      const res = await fetch(`${PUBLIC_API_URI}/api/cohort/`);
       if (!res.ok) {
         throw new Error('Failed to fetch data');
       }

@@ -206,8 +206,11 @@
 		}
 
 		try {
-			const res = await fetch(`/api/feature/${cohortID}/`, {
+			const res = await fetch(`${PUBLIC_API_URI}/api/feature/${cohortID}/`, {
 				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
 				body: JSON.stringify({
 					k: size
 				})
@@ -237,7 +240,7 @@
 
 	async function loadFeatureData() {
 		try {
-			const res = await fetch(`/api/feature/${cohortID}`);
+			const res = await fetch(`${PUBLIC_API_URI}/api/feature/${cohortID}/`);
 			if (!res.ok) {
 				throw new Error('Failed to fetch feature data');
 			}
@@ -391,7 +394,7 @@
 		try {
 			startWorker();
 
-			const res2 = await fetch(`/api/cohortinfo/${cohortID}`);
+			const res2 = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/`);
 			if (!res2.ok) {
 				throw new Error('Failed to fetch data');
 			}
