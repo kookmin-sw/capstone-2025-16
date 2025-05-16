@@ -79,7 +79,7 @@ Instructions:
    - WBC → White blood cell
 
 2. Remove qualifiers and modifiers that might not exist in the database:
-   - Remove "or higher", "or more", "or greater", "or above", "or over"
+   - Remove "or higher", "or more", "or greater", "or above", "or over", "long-term"
    - Remove "and above", "and over"
    - Remove "with complications", "with symptoms"
    - Remove version numbers (e.g., "-3" in "sepsis-3")
