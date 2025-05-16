@@ -112,8 +112,8 @@
             { title: "차트 다운로드하기", steps: [
               { title: "차트 다운로드 버튼 클릭", content: "하나의 차트 토글을 열면 우측 상단에 위치한 다운로드 버튼을 클릭합니다. 버튼 클릭 시 png 이미지로 차트 이미지가 다운로드됩니다.", image: "guide_images/custom-chart/custom-chart-download.png" }
             ] },
-            { title: "차트 삭제하기", steps: [
-              { title: "1단계: 삭제 버튼 클릭", content: "삭제 버튼을 클릭합니다." }
+            { title: "커스텀 차트 삭제하기", steps: [
+              { title: "커스텀 차트 삭제하기", content: "하나의 차트 토글을 열면 우측 상단에 위치한 삭제 버튼을 클릭합니다. 버튼 클릭 시 해당 차트가 삭제됩니다.", image: "guide_images/custom-chart/custom-chart-delete.png" },
             ] },
             { title: "동일한 타겟에서 커스텀 차트 추가하기", steps: [
               { title: "1단계: 추가 버튼 클릭", content: "추가 버튼을 클릭합니다." }
