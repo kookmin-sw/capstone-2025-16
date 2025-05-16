@@ -10,8 +10,8 @@ from datetime import datetime, timezone, timedelta
 import re
 
 load_dotenv()
-openai_api_key = os.environ.get('OPENROUTER_API_KEY')
-openai_api_base = os.environ.get('OPENROUTER_API_BASE')
+openai_api_key = os.environ.get('OPENAI_COMPATIBLE_API_KEY')
+openai_api_base = os.environ.get('OPENAI_COMPATIBLE_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 
 client = OpenAI(
