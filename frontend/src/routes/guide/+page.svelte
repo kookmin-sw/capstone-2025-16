@@ -47,8 +47,8 @@
               { title: "2단계: 코호트 편집 페이지로 이동", content: "코호트 편집 페이지로 이동하여 코호트 정의를 수정합니다. 완료 시 다시 코호트 상세 페이지로 이동합니다.", image: "guide_images/cohort/cohort-edit-2.png" },
             ] },
             { title: "코호트 복제하기", steps: [
-              { title: "우측 상단의 복제 버튼 클릭", content: "우측 상단의 복제 버튼을 클릭합니다." },
-              { title: "복제된 코호트의 상세 페이지로 이동", content: "복제된 코호트의 상세 페이지로 이동합니다. 코호트 이름은 Copy of 원본 코호트 이름 이라고 표시됩니다." },
+              { title: "1단계: 우측 상단의 복제 버튼 클릭", content: "우측 상단의 복제 버튼을 클릭합니다.", image: "guide_images/cohort/cohort-duplicate-1.png" },
+              { title: "2단계: 복제된 코호트의 정의 수정", content: "복제된 코호트의 정의 페이지로 이동합니다. 코호트 이름은 원본 코호트 이름 뒤 Copy가 붙어 추가됩니다. 필요 시 코호트 정의를 추가하거나 수정하여 완료하면 코호트가 생성됩니다.", image: "guide_images/cohort/cohort-duplicate-2.png" },
             ] },
             { title: "코호트 삭제하기", steps: [
               { title: "코호트 삭제하기", content: "우측 상단의 삭제 버튼을 클릭하면 코호트가 삭제되며 코호트 목록으로 페이지가 이동됩니다.", image: "guide_images/cohort/cohort-delete.png" },
