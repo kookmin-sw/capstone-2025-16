@@ -115,8 +115,10 @@
             { title: "커스텀 차트 삭제하기", steps: [
               { title: "커스텀 차트 삭제하기", content: "하나의 차트 토글을 열면 우측 상단에 위치한 삭제 버튼을 클릭합니다. 버튼 클릭 시 해당 차트가 삭제됩니다.", image: "guide_images/custom-chart/custom-chart-delete.png" },
             ] },
-            { title: "동일한 타겟에서 커스텀 차트 추가하기", steps: [
-              { title: "1단계: 추가 버튼 클릭", content: "추가 버튼을 클릭합니다." }
+            { title: "동일한 대상으로 커스텀 차트 추가하기", steps: [
+              { title: "1단계: 추가 버튼 클릭", content: "우측 중앙의 파란 색 + 버튼을 클릭합니다.", image: "guide_images/custom-chart/custom-chart-add-1.png" },
+              { title: "2단계: 차트 커스텀 진행", content: "차트 커스텀 페이지로 이동합니다. 이 페이지에서는 동일한 대상(target)으로 커스텀 차트를 추가할 수 있습니다. 대상은 동일하므로 차트 타입을 선택하는 모달부터 시작합니다.", image: "guide_images/custom-chart/custom-chart-add-2.png" },
+              { title: "3단계: 추가된 차트 확인", content: "이전 페이지에서 생성한 차트가 추가된 것을 확인할 수 있습니다.", image: "guide_images/custom-chart/custom-chart-add-3.png" }
             ] }
           ]
         }
