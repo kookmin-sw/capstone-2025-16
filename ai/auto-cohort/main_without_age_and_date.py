@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
 
 load_dotenv()
-openai_api_key = os.environ.get('OPENROUTER_API_KEY')
-openai_api_base = os.environ.get('OPENROUTER_API_BASE')
+openai_api_key = os.environ.get('OPENAI_COMPATIBLE_API_KEY')
+openai_api_base = os.environ.get('OPENAI_COMPATIBLE_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 
 client = OpenAI(
@@ -31,7 +31,7 @@ Strict requirements:
 
 2. Each container in cohort MUST have:
    - name (ONLY the medical term, NO additional words)
-   - type (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
+   - type (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - Each filter MUST have:
      - type (one of the allowed types)
      - conceptset (matching conceptset_id)
@@ -48,6 +48,12 @@ Strict requirements:
    - Example: "Diagnosed with sepsis-3 and ARDS" → operator: "AND"
    - ***Example: "Serum creatinine ≥ 1.5 mg/dL or increase of ≥ 0.3 mg/dL" → operator: "OR"***
    - Example: "First ICU admission" (no operator) → operator: "AND" (default)
+   [CRITICAL] For complex conditions with multiple operators:
+     * Example: "(A or B) and C" → First container: A, Second container: operator: "OR", Third container: operator: "AND"
+     * Example: "CKD stage ≥ 4 or eGFR < 30 mL/min/1.73m2, and long-term dialysis" → 
+       First container: CKD stage ≥ 4
+       Second container: operator: "OR"
+       Third container: operator: "AND"
 
 4. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
@@ -127,6 +133,7 @@ Strict requirements:
         - "I50.0 Congestive heart failure" → "Congestive heart failure"
         - "I50.9 Heart failure, unspecified" → "Heart failure, unspecified"
         - "I50.1 Left ventricular failure" → "Left ventricular failure"
+        - "S06 Intracranial injury" → "Intracranial injury"
       * When only code is present (e.g., "I50.0"):
         - Convert to corresponding medical term
         - Example: "I50.0" → "Congestive heart failure"
@@ -173,7 +180,7 @@ const cohortExample: CohortDefinition = {
         name: "iron deficiency anemia",
         filters: [
           {
-            type: "condition_era",
+            type: "condition_occurrence",
             conceptset: "2",
           }
         ]
@@ -224,7 +231,7 @@ const cohortExample: CohortDefinition = {
         name: "not sepsis or active infections",
         filters: [
           {
-            type: "condition_era",
+            type: "condition_occurrence",
             conceptset: {
               neq: "6",
             },
@@ -430,6 +437,19 @@ def main():
     # or urine volume < 0.5 mL/(kg·h) for ≥ 6 h. All participants were required to meet the following inclusion criteria: (a) diagnosed AKI within 48 h of admission; (b) patients admitted to the ICU for
     # the first time; and (c) aged ≥ 18 years.
     # Exclusion criteria included: (a) BG records less than 3 times during the first day of ICU admission; (b) stayed < 24 h in the ICU. Ultimately, 6777 patients with AKI were included in the study (Fig. 1).
+    # """
+
+    # implementable_text = """
+    # WPatients with intracranial injuries were identified in the
+    # MIMIC-IV (version 2.2) database using International
+    # Classification of Diseases (ICD) codes ICD-9:85 and ICD10:S06.14 3942 patients with intracranial injury admitted
+    # to the ICU were screened. Patients who met any of the
+    # following criteria were excluded: (1) age <18or >90 years
+    # old; (2) not the first admission to the ICU; (3) ICU stay
+    # less than 1day and (4) death within 3days after ICU
+    # admission. 1780 eligible patients were included in this
+    # study and randomly assigned to training set and development set in a 7:3 ratio. The patient selection process is
+    # plotted in figure 1.
     # """
 
     # 2. 텍스트에서 COHORT JSON 추출
