@@ -83,19 +83,21 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
   }
 
   if (conceptSet.eq) {
-    if (Array.isArray(conceptSet.eq) && !conceptSet.eq.length) {
-      query = query.where(
-        column,
-        'in',
-        eb
-          .selectFrom('codesets')
-          .select('concept_id')
-          .where(
-            'codeset_id',
-            'in',
-            conceptSet.eq.map((e) => eb.val(e)),
-          ),
-      );
+    if (Array.isArray(conceptSet.eq)) {
+      if (conceptSet.eq.length) {
+        query = query.where(
+          column,
+          'in',
+          eb
+            .selectFrom('codesets')
+            .select('concept_id')
+            .where(
+              'codeset_id',
+              'in',
+              conceptSet.eq.map((e) => eb.val(e)),
+            ),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -109,19 +111,21 @@ export const handleConceptSet = <DB, TB extends keyof DB, O>(
   }
 
   if (conceptSet.neq) {
-    if (Array.isArray(conceptSet.neq) && !conceptSet.neq.length) {
-      query = query.where(
-        column,
-        'not in',
-        eb
-          .selectFrom('codesets')
-          .select('concept_id')
-          .where(
-            'codeset_id',
-            'in',
-            conceptSet.neq.map((e) => eb.val(e)),
-          ),
-      );
+    if (Array.isArray(conceptSet.neq)) {
+      if (conceptSet.neq.length) {
+        query = query.where(
+          column,
+          'not in',
+          eb
+            .selectFrom('codesets')
+            .select('concept_id')
+            .where(
+              'codeset_id',
+              'in',
+              conceptSet.neq.map((e) => eb.val(e)),
+            ),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -255,16 +259,20 @@ export const handleStringWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.neq) {
-    if (Array.isArray(operator.neq) && !operator.neq.length) {
-      query = query.where(column, 'not in', operator.neq);
+    if (Array.isArray(operator.neq)) {
+      if (operator.neq.length) {
+        query = query.where(column, 'not in', operator.neq);
+      }
     } else {
       query = query.where(column, '!=', operator.neq);
     }
   }
 
   if (operator.eq) {
-    if (Array.isArray(operator.eq) && !operator.eq.length) {
-      query = query.where(column, 'in', operator.eq);
+    if (Array.isArray(operator.eq)) {
+      if (operator.eq.length) {
+        query = query.where(column, 'in', operator.eq);
+      }
     } else {
       query = query.where(column, '=', operator.eq);
     }
@@ -273,39 +281,47 @@ export const handleStringWithOperator = <DB, TB extends keyof DB, O>(
   const eb = getExpressionBuilder(query);
 
   if (operator.startsWith) {
-    if (Array.isArray(operator.startsWith) && !operator.startsWith.length) {
-      const arr = operator.startsWith;
-      query = query.where(({ or }) => {
-        return or(
-          arr.map((e) => eb(column, 'ilike', e.replace('%', '%%') + '%')),
-        );
-      });
+    if (Array.isArray(operator.startsWith)) {
+      if (operator.startsWith.length) {
+        const arr = operator.startsWith;
+        query = query.where(({ or }) => {
+          return or(
+            arr.map((e) => eb(column, 'ilike', e.replace('%', '%%') + '%')),
+          );
+        });
+      }
     } else {
       query = query.where(column, 'ilike', operator.startsWith + '%');
     }
   }
 
   if (operator.endsWith) {
-    if (Array.isArray(operator.endsWith) && !operator.endsWith.length) {
-      const arr = operator.endsWith;
-      query = query.where(({ or }) => {
-        return or(
-          arr.map((e) => eb(column, 'ilike', '%' + e.replace('%', '%%'))),
-        );
-      });
+    if (Array.isArray(operator.endsWith)) {
+      if (operator.endsWith.length) {
+        const arr = operator.endsWith;
+        query = query.where(({ or }) => {
+          return or(
+            arr.map((e) => eb(column, 'ilike', '%' + e.replace('%', '%%'))),
+          );
+        });
+      }
     } else {
       query = query.where(column, 'ilike', '%' + operator.endsWith);
     }
   }
 
   if (operator.contains) {
-    if (Array.isArray(operator.contains) && !operator.contains.length) {
-      const arr = operator.contains;
-      query = query.where(({ or }) => {
-        return or(
-          arr.map((e) => eb(column, 'ilike', '%' + e.replace('%', '%%') + '%')),
-        );
-      });
+    if (Array.isArray(operator.contains)) {
+      if (operator.contains.length) {
+        const arr = operator.contains;
+        query = query.where(({ or }) => {
+          return or(
+            arr.map((e) =>
+              eb(column, 'ilike', '%' + e.replace('%', '%%') + '%'),
+            ),
+          );
+        });
+      }
     } else {
       query = query.where(column, 'ilike', '%' + operator.contains + '%');
     }
@@ -326,12 +342,14 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.neq) {
-    if (Array.isArray(operator.neq) && !operator.neq.length) {
-      query = query.where(
-        column,
-        'not in',
-        operator.neq.map((e) => eb.fn('_to_date', [eb.val(e)])),
-      );
+    if (Array.isArray(operator.neq)) {
+      if (operator.neq.length) {
+        query = query.where(
+          column,
+          'not in',
+          operator.neq.map((e) => eb.fn('_to_date', [eb.val(e)])),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -342,12 +360,14 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.eq) {
-    if (Array.isArray(operator.eq) && !operator.eq.length) {
-      query = query.where(
-        column,
-        'in',
-        operator.eq.map((e) => eb.fn('_to_date', [eb.val(e)])),
-      );
+    if (Array.isArray(operator.eq)) {
+      if (operator.eq.length) {
+        query = query.where(
+          column,
+          'in',
+          operator.eq.map((e) => eb.fn('_to_date', [eb.val(e)])),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -358,12 +378,14 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.gt) {
-    if (Array.isArray(operator.gt) && !operator.gt.length) {
-      query = query.where(
-        column,
-        '>',
-        eb.fn('_to_date', [eb.val(max(operator.gt))]),
-      );
+    if (Array.isArray(operator.gt)) {
+      if (operator.gt.length) {
+        query = query.where(
+          column,
+          '>',
+          eb.fn('_to_date', [eb.val(max(operator.gt))]),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -374,12 +396,14 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.gte) {
-    if (Array.isArray(operator.gte) && !operator.gte.length) {
-      query = query.where(
-        column,
-        '>=',
-        eb.fn('_to_date', [eb.val(max(operator.gte))]),
-      );
+    if (Array.isArray(operator.gte)) {
+      if (operator.gte.length) {
+        query = query.where(
+          column,
+          '>=',
+          eb.fn('_to_date', [eb.val(max(operator.gte))]),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -390,12 +414,14 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.lt) {
-    if (Array.isArray(operator.lt) && !operator.lt.length) {
-      query = query.where(
-        column,
-        '<',
-        eb.fn('_to_date', [eb.val(min(operator.lt))]),
-      );
+    if (Array.isArray(operator.lt)) {
+      if (operator.lt.length) {
+        query = query.where(
+          column,
+          '<',
+          eb.fn('_to_date', [eb.val(min(operator.lt))]),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -406,12 +432,14 @@ export const handleDateWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.lte) {
-    if (Array.isArray(operator.lte) && !operator.lte.length) {
-      query = query.where(
-        column,
-        '<=',
-        eb.fn('_to_date', [eb.val(min(operator.lte))]),
-      );
+    if (Array.isArray(operator.lte)) {
+      if (operator.lte.length) {
+        query = query.where(
+          column,
+          '<=',
+          eb.fn('_to_date', [eb.val(min(operator.lte))]),
+        );
+      }
     } else {
       query = query.where(
         column,
@@ -434,48 +462,60 @@ export const handleNumberWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.neq) {
-    if (Array.isArray(operator.neq) && !operator.neq.length) {
-      query = query.where(column, 'not in', operator.neq);
+    if (Array.isArray(operator.neq)) {
+      if (operator.neq.length) {
+        query = query.where(column, 'not in', operator.neq);
+      }
     } else {
       query = query.where(column, '!=', operator.neq);
     }
   }
 
   if (operator.eq) {
-    if (Array.isArray(operator.eq) && !operator.eq.length) {
-      query = query.where(column, 'in', operator.eq);
+    if (Array.isArray(operator.eq)) {
+      if (operator.eq.length) {
+        query = query.where(column, 'in', operator.eq);
+      }
     } else {
       query = query.where(column, '=', operator.eq);
     }
   }
 
   if (operator.gt) {
-    if (Array.isArray(operator.gt) && !operator.gt.length) {
-      query = query.where(column, '>', max(operator.gt));
+    if (Array.isArray(operator.gt)) {
+      if (operator.gt.length) {
+        query = query.where(column, '>', max(operator.gt));
+      }
     } else {
       query = query.where(column, '>', operator.gt);
     }
   }
 
   if (operator.gte) {
-    if (Array.isArray(operator.gte) && !operator.gte.length) {
-      query = query.where(column, '>=', max(operator.gte));
+    if (Array.isArray(operator.gte)) {
+      if (operator.gte.length) {
+        query = query.where(column, '>=', max(operator.gte));
+      }
     } else {
       query = query.where(column, '>=', operator.gte);
     }
   }
 
   if (operator.lt) {
-    if (Array.isArray(operator.lt) && !operator.lt.length) {
-      query = query.where(column, '<', min(operator.lt));
+    if (Array.isArray(operator.lt)) {
+      if (operator.lt.length) {
+        query = query.where(column, '<', min(operator.lt));
+      }
     } else {
       query = query.where(column, '<', operator.lt);
     }
   }
 
   if (operator.lte) {
-    if (Array.isArray(operator.lte) && !operator.lte.length) {
-      query = query.where(column, '<=', min(operator.lte));
+    if (Array.isArray(operator.lte)) {
+      if (operator.lte.length) {
+        query = query.where(column, '<=', min(operator.lte));
+      }
     } else {
       query = query.where(column, '<=', operator.lte);
     }
@@ -496,24 +536,28 @@ export const handleIdentifierWithOperator = <DB, TB extends keyof DB, O>(
   }
 
   if (operator.neq) {
-    if (Array.isArray(operator.neq) && !operator.neq.length) {
-      query = query.where(
-        column,
-        'not in',
-        operator.neq.map((e) => eb.val(e)),
-      );
+    if (Array.isArray(operator.neq)) {
+      if (operator.neq.length) {
+        query = query.where(
+          column,
+          'not in',
+          operator.neq.map((e) => eb.val(e)),
+        );
+      }
     } else {
       query = query.where(column, '!=', eb.val(operator.neq));
     }
   }
 
   if (operator.eq) {
-    if (Array.isArray(operator.eq) && !operator.eq.length) {
-      query = query.where(
-        column,
-        'in',
-        operator.eq.map((e) => eb.val(e)),
-      );
+    if (Array.isArray(operator.eq)) {
+      if (operator.eq.length) {
+        query = query.where(
+          column,
+          'in',
+          operator.eq.map((e) => eb.val(e)),
+        );
+      }
     } else {
       query = query.where(column, '=', eb.val(operator.eq));
     }
