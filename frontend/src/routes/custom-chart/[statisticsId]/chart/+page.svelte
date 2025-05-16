@@ -397,7 +397,12 @@
 			{ name: 'ethnicityType', label: 'Ethnicity', type: 'concept' }
 		]
 	};
-
+	const countByProperties = {
+		concept: "concept",
+		age: "numberrange",
+		date: "daterange",
+		value: "numberrange"
+	};
 	// 편집 관련 상태 변수
 	let selectedDomainType = $state<DomainType | null>(null); // 선택된 도메인 타입
 	let editingFilterIndex = $state<number | null>(null); // 편집할 필터 인덱스
@@ -1031,7 +1036,7 @@
 								{#each Object.entries(countBy).filter(([key, value]) => value !== undefined) as [property, value]}
 									<div>
 										<span class="font-medium">{property}:</span>
-										{displayPropertyValue(value, property)}
+										{displayPropertyValue(value, countByProperties[property])}
 									</div>
 								{/each}
 							</div>
