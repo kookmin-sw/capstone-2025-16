@@ -15,7 +15,7 @@
   import StackedBarChartTableView from "$lib/components/Charts/StackedBarChart/StackedBarChartTableView.svelte";
   import Footer from '$lib/components/Footer.svelte';
   import LoadingComponent from "$lib/components/LoadingComponent.svelte";
-
+  import { PUBLIC_API_URI } from '$env/static/public';
   let isLoading = true; // 로딩 상태 관리
 
   // 코호트 데이터
@@ -186,10 +186,10 @@
     try {
       const result = await Promise.all(
         cohortIds.map(async (id) => {
-          const res = await fetch(`/api/cohortinfo/${id}`);
+          const res = await fetch(`${PUBLIC_API_URI}/api/cohort/${id}/`);
           const data = await res.json();
 
-          const res2 = await fetch(`/api/cohortstatistics/${id}`);
+          const res2 = await fetch(`${PUBLIC_API_URI}/api/cohort/${id}/statistics/`);
           const data2 = await res2.json();
 
           return {[id] : {basicInfo:data, statistics:data2}};

@@ -1,8 +1,10 @@
+import { PUBLIC_API_URI } from '$env/static/public';
+    
 self.onmessage = async (event) => {
     const { cohortID } = event.data;
 
     try {
-        const res = await fetch(`/api/cohortstatistics/${cohortID}`);
+        const res = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/statistics/`);
         if (!res.ok) {
             throw new Error('Failed to fetch data');
         }

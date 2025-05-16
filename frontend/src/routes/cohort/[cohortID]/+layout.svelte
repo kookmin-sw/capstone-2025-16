@@ -6,7 +6,8 @@
 	import { onMount, tick } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
+	
 	let isLoading = true;
 	let cohortInfo = [];
     let cohortID = $page.params.cohortID;
@@ -49,7 +50,7 @@
 
 	onMount(async() => {
 		try{
-			const res = await fetch(`/api/userdata/${cohortID}`);
+			const res = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/persons/`);
 			if (!res.ok) {
 				throw new Error('Failed to fetch data');
 			}
@@ -66,7 +67,7 @@
 				);
 			}
 
-			const res2 = await fetch(`/api/cohortinfo/${cohortID}`);
+			const res2 = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/`);
 			if (!res2.ok) {
 				throw new Error('Failed to fetch data');
 			}

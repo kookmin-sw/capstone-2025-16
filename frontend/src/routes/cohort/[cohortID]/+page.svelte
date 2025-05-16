@@ -15,7 +15,7 @@
 	import { page } from '$app/stores';
 	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
 	import { goto } from '$app/navigation';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
 	let worker;
 	let chartLoading = true;
 	let loadingMessage = 'Loading chart data...';
@@ -206,8 +206,11 @@
 		}
 
 		try {
-			const res = await fetch(`/api/feature/${cohortID}/`, {
+			const res = await fetch(`${PUBLIC_API_URI}/api/feature/${cohortID}/`, {
 				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
 				body: JSON.stringify({
 					k: size
 				})
@@ -237,7 +240,7 @@
 
 	async function loadFeatureData() {
 		try {
-			const res = await fetch(`/api/feature/${cohortID}`);
+			const res = await fetch(`${PUBLIC_API_URI}/api/feature/${cohortID}/`);
 			if (!res.ok) {
 				throw new Error('Failed to fetch feature data');
 			}
@@ -391,7 +394,7 @@
 		try {
 			startWorker();
 
-			const res2 = await fetch(`/api/cohortinfo/${cohortID}`);
+			const res2 = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/`);
 			if (!res2.ok) {
 				throw new Error('Failed to fetch data');
 			}
@@ -485,7 +488,7 @@
 							const confirmDuplicate = confirm("Do you want to create a duplicate of this cohort?");
 							if (!confirmDuplicate) return;
 
-							await fetch('https://bento.kookm.in/api/cohort', {
+							await fetch(`${PUBLIC_API_URI}/api/cohort`, {
 								method: 'POST',
 								headers: {
 									'Content-Type': 'application/json'
@@ -539,7 +542,7 @@
 							const confirmDelete = confirm("Are you sure you want to delete this cohort? This action cannot be undone.");
 							if (!confirmDelete) return;
 
-							await fetch(`https://bento.kookm.in/api/cohort/${cohortID}`, {
+							await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}`, {
 								method: 'DELETE'
 							})
 								.then(() => {

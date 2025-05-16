@@ -9,7 +9,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { Concept } from '$lib/models/ConceptSet';
-  
+  import { PUBLIC_API_URI } from '$env/static/public';
   // Operator type definition
   type ConceptOperatorType = {
     eq?: string | string[];
@@ -167,7 +167,7 @@
       // Add domain parameter to query if a domain is selected
       const domainParam = selectedDomain ? `&domain=${encodeURIComponent(selectedDomain)}` : '';
       console.log(currentPage)
-      const response = await fetch(`https://bento.kookm.in/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`);
+      const response = await fetch(`${PUBLIC_API_URI}/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`);
       const data = await response.json();
       
       searchResults = data.concepts;

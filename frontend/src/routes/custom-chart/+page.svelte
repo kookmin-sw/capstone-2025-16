@@ -4,7 +4,8 @@
   import LoadingComponent from "$lib/components/LoadingComponent.svelte";
   import Footer from '$lib/components/Footer.svelte';
 	import { filter } from "d3";
-
+  import { PUBLIC_API_URI } from '$env/static/public';
+  
   let searchQuery = "";
   let searchInput = "";
   let errorMessage = "";
@@ -79,7 +80,7 @@
 
     for (const statistics_id of selectedCharts) {
       try {
-        const res = await fetch(`https://bento.kookm.in/api/statistics/${statistics_id}`, {
+        const res = await fetch(`${PUBLIC_API_URI}/api/statistics/${statistics_id}`, {
           method: 'DELETE'
         });
         if (!res.ok) {
@@ -92,7 +93,7 @@
 
     // 목록 갱신
     try {
-      const res = await fetch('/api/customlistdata/');
+      const res = await fetch(`${PUBLIC_API_URI}/api/statistics/`);
       if (!res.ok) throw new Error();
       chartData = await res.json();
       filteredData = chartData.statistics;
@@ -112,7 +113,7 @@
 
   onMount(async() => {
     try{
-      const res = await fetch('/api/customlistdata/');
+      const res = await fetch(`${PUBLIC_API_URI}/api/statistics/`);
       if (!res.ok) {
         throw new Error("Failed to fetch data");
       }

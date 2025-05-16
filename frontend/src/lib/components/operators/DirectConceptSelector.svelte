@@ -8,7 +8,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Concept } from '../../../routes/custom-chart/[chartID]/chart/[chartID]/models/ConceptSet';
-
+	import { PUBLIC_API_URI } from '$env/static/public';
 	// Value is just the concept ID as a string
 	export let value: string = '';
 	export let label: string = 'Select Concept';
@@ -123,7 +123,7 @@
 			// Add domain parameter to query if a domain is selected
 			const domainParam = selectedDomain ? `&domain=${encodeURIComponent(selectedDomain)}` : '';
 			const response = await fetch(
-				`https://bento.kookm.in/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`
+				`${PUBLIC_API_URI}/api/concept/search?query=${encodeURIComponent(searchQuery)}${domainParam}&page=${currentPage}&limit=${pageSize}`
 			);
 			const data = await response.json();
 
