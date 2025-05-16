@@ -14,6 +14,7 @@
 	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
 	import ContainerHeader from './components/ContainerHeader.svelte';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	const { data } = $props();
 	let { cohort } = data;
 
@@ -21,24 +22,26 @@
 		getCohortCounts();
 	});
 
-	let containerCounts = $state([ ]);
+	let containerCounts = $state([]);
 	console.log('data : ', data);
 	console.log(cohort);
-	console.log(cohort.cohort_definition.initialGroup.containers.length + cohort.cohort_definition.comparisonGroup.containers.length)
+	console.log(
+		cohort.cohort_definition.initialGroup.containers.length +
+			cohort.cohort_definition.comparisonGroup.containers.length
+	);
 	console.log(cohort.cohort_definition);
 
 	let concepts_id_to_name = $state<Record<string, string>>({});
-
 
 	async function getConceptName(concept_id: string) {
 		if (concepts_id_to_name[concept_id]) {
 			return concepts_id_to_name[concept_id];
 		}
 		fetch(`https://bento.kookm.in/api/concept/${encodeURIComponent(concept_id)}`)
-		.then(response => response.json())
-		.then(data => {
-			concepts_id_to_name[concept_id] = data.concept_name;
-		});
+			.then((response) => response.json())
+			.then((data) => {
+				concepts_id_to_name[concept_id] = data.concept_name;
+			});
 		return concept_id;
 	}
 
@@ -549,8 +552,6 @@
 
 	// 컨테이너 삭제 함수
 	function removeContainer(groupType, containerIndex) {
-		
-
 		cohortDefinition[groupType].containers.splice(containerIndex, 1);
 		getCohortCounts();
 	}
@@ -716,9 +717,9 @@
 		getCohortCounts();
 		setTimeout(() => {
 			isUpdating = false;
+			goto(`/cohort/${cohort.cohort_id}`);
 		}, 500);
 	}
-
 
 	function convertContainerFiltersToObject(container) {
 		container.filters.forEach((filter) => {
@@ -747,7 +748,7 @@
 	$effect(() => {
 		if (cohortDefinition) {
 			convertCohortDefinitionToObject();
-			console.log("cohort definition 최적화");
+			console.log('cohort definition 최적화');
 		}
 	});
 </script>
@@ -756,6 +757,34 @@
 <div
 	class="fixed left-0 top-[60px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-auto border-r border-gray-300 bg-gray-50"
 >
+	<button
+		on:click={updateCohortDefinition}
+		class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2 my-2 mx-3 text-xs font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity  hover:from-blue-600 hover:to-blue-700 "
+		disabled={isUpdating}
+	>
+		<span class="relative z-10 flex items-center justify-center gap-2">
+			{#if isUpdating}
+				<div
+					class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+				></div>
+				updating...
+			{:else}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-4 w-4"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+				Save Cohort
+			{/if}
+		</span>
+	</button>
 	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
 		<h3 class="mb-3 text-sm font-bold text-gray-700">Initial Group</h3>
 		{#if cohortDefinition.initialGroup.containers.length === 0}
@@ -1151,37 +1180,6 @@
 				<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON (Developer)</h3>
 				<pre
 					class="h-60 overflow-auto rounded-md bg-gray-100 p-2 text-xs">{getCohortDefinitionJSON()}</pre>
-			</div>
-
-			<div class="flex justify-center p-12">
-				<button
-					on:click={updateCohortDefinition}
-					class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:before:opacity-10 active:scale-95"
-					disabled={isUpdating}
-				>
-					<span class="relative z-10 flex items-center justify-center gap-2">
-						{#if isUpdating}
-							<div
-								class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-							></div>
-							Updating...
-						{:else}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="h-4 w-4"
-								viewBox="0 0 20 20"
-								fill="currentColor"
-							>
-								<path
-									fill-rule="evenodd"
-									d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-									clip-rule="evenodd"
-								/>
-							</svg>
-							Update Cohort
-						{/if}
-					</span>
-				</button>
 			</div>
 		</div>
 	</div>
