@@ -7,12 +7,15 @@
       name: "코호트 정의하기",
       children: [
         { guides: [ { title: "코호트 정의하기", steps: [
-          { title: "1단계: 코호트 이름 입력", content: "코호트의 이름을 입력하세요.", image: "/dummy/step1.png" },
-          { title: "2단계: 조건 추가", content: "필요한 조건을 추가하세요.", image: "/dummy/step2.png" }
+          { title: "1단계: 코호트 이름 및 설명 입력", content: "코호트의 이름과 설명을 입력하세요." },
+          { title: "2단계: 조건 추가", content: "필요한 조건을 추가하세요."}
         ] } ] },
         { guides: [ { title: "Cohort AI로 코호트 자동 정의하기", steps: [
-          { title: "1단계: AI 추천 클릭", content: "AI 추천 버튼을 클릭하세요.", image: "/dummy/ai1.png" },
-          { title: "2단계: 결과 확인", content: "AI가 제안한 코호트 조건을 확인하세요." }
+          { title: "1단계: Cohort AI 버튼 클릭", content: "코호트 정의 페이지 내 우측 상단에 위치한 Cohort AI 버튼을 클릭하세요. 정의하고자 하는 코호트가 실린 논문을 넣으면 자동으로 코호트 정의를 할 수 있습니다.", image: "/guide_images/cohort/cohort-ai-1.png" },
+          { title: "2단계: 논문 Text 입력 혹은 논문 PDF 첨부", content: "Input Text 탭에서 코호트 정의 부분을 Text로 입력하거나 Upload PDF 탭에서 논문 PDF를 그대로 첨부할 수 있습니다.", image: "/guide_images/cohort/cohort-ai-2.png" },
+          { title: "3단계: 코호트 생성 시작", content: "모달 내 우측 하단의 Generate Cohort 버튼을 클릭하세요. 잠시 기다리면 코호트 정의가 완료됩니다.", image: "/guide_images/cohort/cohort-ai-3.png" },
+          { title: "4단계: 생성된 코호트 정의 적용", content: "AI로 생성된 코호트 정의를 json으로 확인 후 우측 상단의 Apply 버튼을 클릭하세요.", image: "/guide_images/cohort/cohort-ai-4.png" },
+          { title: "5단계: 결과 확인", content: "AI가 제안한 코호트 조건이 추가된 내용을 코호트 정의 페이지에서 확인하세요.", image: "/guide_images/cohort/cohort-ai-5.png" }
         ] } ] },
       ]
     },
@@ -27,41 +30,38 @@
               { title: "2단계: 코호트 기본 정보 확인", content: "코호트 상세 페이지의 상단에서 코호트의 기본 정보를 확인할 수 있습니다." }
             ] },
             { title: "코호트 정의 내용 확인하기", steps: [
-              { title: "Definition 탭 클릭", content: "Definition 탭에서 코호트가 어떻게 정의되어 있는지를 json 형식으로 확인할 수 있습니다." }
+              { title: "코호트 정의 내용 확인하기", content: "Definition 탭에서 코호트가 어떻게 정의되어 있는지를 json 형식으로 확인할 수 있습니다. 우측 상단의 Copy 버튼을 누르면 json이 복사됩니다.", image: "guide_images/cohort/cohort-definition.png" }
             ] },
             { title: "코호트 내 주요 Feature 확인하기", steps: [
-              { title: "Features 탭 클릭", content: "Features 탭에서 코호트 내 주요 Feature를 확인할 수 있습니다." },
-              { title: "학습에 사용할 환자 배수 입력", content: "학습에 사용할 환자 배수 k를 입력합니다. 현재 코호트 내 환자수의 k배만큼 환자를 뽑아 학습에 사용합니다." },
-              { title: "분석 시작 버튼 클릭", content: "분석 시작 버튼을 클릭하여 학습을 시작합니다." },
-              { title: "분석 완료 후 결과 확인", content: "분석 완료 후 결과를 확인합니다. Condition과 Procedure 도메인에 대해 influence 값이 높은 top 10 Concept을 확인할 수 있습니다." },
-              { title: "분석 결과 다운로드", content: "분석 결과를 다운로드 합니다. 다운로드 파일은 코호트 이름과 날짜를 포함한 파일명으로 한 csv 파일로 저장됩니다. 가장 최근의 분석 결과만 기록되기에 이전 분석 기록은 확인할 수 없으므로 필요시 다운로드를 받아야 합니다." }
+              { title: "1단계: Features 탭 클릭", content: "단일 코호트 페이지에서 Features 탭을 클릭합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-1.png" },
+              { title: "2단계: 학습에 사용할 환자 배수 입력", content: "주요 Feature를 분석하기 위한 학습에 사용할 환자 배수 k를 입력합니다. 코호트 환자 수의 k배에 해당하는 비교군 환자를 PSM으로 나이와 성별이 비슷한 환자들을 구성해 학습에 사용합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-2.png" },
+              { title: "3단계: 분석 시작 버튼 클릭", content: "분석 시작 버튼을 클릭하여 학습을 시작합니다. 페이지를 나가도 학습은 계속 진행됩니다.\n준비된 데이터를 랜덤하게 학습/검증용으로 나누어 분류 모델을 학습하고, Shap를 적용해 각 피처의 중요도를 계산합니다. 이 과정을 여러 번 반복해 나온 SHAP 값들의 평균을 내 분석합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-3.png" },
+              { title: "4단계: 결과 확인", content: "학습이 완료되면 결과가 표로 나옵니다. Condition과 Procedure 도메인에 대해 influence 값이 높은 top 10 Concept을 확인할 수 있습니다. 각 도메인에 사용된 모델의 F1 Score도 제공됩니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-4.png" },
+              { title: "5단계: 분석 결과 다운로드", content: "분석 결과를 다운로드 합니다. 다운로드 파일은 코호트 이름과 날짜를 포함한 파일명으로 한 csv 파일로 저장됩니다. 가장 최근의 분석 결과만 기록되기에 이전 분석 기록은 확인할 수 없으므로 필요시 다운로드를 받아야 합니다.", image: "guide_images/single-cohort/feature-extractor/feature-extractor-5.png" }
             ] },
-            { title: "코호트 기본 통계 확인하기", steps: [
-              { title: "1단계: Charts 탭 이동", content: "Charts 탭을 클릭합니다." }
+            { title: "코호트 기본 통계 보기", steps: [
+              { title: "기본 통계 보기", content: "단일 코호트 페이지에서 Charts 탭을 클릭하면 코호트 기본 통계가 표시됩니다. 차트 혹은 테이블로 확인할 수 있습니다.", image: "guide_images/cohort/cohort-chart.png" },
             ] },
             { title: "코호트 수정하기", steps: [
-              { title: "우측 상단의 수정 버튼 클릭", content: "우측 상단의 수정 버튼을 클릭합니다." },
-              { title: "코호트 수정 페이지로 이동", content: "코호트 수정 페이지로 이동하여 코호트 정의를 수정합니다." },
-              { title: "코호트 수정 버튼 클릭", content: "코호트 수정 버튼을 클릭하여 코호트를 수정을 완료합니다." }
+              { title: "1단계: 우측 상단의 수정 버튼 클릭", content: "우측 상단의 수정 버튼을 클릭합니다.", image: "guide_images/cohort/cohort-edit-1.png" },
+              { title: "2단계: 코호트 정의 페이지로 이동", content: "코호트 정의 페이지로 이동하여 코호트 정의를 수정합니다. 완료 시 다시 코호트 상세 페이지로 이동합니다.", image: "guide_images/cohort/cohort-edit-2.png" },
             ] },
             { title: "코호트 복제하기", steps: [
-              { title: "우측 상단의 복제 버튼 클릭", content: "우측 상단의 복제 버튼을 클릭합니다." },
-              { title: "복제된 코호트의 상세 페이지로 이동", content: "복제된 코호트의 상세 페이지로 이동합니다. 코호트 이름은 Copy of 원본 코호트 이름 이라고 표시됩니다." },
+              { title: "1단계: 우측 상단의 복제 버튼 클릭", content: "우측 상단의 복제 버튼을 클릭합니다.", image: "guide_images/cohort/cohort-duplicate-1.png" },
+              { title: "2단계: 복제된 코호트의 정의 수정", content: "복제된 코호트의 정의 페이지로 이동합니다. 코호트 이름은 원본 코호트 이름 뒤 Copy가 붙어 추가됩니다. 필요 시 코호트 정의를 추가하거나 수정하여 완료하면 코호트가 생성됩니다.", image: "guide_images/cohort/cohort-duplicate-2.png" },
             ] },
             { title: "코호트 삭제하기", steps: [
-              { title: "우측 상단의 삭제 버튼 클릭", content: "우측 상단의 삭제 버튼을 클릭합니다." },
-              { title: "삭제하기 클릭", content: "삭제 확인 팝업에서 삭제를 누릅니다. 이후 코호트가 삭제되며 다시 코호트 목록 페이지로 이동합니다." },
+              { title: "코호트 삭제하기", content: "우측 상단의 삭제 버튼을 클릭하면 코호트가 삭제되며 코호트 목록으로 페이지가 이동됩니다.", image: "guide_images/cohort/cohort-delete.png" },
             ] },
           ]
         },
         {
-          name: "코호트 내 환자 CDM 보기",
+          name: "코호트 내 환자 데이터 보기",
           guides: [
-            { title: "환자 통계 확인하기", steps: [
-              { title: "1단계: 환자 통계 탭 이동", content: "환자 통계 탭을 클릭합니다." }
-            ] },
-            { title: "CDM 데이터 읽기", steps: [
-              { title: "1단계: CDM 데이터 탭 이동", content: "CDM 데이터 탭을 클릭합니다." }
+            { title: "코호트 내 환자 데이터 보기", steps: [
+              { title: "1단계: 환자 ID 선택", content: "코포트 페이지 내 좌측 사이드바의 환자 목록 중 환자 ID를 선택해 환자 통계 페이지로 이동합니다.", image: "guide_images/cohort/cohort-person-select.png" },
+              { title: "2단계: 환자 통계 확인", content: "클릭한 ID에 해당하는 환자의 통계를 확인할 수 있습니다.", image: "guide_images/cohort/cohort-person-statistics.png" },
+              { title: "3단계: 환자의 특정 CDM 데이터 확인", content: "상단 타임라인에서 특정 방문 기록을 선택하면 해당 방문 기록에 해당하는 CDM 데이터를 확인할 수 있습니다." },
             ] }
           ]
         }
@@ -81,8 +81,10 @@
       name: "환자 검색하기",
       children: [
         { guides: [ { title: "검색하기", steps: [
-          { title: "1단계: 검색창에 환자의 ID 입력", content: "검색창에 환자의 ID를 입력하세요." },
-          { title: "2단계: 결과 확인", content: "검색 결과를 확인하세요." }
+          { title: "1단계: 검색창에 환자의 ID 입력", content: "Person Search 페이지에서 검색창에 환자의 ID를 입력하세요.", image: "guide_images/person-search/person-search-1.png" },
+          { title: "2단계: 검색", content: "검색 버튼을 누르면 해당 환자의 정보가 표시됩니다.", image: "guide_images/person-search/person-search-2.png" },
+          { title: "3단계: 단일 환자 통계 확인", content: "해당 환자의 타임라인과 기본 통계를 확인할 수 있습니다.", image: "guide_images/person-search/person-search-3.png" },
+          { title: "4단계: 개별 CDM 확인", content: "타임라인에서 하나의 방문 기록을 누르면 해당 방문 기록에 해당하는 데이터를 확인할 수 있습니다.", image: "guide_images/person-search/person-search-4.png" }
         ] } ] }
       ]
     },
@@ -95,9 +97,6 @@
         {
           name: "정의된 커스텀 차트 보기",
           guides: [
-            { title: "타겟 세트 확인하기", steps: [
-              { title: "1단계: 타겟 세트 탭 이동", content: "타겟 세트 탭을 클릭합니다." }
-            ] },
             {
               title: "커스텀 차트 보기",
               steps: [
@@ -105,13 +104,15 @@
               ]
             },
             { title: "차트 다운로드하기", steps: [
-              { title: "1단계: 다운로드 버튼 클릭", content: "다운로드 버튼을 클릭합니다." }
+              { title: "차트 다운로드 버튼 클릭", content: "하나의 차트 토글을 열면 우측 상단에 위치한 다운로드 버튼을 클릭합니다. 버튼 클릭 시 png 이미지로 차트 이미지가 다운로드됩니다.", image: "guide_images/custom-chart/custom-chart-download.png" }
             ] },
-            { title: "차트 삭제하기", steps: [
-              { title: "1단계: 삭제 버튼 클릭", content: "삭제 버튼을 클릭합니다." }
+            { title: "커스텀 차트 삭제하기", steps: [
+              { title: "커스텀 차트 삭제하기", content: "하나의 차트 토글을 열면 우측 상단에 위치한 삭제 버튼을 클릭합니다. 버튼 클릭 시 해당 차트가 삭제됩니다.", image: "guide_images/custom-chart/custom-chart-delete.png" },
             ] },
-            { title: "동일한 타겟에서 커스텀 차트 추가하기", steps: [
-              { title: "1단계: 추가 버튼 클릭", content: "추가 버튼을 클릭합니다." }
+            { title: "동일한 대상으로 커스텀 차트 추가하기", steps: [
+              { title: "1단계: 추가 버튼 클릭", content: "우측 중앙의 파란 색 + 버튼을 클릭합니다.", image: "guide_images/custom-chart/custom-chart-add-1.png" },
+              { title: "2단계: 차트 커스텀 진행", content: "차트 커스텀 페이지로 이동합니다. 이 페이지에서는 동일한 대상(target)으로 커스텀 차트를 추가할 수 있습니다. 대상은 동일하므로 차트 타입을 선택하는 모달부터 시작합니다.", image: "guide_images/custom-chart/custom-chart-add-2.png" },
+              { title: "3단계: 추가된 차트 확인", content: "이전 페이지에서 생성한 차트가 추가된 것을 확인할 수 있습니다.", image: "guide_images/custom-chart/custom-chart-add-3.png" }
             ] }
           ]
         }
