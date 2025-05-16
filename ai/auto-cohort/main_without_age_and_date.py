@@ -440,7 +440,7 @@ def main():
     # """
 
     # implementable_text = """
-    # WPatients with intracranial injuries were identified in the
+    # Patients with intracranial injuries were identified in the
     # MIMIC-IV (version 2.2) database using International
     # Classification of Diseases (ICD) codes ICD-9:85 and ICD10:S06.14 3942 patients with intracranial injury admitted
     # to the ICU were screened. Patients who met any of the
