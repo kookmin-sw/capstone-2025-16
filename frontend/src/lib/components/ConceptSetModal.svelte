@@ -341,7 +341,7 @@
                   <p class="text-center text-sm text-gray-500">No concepts added to this set yet.</p>
             </div>
           {:else}
-            <div class="mb-4 overflow-hidden rounded-lg border border-gray-200 shadow">
+            <div class="mb-4 overflow-x-scroll rounded-lg border border-gray-200 shadow">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
