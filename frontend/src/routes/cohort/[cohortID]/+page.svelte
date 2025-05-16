@@ -29,7 +29,7 @@
 	const tabs = [
 		{ key: 'charts', label: 'Charts' },
 		{ key: 'features', label: 'Features' },
-		{ key: 'definition', label: 'Definition' },
+		{ key: 'definition', label: 'Definition' }
 	];
 
 	let isTableView = {
@@ -219,7 +219,6 @@
 			if (!res.ok) {
 				throw new Error('Failed to fetch SHAP analysis data');
 			}
-
 		} catch (error) {
 			console.error('SHAP analysis error:', error);
 			analysisError =
@@ -250,15 +249,14 @@
 				shapFeatures = data.features.features;
 				saveAnalysisResult(data);
 				isShapLoading = false;
-			} else if(data.status === 'completed' && data.features.features.length === 0) {
+			} else if (data.status === 'completed' && data.features.features.length === 0) {
 				shapFeatures = [];
 				isShapLoading = false;
 			} else if (data.status === 'running') {
 				isShapLoading = true;
-			} else if (data.status === 'pending'){
+			} else if (data.status === 'pending') {
 				analysisError = 'Analysis is still pending. Please check back later.';
 			}
-
 		} catch (error) {
 			console.error('Error loading feature data:', error);
 		}
@@ -350,49 +348,38 @@
 	}
 
 	function switchTab(tab) {
-		if(tab === 'features' && isShapLoading) {
+		if (tab === 'features' && isShapLoading) {
 			loadFeatureData();
 		}
 		activeTab = tab;
 		updateIndicator();
 	}
 
-	function startWorker(){
-		worker = new Worker('/src/lib/fetchCohortStatistics.js', {
-			type: 'module'
-		});
-        worker.onmessage = async (event) => {
-            const { success, data } = event.data;
-            if (success) {
-                analysisData = data;
-                ageDistributionChartData = await loadAgeDistributionData();
+	function fetchStatistics() {
+		fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/statistics/`)
+			.then((res) => res.json())
+			.then(async (data) => {
+				analysisData = data;
+				ageDistributionChartData = await loadAgeDistributionData();
 
-				visitCountChartData = binVisitCountDataDynamic(
-					analysisData.visitCount,
-					cohortInfo.name,
-				);
+				visitCountChartData = binVisitCountDataDynamic(analysisData.visitCount, cohortInfo.name);
 
-                chartLoading = false;
-            } else {
-                console.error('Worker error:', data);
-            }
-        };
-
-        worker.postMessage({ cohortID });
-    }
+				chartLoading = false;
+			});
+	}
 
 	async function copyToClipboard(text) {
-        try {
-            await navigator.clipboard.writeText(text);
-        } catch (err) {
-            console.error('클립보드 복사 실패:', err);
-        }
-    }
+		try {
+			await navigator.clipboard.writeText(text);
+		} catch (err) {
+			console.error('클립보드 복사 실패:', err);
+		}
+	}
 
 	onMount(async () => {
 		loadFeatureData();
 		try {
-			startWorker();
+			fetchStatistics();
 
 			const res2 = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/`);
 			if (!res2.ok) {
@@ -426,7 +413,7 @@
 		if (resizeObserver) {
 			resizeObserver.disconnect();
 		}
-		if(worker){
+		if (worker) {
 			worker.terminate();
 		}
 	});
@@ -485,7 +472,7 @@
 					<!-- 코호트 복제 버튼 -->
 					<button
 						onclick={async () => {
-							const confirmDuplicate = confirm("Do you want to create a duplicate of this cohort?");
+							const confirmDuplicate = confirm('Do you want to create a duplicate of this cohort?');
 							if (!confirmDuplicate) return;
 
 							await fetch(`${PUBLIC_API_URI}/api/cohort`, {
@@ -539,7 +526,9 @@
 					<!-- 코호트 삭제 버튼 -->
 					<button
 						onclick={async () => {
-							const confirmDelete = confirm("Are you sure you want to delete this cohort? This action cannot be undone.");
+							const confirmDelete = confirm(
+								'Are you sure you want to delete this cohort? This action cannot be undone.'
+							);
 							if (!confirmDelete) return;
 
 							await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}`, {
@@ -555,19 +544,19 @@
 						class="group relative flex items-center justify-center transition-colors hover:bg-red-50 hover:text-red-500"
 					>
 						<svg
-								class="h-5 w-5"
-								viewBox="0 1 24 24"
-								fill="none"
-								stroke="red"
-								stroke-width="1"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<polyline points="3 6 5 6 21 6"></polyline>
-								<path
-									d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-								></path>
-							</svg>
+							class="h-5 w-5"
+							viewBox="0 1 24 24"
+							fill="none"
+							stroke="red"
+							stroke-width="1"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<polyline points="3 6 5 6 21 6"></polyline>
+							<path
+								d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+							></path>
+						</svg>
 						<span
 							class="absolute left-1/2 top-full mt-2 -translate-x-1/2 transform rounded bg-white p-1 text-xs text-gray-700 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
 						>
@@ -648,8 +637,7 @@
 								stroke-linejoin="round"
 							>
 								<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-								></path>
+								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
 							</svg>
 							Copy
 						</button>
@@ -671,11 +659,12 @@
 				</h2>
 				<div class="mb-4">
 					<p class="text-sm text-gray-600">
-						Enter the size of the comparison group to analyze the top features influencing this cohort
-						using the SHAP algorithm.
+						Enter the size of the comparison group to analyze the top features influencing this
+						cohort using the SHAP algorithm.
 					</p>
 					<p class="text-sm text-gray-600">
-						During model training, concept IDs used for patient cohort classification are excluded, and the model is built solely based on other clinical variables.
+						During model training, concept IDs used for patient cohort classification are excluded,
+						and the model is built solely based on other clinical variables.
 					</p>
 				</div>
 
@@ -1113,9 +1102,7 @@
 							/>
 
 							<div slot="table" class="flex h-full w-full flex-col p-4">
-								<DataTable
-									data={transformLineChartToTableData(visitCountChartData)}
-								/>
+								<DataTable data={transformLineChartToTableData(visitCountChartData)} />
 							</div>
 						</ChartCard>
 

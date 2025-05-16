@@ -1,1255 +1,1370 @@
-<script>
-	import ChartCard from '$lib/components/ChartCard.svelte';
-	import DataTable from '$lib/components/DataTable.svelte';
-	import { AGE_GROUPS, SINGLE_DATA_COLOR } from '$lib/constants.js';
-	import DonutChart from '$lib/components/Charts/DonutChart/DonutChart.svelte';
-	import SingleDonutChartWrapper from '$lib/components/Charts/DonutChart/SingleDonutChartWrapper.svelte';
-	import { transformDonutChartToTableData } from '$lib/components/Charts/DonutChart/donutChartTransformer.js';
-	import LineChart from '$lib/components/Charts/LineChart/LineChart.svelte';
-	import { transformLineChartToTableData } from '$lib/components/Charts/LineChart/lineChartTransformer.js';
-	import BarChart from '$lib/components/Charts/BarChart/BarChart.svelte';
-	import BarChartWrapper from '$lib/components/Charts/BarChart/BarChartWrapper.svelte';
-	import BarChartTableView from '$lib/components/Charts/BarChart/BarChartTableView.svelte';
-	import Footer from '$lib/components/Footer.svelte';
-	import { onMount, onDestroy, tick } from 'svelte';
-	import { page } from '$app/stores';
-	import LoadingComponent from '$lib/components/LoadingComponent.svelte';
-	import { goto } from '$app/navigation';
+<!-- 
+	New Cohort Builder Implementation - Based on types.ts specification
+-->
+
+<script lang="ts">
+	import ConceptSetModal from '$lib/components/ConceptSetModal.svelte';
+	import CohortAIModal from './components/CohortAIModal.svelte';
 	import { PUBLIC_API_URI } from '$env/static/public';
-	let worker;
-	let chartLoading = true;
-	let loadingMessage = 'Loading chart data...';
+	// 연산자 컴포넌트 가져오기
+	import NumberOperator from '$lib/components/operators/NumberOperator.svelte';
+	import StringOperator from '$lib/components/operators/StringOperator.svelte';
+	import DateOperator from '$lib/components/operators/DateOperator.svelte';
+	import IdentifierOperator from '$lib/components/operators/IdentifierOperator.svelte';
+	import ConceptSelectorWrapper from '$lib/components/operators/ConceptSelectorWrapper.svelte';
+	import ContainerHeader from './components/ContainerHeader.svelte';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	const { data } = $props();
+	let { cohort } = data;
 
-	let isLoading = true;
-	let isShapLoading = false;
-	let cohortInfo = [];
-	let cohortID = $page.params.cohortID;
-
-	let activeTab = 'charts';
-	const tabs = [
-		{ key: 'charts', label: 'Charts' },
-		{ key: 'features', label: 'Features' },
-		{ key: 'definition', label: 'Definition' }
-	];
-
-	let isTableView = {
-		genderRatio: false,
-		mortality: false,
-		visitTypeRatio: false,
-		firstOccurrenceAge: false,
-		visitCount: false,
-		topTenDrugs: false,
-		topTenConditions: false,
-		topTenProcedures: false,
-		topTenMeasurements: false
-	};
-
-	let tabElements = Array(tabs.length).fill(null);
-	let indicatorStyle = '';
-	let resizeObserver;
-
-	// SHAP 분석 관련 상태 변수 추가
-	let comparisonGroupSize = '';
-	let analysisStarted = false;
-	let featureData = {
-		cohort_id: '',
-		status: '',
-		features: {
-			features: [],
-			total: 0,
-			page: 0,
-			limit: 100
-		}
-	};
-	let analysisError = null;
-
-	// 로컬 스토리지 키
-	const STORAGE_KEY = `cohort-${cohortID}-feature-analysis`;
-
-	// 이전 분석 결과 로드
-	let hasPreviousAnalysis = false;
-	let previousAnalysisTime = '';
-
-	// 초 단위 시간을 시간, 분, 초 형식으로 변환
-	function formatExecutionTime(seconds) {
-		if (!seconds) return '0s';
-
-		const h = Math.floor(seconds / 3600);
-		const m = Math.floor((seconds % 3600) / 60);
-		const s = Math.floor(seconds % 60);
-
-		const hDisplay = h > 0 ? h + 'h ' : '';
-		const mDisplay = m > 0 ? m + 'm ' : '';
-		const sDisplay = s > 0 ? s + 's' : '';
-
-		return hDisplay + mDisplay + sDisplay;
-	}
-
-	// 날짜와 시간을 포맷팅하는 함수
-	function formatDateTime(timestamp) {
-		const date = new Date(timestamp);
-		return date.toLocaleString();
-	}
-
-	// 이전 분석 결과 저장 함수
-	function saveAnalysisResult(data) {
-		try {
-			const storageData = {
-				data: data,
-				timestamp: new Date().getTime()
-			};
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-		} catch (e) {
-			console.error('Failed to save analysis result to local storage:', e);
-		}
-	}
-
-	// 이전 분석 결과 불러오기 함수
-	function loadPreviousAnalysis() {
-		try {
-			const storedData = localStorage.getItem(STORAGE_KEY);
-			if (storedData) {
-				const parsedData = JSON.parse(storedData);
-				featureData = parsedData.data;
-				previousAnalysisTime = formatDateTime(parsedData.timestamp);
-				hasPreviousAnalysis = true;
-				analysisStarted = true;
-				analysisError = null;
-			}
-		} catch (e) {
-			console.error('Failed to load previous analysis from local storage:', e);
-			hasPreviousAnalysis = false;
-		}
-	}
-
-	function exportToCSV(data, filename) {
-		if (!data || data.length === 0) {
-			alert('No data to export.');
-			return;
-		}
-
-		const headers = Object.keys(data[0]);
-		const rows = data.map((row) =>
-			headers.map((field) => `"${(row[field] ?? '').toString().replace(/"/g, '""')}"`).join(',')
-		);
-
-		const csvContent = [headers.join(','), ...rows].join('\r\n');
-
-		// BOM 추가 (엑셀 한글 깨짐 방지)
-		const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-		const url = URL.createObjectURL(blob);
-
-		const link = document.createElement('a');
-		link.href = url;
-		link.setAttribute('download', filename);
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-	}
-
-	// 페이지 로드 시 이전 분석 결과 확인
 	onMount(() => {
-		updateIndicator();
-
-		resizeObserver = new ResizeObserver(() => {
-			updateIndicator();
-		});
-
-		const tabContainer = tabElements[0]?.parentElement;
-		if (tabContainer) {
-			resizeObserver.observe(tabContainer);
-		}
-
-		// 이전 분석 결과 확인
-		try {
-			const storedData = localStorage.getItem(STORAGE_KEY);
-			if (storedData) {
-				const parsedData = JSON.parse(storedData);
-				previousAnalysisTime = formatDateTime(parsedData.timestamp);
-				hasPreviousAnalysis = true;
-			}
-		} catch (e) {
-			console.error('Failed to check previous analysis:', e);
-		}
+		getCohortCounts();
 	});
 
-	let shapFeatures = [];
+	let containerCounts = $state([]);
+	console.log('data : ', data);
+	console.log(cohort);
+	console.log(
+		cohort.cohort_definition.initialGroup.containers.length +
+			cohort.cohort_definition.comparisonGroup.containers.length
+	);
+	console.log(cohort.cohort_definition);
 
-	// 통계관련
-	let analysisData = [];
-	let ageDistributionChartData = [];
-	let visitCountChartData = [];
+	let concepts_id_to_name = $state<Record<string, string>>({});
 
-	// SHAP 분석 시작 함수 (백엔드 연동 필요)
-	async function startAnalysis() {
-		analysisStarted = true;
-		isShapLoading = true;
-		featureData = {
-			cohort_id: '',
-			status: '',
-			features: {
-				features: [],
-				total: 0,
-				page: 0,
-				limit: 100
-			}
-		};
-		analysisError = null;
-
-		// 입력 값 유효성 검사 (양의 정수)
-		const size = parseInt(comparisonGroupSize);
-		if (isNaN(size) || size <= 0) {
-			analysisError =
-				'Comparison group size must be a positive integer greater than or equal to 1.';
-			isShapLoading = false;
-			return;
+	async function getConceptName(concept_id: string) {
+		if (concepts_id_to_name[concept_id]) {
+			return concepts_id_to_name[concept_id];
 		}
-
-		try {
-			const res = await fetch(`${PUBLIC_API_URI}/api/feature/${cohortID}/`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					k: size
-				})
+		fetch(`${PUBLIC_API_URI}/api/concept/${encodeURIComponent(concept_id)}`)
+			.then((response) => response.json())
+			.then((data) => {
+				concepts_id_to_name[concept_id] = data.concept_name;
 			});
+		return concept_id;
+	}
 
-			if (!res.ok) {
-				throw new Error('Failed to fetch SHAP analysis data');
-			}
-		} catch (error) {
-			console.error('SHAP analysis error:', error);
-			analysisError =
-				error.message ||
-				'An unexpected error occurred while running SHAP analysis. Please try again later.';
-			featureData = {
-				cohort_id: '',
-				status: '',
-				features: {
-					features: [],
-					total: 0,
-					page: 0,
-					limit: 100
+	let isUpdating = $state(false);
+	let isPatientCountUpdating = $state(false);
+
+	let showCohortAIModal = $state(false);
+
+	let cohortName = $state(cohort.name);
+	let cohortDescription = $state(cohort.description);
+
+	/**
+	 * 초기 코호트 정의 구조 생성
+	 * - 기본 인구통계학적 컨셉셋(성별, 인종, 민족성)을 포함
+	 * - 각 컨셉셋은 해당 도메인의 표준 개념들을 포함
+	 */
+	let cohortDefinition = $state<CohortDefinition>(cohort.cohort_definition);
+	convertCohortDefinitionToObject();
+	// Handle AI generated cohort
+	function handleCohortAISubmit(data: any) {
+		console.log('AI Cohort Data:', data);
+		cohortDefinition = data;
+		getCohortCounts();
+		// Here you would process the AI-generated cohort definition
+		// and update the cohortDefinition state
+	}
+
+	// 연산자 타입 정의
+	type OperatorType = {
+		eq?: string | string[];
+		neq?: string | string[];
+		gt?: string | number;
+		gte?: string | number;
+		lt?: string | number;
+		lte?: string | number;
+		startsWith?: string;
+		endsWith?: string;
+		contains?: string;
+		[key: string]: string | string[] | number | undefined;
+	};
+
+	// 연산자 표시 설정
+	const operatorDisplayConfig = {
+		eq: { symbol: '=', label: 'Equal to' },
+		neq: { symbol: '≠', label: 'Not equal to' },
+		gt: { symbol: '>', label: 'Greater than' },
+		gte: { symbol: '≥', label: 'Greater than or equal to' },
+		lt: { symbol: '<', label: 'Less than' },
+		lte: { symbol: '≤', label: 'Less than or equal to' },
+		startsWith: { symbol: 'starts with', label: 'Starts with' },
+		endsWith: { symbol: 'ends with', label: 'Ends with' },
+		contains: { symbol: 'contains', label: 'Contains' }
+	};
+
+	// 속성값 표시 함수
+	function displayPropertyValue(value: any, type?: string): string {
+		if (value === null || value === undefined) return 'Not specified';
+
+		// Boolean 값 처리
+		if (typeof value === 'boolean') {
+			return value ? 'Yes' : 'No';
+		}
+
+		// 객체 처리 (Operator 타입)
+		if (typeof value === 'object') {
+			const parts: string[] = [];
+
+			// 범위 연산자 처리
+			const rangeOperators = ['gte', 'gt', 'lte', 'lt'];
+			const hasRangeStart = value.gte !== undefined || value.gt !== undefined;
+			const hasRangeEnd = value.lte !== undefined || value.lt !== undefined;
+
+			if (hasRangeStart || hasRangeEnd) {
+				if (hasRangeStart) {
+					const startOp = value.gte !== undefined ? 'gte' : 'gt';
+					parts.push(
+						`${operatorDisplayConfig[startOp].label} ${formatValue(value[startOp], type)}`
+					);
 				}
-			}; // 에러 발생 시 기존 결과 초기화
+
+				if (hasRangeEnd) {
+					const endOp = value.lte !== undefined ? 'lte' : 'lt';
+					parts.push(`${operatorDisplayConfig[endOp].label} ${formatValue(value[endOp], type)}`);
+				}
+			}
+
+			// 문자열 연산자 처리
+			const stringOperators = ['startsWith', 'endsWith', 'contains'];
+			for (const op of stringOperators) {
+				if (value[op] !== undefined) {
+					parts.push(`${operatorDisplayConfig[op].label} "${value[op]}"`);
+				}
+			}
+
+			// 동등성 연산자 처리
+			const equalityOperators = ['eq', 'neq'];
+			for (const op of equalityOperators) {
+				if (value[op] !== undefined) {
+					const opValue = value[op];
+					if (Array.isArray(opValue)) {
+						// 다중 값 처리
+						if (type === 'conceptset') {
+							const formattedValues = opValue.map((v) => findConceptSetById(v).name).join(', ');
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues})`);
+						} else {
+							const formattedValues = opValue.map((v) => formatValue(v, type));
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+						}
+					} else {
+						// 단일 값 처리
+						if (type === 'conceptset') {
+							const formattedValue = findConceptSetById(opValue).name;
+							parts.push(`${operatorDisplayConfig[op].label} ${formattedValue}`);
+						} else {
+							parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+						}
+					}
+				}
+			}
+
+			return parts.join('\n') || JSON.stringify(value);
+		}
+
+		// 단일 값 처리
+		return formatValue(value, type);
+	}
+
+	// 값 포맷팅 함수
+	function formatValue(value: any, type?: string): string {
+		// 개념 또는 개념 세트 타입 처리
+		if (type === 'conceptset') {
+			return findConceptSetById(value).name;
+		}
+		if (type === 'concept') {
+			return getConceptNameById(value);
+		}
+
+		// 날짜 타입 처리
+		if (type === 'date') {
+			return new Date(value).toLocaleDateString();
+		}
+
+		// 숫자 타입 처리
+		if (typeof value === 'number') {
+			return value.toLocaleString();
+		}
+
+		// 기본 문자열 처리
+		return value.toString();
+	}
+
+	// Types.ts 기반 도메인 타입
+	const domainTypes = [
+		{
+			type: 'condition_era',
+			name: 'Condition Era',
+			description: 'Find patients with specific diagnosis periods.'
+		},
+		{
+			type: 'condition_occurrence',
+			name: 'Condition Occurrence',
+			description: 'Find patients with specific diagnoses.'
+		},
+		{ type: 'death', name: 'Death', description: 'Find patients based on death information.' },
+		{
+			type: 'device_exposure',
+			name: 'Device Exposure',
+			description: 'Find patients based on device exposure.'
+		},
+		{ type: 'dose_era', name: 'Dose Era', description: 'Find patients based on dose periods.' },
+		{
+			type: 'drug_era',
+			name: 'Drug Era',
+			description: 'Find patients exposed to drug during periods.'
+		},
+		{
+			type: 'drug_exposure',
+			name: 'Drug Exposure',
+			description: 'Find patients based on drug exposure.'
+		},
+		{
+			type: 'measurement',
+			name: 'Measurement',
+			description: 'Find patients based on test measurement results.'
+		},
+		{
+			type: 'observation',
+			name: 'Observation',
+			description: 'Find patients based on observation information.'
+		},
+		{
+			type: 'observation_period',
+			name: 'Observation Period',
+			description: 'Find patients based on observation periods.'
+		},
+		{
+			type: 'procedure_occurrence',
+			name: 'Procedure Occurrence',
+			description: 'Find patients who received medical procedures.'
+		},
+		{ type: 'specimen', name: 'Specimen', description: 'Find patients based on specimen samples.' },
+		{
+			type: 'visit_occurrence',
+			name: 'Visit Occurrence',
+			description: 'Find patients based on hospital visits.'
+		},
+		{
+			type: 'demographic',
+			name: 'Demographics',
+			description:
+				'Find patients based on demographic information like gender, race, and ethnicity.'
+		}
+	];
+
+	// 도메인별 속성 정의
+	const domainProperties = {
+		condition_era: [
+			{ name: 'conceptset', label: 'Condition Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Occurrence Only', type: 'checkbox' },
+			{ name: 'startAge', label: 'Age at Era Start', type: 'numberrange' },
+			{ name: 'endAge', label: 'Age at Era End', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'conditionCount', label: 'Condition Count', type: 'numberrange' },
+			{ name: 'length', label: 'Era Length', type: 'numberrange' }
+		],
+		condition_occurrence: [
+			{ name: 'conceptset', label: 'Condition Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Occurrence Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Occurrence', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'conditionStatus', label: 'Condition Status', type: 'concept' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'conditionType', label: 'Condition Type', type: 'concept' },
+			{ name: 'visitType', label: 'Visit Type', type: 'concept' },
+			{ name: 'source', label: 'Source', type: 'concept' },
+			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' }
+		],
+		death: [
+			{ name: 'conceptset', label: 'Cause of Death Concept Set', type: 'conceptset' },
+			{ name: 'age', label: 'Age at Death', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'date', label: 'Death Date', type: 'daterange' },
+			{ name: 'deathType', label: 'Death Type', type: 'concept' },
+			{ name: 'cause', label: 'Cause', type: 'concept' }
+		],
+		device_exposure: [
+			{ name: 'conceptset', label: 'Device Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Exposure Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Exposure', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'deviceType', label: 'Device Type', type: 'concept' },
+			{ name: 'visitType', label: 'Visit Type', type: 'concept' },
+			{ name: 'uniqueDeviceId', label: 'Unique Device ID', type: 'string' },
+			{ name: 'quantity', label: 'Quantity', type: 'numberrange' },
+			{ name: 'source', label: 'Source', type: 'concept' },
+			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' }
+		],
+		dose_era: [
+			{ name: 'conceptset', label: 'Drug Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Era Only', type: 'checkbox' },
+			{ name: 'startAge', label: 'Age at Era Start', type: 'numberrange' },
+			{ name: 'endAge', label: 'Age at Era End', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'doseUnit', label: 'Dose Unit', type: 'concept' },
+			{ name: 'length', label: 'Era Length', type: 'numberrange' },
+			{ name: 'doseValue', label: 'Dose Value', type: 'numberrange' }
+		],
+		drug_era: [
+			{ name: 'conceptset', label: 'Drug Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Era Only', type: 'checkbox' },
+			{ name: 'startAge', label: 'Age at Era Start', type: 'numberrange' },
+			{ name: 'endAge', label: 'Age at Era End', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'length', label: 'Era Length', type: 'numberrange' },
+			{ name: 'eraExposureCount', label: 'Era Exposure Count', type: 'numberrange' }
+		],
+		drug_exposure: [
+			{ name: 'conceptset', label: 'Drug Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Exposure Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Exposure', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'drugType', label: 'Drug Type', type: 'concept' },
+			{ name: 'visitType', label: 'Visit Type', type: 'concept' },
+			{ name: 'stopReason', label: 'Stop Reason', type: 'string' },
+			{ name: 'refill', label: 'Refill', type: 'numberrange' },
+			{ name: 'quantity', label: 'Quantity', type: 'numberrange' },
+			{ name: 'daysSupply', label: 'Days Supply', type: 'numberrange' },
+			{ name: 'routeType', label: 'Route Type', type: 'concept' },
+			{ name: 'effectiveDose', label: 'Effective Dose', type: 'numberrange' },
+			{ name: 'doseUnit', label: 'Dose Unit', type: 'concept' },
+			{ name: 'lotNumber', label: 'Lot Number', type: 'string' },
+			{ name: 'source', label: 'Source', type: 'concept' },
+			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' }
+		],
+		measurement: [
+			{ name: 'conceptset', label: 'Measurement Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Measurement Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Measurement', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'date', label: 'Measurement Date', type: 'daterange' },
+			{ name: 'measurementType', label: 'Measurement Type', type: 'concept' },
+			{ name: 'visitType', label: 'Visit Type', type: 'concept' },
+			{ name: 'operatorType', label: 'Operator Type', type: 'concept' },
+			{ name: 'valueAsNumber', label: 'Value as Number', type: 'numberrange' },
+			{ name: 'valueAsConcept', label: 'Value as Concept', type: 'concept' },
+			{ name: 'unitType', label: 'Unit Type', type: 'concept' },
+			{ name: 'abnormal', label: 'Abnormal Result', type: 'checkbox' },
+			{ name: 'rangeLow', label: 'Range Low', type: 'numberrange' },
+			{ name: 'rangeHigh', label: 'Range High', type: 'numberrange' },
+			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' },
+			{ name: 'source', label: 'Source', type: 'concept' }
+		],
+		observation: [
+			{ name: 'conceptset', label: 'Observation Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Observation Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Observation', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'date', label: 'Observation Date', type: 'daterange' },
+			{ name: 'observationType', label: 'Observation Type', type: 'concept' },
+			{ name: 'visitType', label: 'Visit Type', type: 'concept' },
+			{ name: 'valueAsNumber', label: 'Value as Number', type: 'numberrange' },
+			{ name: 'valueAsString', label: 'Value as String', type: 'string' },
+			{ name: 'valueAsConcept', label: 'Value as Concept', type: 'concept' },
+			{ name: 'qualifierType', label: 'Qualifier Type', type: 'concept' },
+			{ name: 'unitType', label: 'Unit Type', type: 'concept' },
+			{ name: 'source', label: 'Source', type: 'concept' },
+			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' }
+		],
+		observation_period: [
+			{ name: 'first', label: 'First Period Only', type: 'checkbox' },
+			{ name: 'startAge', label: 'Age at Period Start', type: 'numberrange' },
+			{ name: 'endAge', label: 'Age at Period End', type: 'numberrange' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'length', label: 'Period Length', type: 'numberrange' }
+		],
+		procedure_occurrence: [
+			{ name: 'conceptset', label: 'Procedure Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Procedure Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Procedure', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'startDate', label: 'Procedure Date', type: 'daterange' },
+			{ name: 'procedureType', label: 'Procedure Type', type: 'concept' },
+			{ name: 'visitType', label: 'Visit Type', type: 'concept' },
+			{ name: 'modifierType', label: 'Modifier Type', type: 'concept' },
+			{ name: 'quantity', label: 'Quantity', type: 'numberrange' },
+			{ name: 'source', label: 'Source', type: 'concept' },
+			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' }
+		],
+		specimen: [
+			{ name: 'conceptset', label: 'Specimen Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Specimen Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Specimen Collection', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'date', label: 'Specimen Date', type: 'daterange' },
+			{ name: 'specimenType', label: 'Specimen Type', type: 'concept' },
+			{ name: 'quantity', label: 'Quantity', type: 'numberrange' },
+			{ name: 'unitType', label: 'Unit Type', type: 'concept' },
+			{ name: 'anatomicSiteType', label: 'Anatomic Site Type', type: 'concept' },
+			{ name: 'diseaseStatus', label: 'Disease Status', type: 'concept' }
+		],
+		visit_occurrence: [
+			{ name: 'conceptset', label: 'Visit Concept Set', type: 'conceptset' },
+			{ name: 'first', label: 'First Visit Only', type: 'checkbox' },
+			{ name: 'age', label: 'Age at Visit Start', type: 'numberrange' },
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'startDate', label: 'Start Date', type: 'daterange' },
+			{ name: 'endDate', label: 'End Date', type: 'daterange' },
+			{ name: 'visitType', label: 'Visit Type', type: 'concept' },
+			{ name: 'length', label: 'Visit Length', type: 'numberrange' },
+			{ name: 'source', label: 'Source', type: 'concept' },
+			{ name: 'providerSpecialty', label: 'Provider Specialty', type: 'concept' },
+			{ name: 'placeOfService', label: 'Place of Service', type: 'concept' }
+		],
+		demographic: [
+			{ name: 'gender', label: 'Gender', type: 'concept' },
+			{ name: 'raceType', label: 'Race', type: 'concept' },
+			{ name: 'ethnicityType', label: 'Ethnicity', type: 'concept' }
+		]
+	};
+
+	// 편집 관련 상태 변수
+	let selectedDomainType = $state<DomainType | null>(null); // 선택된 도메인 타입
+	let editingFilterIndex = $state<number | null>(null); // 편집할 필터 인덱스
+	let editingGroupType = $state<'initialGroup' | 'comparisonGroup'>('initialGroup'); // 편집할 그룹 타입
+	let editingContainerIndex = $state<number>(0); // 편집할 컨테이너 인덱스
+
+	// 현재 편집중인 필터 속성 값
+	let currentFilterValues = $state<FilterValues>({});
+
+	// 컨테이너 드래그 앤 드롭 관련 변수
+	let draggedContainerIndex = $state(null);
+	let hoveredContainerIndex = $state(null);
+	let draggedGroupType = $state(null);
+
+	// 모달 관련 상태 변수
+	let showConceptSetModal = $state(false);
+
+	// 필터 초기화 함수
+	function resetFilterValues() {
+		currentFilterValues = {};
+		selectedDomainType = null;
+		editingFilterIndex = null;
+	}
+
+	// 필터 생성 함수 - Filter 타입에 맞게 설정
+	function createFilter() {
+		if (!selectedDomainType) return;
+
+		// 기본 필터 객체 생성 - Filter 타입에 맞게 타입 속성 설정
+		const newFilter = {
+			type: selectedDomainType
+		};
+
+		// 설정된 속성값 추가
+		for (const key in currentFilterValues) {
+			if (
+				currentFilterValues[key] !== null &&
+				currentFilterValues[key] !== undefined &&
+				!(typeof currentFilterValues[key] === 'boolean' && currentFilterValues[key] === false) &&
+				!Array.isArray(currentFilterValues[key])
+			) {
+				newFilter[key] = currentFilterValues[key];
+			}
+		}
+
+		// 현재 편집중인 필터가 있는 경우 업데이트
+		if (editingFilterIndex !== null) {
+			cohortDefinition[editingGroupType].containers[editingContainerIndex].filters[
+				editingFilterIndex
+			] = newFilter;
+		} else {
+			// 새 필터 추가
+			cohortDefinition[editingGroupType].containers[editingContainerIndex].filters.push(newFilter);
+		}
+
+		// 상태 초기화
+		resetFilterValues();
+		getCohortCounts();
+	}
+
+	// 필터 수정 함수
+	function editFilter(
+		groupType: 'initialGroup' | 'comparisonGroup',
+		containerIndex: number,
+		filterIndex: number
+	) {
+		editingGroupType = groupType;
+		editingContainerIndex = containerIndex;
+		editingFilterIndex = filterIndex;
+
+		const filter = cohortDefinition[groupType].containers[containerIndex].filters[
+			filterIndex
+		] as Filter;
+		selectedDomainType = filter.type;
+
+		// 기존 값 로드
+		currentFilterValues = { ...filter } as FilterValues;
+		delete currentFilterValues.type; // type 속성 제외
+	}
+
+	// 필터 삭제 함수
+	function removeFilter(
+		groupType: 'initialGroup' | 'comparisonGroup',
+		containerIndex: number,
+		filterIndex: number
+	) {
+		cohortDefinition[groupType].containers[containerIndex].filters.splice(filterIndex, 1);
+		getCohortCounts();
+	}
+
+	// 조건 타입 이름 표시 함수
+	function getDomainTypeName(type) {
+		const domainType = domainTypes.find((dt) => dt.type === type);
+		return domainType ? domainType.name : type;
+	}
+
+	// 속성값 업데이트 함수
+	function updateFilterValue(property, value) {
+		currentFilterValues[property] = value;
+	}
+
+	// 새 컨테이너 추가 함수 - SubsequentContainer 타입 적용
+	function addContainer(groupType) {
+		const containers = cohortDefinition[groupType].containers;
+		const newContainer = {
+			name: `Container ${containers.length + 1}`,
+			filters: []
+		};
+
+		// 첫 번째가 아닌 컨테이너는 SubsequentContainer 타입으로 operator 필요
+		if (containers.length > 0) {
+			newContainer.operator = 'AND';
+		}
+
+		cohortDefinition[groupType].containers.push(newContainer);
+	}
+
+	// 컨테이너 삭제 함수
+	function removeContainer(groupType, containerIndex) {
+		cohortDefinition[groupType].containers.splice(containerIndex, 1);
+		getCohortCounts();
+	}
+
+	// 컨테이너 이름 변경 함수
+	function updateContainerName(groupType, containerIndex, name) {
+		cohortDefinition[groupType].containers[containerIndex].name = name;
+	}
+
+	// 컨테이너 연산자 변경 함수 - SubsequentContainer 타입의 operator 속성 업데이트
+	function updateContainerOperator(groupType, containerIndex, operator) {
+		if (containerIndex > 0) {
+			// 첫 번째 컨테이너는 FirstContainer 타입으로 연산자가 없음
+			cohortDefinition[groupType].containers[containerIndex].operator = operator;
 		}
 	}
 
-	async function loadFeatureData() {
-		try {
-			const res = await fetch(`${PUBLIC_API_URI}/api/feature/${cohortID}/`);
-			if (!res.ok) {
-				throw new Error('Failed to fetch feature data');
-			}
-			const data = await res.json();
-			if (data.status === 'completed' && data.features.features.length > 0) {
-				featureData = data;
-				shapFeatures = data.features.features;
-				saveAnalysisResult(data);
-				isShapLoading = false;
-			} else if (data.status === 'completed' && data.features.features.length === 0) {
-				shapFeatures = [];
-				isShapLoading = false;
-			} else if (data.status === 'running') {
-				isShapLoading = true;
-			} else if (data.status === 'pending') {
-				analysisError = 'Analysis is still pending. Please check back later.';
-			}
-		} catch (error) {
-			console.error('Error loading feature data:', error);
+	// 컨셉셋 업데이트 함수
+	function handleConceptSetUpdate(event: { detail: { conceptSets: ConceptSet[] } }) {
+		const { conceptSets } = event.detail;
+		cohortDefinition.conceptsets = conceptSets;
+	}
+
+	// 컨셉셋 선택 함수
+	function selectConceptSet(id: Identifier) {
+		if (!currentFilterValues.conceptset) {
+			currentFilterValues = { ...currentFilterValues, conceptset: id };
+		} else {
+			currentFilterValues.conceptset = id;
 		}
 	}
 
-	async function loadAgeDistributionData() {
-		try {
-			const ageData = [];
+	// 범위값 추출 함수
+	function extractRangeValue(operatorObj, key) {
+		if (!operatorObj) return '';
+		return operatorObj[key] !== undefined ? operatorObj[key] : '';
+	}
 
-			const cohortName = cohortInfo.name;
-			for (const [key, value] of Object.entries(analysisData.age)) {
-				ageData.push({
-					label: key,
-					value: value,
-					series: cohortName
+	// JSON 변환 함수
+	function getCohortDefinitionJSON() {
+		return JSON.stringify(cohortDefinition, null, 2);
+	}
+
+	// 개념 ID로 개념 찾기
+	function findConceptById(conceptId: string): { id: string; name: string } | undefined {
+		for (const conceptSet of cohortDefinition.conceptsets) {
+			for (const item of conceptSet.items) {
+				if (item.concept_id === conceptId) {
+					return {
+						id: item.concept_id,
+						name: item.concept_name
+					};
+				}
+			}
+		}
+		return undefined;
+	}
+
+	function findConceptSetById(conceptSetId: string): ConceptSet | undefined {
+		for (const conceptSet of cohortDefinition.conceptsets) {
+			if (conceptSet.conceptset_id === conceptSetId) {
+				return conceptSet;
+			}
+		}
+		return undefined;
+	}
+
+	// 컨테이너 순서 변경 함수
+	function handleContainerReorder(groupType, draggedIndex, targetIndex) {
+		if (draggedIndex === targetIndex) return;
+
+		const containers = [...cohortDefinition[groupType].containers];
+
+		// 첫 번째 컨테이너는 operator가 없으므로 특별 처리
+		if (draggedIndex === 0 || targetIndex === 0) {
+			// 첫 번째 컨테이너가 관련된 경우, operator 이동 처리 필요
+			const temp = containers[draggedIndex];
+			containers.splice(draggedIndex, 1);
+			containers.splice(targetIndex, 0, temp);
+
+			// operator 재설정
+			if (containers[0].operator) {
+				// 새 첫 번째 컨테이너에 operator가 있으면 제거 (FirstContainer 타입으로 변환)
+				const firstOperator = containers[0].operator;
+				delete containers[0].operator;
+
+				// 원래 첫 번째였던 컨테이너가 이동했으면 operator 추가 (SubsequentContainer 타입으로 변환)
+				if (draggedIndex === 0 && targetIndex > 0) {
+					containers[1].operator = containers[1].operator || firstOperator || 'AND';
+				}
+			}
+		} else {
+			// 첫 번째 컨테이너가 아닌 경우 일반적인 순서 변경
+			const temp = containers[draggedIndex];
+			containers.splice(draggedIndex, 1);
+			containers.splice(targetIndex, 0, temp);
+		}
+
+		// 모든 컨테이너에 operator가 있는지 확인하고 첫 번째 이외의 컨테이너에 없으면 추가
+		for (let i = 1; i < containers.length; i++) {
+			if (!containers[i].operator) {
+				containers[i].operator = 'AND';
+			}
+		}
+
+		// 첫 번째 컨테이너에 operator가 있으면 제거
+		if (containers[0].operator) {
+			delete containers[0].operator;
+		}
+
+		cohortDefinition[groupType].containers = containers;
+	}
+
+	let conceptNameSet = $state({});
+	function getConceptNameById(conceptId: string): Promise<string> {
+		if (conceptNameSet[conceptId]) {
+			return conceptNameSet[conceptId];
+		} else {
+			fetch(`${PUBLIC_API_URI}/api/concept/${conceptId}`)
+				.then((res) => res.json())
+				.then((concept) => {
+					console.log(concept);
+					conceptNameSet[conceptId] = concept.concept_name;
 				});
-			}
-
-			return ageData;
-		} catch (error) {
-			console.error('Error loading age distribution data:', error);
-			return [];
+			return conceptId;
 		}
 	}
 
-	function estimateBinCount(min, max, uniqueCount) {
-		const range = max - min + 1;
-
-		// 값이 10개 미만이면 1개씩 구분
-		if (range <= 10 || uniqueCount <= 10) return range;
-
-		return 10;
+	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
+	function getConceptsByDomain(domainId: string): { id: string; name: string }[] {
+		return cohortDefinition.conceptsets.flatMap((cs) =>
+			cs.items
+				.filter((item) => item.domain_id === domainId)
+				.map((item) => ({
+					id: item.concept_id,
+					name: item.concept_name
+				}))
+		);
 	}
 
-	function binVisitCountDataDynamic(visitCountData, cohortName = '') {
-		const numericCounts = Object.keys(visitCountData)
-			.map((c) => parseInt(c))
-			.filter((c) => !isNaN(c));
+	// 특정 컨셉셋 ID의 개념들을 가져오는 함수
+	function getConceptsBySetId(conceptsetId: string): { id: string; name: string }[] {
+		const conceptSet = cohortDefinition.conceptsets.find((cs) => cs.conceptset_id === conceptsetId);
+		if (!conceptSet) return [];
 
-		if (numericCounts.length === 0) return [];
-
-		const min = Math.min(...numericCounts);
-		const max = Math.max(...numericCounts);
-		const uniqueCount = numericCounts.length;
-
-		// binCount 자동 계산
-		const binCount = estimateBinCount(min, max, uniqueCount);
-		const binSize = Math.max(1, Math.ceil((max - min + 1) / binCount));
-
-		const binned = new Map();
-
-		// 모든 구간 미리 세팅 (빈칸 없이)
-		for (let i = min; i <= max; i += binSize) {
-			const start = i;
-			const end = Math.min(i + binSize - 1, max);
-			const label = `${start}-${end}`;
-			binned.set(label, 0);
-		}
-
-		// 값 누적
-		for (const [key, value] of Object.entries(visitCountData)) {
-			const count = parseInt(key);
-			if (isNaN(count)) continue;
-
-			const binStart = Math.floor((count - min) / binSize) * binSize + min;
-			const binEnd = Math.min(binStart + binSize - 1, max);
-			const label = `${binStart}-${binEnd}`;
-			binned.set(label, (binned.get(label) || 0) + value);
-		}
-
-		// 결과 반환
-		return Array.from(binned.entries()).map(([label, value]) => ({
-			label,
-			value,
-			series: cohortName
+		return conceptSet.items.map((item) => ({
+			id: item.concept_id,
+			name: item.concept_name
 		}));
 	}
 
-	function updateIndicator() {
-		if (!tabElements || tabElements.length === 0) return;
-		const activeElement = tabElements.find((el) => el?.dataset.key === activeTab);
-		if (!activeElement) return;
-
-		const containerLeft = tabElements[0].parentElement.getBoundingClientRect().left;
-		const activeLeft = activeElement.getBoundingClientRect().left;
-		const relativeLeft = activeLeft - containerLeft;
-
-		indicatorStyle = `left: ${relativeLeft}px; width: ${activeElement.offsetWidth}px`;
+	async function getCohortCounts() {
+		isPatientCountUpdating = true;
+		const response = await fetch(`${PUBLIC_API_URI}/api/cohort`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				name: 'temporary',
+				description: 'temporary',
+				cohortDefinition: cohortDefinition,
+				temporary: true
+			})
+		});
+		const counts = await response.json();
+		containerCounts = counts.containerCounts;
+		isPatientCountUpdating = false;
 	}
 
-	function switchTab(tab) {
-		if (tab === 'features' && isShapLoading) {
-			loadFeatureData();
-		}
-		activeTab = tab;
-		updateIndicator();
-	}
+	async function updateCohortDefinition() {
+		isUpdating = true;
 
-	function fetchStatistics() {
-		fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/statistics/`)
-			.then((res) => res.json())
-			.then(async (data) => {
-				analysisData = data;
-				ageDistributionChartData = await loadAgeDistributionData();
-
-				visitCountChartData = binVisitCountDataDynamic(analysisData.visitCount, cohortInfo.name);
-
-				chartLoading = false;
-			});
-	}
-
-	async function copyToClipboard(text) {
-		try {
-			await navigator.clipboard.writeText(text);
-		} catch (err) {
-			console.error('클립보드 복사 실패:', err);
-		}
-	}
-
-	onMount(async () => {
-		loadFeatureData();
-		try {
-			fetchStatistics();
-
-			const res2 = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}/`);
-			if (!res2.ok) {
-				throw new Error('Failed to fetch data');
-			}
-			const data2 = await res2.json();
-
-			if (data2.length !== 0) {
-				cohortInfo = data2;
-			}
-		} catch (error) {
-			console.error('Error fetching data:', error);
-		} finally {
-			isLoading = false;
-		}
-
-		await tick();
-		updateIndicator();
-
-		resizeObserver = new ResizeObserver(() => {
-			updateIndicator();
+		const response = await fetch(`${PUBLIC_API_URI}/api/cohort/${cohort.cohort_id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				name: cohortName,
+				description: cohortDescription,
+				cohortDefinition: cohortDefinition
+			})
 		});
 
-		const tabContainer = tabElements[0]?.parentElement;
-		if (tabContainer) {
-			resizeObserver.observe(tabContainer);
-		}
-	});
-
-	onDestroy(() => {
-		if (resizeObserver) {
-			resizeObserver.disconnect();
-		}
-		if (worker) {
-			worker.terminate();
-		}
-	});
-
-	$: {
-		if (activeTab) {
-			updateIndicator();
-		}
+		const data = await response.json();
+		getCohortCounts();
+		setTimeout(() => {
+			isUpdating = false;
+			goto(`/cohort/${cohort.cohort_id}`);
+		}, 500);
 	}
+
+	function convertContainerFiltersToObject(container) {
+		container.filters.forEach((filter) => {
+			const keys = Object.keys(filter).filter((key) => key !== 'type');
+			keys.forEach((key) => {
+				const value = filter[key];
+				if (typeof value === 'string' || typeof value === 'number') {
+					filter[key] = { eq: value };
+				}
+				if (typeof value === 'object' && Object.keys(value).length === 0) {
+					delete filter[key];
+				}
+			});
+		});
+	}
+
+	function convertCohortDefinitionToObject() {
+		cohortDefinition.initialGroup.containers.forEach((container) => {
+			convertContainerFiltersToObject(container);
+		});
+		cohortDefinition.comparisonGroup.containers.forEach((container) => {
+			convertContainerFiltersToObject(container);
+		});
+	}
+
+	$effect(() => {
+		if (cohortDefinition) {
+			convertCohortDefinitionToObject();
+			console.log('cohort definition 최적화');
+		}
+	});
 </script>
 
-{#if isLoading}
-	<LoadingComponent message="Loading cohort data..." />
-{:else}
-	<div class="pl-4 pr-4">
-		<div class="mb-8 mt-3 overflow-hidden rounded-lg border">
-			<!-- 상단 정보 -->
-			<div class="flex w-full items-center justify-between bg-gray-50 p-3">
-				<div class="flex items-center gap-4">
-					<div class="font-medium text-blue-600">{cohortInfo.name}</div>
-					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs">
-						<span class="text-gray-600">Total patients:</span>
-						<span class="text-blue-800">{Number(cohortInfo.count).toLocaleString()}</span>
-					</span>
+<!-- Left Sidebar -->
+<div
+	class="fixed left-0 top-[60px] flex h-[calc(100vh-60px)] w-[200px] flex-col overflow-y-auto border-r border-gray-300 bg-gray-50"
+>
+	<button
+		on:click={updateCohortDefinition}
+		class="relative mx-3 my-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:from-blue-600 hover:to-blue-700"
+		disabled={isUpdating}
+	>
+		<span class="relative z-10 flex items-center justify-center gap-2">
+			{#if isUpdating}
+				<div
+					class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+				></div>
+				updating...
+			{:else}
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-4 w-4"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+				Save Cohort
+			{/if}
+		</span>
+	</button>
+	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
+		<h3 class="mb-3 text-sm font-bold text-gray-700">Initial Group</h3>
+		{#if cohortDefinition.initialGroup.containers.length === 0}
+			<p class="mb-2 ml-2 text-xs italic text-gray-500">No initial containers defined</p>
+		{:else}
+			{#each cohortDefinition.initialGroup.containers as container}
+				<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
+					<p class="text-xs font-medium text-blue-700">{container.name}</p>
 				</div>
+			{/each}
+		{/if}
+	</div>
 
-				<div class="flex items-center gap-4">
-					<!-- 코호트 수정 버튼 -->
-					<button
-						onclick={() => {
-							goto(`/edit/${cohortID}`);
-						}}
-						class="group relative flex items-center justify-center"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 -1 24 24"
-							stroke-width="1.5"
-							stroke="currentColor"
-							class="h-7 w-6 text-blue-600 hover:text-blue-800"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								d="M15.232 5.232a3 3 0 00-4.464 0L3 12.5V17h4.5l7.768-7.768a3 3 0 000-4.464z"
-							/>
-						</svg>
-						<span
-							class="absolute left-1/2 top-full mt-2 -translate-x-1/2 transform rounded bg-white p-1 text-xs text-gray-700 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
-						>
-							Edit
-						</span>
-					</button>
+	{#if cohortDefinition.comparisonGroup}
+		<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
+			<h3 class="mb-3 text-sm font-bold text-gray-700">Comparison Group</h3>
+			{#if cohortDefinition.comparisonGroup.containers.length === 0}
+				<p class="mb-2 ml-2 text-xs italic text-gray-500">No comparison containers defined</p>
+			{:else}
+				{#each cohortDefinition.comparisonGroup.containers as container}
+					<div class="mb-2 rounded-md bg-blue-50 px-2 py-1">
+						<p class="text-xs font-medium text-blue-700">{container.name}</p>
+					</div>
+				{/each}
+			{/if}
+		</div>
+	{/if}
 
-					<!-- 코호트 복제 버튼 -->
-					<button
-						onclick={async () => {
-							const confirmDuplicate = confirm('Do you want to create a duplicate of this cohort?');
-							if (!confirmDuplicate) return;
+	<div class="flex w-full flex-col border-b border-gray-300 px-2 py-3">
+		<div class="mb-3 flex items-center justify-between">
+			<h3 class="text-sm font-bold text-gray-700">Concept Sets</h3>
+			<button
+				class="text-xs text-blue-600 hover:text-blue-800"
+				on:click={() => (showConceptSetModal = true)}
+			>
+				Manage
+			</button>
+		</div>
+		{#if cohortDefinition.conceptsets.length === 0}
+			<p class="mb-2 ml-2 text-xs italic text-gray-500">No concept sets defined</p>
+		{:else}
+			{#each cohortDefinition.conceptsets as conceptSet}
+				<div class="mb-2 rounded-md bg-purple-50 px-2 py-1">
+					<p class="text-xs font-medium text-purple-700">{conceptSet.name}</p>
+				</div>
+			{/each}
+		{/if}
+	</div>
+</div>
 
-							await fetch(`${PUBLIC_API_URI}/api/cohort`, {
-								method: 'POST',
-								headers: {
-									'Content-Type': 'application/json'
-								},
-								body: JSON.stringify({
-									name: cohortInfo.name + ' Copy',
-									description: cohortInfo.description,
-									cohortDefinition: JSON.parse(cohortInfo.cohort_definition),
-									temporary: false
-								})
-							})
-								.then((res) => res.json())
-								.then((data) => {
-									goto(`/edit/${data.cohortId}`);
-								});
-						}}
-						class="group relative flex items-center justify-center"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 -1 20 20"
-							fill="none"
-							stroke="#4CAF50"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="h-5 w-5 hover:text-green-800"
-						>
-							<g fill="none" fill-rule="evenodd">
-								<path
-									d="m16.5 10.5v-8c0-1.1045695-.8954305-2-2-2h-8c-1.1045695 0-2 .8954305-2 2v8c0 1.1045695.8954305 2 2 2h8c1.1045695 0 2-.8954305 2-2z"
+<!-- Main Content Area -->
+<div
+	class="fixed left-[200px] top-[60px] h-[calc(100vh-60px)] w-[calc(100vw-600px)] overflow-y-auto"
+>
+	<div class="flex h-full">
+		<!-- Main Panel -->
+		<div class="flex flex-1 flex-col p-5">
+			<div class="mb-8">
+				<div class="flex items-center justify-between">
+					<div class="w-2/3">
+						<div class="group relative">
+							<label
+								for="cohortName"
+								class="mb-1 block flex px-1 text-sm font-medium text-gray-700"
+							>
+								<svg
+									class="h-4 w-4 text-gray-400"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+									/>
+								</svg>
+								Cohort Name
+							</label>
+
+							<div class="relative">
+								<input
+									type="text"
+									id="cohortName"
+									class="w-full rounded border-0 bg-transparent p-0 text-2xl font-bold text-gray-800 transition-colors duration-200 focus:ring-0 group-hover:bg-gray-50"
+									bind:value={cohortName}
 								/>
-								<path
-									d="m4.5 4.50345827h-2c-1.1045695 0-2 .8954305-2 2v7.99654173c0 1.1045695.8954305 2 2 2h.00345528l8.00000002-.0138241c1.1032187-.001906 1.9965447-.8967767 1.9965447-1.9999971v-1.9827205"
+							</div>
+						</div>
+						<div class="group relative mt-4">
+							<label
+								for="cohortDescription"
+								class="mb-1 block flex px-1 text-sm font-medium text-gray-700"
+							>
+								<svg
+									class="h-4 w-4 text-gray-400"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+									/>
+								</svg>
+								Description
+							</label>
+							<div class="relative">
+								<textarea
+									id="cohortDescription"
+									on:input={(e) => {
+										const target = e.target;
+										cohortDescription = target.value;
+										target.style.height = 'auto';
+										target.style.height = target.scrollHeight + 'px';
+									}}
+									class="w-full overflow-hidden rounded border-0 bg-transparent p-0 text-sm text-gray-600 transition-colors duration-200 focus:ring-0 group-hover:bg-gray-50"
+									bind:value={cohortDescription}
+									style="min-height: 1.5rem; height: auto; resize: none;"
 								/>
-								<path d="m10.5 3.5v6" />
-								<path d="m10.5 3.5v6" transform="matrix(0 1 -1 0 17 -4)" />
-							</g>
-						</svg>
-						<span
-							class="absolute left-1/2 top-full mt-2 -translate-x-1/2 transform rounded bg-white p-1 text-xs text-gray-700 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
-						>
-							Duplicate
-						</span>
-					</button>
+							</div>
+						</div>
+					</div>
 
-					<!-- 코호트 삭제 버튼 -->
 					<button
-						onclick={async () => {
-							const confirmDelete = confirm(
-								'Are you sure you want to delete this cohort? This action cannot be undone.'
-							);
-							if (!confirmDelete) return;
-
-							await fetch(`${PUBLIC_API_URI}/api/cohort/${cohortID}`, {
-								method: 'DELETE'
-							})
-								.then(() => {
-									goto('/cohort');
-								})
-								.catch((error) => {
-									console.error('Error deleting cohort:', error);
-								});
-						}}
-						class="group relative flex items-center justify-center transition-colors hover:bg-red-50 hover:text-red-500"
+						class="relative flex items-center rounded-2xl px-4 py-2"
+						on:click={() => (showCohortAIModal = true)}
 					>
-						<svg
-							class="h-5 w-5"
-							viewBox="0 1 24 24"
-							fill="none"
-							stroke="red"
-							stroke-width="1"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<polyline points="3 6 5 6 21 6"></polyline>
-							<path
-								d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-							></path>
-						</svg>
 						<span
-							class="absolute left-1/2 top-full mt-2 -translate-x-1/2 transform rounded bg-white p-1 text-xs text-gray-700 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
+							class="animate-gradient-rotation absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400"
+						></span>
+						<span class="absolute inset-[3px] rounded-xl bg-white"></span>
+						<span
+							class="relative bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-sm font-medium text-transparent"
+							>use Cohort AI</span
 						>
-							Delete
-						</span>
 					</button>
 				</div>
 			</div>
 
-			<!-- 상세 정보 -->
-			<div class="border-t p-4">
-				<div class="grid grid-cols-2 gap-4 text-sm">
-					<div>
-						<p class="text-gray-500">ID</p>
-						<p class="font-medium">{cohortInfo.cohort_id}</p>
+			<!-- Initial Group Section -->
+			<div class="mb-6">
+				<div class="mb-4 flex items-center justify-between">
+					<h3 class="text-lg font-semibold text-gray-800">Initial Group</h3>
+					<button
+						class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+						on:click={() => addContainer('initialGroup')}
+					>
+						Add Container
+					</button>
+				</div>
+
+				<div class="space-y-6">
+					{#each cohortDefinition.initialGroup.containers as container, containerIndex}
+						<div
+							class="cursor-move rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 {draggedContainerIndex ===
+								containerIndex && draggedGroupType === 'initialGroup'
+								? 'opacity-50'
+								: ''} {hoveredContainerIndex === containerIndex &&
+							draggedContainerIndex !== null &&
+							draggedContainerIndex !== containerIndex &&
+							draggedGroupType === 'initialGroup'
+								? 'border-blue-400 bg-blue-50'
+								: ''}"
+							draggable="true"
+							on:dragstart={() => {
+								draggedContainerIndex = containerIndex;
+								draggedGroupType = 'initialGroup';
+							}}
+							on:dragover|preventDefault={() => {
+								hoveredContainerIndex = containerIndex;
+							}}
+							on:drop|preventDefault={() => {
+								if (draggedGroupType === 'initialGroup') {
+									handleContainerReorder(
+										'initialGroup',
+										draggedContainerIndex,
+										hoveredContainerIndex
+									);
+								}
+								draggedContainerIndex = null;
+								hoveredContainerIndex = null;
+								draggedGroupType = null;
+							}}
+						>
+							<ContainerHeader
+								name={container.name}
+								operator={container.operator || 'AND'}
+								patientCount={containerCounts[containerIndex] || 0}
+								canRemove={containerIndex > 0 ||
+									cohortDefinition.initialGroup.containers.length > 1}
+								isFirstContainer={containerIndex === 0}
+								groupType="initialGroup"
+								{containerIndex}
+								isLoading={isPatientCountUpdating}
+								onContainerNameChange={updateContainerName}
+								onOperatorChange={updateContainerOperator}
+								onAddFilter={() => {
+									editingGroupType = 'initialGroup';
+									editingContainerIndex = containerIndex;
+									selectedDomainType = null;
+								}}
+								onRemove={removeContainer}
+							/>
+
+							{#if container.filters.length === 0}
+								<div
+									class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
+								>
+									<p class="text-gray-500">No filters added. Click "Add Filter" to add a filter.</p>
+								</div>
+							{:else}
+								<div class="space-y-4">
+									{#each container.filters as filter, filterIndex}
+										<div class="rounded border border-gray-200 bg-gray-50 p-3">
+											<div class="mb-2 flex items-center justify-between">
+												<h5 class="text-base font-medium text-gray-700">
+													{getDomainTypeName(filter.type)}
+												</h5>
+												<div class="flex space-x-2">
+													<button
+														class="text-xs text-blue-500 hover:text-blue-700"
+														on:click={() => editFilter('initialGroup', containerIndex, filterIndex)}
+													>
+														Edit
+													</button>
+													<button
+														class="text-xs text-red-500 hover:text-red-700"
+														on:click={() =>
+															removeFilter('initialGroup', containerIndex, filterIndex)}
+													>
+														Remove
+													</button>
+												</div>
+											</div>
+
+											<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2">
+												{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
+													<div>
+														<span class="font-medium">{property}:</span>
+														{displayPropertyValue(value, domainProperties[filter.type].find((filter) => filter.name === property)?.type || '')}
+													</div>
+												{/each}
+											</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Comparison Group Section -->
+			{#if cohortDefinition.comparisonGroup}
+				<div class="mb-6">
+					<div class="mb-4 flex items-center justify-between">
+						<div class="flex items-center">
+							<h3 class="text-lg font-semibold text-gray-800">Comparison Group</h3>
+							<span class="ml-3 text-xs text-gray-500"
+								>Combined with Initial Group using AND logic</span
+							>
+						</div>
+						<button
+							class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+							on:click={() => addContainer('comparisonGroup')}
+						>
+							Add Container
+						</button>
 					</div>
-					<div>
-						<p class="text-gray-500">Author</p>
-						<p class="font-medium">anonymous</p>
-						<!-- <p class="font-medium">{cohortInfo.author}</p> -->
-						<!--  ({analysisData.basicInfo.author.department}) -->
-					</div>
-					<div>
-						<p class="text-gray-500">Created at</p>
-						<p class="font-medium">{new Date(cohortInfo.created_at).toLocaleString()}</p>
-					</div>
-					<div>
-						<p class="text-gray-500">Updated at</p>
-						<p class="font-medium">{new Date(cohortInfo.updated_at).toLocaleString()}</p>
-					</div>
-					<div class="col-span-2">
-						<p class="text-gray-500">Description</p>
-						<p class="font-medium">{cohortInfo.description}</p>
+
+					<div class="space-y-6">
+						{#each cohortDefinition.comparisonGroup.containers as container, containerIndex}
+							<div
+								class="cursor-move rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 {draggedContainerIndex ===
+									containerIndex && draggedGroupType === 'comparisonGroup'
+									? 'opacity-50'
+									: ''} {hoveredContainerIndex === containerIndex &&
+								draggedContainerIndex !== null &&
+								draggedContainerIndex !== containerIndex &&
+								draggedGroupType === 'comparisonGroup'
+									? 'border-blue-400 bg-blue-50'
+									: ''}"
+								draggable="true"
+								on:dragstart={() => {
+									draggedContainerIndex = containerIndex;
+									draggedGroupType = 'comparisonGroup';
+								}}
+								on:dragover|preventDefault={() => {
+									hoveredContainerIndex = containerIndex;
+								}}
+								on:drop|preventDefault={() => {
+									if (draggedGroupType === 'comparisonGroup') {
+										handleContainerReorder(
+											'comparisonGroup',
+											draggedContainerIndex,
+											hoveredContainerIndex
+										);
+									}
+									draggedContainerIndex = null;
+									hoveredContainerIndex = null;
+									draggedGroupType = null;
+								}}
+							>
+								<ContainerHeader
+									name={container.name}
+									operator={container.operator || 'AND'}
+									patientCount={containerCounts[
+										containerIndex + cohortDefinition.initialGroup.containers.length
+									] || 0}
+									canRemove={containerIndex > 0 ||
+										cohortDefinition.comparisonGroup.containers.length > 1}
+									isFirstContainer={containerIndex === 0}
+									groupType="comparisonGroup"
+									{containerIndex}
+									isLoading={isPatientCountUpdating}
+									onContainerNameChange={updateContainerName}
+									onOperatorChange={updateContainerOperator}
+									onAddFilter={() => {
+										editingGroupType = 'comparisonGroup';
+										editingContainerIndex = containerIndex;
+										selectedDomainType = null;
+									}}
+									onRemove={removeContainer}
+								/>
+
+								{#if container.filters.length === 0}
+									<div
+										class="flex items-center justify-center rounded-lg border border-dashed border-gray-300 p-6"
+									>
+										<p class="text-gray-500">
+											No filters added. Click "Add Filter" to add a filter.
+										</p>
+									</div>
+								{:else}
+									<div class="space-y-4">
+										{#each container.filters as filter, filterIndex}
+											<div class="rounded border border-gray-200 bg-gray-50 p-3">
+												<div class="mb-2 flex items-center justify-between">
+													<h5 class="text-base font-medium text-gray-700">
+														{getDomainTypeName(filter.type)}
+													</h5>
+													<div class="flex space-x-2">
+														<button
+															class="text-xs text-blue-500 hover:text-blue-700"
+															on:click={() =>
+																editFilter('comparisonGroup', containerIndex, filterIndex)}
+														>
+															Edit
+														</button>
+														<button
+															class="text-xs text-red-500 hover:text-red-700"
+															on:click={() =>
+																removeFilter('comparisonGroup', containerIndex, filterIndex)}
+														>
+															Remove
+														</button>
+													</div>
+												</div>
+
+												<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 md:grid-cols-2">
+													{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
+														<div>
+															<span class="font-medium">{property}:</span>
+															{#if domainTypes.find((domain) => domain.type === filter.type)?.type === 'concept'}
+																{displayPropertyValue(value, 'concept')}
+															{:else}
+																{displayPropertyValue(value, property)}
+															{/if}
+														</div>
+													{/each}
+												</div>
+											</div>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/each}
 					</div>
 				</div>
+			{/if}
+
+			<!-- Cohort JSON display (for debugging) -->
+			<div class="mb-6 rounded-lg border border-gray-200 p-4">
+				<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON (Developer)</h3>
+				<pre
+					class="h-60 overflow-auto rounded-md bg-gray-100 p-2 text-xs">{getCohortDefinitionJSON()}</pre>
 			</div>
 		</div>
 	</div>
+</div>
+<div
+	class="fixed right-0 top-[60px] h-[calc(100vh-60px)] w-[400px] overflow-y-auto border-l border-gray-300 bg-gray-50 p-5"
+>
+	{#if selectedDomainType === null}
+		<div class="mb-4">
+			<!-- Display context info based on the current editing state -->
+			{#if editingGroupType && editingContainerIndex !== null}
+				<h3 class="mb-2 text-xl font-bold text-gray-800">
+					Add Filter to {editingGroupType === 'initialGroup' ? 'Initial Group' : 'Comparison Group'}
+				</h3>
+				<p class="mb-4 text-sm text-gray-600">
+					Container: {cohortDefinition[editingGroupType].containers[editingContainerIndex]?.name}
+				</p>
+			{:else}
+				<h3 class="mb-3 text-xl font-bold text-gray-800">Add Filter</h3>
+				<p class="mb-4 text-sm text-gray-600">Select a domain type to add a filter.</p>
+			{/if}
+		</div>
 
-	<div class="mb-5 w-full border-b border-gray-300">
-		<div class="relative flex">
-			{#each tabs as tab, i}
+		<div class="space-y-2">
+			{#each domainTypes as domain}
 				<button
-					class="tab"
-					class:active={activeTab === tab.key}
-					onclick={() => switchTab(tab.key)}
-					bind:this={tabElements[i]}
-					data-key={tab.key}
+					class="w-full rounded-md border border-blue-200 bg-white p-3 text-left transition-colors hover:bg-blue-50"
+					on:click={() => (selectedDomainType = domain.type)}
 				>
-					{tab.label}
+					<div class="flex items-center justify-start">
+						<span class="font-medium text-blue-600">{domain.name}</span>
+					</div>
+					<p class="mt-1 text-xs text-gray-500">{domain.description}</p>
 				</button>
 			{/each}
-			<div
-				class="absolute bottom-0 h-0.5 bg-black transition-all duration-300 ease-in-out"
-				style={indicatorStyle}
-			></div>
 		</div>
-	</div>
-
-	<div class="pb-10">
-		{#if activeTab === 'definition'}
-			<div class="p-3">
-				<!-- Cohort JSON display (for debugging) -->
-				<div class="rounded-lg border border-gray-200 p-4">
-					<div class="mb-2 flex items-center justify-between">
-						<h3 class="mb-2 text-lg font-semibold text-gray-800">Cohort Definition JSON</h3>
-						<button
-							class="flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-200"
-							onclick={() => copyToClipboard(JSON.stringify(cohortInfo.cohort_definition, null, 2))}
-						>
-							<svg
-								class="h-3 w-3"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-							</svg>
-							Copy
-						</button>
-					</div>
-					<pre class="rounded-md bg-gray-100 p-2 text-xs">{JSON.stringify(
-							JSON.parse(cohortInfo.cohort_definition),
-							null,
-							2
-						)}
-					</pre>
-				</div>
+	{:else}
+		<!-- Domain Type Filter Editing -->
+		<div class="mb-4">
+			<div class="flex items-center justify-between">
+				<h3 class="text-xl font-bold text-gray-800">
+					{getDomainTypeName(selectedDomainType)}
+				</h3>
+				<button
+					class="text-sm text-gray-500 hover:text-gray-700"
+					on:click={() => {
+						selectedDomainType = null;
+						resetFilterValues();
+					}}
+				>
+					Cancel
+				</button>
 			</div>
-		{/if}
+			<p class="mb-4 text-sm text-gray-600">Configure filter properties.</p>
+		</div>
 
-		{#if activeTab === 'features'}
-			<div class="space-y-6 p-6">
-				<h2 class="text-xl font-semibold text-gray-800">
-					Cohort Feature Importance Analysis (SHAP)
-				</h2>
-				<div class="mb-4">
-					<p class="text-sm text-gray-600">
-						Enter the size of the comparison group to analyze the top features influencing this
-						cohort using the SHAP algorithm.
-					</p>
-					<p class="text-sm text-gray-600">
-						During model training, concept IDs used for patient cohort classification are excluded,
-						and the model is built solely based on other clinical variables.
-					</p>
-				</div>
+		<div class="mb-6 space-y-4">
+			{#if domainProperties[selectedDomainType]}
+				{#each domainProperties[selectedDomainType] as property}
+					<!-- Property input fields by type -->
+					<div class="mb-3">
+						<label class="mb-1 block text-sm font-medium text-gray-700">
+							{property.label}
+						</label>
 
-				<div class="flex items-end space-x-4">
-					<div class="max-w-xs flex-grow">
-						<label for="comparisonSize" class="mb-1 block text-sm font-medium text-gray-700"
-							>Comparison Group Size Multiplier:</label
-						>
-						<input
-							type="number"
-							id="comparisonSize"
-							bind:value={comparisonGroupSize}
-							placeholder="e.g., 2"
-							class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-							min="1"
-							disabled={isLoading}
-						/>
-					</div>
-					<button
-						onclick={startAnalysis}
-						disabled={isShapLoading || !comparisonGroupSize || parseInt(comparisonGroupSize) <= 0}
-						class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{#if isShapLoading}
-							Analyzing...
-						{:else}
-							Start Analysis
+						{#if property.type === 'checkbox'}
+							<div class="flex items-center">
+								<input
+									type="checkbox"
+									class="h-4 w-4 rounded border-gray-300 text-blue-600"
+									checked={currentFilterValues[property.name] === true}
+									on:change={(e) => updateFilterValue(property.name, e.target.checked)}
+								/>
+								<span class="ml-2 text-sm text-gray-600">
+									{property.name === 'first'
+										? 'Limit to first occurrence'
+										: property.name === 'abnormal'
+											? 'Abnormal result only'
+											: ''}
+								</span>
+							</div>
+						{:else if property.type === 'conceptset'}
+							<IdentifierOperator
+								value={currentFilterValues[property.name] || {}}
+								options={cohortDefinition.conceptsets.map((cs) => ({
+									id: cs.conceptset_id.toString(),
+									name: cs.name || `Concept Set ${cs.conceptset_id}`
+								}))}
+								placeholder="Select concept set"
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
+						{:else if property.type === 'concept'}
+							<ConceptSelectorWrapper
+								value={currentFilterValues[property.name] || {}}
+								{property}
+								onChange={updateFilterValue}
+							/>
+						{:else if property.type === 'numberrange'}
+							<NumberOperator
+								value={currentFilterValues[property.name] || {}}
+								placeholder="Enter number"
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
+						{:else if property.type === 'daterange'}
+							<DateOperator
+								value={currentFilterValues[property.name] || {}}
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
+						{:else if property.type === 'string'}
+							<StringOperator
+								value={currentFilterValues[property.name] || {}}
+								placeholder="Enter text"
+								on:change={(e) => updateFilterValue(property.name, e.detail)}
+							/>
 						{/if}
-					</button>
-
-					{#if hasPreviousAnalysis && !analysisStarted}
-						<button
-							onclick={loadPreviousAnalysis}
-							class="flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="mr-1 h-4 w-4"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-								/>
-							</svg>
-							Load Previous Analysis
-						</button>
-					{/if}
-				</div>
-				{#if hasPreviousAnalysis && !analysisStarted}
-					<div class="mt-2">
-						<p class="text-xs text-gray-500">
-							Previous analysis available from {previousAnalysisTime}
-						</p>
 					</div>
-				{/if}
-				{#if isShapLoading}
-					<div class="mt-6 flex items-center justify-center space-x-2 text-gray-600">
-						<svg
-							class="h-5 w-5 animate-spin text-blue-600"
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
-						<span>Running SHAP analysis. Please wait...</span>
-					</div>
-				{/if}
-
-				{#if analysisError && !isShapLoading}
-					<div class="mt-6 rounded-md border border-red-300 bg-red-100 p-4 text-sm text-red-800">
-						<p><strong class="font-medium">Error:</strong> {analysisError}</p>
-					</div>
-				{/if}
-
-				{#if !isShapLoading && !analysisError && shapFeatures.length > 0}
-					{@const procedureFeatures = shapFeatures
-						.filter((f) => f.domain === 'procedure')
-						.sort((a, b) => b.influence - a.influence)
-						.slice(0, 10)}
-					{@const conditionFeatures = shapFeatures
-						.filter((f) => f.domain === 'condition')
-						.sort((a, b) => b.influence - a.influence)
-						.slice(0, 10)}
-
-					<div class="mt-8">
-						<div class="mb-1 flex items-center justify-between">
-							{#if featureData.features.features[0].multiple > 0}
-								<span class="text-sm text-gray-600">
-									<span class="text-gray-500">Comparison Size (people): </span>
-									<span class="font-medium text-zinc-700"
-										>{cohortInfo.count * featureData.features.features[0].multiple}</span
-									>
-									<span class="font-medium text-zinc-700">
-										({featureData.features.features[0].multiple} x {cohortInfo.count})</span
-									>
-								</span>
-							{:else}
-								<span></span>
-							{/if}
-
-							{#if featureData.features.features[0].execution_time}
-								<span class="text-sm text-gray-500">
-									<span class="text-gray-500">Execution Time: </span>
-									<span class="font-medium text-zinc-700"
-										>{formatExecutionTime(featureData.features.features[0].execution_time)}</span
-									>
-								</span>
-							{/if}
-						</div>
-
-						<div class="mb-5 flex items-center justify-start gap-3">
-							{#if featureData.features.features.find((f) => f.domain_name === 'condition')}
-								<span class="text-sm text-gray-600">
-									<span class="text-gray-500">Condition Model F1 Score: </span>
-									<span class="font-medium text-zinc-700"
-										>{featureData.features.features.find((f) => f.domain_name === 'condition')
-											.avg_f1_score}</span
-									>
-								</span>
-							{/if}
-							{#if featureData.features.features.find((f) => f.domain_name === 'procedure')}
-								<span class="text-sm text-gray-500">|</span>
-								<span class="text-sm text-gray-600">
-									<span class="text-gray-500">Procedure Model F1 Score: </span>
-									<span class="font-medium text-zinc-700"
-										>{featureData.features.features.find((f) => f.domain_name === 'procedure')
-											.avg_f1_score}</span
-									>
-								</span>
-							{/if}
-						</div>
-
-						<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-							<!-- Condition Column -->
-							<div>
-								<div class="mb-2 flex items-center justify-between">
-									<h4 class="text-sm font-semibold text-gray-700">Condition</h4>
-									<button
-										title="Download CSV"
-										aria-label="export csv"
-										class="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-500"
-										onclick={() =>
-											exportToCSV(
-												featureData.features.features.filter((f) => f.domain_name === 'condition'),
-												'condition_features.csv'
-											)}
-									>
-										<svg
-											class="h-5 w-5"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-										>
-											<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-											<polyline points="7 10 12 15 17 10"></polyline>
-											<line x1="12" y1="15" x2="12" y2="3"></line>
-										</svg>
-									</button>
-								</div>
-								{#if featureData.features.features.filter((f) => f.domain_name === 'condition').length > 0}
-									<div class="overflow-hidden rounded-lg border shadow-sm">
-										<table class="min-w-full divide-y divide-gray-200 text-xs">
-											<thead class="sticky top-0 z-10 bg-gray-50">
-												<tr>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Rank</th
-													>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Concept Id</th
-													>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Concept Name</th
-													>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Influence</th
-													>
-												</tr>
-											</thead>
-											<tbody class="divide-y divide-gray-200 bg-white">
-												{#each featureData.features.features.filter((f) => f.domain_name === 'condition') as feature}
-													<tr>
-														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
-															>{feature.rank}</td
-														>
-														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
-															>{feature.concept_id}</td
-														>
-														<td
-															class="max-w-[200px] truncate px-3 py-1.5 font-medium text-gray-700"
-															title={feature.concept_name}
-														>
-															{feature.concept_name}
-														</td>
-														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
-															>{feature.influence}%</td
-														>
-													</tr>
-												{/each}
-											</tbody>
-										</table>
-									</div>
-								{:else}
-									<div
-										class="flex h-[250px] items-center justify-center rounded-lg border p-4 text-center text-xs text-gray-500 shadow-sm"
-									>
-										No significant condition features found.
-									</div>
-								{/if}
-							</div>
-							<!-- Procedure Column -->
-							<div>
-								<div class="mb-2 flex items-center justify-between">
-									<h4 class="text-sm font-semibold text-gray-700">Procedure</h4>
-									<button
-										title="Download CSV"
-										aria-label="export csv"
-										class="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-500"
-										onclick={() =>
-											exportToCSV(
-												featureData.features.features.filter((f) => f.domain_name === 'procedure'),
-												'procedure_features.csv'
-											)}
-									>
-										<svg
-											class="h-5 w-5"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-										>
-											<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-											<polyline points="7 10 12 15 17 10"></polyline>
-											<line x1="12" y1="15" x2="12" y2="3"></line>
-										</svg>
-									</button>
-								</div>
-								{#if featureData.features.features.filter((f) => f.domain_name === 'procedure').length > 0}
-									<div class="overflow-hidden rounded-lg border shadow-sm">
-										<table class="min-w-full divide-y divide-gray-200 text-xs">
-											<thead class="sticky top-0 z-10 bg-gray-50">
-												<tr>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Rank</th
-													>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Concept Id</th
-													>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Concept Name</th
-													>
-													<th
-														scope="col"
-														class="px-3 py-2 text-left font-medium uppercase tracking-wider text-gray-500"
-														>Influence</th
-													>
-												</tr>
-											</thead>
-											<tbody class="divide-y divide-gray-200 bg-white">
-												{#each featureData.features.features.filter((f) => f.domain_name === 'procedure') as feature}
-													<tr>
-														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
-															>{feature.rank}</td
-														>
-														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
-															>{feature.concept_id}</td
-														>
-														<td
-															class="max-w-[200px] truncate px-3 py-1.5 font-medium text-gray-700"
-															title={feature.concept_name}
-														>
-															{feature.concept_name}
-														</td>
-														<td class="whitespace-nowrap px-3 py-1.5 text-gray-500"
-															>{feature.influence}%</td
-														>
-													</tr>
-												{/each}
-											</tbody>
-										</table>
-									</div>
-								{:else}
-									<div
-										class="flex h-[250px] items-center justify-center rounded-lg border p-4 text-center text-xs text-gray-500 shadow-sm"
-									>
-										No significant procedure features found.
-									</div>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{/if}
-			</div>
-		{/if}
-
-		{#if activeTab == 'charts'}
-			{#if !chartLoading}
-				<div class="w-full">
-					<div class="grid grid-cols-6 gap-4">
-						<ChartCard
-							title="Gender Ratio"
-							description="The ratio of genders within the cohort."
-							type="third"
-							hasTableView={true}
-							isTableView={isTableView.gender}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.gender = detail)}
-						>
-							<SingleDonutChartWrapper data={analysisData.gender} />
-
-							<div slot="table" class="flex h-full w-full flex-col pt-2">
-								<DataTable
-									data={transformDonutChartToTableData({
-										cohortName: cohortInfo.name,
-										data: analysisData.gender,
-										totalPatients: cohortInfo.count
-									})}
-								/>
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Mortality"
-							description="The percentage of patients within the cohort who have died."
-							type="third"
-							hasTableView={true}
-							isTableView={isTableView.mortality}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.mortality = detail)}
-						>
-							<SingleDonutChartWrapper data={analysisData.mortality} />
-
-							<div slot="table" class="flex h-full w-full flex-col pt-2">
-								<DataTable
-									data={transformDonutChartToTableData({
-										cohortName: cohortInfo.name,
-										data: analysisData.mortality,
-										totalPatients: cohortInfo.count
-									})}
-								/>
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Visit Type Ratio"
-							description="The proportion of different types of medical visits (outpatient, inpatient, emergency room, etc.) that occurred during the cohort period."
-							type="third"
-							hasTableView={true}
-							isTableView={isTableView.visitTypeRatio}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.visitTypeRatio = detail)}
-						>
-							<SingleDonutChartWrapper data={analysisData.visitType} />
-
-							<div slot="table" class="flex h-full w-full flex-col pt-2">
-								<DataTable
-									data={transformDonutChartToTableData({
-										cohortName: cohortInfo.name,
-										data: analysisData.visitType,
-										totalPatients: cohortInfo.count
-									})}
-								/>
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Distribution of First Occurrence Age"
-							description="The age distribution of patients at the time of their first medical visit during the cohort period."
-							type="half"
-							hasTableView={true}
-							isTableView={isTableView.age}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.age = detail)}
-						>
-							<LineChart
-								data={ageDistributionChartData}
-								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
-								showLegend={false}
-							/>
-
-							<div slot="table" class="flex h-full w-full flex-col p-4">
-								<DataTable data={transformLineChartToTableData(ageDistributionChartData)} />
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Distribution of Visit Count"
-							description="The distribution of the total number of medical visits made by patients during the cohort period."
-							type="half"
-							hasTableView={true}
-							isTableView={isTableView.visitCount}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.visitCount = detail)}
-						>
-							<LineChart
-								data={visitCountChartData}
-								cohortColorMap={{ [cohortInfo.name]: SINGLE_DATA_COLOR }}
-								showLegend={false}
-							/>
-
-							<div slot="table" class="flex h-full w-full flex-col p-4">
-								<DataTable data={transformLineChartToTableData(visitCountChartData)} />
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Top 10 Drugs"
-							description="The list of the top 10 most frequently prescribed medications for patients in the cohort."
-							type="half"
-							hasTableView={true}
-							isTableView={isTableView.topTenDrugs}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.topTenDrugs = detail)}
-						>
-							<BarChartWrapper
-								data={Object.entries(analysisData.topTenDrug).map(([name, count]) => ({
-									name,
-									count
-								}))}
-								cohortName={cohortInfo.name}
-								cohortTotalCount={cohortInfo.count}
-							/>
-
-							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-								<BarChartTableView
-									data={Object.entries(analysisData.topTenDrug).map(([name, count]) => ({
-										name,
-										count
-									}))}
-									domainKey="drug"
-									cohortName={cohortInfo.name}
-									cohortTotalCount={cohortInfo.count}
-								/>
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Top 10 Conditions"
-							description="The list of the top 10 most frequently diagnosed medical conditions among patients in the cohort."
-							type="half"
-							hasTableView={true}
-							isTableView={isTableView.topTenConditions}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.topTenConditions = detail)}
-						>
-							<BarChartWrapper
-								data={Object.entries(analysisData.topTenCondition).map(([name, count]) => ({
-									name,
-									count
-								}))}
-								cohortName={cohortInfo.name}
-								cohortTotalCount={cohortInfo.count}
-							/>
-
-							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-								<BarChartTableView
-									data={Object.entries(analysisData.topTenCondition).map(([name, count]) => ({
-										name,
-										count
-									}))}
-									domainKey="condition"
-									cohortName={cohortInfo.name}
-									cohortTotalCount={cohortInfo.count}
-								/>
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Top 10 Procedures"
-							description="The list of the top 10 most frequently performed procedures and medical tests on patients in the cohort."
-							type="half"
-							hasTableView={true}
-							isTableView={isTableView.topTenProcedures}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.topTenProcedures = detail)}
-						>
-							<BarChartWrapper
-								data={Object.entries(analysisData.topTenProcedure).map(([name, count]) => ({
-									name,
-									count
-								}))}
-								cohortName={cohortInfo.name}
-								cohortTotalCount={cohortInfo.count}
-							/>
-
-							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-								<BarChartTableView
-									data={Object.entries(analysisData.topTenProcedure).map(([name, count]) => ({
-										name,
-										count
-									}))}
-									domainKey="procedure"
-									cohortName={cohortInfo.name}
-									cohortTotalCount={cohortInfo.count}
-								/>
-							</div>
-						</ChartCard>
-
-						<ChartCard
-							title="Top 10 Measurements"
-							description="The list of the top 10 most frequently recorded clinical measurements within the cohort."
-							type="half"
-							hasTableView={true}
-							isTableView={isTableView.topTenMeasurements}
-							hasXButton={false}
-							on:toggleView={({ detail }) => (isTableView.topTenMeasurements = detail)}
-						>
-							<BarChartWrapper
-								data={Object.entries(analysisData.topTenMeasurement).map(([name, count]) => ({
-									name,
-									count
-								}))}
-								cohortName={cohortInfo.name}
-								cohortTotalCount={cohortInfo.count}
-							/>
-
-							<div slot="table" class="flex h-full w-full flex-col overflow-auto p-4">
-								<BarChartTableView
-									data={Object.entries(analysisData.topTenMeasurement).map(([name, count]) => ({
-										name,
-										count
-									}))}
-									domainKey="measurement"
-									cohortName={cohortInfo.name}
-									cohortTotalCount={cohortInfo.count}
-								/>
-							</div>
-						</ChartCard>
-					</div>
-				</div>
+				{/each}
 			{:else}
-				Please wait...
+				<p class="italic text-gray-600">No properties available for this domain type.</p>
 			{/if}
-		{/if}
-	</div>
+		</div>
 
-	<Footer />
-{/if}
+		<div class="mt-6 flex justify-end">
+			<button
+				class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+				on:click={createFilter}
+			>
+				{editingFilterIndex !== null ? 'Update' : 'Add'} Filter
+			</button>
+		</div>
+	{/if}
+</div>
+
+<!-- Concept Set Management Modal -->
+<ConceptSetModal
+	bind:show={showConceptSetModal}
+	conceptSets={cohortDefinition.conceptsets}
+	on:update={handleConceptSetUpdate}
+	on:close={() => (showConceptSetModal = false)}
+/>
+
+<!-- Cohort AI Modal -->
+<CohortAIModal
+	bind:show={showCohortAIModal}
+	onClose={() => (showCohortAIModal = false)}
+	onSubmit={handleCohortAISubmit}
+/>
 
 <style>
-	.tab {
-		padding: 0.75rem 1.5rem;
-		margin-right: 1rem;
-		cursor: pointer;
-		border-bottom: 2px solid transparent;
-		position: relative;
+	@keyframes gradient-rotate {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
 	}
 
-	.tab.active {
-		font-weight: 500;
+	:global(.animate-gradient-rotation) {
+		background-size: 200% 200%;
+		animation: gradient-rotate 3s ease infinite;
 	}
 </style>
