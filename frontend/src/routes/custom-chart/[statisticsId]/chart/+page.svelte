@@ -750,7 +750,7 @@
 	}
 
 	function findConceptSetById(conceptSetId: string): ConceptSet | undefined {
-		for (const conceptSet of cohortDefinition.conceptsets) {
+		for (const conceptSet of conceptsets) {
 			if (conceptSet.conceptset_id === conceptSetId) {
 				return conceptSet;
 			}
@@ -1177,11 +1177,7 @@
 														<span class="font-medium">{property}:</span>
 														{displayPropertyValue(
 															value,
-															property === 'gender' ||
-																property === 'raceType' ||
-																property === 'ethnicityType'
-																? 'concept'
-																: undefined
+															property
 														)}
 													</div>
 												{/each}
