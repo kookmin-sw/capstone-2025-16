@@ -758,7 +758,6 @@
 		return undefined;
 	}
 
-
 	// 컨테이너 순서 변경 함수
 	function handleContainerReorder(draggedIndex, targetIndex) {
 		if (draggedIndex === targetIndex) return;
@@ -1089,9 +1088,9 @@
 							}}
 						>
 							<div class="mb-4 flex items-center justify-between">
-								<div class="flex items-center">
-									<div>
-										<h4 class="flex items-center text-lg font-medium text-blue-600">
+								<div class="flex w-full space-x-8">
+									<div class="flex w-full flex-col">
+										<div class="flex w-full items-center text-lg font-medium text-blue-600">
 											<svg
 												class="h-4 w-4 text-gray-400"
 												xmlns="http://www.w3.org/2000/svg"
@@ -1112,32 +1111,32 @@
 												value={group.name}
 												on:change={(e) => onGroupNameChange(containerIndex, e.target.value)}
 											/>
-										</h4>
+										</div>
 									</div>
-								</div>
-								<div class="flex space-x-2">
-									<button
-										class="text-sm text-blue-500 hover:text-blue-700"
-										on:click={() => onAddFilter(containerIndex)}
-									>
-										Add Filter
-									</button>
-									{#if group.definition.data !== undefined}
+									<div class="flex space-x-2">
 										<button
-											class="text-sm text-blue-500 hover:text-blue-700"
-											on:click={() => onAddData(containerIndex)}
+											class="text-sm text-blue-500 hover:text-blue-700 whitespace-nowrap"
+											on:click={() => onAddFilter(containerIndex)}
 										>
-											Add Data
+											Add Filter
 										</button>
-									{/if}
-									{#if groups.length > 1}
-										<button
-											class="text-sm text-red-500 hover:text-red-700"
-											on:click={() => onGroupRemove(containerIndex)}
-										>
-											Remove
-										</button>
-									{/if}
+										{#if group.definition.data !== undefined}
+											<button
+												class="text-sm text-blue-500 hover:text-blue-700 whitespace-nowrap"
+												on:click={() => onAddData(containerIndex)}
+											>
+												Add Data
+											</button>
+										{/if}
+										{#if groups.length > 1}
+											<button
+												class="text-sm text-red-500 hover:text-red-700 whitespace-nowrap"
+												on:click={() => onGroupRemove(containerIndex)}
+											>
+												Remove
+											</button>
+										{/if}
+									</div>
 								</div>
 							</div>
 
