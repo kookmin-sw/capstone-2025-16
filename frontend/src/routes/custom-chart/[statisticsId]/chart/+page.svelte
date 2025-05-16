@@ -675,21 +675,12 @@
 					const opValue = value[op];
 					if (Array.isArray(opValue)) {
 						// 다중 값 처리
-						if (type === 'conceptset') {
-							const formattedValues = opValue.map((v) => findConceptSetById(v).name).join(', ');
-							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues})`);
-						} else {
-							const formattedValues = opValue.map((v) => formatValue(v, type));
-							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
-						}
+						const formattedValues = opValue.map((v) => formatValue(v, type));
+						parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
 					} else {
 						// 단일 값 처리
-						if (type === 'conceptset') {
-							const formattedValue = findConceptSetById(opValue).name;
-							parts.push(`${operatorDisplayConfig[op].label} ${formattedValue}`);
-						} else {
-							parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
-						}
+
+						parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
 					}
 				}
 			}
@@ -704,20 +695,11 @@
 	// 값 포맷팅 함수
 	function formatValue(value: any, type?: string): string {
 		// 개념 또는 개념 세트 타입 처리
-		if (type === 'concept' || type === 'conceptset') {
-			if (Array.isArray(value)) {
-				// 다중 개념 ID 처리
-				return value
-					.map((id) => {
-						const concept = findConceptById(id);
-						return concept ? concept.name : id;
-					})
-					.join(', ');
-			} else {
-				// 단일 개념 ID 처리
-				const concept = findConceptById(value);
-				return concept ? concept.name : value.toString();
-			}
+		if (type === 'conceptset') {
+			return findConceptSetById(value).name;
+		}
+		if (type === 'concept') {
+			return getConceptNameById(value);
 		}
 
 		// 날짜 타입 처리
@@ -746,7 +728,6 @@
 				}
 			}
 		}
-		return undefined;
 	}
 
 	function findConceptSetById(conceptSetId: string): ConceptSet | undefined {
@@ -771,6 +752,22 @@
 
 		groups = groups_temp;
 	}
+
+	let conceptNameSet = $state({});
+	function getConceptNameById(conceptId: string): Promise<string> {
+		if (conceptNameSet[conceptId]) {
+			return conceptNameSet[conceptId];
+		} else {
+			fetch(`https://bento.kookm.in/api/concept/${conceptId}`)
+				.then((res) => res.json())
+				.then((concept) => {
+					console.log(concept);
+					conceptNameSet[conceptId] = concept.concept_name;
+				});
+			return conceptId;
+		}
+	}
+
 
 	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
 	function getConceptsByDomain(domainId: string): { id: string; name: string }[] {
@@ -1034,7 +1031,7 @@
 								{#each Object.entries(countBy).filter(([key, value]) => value !== undefined) as [property, value]}
 									<div>
 										<span class="font-medium">{property}:</span>
-										{displayPropertyValue(value, property === 'concept' ? 'concept' : undefined)}
+										{displayPropertyValue(value, property)}
 									</div>
 								{/each}
 							</div>
@@ -1115,14 +1112,14 @@
 									</div>
 									<div class="flex space-x-2">
 										<button
-											class="text-sm text-blue-500 hover:text-blue-700 whitespace-nowrap"
+											class="whitespace-nowrap text-sm text-blue-500 hover:text-blue-700"
 											on:click={() => onAddFilter(containerIndex)}
 										>
 											Add Filter
 										</button>
 										{#if group.definition.data !== undefined}
 											<button
-												class="text-sm text-blue-500 hover:text-blue-700 whitespace-nowrap"
+												class="whitespace-nowrap text-sm text-blue-500 hover:text-blue-700"
 												on:click={() => onAddData(containerIndex)}
 											>
 												Add Data
@@ -1130,7 +1127,7 @@
 										{/if}
 										{#if groups.length > 1}
 											<button
-												class="text-sm text-red-500 hover:text-red-700 whitespace-nowrap"
+												class="whitespace-nowrap text-sm text-red-500 hover:text-red-700"
 												on:click={() => onGroupRemove(containerIndex)}
 											>
 												Remove
@@ -1175,10 +1172,7 @@
 												{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 													<div>
 														<span class="font-medium">{property}:</span>
-														{displayPropertyValue(
-															value,
-															property
-														)}
+														{displayPropertyValue(value, domainProperties[filter.type].find((filter) => filter.name === property)?.type || '')}
 													</div>
 												{/each}
 											</div>
@@ -1245,14 +1239,7 @@
 													{#each Object.entries(group.definition.data).filter(([key]) => key !== 'type') as [property, value]}
 														<div>
 															<span class="font-medium">{property}:</span>
-															{displayPropertyValue(
-																value,
-																property === 'gender' ||
-																	property === 'raceType' ||
-																	property === 'ethnicityType'
-																	? 'concept'
-																	: undefined
-															)}
+															{displayPropertyValue(value, domainProperties[filter.type].find((filter) => filter.name === property)?.type || '')}
 														</div>
 													{/each}
 												</div>

@@ -152,7 +152,7 @@
 						}
 					} else {
 						// 단일 값 처리
-						if (type === 'conceptset') {	
+						if (type === 'conceptset') {
 							const formattedValue = findConceptSetById(opValue).name;
 							parts.push(`${operatorDisplayConfig[op].label} ${formattedValue}`);
 						} else {
@@ -172,20 +172,11 @@
 	// 값 포맷팅 함수
 	function formatValue(value: any, type?: string): string {
 		// 개념 또는 개념 세트 타입 처리
-		if (type === 'concept' || type === 'conceptset') {
-			if (Array.isArray(value)) {
-				// 다중 개념 ID 처리
-				return value
-					.map((id) => {
-						const concept = findConceptById(id);
-						return concept ? concept.name : id;
-					})
-					.join(', ');
-			} else {
-				// 단일 개념 ID 처리
-				const concept = findConceptById(value);
-				return concept ? concept.name : value.toString();
-			}
+		if (type === 'conceptset') {
+			return findConceptSetById(value).name;
+		}
+		if (type === 'concept') {
+			return getConceptNameById(value);
 		}
 
 		// 날짜 타입 처리
@@ -675,6 +666,21 @@
 		cohortDefinition[groupType].containers = containers;
 	}
 
+	let conceptNameSet = $state({});
+	function getConceptNameById(conceptId: string): Promise<string> {
+		if (conceptNameSet[conceptId]) {
+			return conceptNameSet[conceptId];
+		} else {
+			fetch(`https://bento.kookm.in/api/concept/${conceptId}`)
+				.then((res) => res.json())
+				.then((concept) => {
+					console.log(concept);
+					conceptNameSet[conceptId] = concept.concept_name;
+				});
+			return conceptId;
+		}
+	}
+
 	// 개념 집합에서 특정 도메인의 개념들만 필터링하는 함수
 	function getConceptsByDomain(domainId: string): { id: string; name: string }[] {
 		return cohortDefinition.conceptsets.flatMap((cs) =>
@@ -1049,7 +1055,7 @@
 												{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 													<div>
 														<span class="font-medium">{property}:</span>
-														{displayPropertyValue(value, property)}
+														{displayPropertyValue(value, domainProperties[filter.type].find((filter) => filter.name === property)?.type || '')}
 													</div>
 												{/each}
 											</div>
@@ -1173,7 +1179,11 @@
 													{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 														<div>
 															<span class="font-medium">{property}:</span>
-															{displayPropertyValue(value, property)}
+															{#if domainTypes.find((domain) => domain.type === filter.type)?.type === 'concept'}
+																{displayPropertyValue(value, 'concept')}
+															{:else}
+																{displayPropertyValue(value, property)}
+															{/if}
 														</div>
 													{/each}
 												</div>
