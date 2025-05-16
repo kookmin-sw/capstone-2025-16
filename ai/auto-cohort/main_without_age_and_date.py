@@ -409,13 +409,13 @@ def main():
     # print("\n[Implementable Criteria 부분만]:")
     # print(implementable_text)
 
-    # implementable_text = """
-    # Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
-    # external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
-    # 2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
-    # diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
-    # stay duration of less than 24 h.
-    # # """
+    implementable_text = """
+    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    stay duration of less than 24 h.
+    # """
     
     # implementable_text = """
     # This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
@@ -446,8 +446,6 @@ def main():
     # Patients who received administration of calcineurin inhibitors (CNIs), including cyclosporin A (CsA) or tacrolimus (FK506), during their ICU stay were defined as the CNIs group.
     # The remaining patients who did not receive CNIs were defined as the control group.
     # """
-
-    implementable_text = """Insulin"""
 
     # 2. 텍스트에서 COHORT JSON 추출
     cohort_json = text_to_json(implementable_text)

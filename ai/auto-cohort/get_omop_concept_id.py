@@ -6,7 +6,7 @@ import cohort_json_schema
 from openai import OpenAI
 
 # 환경 변수 로드
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 clickhouse_host = os.environ.get('CLICKHOUSE_HOST')
 clickhouse_database = os.environ.get('CLICKHOUSE_DATABASE')
 clickhouse_user = os.environ.get('CLICKHOUSE_USER')
@@ -137,10 +137,9 @@ def refine_search_query(term) -> str:
     return refined_term
 
 # ClickHouse에서 concept 정보 조회
-def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: bool = True) -> list:
+def get_omop_concept_id(term: str, domain_id: str, limit: int = 5, auto_refine: bool = True) -> list:
     cleaned_term = clean_term(term)
     
-    # 디버깅을 위한 출력
     print(f"\n[get_omop_concept_id] 검색 용어: '{cleaned_term}', 도메인: '{domain_id}'")
     
     query = """
@@ -226,9 +225,8 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
     LIMIT %(limit)s
     """
     
-    # 실제 쿼리 출력
-    print("\n[실행될 쿼리]:")
-    print(query.replace('%(term)s', f"'%{cleaned_term}%'").replace('%(domain_id)s', f"'{domain_id}'").replace('%(limit)s', str(limit)))
+    # print("\n[실행될 쿼리]:")
+    # print(query.replace('%(term)s', f"'%{cleaned_term}%'").replace('%(domain_id)s', f"'{domain_id}'").replace('%(limit)s', str(limit)))
     
     results = clickhouse_client.execute(query, {
         'term': f'%{cleaned_term}%',
@@ -236,27 +234,24 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
         'limit': limit
     })
     
-    # 디버깅을 위한 출력
-    # print(f"검색 결과 개수: {len(results)}")
-    
     # Concept 객체로 변환
     concepts = []
     for result in results:
         if result[12] == 1:  # is_used가 1인 경우만 추가
             concept = {
-                "concept_id": str(result[0]),  # Identifier는 string
+                "concept_id": str(result[0]), 
                 "concept_name": result[1],
                 "domain_id": result[2],
                 "vocabulary_id": result[3],
                 "concept_class_id": result[4],
                 "standard_concept": result[5],
                 "concept_code": result[6],
-                "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,  # date를 문자열로 변환
-                "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,    # date를 문자열로 변환
+                "valid_start_date": result[7].strftime("%Y-%m-%d") if result[7] else None,
+                "valid_end_date": result[8].strftime("%Y-%m-%d") if result[8] else None,
                 "invalid_reason": result[9],
                 "parent_count": result[10],    # 부모 개념 수
                 "child_count": result[11],     # 자식 개념 수
-                "includeDescendants": True,  # 기본값 설정
+                "includeDescendants": True,
                 "includeMapped": True
             }
             concepts.append(concept)
@@ -276,8 +271,6 @@ def get_omop_concept_id(term: str, domain_id: str, limit: int = 3, auto_refine: 
 
 # concept_set_id에 해당하는 filter의 type을 찾아 domain_id를 반환
 def get_concept_set_domain_id(cohort_json: dict, concept_set_id: str) -> str:
-    # print(f"\n[get_concept_set_domain_id] concept_set_id '{concept_set_id}'에 대한 도메인 ID 검색:")
-    
     # cohort 구조 처리
     if "cohort" in cohort_json:
         for group in cohort_json.get("cohort", []):

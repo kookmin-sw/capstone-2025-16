@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-openai_api_key = os.environ.get('OPENROUTER_API_KEY')
-openai_api_base = os.environ.get('OPENROUTER_API_BASE')
+openai_api_key = os.environ.get('OPENAI_COMPATIBLE_API_KEY')
+openai_api_base = os.environ.get('OPENAI_COMPATIBLE_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 client = OpenAI(
     api_key=openai_api_key,
