@@ -143,11 +143,21 @@
 					const opValue = value[op];
 					if (Array.isArray(opValue)) {
 						// 다중 값 처리
-						const formattedValues = opValue.map((v) => formatValue(v, type));
-						parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+						if (type === 'conceptset') {
+							const formattedValues = opValue.map((v) => findConceptSetById(v).name).join(', ');
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues})`);
+						} else {
+							const formattedValues = opValue.map((v) => formatValue(v, type));
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+						}
 					} else {
 						// 단일 값 처리
-						parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+						if (type === 'conceptset') {	
+							const formattedValue = findConceptSetById(opValue).name;
+							parts.push(`${operatorDisplayConfig[op].label} ${formattedValue}`);
+						} else {
+							parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+						}
 					}
 				}
 			}
@@ -610,6 +620,15 @@
 		return undefined;
 	}
 
+	function findConceptSetById(conceptSetId: string): ConceptSet | undefined {
+		for (const conceptSet of cohortDefinition.conceptsets) {
+			if (conceptSet.conceptset_id === conceptSetId) {
+				return conceptSet;
+			}
+		}
+		return undefined;
+	}
+
 	// 컨테이너 순서 변경 함수
 	function handleContainerReorder(groupType, draggedIndex, targetIndex) {
 		if (draggedIndex === targetIndex) return;
@@ -759,7 +778,7 @@
 >
 	<button
 		on:click={updateCohortDefinition}
-		class="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2 my-2 mx-3 text-xs font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity  hover:from-blue-600 hover:to-blue-700 "
+		class="relative mx-3 my-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 ease-in-out before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:from-blue-600 hover:to-blue-700"
 		disabled={isUpdating}
 	>
 		<span class="relative z-10 flex items-center justify-center gap-2">
@@ -1154,14 +1173,7 @@
 													{#each Object.entries(filter).filter(([key]) => key !== 'type') as [property, value]}
 														<div>
 															<span class="font-medium">{property}:</span>
-															{displayPropertyValue(
-																value,
-																property === 'gender' ||
-																	property === 'raceType' ||
-																	property === 'ethnicityType'
-																	? 'concept'
-																	: undefined
-															)}
+															{displayPropertyValue(value, property)}
 														</div>
 													{/each}
 												</div>
