@@ -77,7 +77,7 @@ _(추가 예정)_
 ```bash
 git clone https://github.com/kookmin-sw/capstone-2025-16.git
 cd capstone-2025-16
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 ###  [FrontEnd](https://github.com/kookmin-sw/capstone-2025-16/blob/master/frontend/README.md)
