@@ -11,8 +11,11 @@
           { title: "2단계: 조건 추가", content: "필요한 조건을 추가하세요.", image: "/dummy/step2.png" }
         ] } ] },
         { guides: [ { title: "Cohort AI로 코호트 자동 정의하기", steps: [
-          { title: "1단계: AI 추천 클릭", content: "AI 추천 버튼을 클릭하세요.", image: "/dummy/ai1.png" },
-          { title: "2단계: 결과 확인", content: "AI가 제안한 코호트 조건을 확인하세요." }
+          { title: "1단계: Cohort AI 버튼 클릭", content: "코호트 정의 페이지 내 우측 상단에 위치한 Cohort AI 버튼을 클릭하세요. 정의하고자 하는 코호트가 실린 논문을 넣으면 자동으로 코호트 정의를 할 수 있습니다.", image: "/guide_images/cohort/cohort-ai-1.png" },
+          { title: "2단계: 논문 Text 입력 혹은 논문 PDF 첨부", content: "Input Text 탭에서 코호트 정의 부분을 Text로 입력하거나 Upload PDF 탭에서 논문 PDF를 그대로 첨부할 수 있습니다.", image: "/guide_images/cohort/cohort-ai-2.png" },
+          { title: "3단계: 코호트 생성 시작", content: "모달 내 우측 하단의 Generate Cohort 버튼을 클릭하세요. 몇 초 후에 코호트 정의가 완료됩니다.", image: "/guide_images/cohort/cohort-ai-3.png" },
+          { title: "4단계: 생성된 코호트 정의 적용", content: "AI로 생성된 코호트 정의를 json으로 확인 후 우측 상단의 Apply 버튼을 클릭하세요.", image: "/guide_images/cohort/cohort-ai-4.png" },
+          { title: "5단계: 결과 확인", content: "AI가 제안한 코호트 조건이 추가된 내용을 코호트 정의 페이지에서 확인하세요.", image: "/guide_images/cohort/cohort-ai-5.png" }
         ] } ] },
       ]
     },
