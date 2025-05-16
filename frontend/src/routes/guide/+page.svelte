@@ -56,10 +56,12 @@
           ]
         },
         {
-          name: "코호트 내 환자 CDM 보기",
+          name: "코호트 내 환자 데이터 보기",
           guides: [
-            { title: "환자 통계 확인하기", steps: [
-              { title: "1단계: 환자 통계 탭 이동", content: "환자 통계 탭을 클릭합니다." }
+            { title: "코호트 내 환자 데이터 보기", steps: [
+              { title: "1단계: 환자 ID 선택", content: "코포트 페이지 내 좌측 사이드바의 환자 목록 중 환자 ID를 선택해 환자 통계 페이지로 이동합니다.", image: "guide_images/cohort/cohort-person-select.png" },
+              { title: "2단계: 환자 통계 확인", content: "클릭한 ID에 해당하는 환자의 통계를 확인할 수 있습니다.", image: "guide_images/cohort/cohort-person-statistics.png" },
+              { title: "3단계: 환자의 특정 CDM 데이터 확인", content: "상단 타임라인에서 특정 방문 기록을 선택하면 해당 방문 기록에 해당하는 CDM 데이터를 확인할 수 있습니다." },
             ] },
             { title: "CDM 데이터 읽기", steps: [
               { title: "1단계: CDM 데이터 탭 이동", content: "CDM 데이터 탭을 클릭합니다." }
