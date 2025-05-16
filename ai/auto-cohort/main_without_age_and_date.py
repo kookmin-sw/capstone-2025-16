@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
 
 load_dotenv()
-openai_api_key = os.environ.get('OPENROUTER_API_KEY')
-openai_api_base = os.environ.get('OPENROUTER_API_BASE')
+openai_api_key = os.environ.get('OPENAI_COMPATIBLE_API_KEY')
+openai_api_base = os.environ.get('OPENAI_COMPATIBLE_API_BASE')
 model_name = os.environ.get('LLM_MODEL')
 
 client = OpenAI(
@@ -31,7 +31,7 @@ Strict requirements:
 
 2. Each container in cohort MUST have:
    - name (ONLY the medical term, NO additional words)
-   - type (must be one of: ["condition_era", "condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
+   - type (must be one of: ["condition_occurrence", "death", "device_exposure", "dose_era", "drug_era", "drug_exposure", "measurement", "observation", "observation_period", "procedure_occurrence", "specimen", "visit_occurrence", "visit_detail", "location_region", "demographic"])
    - Each filter MUST have:
      - type (one of the allowed types)
      - conceptset (matching conceptset_id)
@@ -41,12 +41,19 @@ Strict requirements:
        * In all other cases, do not include the first field
 
 3. [CRITICAL] Logical Operators (AND/OR):
-   - If conditions are connected with "AND" in the text, use operator: "AND"
-   - If conditions are connected with "OR" in the text, use operator: "OR"
+   - If conditions are connected with "and" in the text, use operator: "AND"
+   - If conditions are connected with "or" in the text, use operator: "OR"
    - If no operator is specified, use operator: "AND" as default
-   - Example: "Diagnosed with sepsis-3 AND ARDS" → operator: "AND"
-   - Example: "Serum creatinine ≥ 1.5 mg/dL OR increase of ≥ 0.3 mg/dL" → operator: "OR"
+   [ABSOLUTELY MANDATORY] When text says "A or B", create ONE container(B) with operator: "OR"
+   - Example: "Diagnosed with sepsis-3 and ARDS" → operator: "AND"
+   - ***Example: "Serum creatinine ≥ 1.5 mg/dL or increase of ≥ 0.3 mg/dL" → operator: "OR"***
    - Example: "First ICU admission" (no operator) → operator: "AND" (default)
+   [CRITICAL] For complex conditions with multiple operators:
+     * Example: "(A or B) and C" → First container: A, Second container: operator: "OR", Third container: operator: "AND"
+     * Example: "CKD stage ≥ 4 or eGFR < 30 mL/min/1.73m2, and long-term dialysis" → 
+       First container: CKD stage ≥ 4
+       Second container: operator: "OR"
+       Third container: operator: "AND"
 
 4. For Measurement criteria:
    - Include "valueAsNumber" with appropriate operator ("gt", "lt", "eq", etc.)
@@ -126,6 +133,7 @@ Strict requirements:
         - "I50.0 Congestive heart failure" → "Congestive heart failure"
         - "I50.9 Heart failure, unspecified" → "Heart failure, unspecified"
         - "I50.1 Left ventricular failure" → "Left ventricular failure"
+        - "S06 Intracranial injury" → "Intracranial injury"
       * When only code is present (e.g., "I50.0"):
         - Convert to corresponding medical term
         - Example: "I50.0" → "Congestive heart failure"
@@ -153,7 +161,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "procedure_occurrence",
-            first: true,
             conceptset: "0",
           }
         ]
@@ -164,7 +171,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "drug_exposure",
-            first: true,
             conceptset: "1",
           }
         ]
@@ -174,8 +180,7 @@ const cohortExample: CohortDefinition = {
         name: "iron deficiency anemia",
         filters: [
           {
-            type: "condition_era",
-            first: true,
+            type: "condition_occurrence",
             conceptset: "2",
           }
         ]
@@ -203,7 +208,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "measurement",
-            first: true,
             measurementType: { eq: "234567" },
             valueAsNumber: { lte: 13 }, // hemoglobin > 13 g/dL를 제외해야하니 13 g/dL 이하로 설정.
             conceptset: "4"
@@ -216,7 +220,6 @@ const cohortExample: CohortDefinition = {
         filters: [
           {
             type: "procedure_occurrence",
-            first: true,
             conceptset: {
               neq: "5",
             },
@@ -224,12 +227,11 @@ const cohortExample: CohortDefinition = {
         ]
       },
       {
-        operator: "AND",
+        operator: "OR", // 이 부분 주의
         name: "not sepsis or active infections",
         filters: [
           {
-            type: "condition_era",
-            first: true,
+            type: "condition_occurrence",
             conceptset: {
               neq: "6",
             },
@@ -407,26 +409,47 @@ def main():
     # print("\n[Implementable Criteria 부분만]:")
     # print(implementable_text)
 
-    implementable_text = """
-    Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
-    external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
-    2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
-    diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
-    stay duration of less than 24 h.
-    # """
-    
     # implementable_text = """
-    # This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
-    # to 2019. Patients with severe chronic kidney disease
-    # (CKD), defined as CKD stage ≥ 4 or estimated glomerular
-    # filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
-    # undergoing long-term dialysis treatment were excluded.
-    # """
+    # Data from both the MIMIC and external validation datasets were selected based on the same inclusion and exclusion criteria. The
+    # external validation dataset was obtained from a tertiary hospital in Liaoning Province, China, between January 2016 and September
+    # 2022. Adult patients who met the criteria for sepsis-3 and ARDS(Acute Respiratory Distress syndrome) were included in this study. The inclusion criteria were as follows: (1)
+    # diagnosed with sepsis-3 and ARDS, (2) first intensive care unit admission, and (3) age ≥18 years. The exclusion criterion was an ICU
+    # stay duration of less than 24 h.
+    # # """
+    
+    implementable_text = """
+    This study selected adult septic patients who were admitted to the ICU from the MIMIC-IV database from 2008
+    to 2019. Patients with severe chronic kidney disease
+    (CKD), defined as CKD stage ≥ 4 or estimated glomerular
+    filtration rate (eGFR) < 30 mL/min/1.73m2, and patients
+    undergoing long-term dialysis treatment were excluded.
+    """
 
     # implementable_text = """
     # We conducted this retrospective cohort study based on a US publicdatabase: Medical Information Mart for Intensive Care IV (MIMIC-IV)Database.
     # 11–13 All sepsis patients with sepsis 3.0 criteria were in-cluded.14 Exclusion criteria were as follows: (1) Without records ofFBG and TG in 24 h after admission; (2) Age less than 18-year-old;
     # (3) Diabetes and patients with antidiabetic treatment (insulin or oralantidiabetics); (4) Died within 48 h after admission; (5) Patients withacute pancreatitis; (6) Patients with dyslipidemia and patients withreceiving lipid-lowering drugs.
+    # """
+
+    # implementable_text = """
+    # A total of 76,540 admissions were admitted to the ICU in the MIMIC-IV database, of which 53,150 were admitted to the ICU for the first time.
+    # According to the Kidney Disease: Improving Global Outcomes (KDIGO)­ guidelines20, AKI was diagnosed as follows: serum creatinine ≥ 1.5 times baseline or increase of ≥ 0.3 mg/dL within any 48 h period,
+    # or urine volume < 0.5 mL/(kg·h) for ≥ 6 h. All participants were required to meet the following inclusion criteria: (a) diagnosed AKI within 48 h of admission; (b) patients admitted to the ICU for
+    # the first time; and (c) aged ≥ 18 years.
+    # Exclusion criteria included: (a) BG records less than 3 times during the first day of ICU admission; (b) stayed < 24 h in the ICU. Ultimately, 6777 patients with AKI were included in the study (Fig. 1).
+    # """
+
+    # implementable_text = """
+    # Patients with intracranial injuries were identified in the
+    # MIMIC-IV (version 2.2) database using International
+    # Classification of Diseases (ICD) codes ICD-9:85 and ICD10:S06.14 3942 patients with intracranial injury admitted
+    # to the ICU were screened. Patients who met any of the
+    # following criteria were excluded: (1) age <18or >90 years
+    # old; (2) not the first admission to the ICU; (3) ICU stay
+    # less than 1day and (4) death within 3days after ICU
+    # admission. 1780 eligible patients were included in this
+    # study and randomly assigned to training set and development set in a 7:3 ratio. The patient selection process is
+    # plotted in figure 1.
     # """
 
     # 2. 텍스트에서 COHORT JSON 추출
