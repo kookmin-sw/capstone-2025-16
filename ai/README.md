@@ -13,7 +13,7 @@ AI는 Auto-Cohort, Feature-Extraction으로 구성됩니다. 단순히 테스트
    ```
 2. feature-extraction 디렉토리로 이동 후 docker compose를 사용해 실행합니다.
    ```bash
-   cd clickhouse
+   cd feature-extraction
    cp .env.example .env
    vi .env # env를 수정합니다
    docker compose up -d --build
