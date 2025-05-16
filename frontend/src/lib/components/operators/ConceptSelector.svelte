@@ -47,17 +47,7 @@
   let totalPages = 0;
 
   // Available domains for filtering
-  const availableDomains = [
-    '', 'Measurement', 'Drug', 'Observation', 'Note', 'Procedure', 
-    'Meas Value', 'Device', 'Condition', 'Metadata', 'Spec Anatomic Site', 
-    'Specimen', 'Type Concept', 'Unit', 'Provider', 'Race', 'Relationship', 
-    'Geography', 'Route', 'Language', 'Visit', 'Plan', 'Sponsor', 'Payer', 
-    'Plan Stop Reason', 'Gender', 'Cost', 'Episode', 'Revenue Code', 
-    'Condition Status', 'Regimen', 'Condition/Procedure', 'Condition/Obs', 
-    'Obs/Procedure', 'Currency', 'Ethnicity', 'Meas/Procedure', 
-    'Meas Value Operator', 'Condition/Meas', 'Device/Procedure', 
-    'Drug/Procedure', 'Device/Drug', 'Place of Service', 'Condition/Device'
-  ];
+  const availableDomains = ['', 'Condition', 'Condition Status', 'Condition/Device', 'Condition/Meas', 'Condition/Obs', 'Condition/Procedure', 'Cost', 'Currency', 'Device', 'Device/Drug', 'Device/Procedure', 'Drug', 'Drug/Procedure', 'Episode', 'Ethnicity', 'Gender', 'Geography', 'Language', 'Meas Value', 'Meas Value Operator', 'Meas/Procedure', 'Measurement', 'Metadata', 'Note', 'Obs/Procedure', 'Observation', 'Payer', 'Place of Service', 'Plan', 'Plan Stop Reason', 'Procedure', 'Provider', 'Race', 'Regimen', 'Relationship', 'Revenue Code', 'Route', 'Spec Anatomic Site', 'Specimen', 'Sponsor', 'Type Concept', 'Unit', 'Visit']
   
   // Filter display values
   let displayValue = '';
