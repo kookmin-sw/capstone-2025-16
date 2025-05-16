@@ -55,14 +55,22 @@ export class CohortController {
     type: Number,
     description: 'Number of items per page',
   })
+  @ApiQuery({
+    name: 'query',
+    required: false,
+    type: String,
+    description: 'Search query',
+  })
   @ApiResponse({
     status: 200,
     description: 'Cohort list',
     type: CohortListResponse,
   })
   @Get()
-  async getCohorts(@Query() { page, limit }: PaginationQuery) {
-    return await this.cohortService.getCohorts(page, limit);
+  async getCohorts(
+    @Query() { page, limit, query }: PaginationQuery & { query?: string },
+  ) {
+    return await this.cohortService.getCohorts(page, limit, query);
   }
 
   @ApiOperation({ summary: 'Get cohort details' })

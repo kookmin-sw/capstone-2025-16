@@ -60,14 +60,22 @@ export class StatisticsController {
     type: Number,
     description: 'Number of items per page',
   })
+  @ApiQuery({
+    name: 'query',
+    required: false,
+    type: String,
+    description: 'Search query',
+  })
   @ApiResponse({
     status: 200,
     description: 'Statistics list',
     type: StatisticsListResponse,
   })
   @Get()
-  async getStatistics(@Query() { page, limit }: PaginationQuery) {
-    return await this.statisticsService.getStatistics(page, limit);
+  async getStatistics(
+    @Query() { page, limit, query }: PaginationQuery & { query?: string },
+  ) {
+    return await this.statisticsService.getStatistics(page, limit, query);
   }
 
   @ApiOperation({ summary: 'Get statistics details' })

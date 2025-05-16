@@ -20,21 +20,42 @@ export class CohortService {
   async getCohorts(
     page: number = 0,
     limit: number = 50,
+    query?: string,
   ): Promise<CohortListResponse> {
     const offset = page * limit;
 
+    query = query?.trim() || '';
+
     // 코호트 목록 조회 쿼리
-    const cohortsQuery = getBaseDB()
+    let cohortsQuery = getBaseDB()
       .selectFrom('cohort')
       .selectAll()
       .limit(limit)
       .offset(offset)
       .orderBy('updated_at', 'desc');
 
+    if (query) {
+      cohortsQuery = cohortsQuery.where(({ eb }) =>
+        eb.or([
+          eb('name', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+          eb('description', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+        ]),
+      );
+    }
+
     // 총 결과 수를 계산하기 위한 쿼리
-    const countQuery = getBaseDB()
+    let countQuery = getBaseDB()
       .selectFrom('cohort')
       .select(({ fn }) => [fn.count('cohort_id').as('total')]);
+
+    if (query) {
+      countQuery = countQuery.where(({ eb }) =>
+        eb.or([
+          eb('name', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+          eb('description', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+        ]),
+      );
+    }
 
     // 두 쿼리를 병렬로 실행
     const [cohorts, countResult] = await Promise.all([

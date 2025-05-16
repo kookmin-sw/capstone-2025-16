@@ -35,21 +35,41 @@ export class StatisticsService {
   async getStatistics(
     page: number = 0,
     limit: number = 50,
+    query?: string,
   ): Promise<StatisticsListResponse> {
     const offset = page * limit;
 
+    query = query?.trim() || '';
+
     // 통계 목록 조회 쿼리
-    const statisticsQuery = getBaseDB()
+    let statisticsQuery = getBaseDB()
       .selectFrom('statistics')
       .selectAll()
       .limit(limit)
       .offset(offset)
       .orderBy('updated_at', 'desc');
 
+    if (query) {
+      statisticsQuery = statisticsQuery.where(({ eb }) =>
+        eb.or([
+          eb('name', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+          eb('description', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+        ]),
+      );
+    }
     // 총 결과 수를 계산하기 위한 쿼리
-    const countQuery = getBaseDB()
+    let countQuery = getBaseDB()
       .selectFrom('statistics')
       .select(({ fn }) => [fn.count('statistics_id').as('total')]);
+
+    if (query) {
+      countQuery = countQuery.where(({ eb }) =>
+        eb.or([
+          eb('name', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+          eb('description', 'ilike', `%${query.replaceAll('%', '%%')}%`),
+        ]),
+      );
+    }
 
     // 두 쿼리를 병렬로 실행
     const [statistics, countResult] = await Promise.all([
