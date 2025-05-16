@@ -133,10 +133,8 @@
 	}
 
 	async function createChart() {
-
-
 		// concept sets 연결
-		groups.forEach(group => {
+		groups.forEach((group) => {
 			group.definition.conceptsets = conceptsets;
 		});
 
@@ -677,11 +675,21 @@
 					const opValue = value[op];
 					if (Array.isArray(opValue)) {
 						// 다중 값 처리
-						const formattedValues = opValue.map((v) => formatValue(v, type));
-						parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+						if (type === 'conceptset') {
+							const formattedValues = opValue.map((v) => findConceptSetById(v).name).join(', ');
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues})`);
+						} else {
+							const formattedValues = opValue.map((v) => formatValue(v, type));
+							parts.push(`${operatorDisplayConfig[op].label} (${formattedValues.join(', ')})`);
+						}
 					} else {
 						// 단일 값 처리
-						parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+						if (type === 'conceptset') {
+							const formattedValue = findConceptSetById(opValue).name;
+							parts.push(`${operatorDisplayConfig[op].label} ${formattedValue}`);
+						} else {
+							parts.push(`${operatorDisplayConfig[op].label} ${formatValue(opValue, type)}`);
+						}
 					}
 				}
 			}
@@ -740,6 +748,16 @@
 		}
 		return undefined;
 	}
+
+	function findConceptSetById(conceptSetId: string): ConceptSet | undefined {
+		for (const conceptSet of cohortDefinition.conceptsets) {
+			if (conceptSet.conceptset_id === conceptSetId) {
+				return conceptSet;
+			}
+		}
+		return undefined;
+	}
+
 
 	// 컨테이너 순서 변경 함수
 	function handleContainerReorder(draggedIndex, targetIndex) {
