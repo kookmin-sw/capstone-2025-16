@@ -43,9 +43,8 @@
               { title: "1단계: Charts 탭 이동", content: "Charts 탭을 클릭합니다." }
             ] },
             { title: "코호트 수정하기", steps: [
-              { title: "우측 상단의 수정 버튼 클릭", content: "우측 상단의 수정 버튼을 클릭합니다." },
-              { title: "코호트 수정 페이지로 이동", content: "코호트 수정 페이지로 이동하여 코호트 정의를 수정합니다." },
-              { title: "코호트 수정 버튼 클릭", content: "코호트 수정 버튼을 클릭하여 코호트를 수정을 완료합니다." }
+              { title: "1단계: 우측 상단의 수정 버튼 클릭", content: "우측 상단의 수정 버튼을 클릭합니다.", image: "guide_images/cohort/cohort-edit-1.png" },
+              { title: "2단계: 코호트 편집 페이지로 이동", content: "코호트 편집 페이지로 이동하여 코호트 정의를 수정합니다. 완료 시 다시 코호트 상세 페이지로 이동합니다.", image: "guide_images/cohort/cohort-edit-2.png" },
             ] },
             { title: "코호트 복제하기", steps: [
               { title: "우측 상단의 복제 버튼 클릭", content: "우측 상단의 복제 버튼을 클릭합니다." },
