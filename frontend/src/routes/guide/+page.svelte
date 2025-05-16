@@ -7,8 +7,10 @@
       name: "코호트 정의하기",
       children: [
         { guides: [ { title: "코호트 정의하기", steps: [
-          { title: "1단계: 코호트 이름 및 설명 입력", content: "코호트의 이름과 설명을 입력하세요." },
-          { title: "2단계: 조건 추가", content: "필요한 조건을 추가하세요."}
+          { title: "1단계: 코호트 이름 및 설명 입력", content: "코호트의 이름과 설명을 입력하세요.", image: "/guide_images/cohort/cohort-define-1.png" },
+          { title: "2단계: 컨셉세트 설정", content: "좌측 사이드바 하단의 Concept Set Manage 버튼을 클릭하여 컨셉세트 모달에서 컨셉세트를 설정하세요.", image: "/guide_images/cohort/cohort-define-2.png" },
+          { title: "3단계: 조건 추가", content: "필터링 조건을 걸어 코호트 정의에 추가하세요. 조건을 추가하면 해당 조건에 의해 필터링된 환자수가 표시됩니다.", image: "/guide_images/cohort/cohort-define-3.png" },
+          { title: "4단계: 코호트 정의 저장", content: "좌측 상단의 Save 버튼을 클릭하여 코호트 정의를 저장하세요.", image: "/guide_images/cohort/cohort-define-4.png"}
         ] } ] },
         { guides: [ { title: "Cohort AI로 코호트 자동 정의하기", steps: [
           { title: "1단계: Cohort AI 버튼 클릭", content: "코호트 정의 페이지 내 우측 상단에 위치한 Cohort AI 버튼을 클릭하세요. 정의하고자 하는 코호트가 실린 논문을 넣으면 자동으로 코호트 정의를 할 수 있습니다.", image: "/guide_images/cohort/cohort-ai-1.png" },
