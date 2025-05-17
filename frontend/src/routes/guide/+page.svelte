@@ -101,7 +101,9 @@
             {
               title: "커스텀 차트 보기",
               steps: [
-                { title: "1단계: 차트 목록 확인", content: "차트 목록을 확인하세요." }
+                { title: "1단계: 커스텀 차트 목록 확인", content: "커스텀 차트 목록에서 커스텀 차트를 클릭합니다.", image: "guide_images/custom-chart/custom-chart-1.png" },
+                { title: "2단계: 커스텀 차트 상세 페이지 이동", content: "커스텀 차트 상세 페이지에서 차트 이미지를 확인할 수 있습니다.", image: "guide_images/custom-chart/custom-chart-2.png" },
+                { title: "3단계: 차트 토글 클릭", content: "차트 토글을 클릭하면 차트 이미지가 표시됩니다.", image: "guide_images/custom-chart/custom-chart-3.png" }
               ]
             },
             { title: "차트 다운로드하기", steps: [
