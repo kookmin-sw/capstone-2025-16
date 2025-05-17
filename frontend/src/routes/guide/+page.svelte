@@ -73,9 +73,8 @@
       name: "다중 코호트 비교하기",
       children: [
         { guides: [ { title: "다중 코호트 비교하기", steps: [
-          { title: "1단계: 비교할 코호트 선택", content: "목록에서 코호트를 눌러 선택해주세요. 2개에서 최대 5개의 코호트를 동시에 비교할 수 있습니다." },
-          { title: "2단계: Compare 버튼 클릭", content: "코호트를 모두 선택했다면 Compare 버튼을 클릭해주세요." },
-          { title: "3단계: 다중 코호트 비교 페이지에서 결과 확인", content: "다중 코호트 비교 페이지에서 여러 차트를 확인할 수 있습니다. 모든 차트는 테이블로 변환하여 볼 수 있으며, Top 10 차트의 경우 기준 코호트(Anchor Cohort)를 지정하여 Top 10을 확인할 수도 있습니다." },
+          { title: "1단계: 비교할 코호트 선택", content: "목록에서 비교할 코호트들을 선택하고, Compare 버튼을 클릭합니다. 2개에서 최대 5개의 코호트를 선택할 수 있습니다.", image: "guide_images/cohort-comparison/cohort-comparison-1.png" },
+          { title: "2단계: 다중 코호트 비교 페이지로 이동", content: "다중 코호트 비교 페이지에서 여러 차트를 확인할 수 있습니다. 모든 차트는 테이블로 변환하여 볼 수 있으며, Top 10 차트의 경우 기준 코호트(Anchor Cohort)를 지정하여 Top 10을 확인할 수도 있습니다.", image: "guide_images/cohort-comparison/cohort-comparison-2.png" },
         ] } ] },
       ]
     },
