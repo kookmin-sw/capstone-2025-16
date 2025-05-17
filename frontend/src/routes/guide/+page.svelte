@@ -28,8 +28,8 @@
           name: "단일 코호트 보기",
           guides: [
             { title: "단일 코호트 보기", steps: [
-              { title: "1단계: 코호트 목록에서 코호트를 클릭", content: "코호트 목록에서 보고자 하는 코호트의 이름을 눌러 코호트 상세 페이지로 이동합니다." },
-              { title: "2단계: 코호트 기본 정보 확인", content: "코호트 상세 페이지의 상단에서 코호트의 기본 정보를 확인할 수 있습니다." }
+              { title: "1단계: 코호트 목록에서 코호트를 클릭", content: "코호트 목록에서 보고자 하는 코호트의 이름을 눌러 코호트 상세 페이지로 이동합니다.", image: "guide_images/cohort/cohort-list.png"},
+              { title: "2단계: 코호트 상세 페이지로 이동", content: "코호트 상세 페이지의 상단에서 코호트의 기본 정보를 확인할 수 있으며 좌측에는 코호트 내 환자들의 목록이 있습니다.", image: "guide_images/cohort/single-cohort-page.png" }
             ] },
             { title: "코호트 정의 내용 확인하기", steps: [
               { title: "코호트 정의 내용 확인하기", content: "Definition 탭에서 코호트가 어떻게 정의되어 있는지를 json 형식으로 확인할 수 있습니다. 우측 상단의 Copy 버튼을 누르면 json이 복사됩니다.", image: "guide_images/cohort/cohort-definition.png" }
@@ -61,9 +61,9 @@
           name: "코호트 내 환자 데이터 보기",
           guides: [
             { title: "코호트 내 환자 데이터 보기", steps: [
-              { title: "1단계: 환자 ID 선택", content: "코포트 페이지 내 좌측 사이드바의 환자 목록 중 환자 ID를 선택해 환자 통계 페이지로 이동합니다.", image: "guide_images/cohort/cohort-person-select.png" },
+              { title: "1단계: 환자 ID 선택", content: "코호트 페이지 내 좌측 사이드바의 환자 목록 중 환자 ID를 선택해 환자 통계 페이지로 이동합니다.", image: "guide_images/cohort/cohort-person-select.png" },
               { title: "2단계: 환자 통계 확인", content: "클릭한 ID에 해당하는 환자의 통계를 확인할 수 있습니다.", image: "guide_images/cohort/cohort-person-statistics.png" },
-              { title: "3단계: 환자의 특정 CDM 데이터 확인", content: "상단 타임라인에서 특정 방문 기록을 선택하면 해당 방문 기록에 해당하는 CDM 데이터를 확인할 수 있습니다." },
+              { title: "3단계: 환자의 특정 CDM 데이터 확인", content: "상단 타임라인에서 특정 방문 기록을 선택하면 해당 방문 기록에 해당하는 CDM 데이터를 확인할 수 있습니다.", image: "guide_images/cohort/cohort-patient-cdm-3.png" },
             ] }
           ]
         }
@@ -73,9 +73,8 @@
       name: "다중 코호트 비교하기",
       children: [
         { guides: [ { title: "다중 코호트 비교하기", steps: [
-          { title: "1단계: 비교할 코호트 선택", content: "목록에서 코호트를 눌러 선택해주세요. 2개에서 최대 5개의 코호트를 동시에 비교할 수 있습니다." },
-          { title: "2단계: Compare 버튼 클릭", content: "코호트를 모두 선택했다면 Compare 버튼을 클릭해주세요." },
-          { title: "3단계: 다중 코호트 비교 페이지에서 결과 확인", content: "다중 코호트 비교 페이지에서 여러 차트를 확인할 수 있습니다. 모든 차트는 테이블로 변환하여 볼 수 있으며, Top 10 차트의 경우 기준 코호트(Anchor Cohort)를 지정하여 Top 10을 확인할 수도 있습니다." },
+          { title: "1단계: 비교할 코호트 선택", content: "목록에서 비교할 코호트들을 선택하고, Compare 버튼을 클릭합니다. 2개에서 최대 5개의 코호트를 선택할 수 있습니다.", image: "guide_images/cohort-comparison/cohort-comparison-1.png" },
+          { title: "2단계: 다중 코호트 비교 페이지로 이동", content: "다중 코호트 비교 페이지에서 여러 차트를 확인할 수 있습니다. 모든 차트는 테이블로 변환하여 볼 수 있으며, Top 10 차트의 경우 기준 코호트(Anchor Cohort)를 지정하여 Top 10을 확인할 수도 있습니다.", image: "guide_images/cohort-comparison/cohort-comparison-2.png" },
         ] } ] },
       ]
     },
@@ -94,7 +93,10 @@
       name: "커스텀 차트 사용하기",
       children: [
         { name: "커스텀 차트 정의하기", guides: [ { title: "커스텀 차트 정의하기", steps: [
-          { title: "1단계: 차트 정의 시작", content: "차트 정의 버튼을 클릭합니다." }
+          { title: "1단계: 커스텀 차트 페이지 생성", content: "커스텀 차트 목록에서 새로운 페이지를 생성하기 위해 '+ New Chart Page'버튼을 클릭합니다.", image: "guide_images/custom-chart/custom-chart-new-1.png"},
+          { title: "2단계: 커스텀 대상 집합(Target Set) 설정", content: "커스텀의 대상이 될 대상 집합(Target Set)을 선택합니다. 코호트(1~5개) 혹은 단일 환자로 커스텀 대상을 구성할 수 있습니다. Target Set의 이름과 설명도 기입합니다.", image: "guide_images/custom-chart/custom-chart-new-2.png"},
+          { title: "3단계: 차트 유형 선택", content: "Bar Chart와 Box Plot 중 시각화하고자 하는 형태의 차트를 선택합니다. 환자 수 혹은 데이터 수를 y축으로 하는 시각화를 할 경우 Bar Chart를, Value 값을 시각화할 경우 Box Plot을 선택합니다.", image: "guide_images/custom-chart/custom-chart-new-3.png"},
+          { title: "4단계: 커스텀 차트 정의", content: "커스텀 차트의 이름과 설명을 기입합니다. 시각화하고자 하는 형태로 그룹을 나누고, 코호트 정의를 하듯이 커스텀 차트에도 필터링을 걸어 조건을 추가해줍니다. 모든 정의를 마치면 하단의 '+ Create New Chart' 버튼을 눌러 차트 생성을 완료합니다.", image: "guide_images/custom-chart/custom-chart-new-4.png"},
         ] } ] },
         {
           name: "정의된 커스텀 차트 보기",
@@ -102,7 +104,9 @@
             {
               title: "커스텀 차트 보기",
               steps: [
-                { title: "1단계: 차트 목록 확인", content: "차트 목록을 확인하세요." }
+                { title: "1단계: 커스텀 차트 목록 확인", content: "커스텀 차트 목록에서 커스텀 차트를 클릭합니다.", image: "guide_images/custom-chart/custom-chart-1.png" },
+                { title: "2단계: 커스텀 차트 상세 페이지 이동", content: "커스텀 차트 상세 페이지에서 차트 이미지를 확인할 수 있습니다.", image: "guide_images/custom-chart/custom-chart-2.png" },
+                { title: "3단계: 차트 토글 클릭", content: "차트 토글을 클릭하면 차트 이미지가 표시됩니다.", image: "guide_images/custom-chart/custom-chart-3.png" }
               ]
             },
             { title: "차트 다운로드하기", steps: [
