@@ -121,6 +121,14 @@
           else if (item.type === "upper") groupData.q3 = item.value;
           else if (item.type === "outlier") groupData.outliers.push(item.value);
         });
+
+        // 이상치 정렬 및 제한
+        if (groupData.outliers.length > 0) {
+          groupData.outliers.sort((a, b) => a - b);
+          const lowerOutliers = groupData.outliers.filter(v => v < groupData.q1).slice(-2);
+          const upperOutliers = groupData.outliers.filter(v => v > groupData.q3).slice(0, 2);
+          groupData.outliers = [...lowerOutliers, ...upperOutliers];
+        }
         
         boxplotData.push(groupData);
       });
