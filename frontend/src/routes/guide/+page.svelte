@@ -93,7 +93,10 @@
       name: "커스텀 차트 사용하기",
       children: [
         { name: "커스텀 차트 정의하기", guides: [ { title: "커스텀 차트 정의하기", steps: [
-          { title: "1단계: 차트 정의 시작", content: "차트 정의 버튼을 클릭합니다." }
+          { title: "1단계: 커스텀 차트 페이지 생성", content: "커스텀 차트 목록에서 새로운 페이지를 생성하기 위해 '+ New Chart Page'버튼을 클릭합니다.", image: "guide_images/custom-chart/custom-chart-new-1.png"},
+          { title: "2단계: 커스텀 대상 집합(Target Set) 설정", content: "커스텀의 대상이 될 대상 집합(Target Set)을 선택합니다. 코호트(1~5개) 혹은 단일 환자로 커스텀 대상을 구성할 수 있습니다. Target Set의 이름과 설명도 기입합니다.", image: "guide_images/custom-chart/custom-chart-new-2.png"},
+          { title: "3단계: 차트 유형 선택", content: "Bar Chart와 Box Plot 중 시각화하고자 하는 형태의 차트를 선택합니다. 환자 수 혹은 데이터 수를 y축으로 하는 시각화를 할 경우 Bar Chart를, Value 값을 시각화할 경우 Box Plot을 선택합니다.", image: "guide_images/custom-chart/custom-chart-new-3.png"},
+          { title: "4단계: 커스텀 차트 정의", content: "커스텀 차트의 이름과 설명을 기입합니다. 시각화하고자 하는 형태로 그룹을 나누고, 코호트 정의를 하듯이 커스텀 차트에도 필터링을 걸어 조건을 추가해줍니다. 모든 정의를 마치면 하단의 '+ Create New Chart' 버튼을 눌러 차트 생성을 완료합니다.", image: "guide_images/custom-chart/custom-chart-new-4.png"},
         ] } ] },
         {
           name: "정의된 커스텀 차트 보기",
