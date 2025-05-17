@@ -28,8 +28,8 @@
           name: "단일 코호트 보기",
           guides: [
             { title: "단일 코호트 보기", steps: [
-              { title: "1단계: 코호트 목록에서 코호트를 클릭", content: "코호트 목록에서 보고자 하는 코호트의 이름을 눌러 코호트 상세 페이지로 이동합니다." },
-              { title: "2단계: 코호트 기본 정보 확인", content: "코호트 상세 페이지의 상단에서 코호트의 기본 정보를 확인할 수 있습니다." }
+              { title: "1단계: 코호트 목록에서 코호트를 클릭", content: "코호트 목록에서 보고자 하는 코호트의 이름을 눌러 코호트 상세 페이지로 이동합니다.", image: "guide_images/cohort/cohort-list.png"},
+              { title: "2단계: 코호트 상세 페이지로 이동", content: "코호트 상세 페이지의 상단에서 코호트의 기본 정보를 확인할 수 있으며 좌측에는 코호트 내 환자들의 목록이 있습니다.", image: "guide_images/cohort/single-cohort-page.png" }
             ] },
             { title: "코호트 정의 내용 확인하기", steps: [
               { title: "코호트 정의 내용 확인하기", content: "Definition 탭에서 코호트가 어떻게 정의되어 있는지를 json 형식으로 확인할 수 있습니다. 우측 상단의 Copy 버튼을 누르면 json이 복사됩니다.", image: "guide_images/cohort/cohort-definition.png" }
@@ -61,9 +61,9 @@
           name: "코호트 내 환자 데이터 보기",
           guides: [
             { title: "코호트 내 환자 데이터 보기", steps: [
-              { title: "1단계: 환자 ID 선택", content: "코포트 페이지 내 좌측 사이드바의 환자 목록 중 환자 ID를 선택해 환자 통계 페이지로 이동합니다.", image: "guide_images/cohort/cohort-person-select.png" },
+              { title: "1단계: 환자 ID 선택", content: "코호트 페이지 내 좌측 사이드바의 환자 목록 중 환자 ID를 선택해 환자 통계 페이지로 이동합니다.", image: "guide_images/cohort/cohort-person-select.png" },
               { title: "2단계: 환자 통계 확인", content: "클릭한 ID에 해당하는 환자의 통계를 확인할 수 있습니다.", image: "guide_images/cohort/cohort-person-statistics.png" },
-              { title: "3단계: 환자의 특정 CDM 데이터 확인", content: "상단 타임라인에서 특정 방문 기록을 선택하면 해당 방문 기록에 해당하는 CDM 데이터를 확인할 수 있습니다." },
+              { title: "3단계: 환자의 특정 CDM 데이터 확인", content: "상단 타임라인에서 특정 방문 기록을 선택하면 해당 방문 기록에 해당하는 CDM 데이터를 확인할 수 있습니다.", image: "guide_images/cohort/cohort-patient-cdm-3.png" },
             ] }
           ]
         }
