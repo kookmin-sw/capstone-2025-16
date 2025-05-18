@@ -77,52 +77,52 @@ async def main():
 def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
     db_cohort_drop(cohort_id)
     start_time = time.time()
-    
+
     df_target = get_target_cohort(cohort_id)
     df_target = df_target.head(3000)
     df_comp_origin = get_comparator_cohort(cohort_id)
     cols_to_drop = get_drop_id(cohort_id)
     df_comp = prepare_psm_features(df_target, df_comp_origin, k=k, normalize=True)
-    
+
     df_full = pd.concat([df_target, df_comp]).reset_index(drop=True).drop(
         columns=[c for c in ['age','gender'] if c in df_target.columns]
     )
-    
+
     for col in ("procedure_ids", "condition_ids"):
         if col not in df_full.columns:
             df_full[col] = [ [] for _ in range(len(df_full)) ]
-    
+
     X_proc_csr, proc_feats = process_boolean_mlb(df_full, "procedure_ids", normalize=True)
     X_cond_csr, cond_feats = process_boolean_mlb(df_full, "condition_ids", normalize=True)
     y_all = df_full["label"].to_numpy()
     def drop_feats(X, feats):
         keep_idx = [i for i,f in enumerate(feats) if f not in cols_to_drop]
         return X[:, keep_idx], [f for i,f in enumerate(feats) if i in keep_idx]
-    
+
     X_proc_csr, proc_feats = drop_feats(X_proc_csr, proc_feats)
     X_cond_csr, cond_feats = drop_feats(X_cond_csr, cond_feats)
-    
+
     epochs = 100
     proc_importances, cond_importances = [], []
     proc_f1_scores, cond_f1_scores = [], []
-    
+
     min_epochs_before_check = 10
     max_same_top_n = 8
     n_top = 10
-    
+
     proc_importances = []
     cond_importances = []
     proc_done = cond_done = False
-    
+
     proc_avg_ref_set = None
     proc_avg_stable_count = 0
-    
+
     cond_avg_ref_set = None
     cond_avg_stable_count = 0
-    
+
     for seed in range(epochs):
         current_epoch_num = seed + 1
-    
+
         if not proc_done:
             X_tr_proc, X_te_proc, y_tr, y_te = train_test_split(
                 X_proc_csr, y_all, test_size=0.3,
@@ -139,14 +139,15 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
             proc_importances.append(
                 imp_proc.rename(columns={'mean_pct':'importance'})
             )
-    
+            proc_f1_scores.append(best_proc)
+
             avg_proc_imp = (
                 pd.concat(proc_importances)
                 .groupby('feature')['importance']
                 .mean()
                 .reset_index()
             )
-    
+
             if current_epoch_num > min_epochs_before_check:
                 top10_avg_proc = (
                     avg_proc_imp
@@ -164,10 +165,10 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
                     else:
                         proc_avg_ref_set = curr_proc_avg_set
                         proc_avg_stable_count = 1
-    
+
                 if proc_avg_stable_count >= max_same_top_n:
                     proc_done = True
-    
+
         if not cond_done:
             X_tr_cond, X_te_cond, y_tr2, y_te2 = train_test_split(
                 X_cond_csr, y_all, test_size=0.3,
@@ -184,7 +185,8 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
             cond_importances.append(
                 imp_cond.rename(columns={'mean_pct':'importance'})
             )
-    
+            cond_f1_scores.append(best_cond)
+
             avg_cond_imp = (
                 pd.concat(cond_importances)
                 .groupby('feature')['importance']
@@ -199,7 +201,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
                     .tolist()
                 )
                 curr_cond_avg_set = set(top10_avg_cond)
-    
+
                 if cond_avg_ref_set is None:
                     cond_avg_ref_set = curr_cond_avg_set
                     cond_avg_stable_count = 1
@@ -209,12 +211,12 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
                     else:
                         cond_avg_ref_set = curr_cond_avg_set
                         cond_avg_stable_count = 1
-    
+
                 print(f"[Cond] avg top10 stable: {cond_avg_stable_count}/{max_same_top_n}")
-    
+
                 if cond_avg_stable_count >= max_same_top_n:
                     cond_done = True
-    
+
         if proc_done and cond_done:
             break
     avg_proc_imp = avg_proc_imp.sort_values('importance', ascending=False)
