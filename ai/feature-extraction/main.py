@@ -211,9 +211,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
                     else:
                         cond_avg_ref_set = curr_cond_avg_set
                         cond_avg_stable_count = 1
-
-                print(f"[Cond] avg top10 stable: {cond_avg_stable_count}/{max_same_top_n}")
-
+            
                 if cond_avg_stable_count >= max_same_top_n:
                     cond_done = True
 
