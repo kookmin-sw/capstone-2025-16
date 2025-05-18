@@ -77,97 +77,148 @@ async def main():
 def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
     db_cohort_drop(cohort_id)
     start_time = time.time()
-
+    
     df_target = get_target_cohort(cohort_id)
     df_target = df_target.head(3000)
     df_comp_origin = get_comparator_cohort(cohort_id)
     cols_to_drop = get_drop_id(cohort_id)
-
     df_comp = prepare_psm_features(df_target, df_comp_origin, k=k, normalize=True)
-
+    
     df_full = pd.concat([df_target, df_comp]).reset_index(drop=True).drop(
         columns=[c for c in ['age','gender'] if c in df_target.columns]
     )
-
+    
     for col in ("procedure_ids", "condition_ids"):
         if col not in df_full.columns:
             df_full[col] = [ [] for _ in range(len(df_full)) ]
-
+    
     X_proc_csr, proc_feats = process_boolean_mlb(df_full, "procedure_ids", normalize=True)
     X_cond_csr, cond_feats = process_boolean_mlb(df_full, "condition_ids", normalize=True)
     y_all = df_full["label"].to_numpy()
-
     def drop_feats(X, feats):
         keep_idx = [i for i,f in enumerate(feats) if f not in cols_to_drop]
         return X[:, keep_idx], [f for i,f in enumerate(feats) if i in keep_idx]
-
+    
     X_proc_csr, proc_feats = drop_feats(X_proc_csr, proc_feats)
     X_cond_csr, cond_feats = drop_feats(X_cond_csr, cond_feats)
-
+    
     epochs = 100
     proc_importances, cond_importances = [], []
     proc_f1_scores, cond_f1_scores = [], []
+    
+    min_epochs_before_check = 10
     max_same_top_n = 8
     n_top = 10
-
-    proc_top10_history = []
-    cond_top10_history = []
-
-    proc_done = False
-    cond_done = False
-    min_epochs_before_check = 10 
-
+    
+    proc_importances = []
+    cond_importances = []
+    proc_done = cond_done = False
+    
+    proc_avg_ref_set = None
+    proc_avg_stable_count = 0
+    
+    cond_avg_ref_set = None
+    cond_avg_stable_count = 0
+    
     for seed in range(epochs):
-        current_epoch_num = seed + 1 
-
+        current_epoch_num = seed + 1
+    
         if not proc_done:
             X_tr_proc, X_te_proc, y_tr, y_te = train_test_split(
-                X_proc_csr, y_all, test_size=0.3, stratify=y_all, random_state=seed
+                X_proc_csr, y_all, test_size=0.3,
+                stratify=y_all, random_state=seed
             )
             m_proc = train_model(X_tr_proc, y_tr)
             _, _, best_proc, imp_proc = iterative_shap_train(
                 m_proc, X_tr_proc, y_tr, X_te_proc, y_te,
                 feature_names=proc_feats,
-                initial_ratio=0.1, improvement_threshold=0.01, max_iter=3
+                initial_ratio=0.1,
+                improvement_threshold=0.01,
+                max_iter=3
             )
-            proc_importances.append(imp_proc.rename(columns={'mean_pct':'importance'}))
-            proc_f1_scores.append(best_proc)
-
-            top10_proc_list = imp_proc.sort_values('mean_pct', ascending=False).head(n_top)['feature'].tolist()
-            proc_top10_history.append(top10_proc_list)
-
-            if current_epoch_num > min_epochs_before_check and len(proc_top10_history) >= max_same_top_n:
-                recent_proc_lists = proc_top10_history[-max_same_top_n:]
-                first_set_in_window_proc = set(recent_proc_lists[0])
-                if all(set(top_list) == first_set_in_window_proc for top_list in recent_proc_lists[1:]):
+            proc_importances.append(
+                imp_proc.rename(columns={'mean_pct':'importance'})
+            )
+    
+            avg_proc_imp = (
+                pd.concat(proc_importances)
+                .groupby('feature')['importance']
+                .mean()
+                .reset_index()
+            )
+    
+            if current_epoch_num > min_epochs_before_check:
+                top10_avg_proc = (
+                    avg_proc_imp
+                    .sort_values('importance', ascending=False)
+                    .head(n_top)['feature']
+                    .tolist()
+                )
+                curr_proc_avg_set = set(top10_avg_proc)
+                if proc_avg_ref_set is None:
+                    proc_avg_ref_set = curr_proc_avg_set
+                    proc_avg_stable_count = 1
+                else:
+                    if curr_proc_avg_set == proc_avg_ref_set:
+                        proc_avg_stable_count += 1
+                    else:
+                        proc_avg_ref_set = curr_proc_avg_set
+                        proc_avg_stable_count = 1
+    
+                if proc_avg_stable_count >= max_same_top_n:
                     proc_done = True
-
+    
         if not cond_done:
             X_tr_cond, X_te_cond, y_tr2, y_te2 = train_test_split(
-                X_cond_csr, y_all, test_size=0.3, stratify=y_all, random_state=seed
+                X_cond_csr, y_all, test_size=0.3,
+                stratify=y_all, random_state=seed
             )
             m_cond = train_model(X_tr_cond, y_tr2)
             _, _, best_cond, imp_cond = iterative_shap_train(
                 m_cond, X_tr_cond, y_tr2, X_te_cond, y_te2,
                 feature_names=cond_feats,
-                initial_ratio=0.1, improvement_threshold=0.01, max_iter=3
+                initial_ratio=0.1,
+                improvement_threshold=0.01,
+                max_iter=3
             )
-            cond_importances.append(imp_cond.rename(columns={'mean_pct':'importance'}))
-            cond_f1_scores.append(best_cond)
-
-            top10_cond_list = imp_cond.sort_values('mean_pct', ascending=False).head(n_top)['feature'].tolist()
-            cond_top10_history.append(top10_cond_list)
-
-            if current_epoch_num > min_epochs_before_check and len(cond_top10_history) >= max_same_top_n:
-                recent_cond_lists = cond_top10_history[-max_same_top_n:]
-                first_set_in_window_cond = set(recent_cond_lists[0])
-                if all(set(top_list) == first_set_in_window_cond for top_list in recent_cond_lists[1:]):
+            cond_importances.append(
+                imp_cond.rename(columns={'mean_pct':'importance'})
+            )
+    
+            avg_cond_imp = (
+                pd.concat(cond_importances)
+                .groupby('feature')['importance']
+                .mean()
+                .reset_index()
+            )
+            if current_epoch_num > min_epochs_before_check:
+                top10_avg_cond = (
+                    avg_cond_imp
+                    .sort_values('importance', ascending=False)
+                    .head(n_top)['feature']
+                    .tolist()
+                )
+                curr_cond_avg_set = set(top10_avg_cond)
+    
+                if cond_avg_ref_set is None:
+                    cond_avg_ref_set = curr_cond_avg_set
+                    cond_avg_stable_count = 1
+                else:
+                    if curr_cond_avg_set == cond_avg_ref_set:
+                        cond_avg_stable_count += 1
+                    else:
+                        cond_avg_ref_set = curr_cond_avg_set
+                        cond_avg_stable_count = 1
+    
+                print(f"[Cond] avg top10 stable: {cond_avg_stable_count}/{max_same_top_n}")
+    
+                if cond_avg_stable_count >= max_same_top_n:
                     cond_done = True
-
+    
         if proc_done and cond_done:
             break
-    avg_proc_imp = pd.concat(proc_importances).groupby('feature')['importance'].mean().reset_index()
-    avg_cond_imp = pd.concat(cond_importances).groupby('feature')['importance'].mean().reset_index()
+    avg_proc_imp = avg_proc_imp.sort_values('importance', ascending=False)
+    avg_cond_imp = avg_cond_imp.sort_values('importance', ascending=False)
     avg_proc_f1 = float(np.mean(proc_f1_scores))
     avg_cond_f1 = float(np.mean(cond_f1_scores))
     exec_time = time.time() - start_time
