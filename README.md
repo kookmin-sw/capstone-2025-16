@@ -85,3 +85,5 @@ docker-compose up -d --build
 ###  [FrontEnd](https://github.com/kookmin-sw/capstone-2025-16/blob/master/frontend/README.md)
 
 ### [BackEnd](https://github.com/kookmin-sw/capstone-2025-16/blob/master/backend/README.md)
+
+### [AI](https://github.com/kookmin-sw/capstone-2025-16/blob/master/ai/README.md)
