@@ -23,6 +23,52 @@ const Introduction = () => {
       <div className="absolute top-40 -right-20 w-80 h-80 bg-gradient-to-r from-bento-accent-400/30 to-bento-accent-600/30 rounded-full blur-3xl animate-float"></div>
       <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-bento-blue-500/40 rounded-full blur-sm animate-ping-slow"></div>
       <div className="absolute bottom-1/3 right-1/4 w-3 h-3 bg-bento-accent-500/50 rounded-full blur-sm animate-ping-slow"></div>
+
+      {/* 새로운 배경 애니메이션 요소들 */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* 움직이는 그라디언트 원들 */}
+        <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-gradient-to-r from-bento-blue-500/20 to-bento-accent-500/20 rounded-full blur-2xl animate-float-delayed"></div>
+        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-gradient-to-r from-bento-accent-500/20 to-bento-blue-500/20 rounded-full blur-2xl animate-float"></div>
+        
+        {/* 움직이는 선들 */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-bento-blue-500/30 to-transparent animate-slide-right"></div>
+          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-bento-accent-500/30 to-transparent animate-slide-left"></div>
+          <div className="absolute bottom-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-bento-blue-500/30 to-transparent animate-slide-right"></div>
+        </div>
+
+        {/* 움직이는 점들 */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-bento-blue-500/30 rounded-full"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animation: `float ${5 + Math.random() * 5}s infinite`,
+                animationDelay: `${Math.random() * 5}s`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 반짝이는 효과 */}
+        <div className="absolute inset-0">
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-white/20 rounded-full"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animation: `twinkle ${3 + Math.random() * 2}s infinite`,
+                animationDelay: `${Math.random() * 3}s`
+              }}
+            />
+          ))}
+        </div>
+      </div>
       
       <div className="container mx-auto px-6 relative z-10">
         {/* 향상된 헤더 섹션 */}
