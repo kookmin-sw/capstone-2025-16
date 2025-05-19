@@ -129,24 +129,19 @@ const Team = () => {
 
   return (
     <section id="team" className="relative py-24 overflow-hidden">
-      {/* 배경 효과 - 업데이트된 디자인 */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-bento-dark-900 to-bento-dark-950"></div>
       
-      {/* 그리드 패턴 배경 */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzJkM2Q2MTIyIiBvcGFjaXR5PSIwLjIiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNncmlkKSIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIvPjwvc3ZnPg==')] opacity-20"></div>
       
-      {/* 장식 요소 - 애니메이션 추가 */}
       <div className="absolute top-20 right-10 w-96 h-96 bg-bento-blue-600/10 rounded-full blur-3xl animate-pulse-slow"></div>
       <div className="absolute top-60 left-10 w-64 h-64 bg-bento-accent-600/10 rounded-full blur-3xl animate-float"></div>
       <div className="absolute bottom-20 left-20 w-80 h-80 bg-bento-blue-600/5 rounded-full blur-3xl animate-pulse-slow"></div>
       <div className="absolute -bottom-10 right-20 w-72 h-72 bg-bento-accent-600/8 rounded-full blur-3xl animate-float-delayed"></div>
       
-      {/* 추가 장식 - 사이버펑크 스타일 원 */}
       <div className="absolute top-40 left-1/3 w-4 h-4 bg-bento-blue-500/30 rounded-full blur-sm animate-ping-slow"></div>
       <div className="absolute bottom-60 right-1/4 w-3 h-3 bg-bento-accent-500/40 rounded-full blur-sm animate-ping-slow"></div>
       <div className="absolute top-1/2 right-1/3 w-2 h-2 bg-bento-blue-500/50 rounded-full animate-ping-slow"></div>
       
-      {/* 컨텐츠 영역 */}
       <div className="container relative z-10 mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -177,7 +172,6 @@ const Team = () => {
         ))}
       </div>
 
-      {/* 추가적인 장식 요소 - 바닥 글로우 */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-bento-blue-500/30 to-transparent"></div>
     </section>
   );
