@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiGithub, FiYoutube, FiArrowDown, FiZap, FiTarget } from 'react-icons/fi';
 
 const SectionWrapper = ({ children, id, title }) => (
@@ -13,6 +13,21 @@ const SectionWrapper = ({ children, id, title }) => (
 );
 
 const Introduction = () => {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const introSection = document.getElementById('introduction');
+      if (introSection) {
+        const rect = introSection.getBoundingClientRect();
+        setIsVisible(rect.bottom > 0);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <section id="introduction" className="relative min-h-screen pt-28 pb-16 flex flex-col justify-center overflow-hidden">
       {/* 향상된 배경 효과 */}
@@ -229,13 +244,17 @@ const Introduction = () => {
           </div>
         </div>
 
-        {/* 아래로 스크롤 표시 - 강화된 애니메이션 */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-float">
+        {/* 아래로 스크롤 표시 - 스크롤에 따른 가시성 제어 */}
+        <div className={`fixed bottom-12 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
           <a href="#background" className="flex flex-col items-center group">
-            <span className="text-sm mb-2 text-bento-gray-400 group-hover:text-bento-blue-400 transition-colors">더 알아보기</span>
+            <span className="text-sm mb-3 text-bento-gray-400 group-hover:text-bento-blue-400 transition-colors duration-300">
+              더 알아보기
+            </span>
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-b from-bento-blue-500/0 to-bento-blue-500/30 rounded-full blur-md group-hover:opacity-100 opacity-0 transition-opacity"></div>
-              <FiArrowDown className="h-6 w-6 text-bento-gray-400 group-hover:text-bento-blue-400 transition-colors animate-bounce" />
+              <div className="absolute inset-0 bg-gradient-to-b from-bento-blue-500/0 to-bento-blue-500/30 rounded-full blur-md group-hover:opacity-100 opacity-0 transition-opacity duration-300"></div>
+              <div className="relative p-2 rounded-full bg-bento-dark-800/80 backdrop-blur-sm border border-bento-gray-700/50 group-hover:border-bento-blue-500/50 transition-all duration-300">
+                <FiArrowDown className="h-6 w-6 text-bento-gray-400 group-hover:text-bento-blue-400 transition-colors duration-300 animate-bounce" />
+              </div>
             </div>
           </a>
         </div>
