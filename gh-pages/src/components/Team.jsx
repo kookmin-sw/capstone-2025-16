@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiCode, FiDatabase, FiLayers, FiServer, FiCpu, FiCloud, FiActivity } from 'react-icons/fi';
+import { FiCode, FiDatabase, FiLayers, FiServer, FiCpu, FiCloud, FiActivity, FiGithub } from 'react-icons/fi';
 
 const Team = () => {
   // 팀원별 고유 아이콘 설정 (색상은 통일)
@@ -10,21 +10,27 @@ const Team = () => {
         role: "인공지능 개발", 
         color: "from-bento-blue-500 to-bento-blue-700",
         icon: <FiCpu />,
-        description: "AI 모델 설계 및 개발 총괄" 
+        description: "AI 모델 설계 및 개발 총괄",
+        github: "https://github.com/IamWonILuvWon",
+        githubUsername: "IamWonILuvWon"
       },
       { 
         name: "정채원", 
         role: "인공지능 개발", 
         color: "from-bento-blue-500 to-bento-blue-700",
         icon: <FiCpu />,
-        description: "머신러닝 모델 개발 및 데이터 분석" 
+        description: "머신러닝 모델 개발 및 데이터 분석",
+        github: "https://github.com/chloebh9",
+        githubUsername: "chloebh9"
       },
       { 
         name: "배진우", 
         role: "인공지능 개발", 
         color: "from-bento-blue-500 to-bento-blue-700",
         icon: <FiCpu />,
-        description: "AI 모델 최적화 및 인프라 관리" 
+        description: "AI 모델 최적화 및 인프라 관리",
+        github: "https://github.com/bgw4399",
+        githubUsername: "bgw4399"
       },
     ],
     frontend: [
@@ -33,21 +39,27 @@ const Team = () => {
         role: "프론트엔드 개발", 
         color: "from-bento-blue-500 to-bento-blue-700",
         icon: <FiLayers />,
-        description: "사용자 인터페이스 설계 및 프론트엔드 개발" 
+        description: "사용자 인터페이스 설계 및 프론트엔드 개발",
+        github: "https://github.com/ima9ine4",
+        githubUsername: "ima9ine4"
       },
       { 
         name: "권세건", 
         role: "프론트엔드 개발", 
         color: "from-bento-blue-500 to-bento-blue-700",
         icon: <FiLayers />,
-        description: "컴포넌트 설계 및 프론트엔드 개발" 
+        description: "컴포넌트 설계 및 프론트엔드 개발",
+        github: "https://github.com/honeybugs",
+        githubUsername: "honeybugs"
       },
       { 
         name: "이재영", 
         role: "프론트엔드 개발", 
         color: "from-bento-blue-500 to-bento-blue-700",
         icon: <FiLayers />,
-        description: "사용자 경험 및 인터랙션 디자인" 
+        description: "사용자 경험 및 인터랙션 디자인",
+        github: "https://github.com/rktlskan021",
+        githubUsername: "rktlskan021"
       },
     ],
     backend: [
@@ -56,7 +68,9 @@ const Team = () => {
         role: "백엔드 개발", 
         color: "from-bento-blue-500 to-bento-blue-700",
         icon: <FiDatabase />,
-        description: "백엔드 API 개발 및 데이터베이스 설계" 
+        description: "백엔드 API 개발 및 데이터베이스 설계",
+        github: "https://github.com/cg10036",
+        githubUsername: "cg10036"
       },
     ]
   };
@@ -78,12 +92,11 @@ const Team = () => {
         <div className="relative mb-5">
           <div className="absolute inset-0 bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 rounded-full blur-sm opacity-70"></div>
           <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-bento-dark-800 border border-bento-gray-700/50 backdrop-blur-sm z-10">
-            <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-bento-blue-500 to-bento-accent-600 overflow-hidden p-4 text-white">
-              {member.icon}
-              <span className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-4xl font-bold">
-                {member.name.substring(0, 1)}
-              </span>
-            </div>
+            <img 
+              src={`https://github.com/${member.githubUsername}.png`}
+              alt={member.name}
+              className="w-20 h-20 rounded-full object-cover"
+            />
           </div>
         </div>
         
@@ -100,6 +113,16 @@ const Team = () => {
         <p className="text-bento-gray-300 text-sm text-center opacity-0 group-hover:opacity-100 transition-all duration-500 mt-1">
           {member.description}
         </p>
+
+        <a 
+          href={member.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 text-bento-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2"
+        >
+          <FiGithub className="w-5 h-5" />
+          <span className="text-sm">{member.githubUsername}</span>
+        </a>
       </div>
     </div>
   );
