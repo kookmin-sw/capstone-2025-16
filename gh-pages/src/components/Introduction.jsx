@@ -135,7 +135,7 @@ const Introduction = () => {
                 <p className="mb-6">
                   현재 가장 많이 사용하는 Atlas 프로그램보다 <span className="relative inline-block">
                     <span className="absolute inset-0 bg-bento-accent-500/20 blur-sm rounded-md"></span>
-                    <span className="relative text-bento-accent-300 font-semibold">950배 빠른 속도</span>
+                    <span className="relative text-bento-accent-300 font-semibold">최대 3,000배 빠른 속도</span>
                   </span>를 자랑하며, 
                   기본 제공 차트 외에도 사용자가 직접 정의한 통계 지표를 기반으로 원하는 데이터를 
                   자유롭게 그래프로 생성·분석할 수 있습니다.
