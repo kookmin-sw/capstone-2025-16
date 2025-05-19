@@ -3,57 +3,106 @@ import { FiCode, FiDatabase, FiLayers, FiServer, FiCpu, FiCloud, FiActivity } fr
 
 const Team = () => {
   // 팀원별 고유 아이콘 설정 (색상은 통일)
-  const teamMembers = [
-    { 
-      name: "장원준", 
-      role: "인공지능 개발", 
-      color: "from-bento-blue-500 to-bento-blue-700",
-      icon: <FiCpu />,
-      description: "AI 모델 설계 및 개발 총괄" 
-    },
-    { 
-      name: "임혜진", 
-      role: "프론트엔드 개발", 
-      color: "from-bento-blue-500 to-bento-blue-700",
-      icon: <FiLayers />,
-      description: "사용자 인터페이스 설계 및 프론트엔드 개발" 
-    },
-    { 
-      name: "권세건", 
-      role: "프론트엔드 개발", 
-      color: "from-bento-blue-500 to-bento-blue-700",
-      icon: <FiLayers />,
-      description: "컴포넌트 설계 및 프론트엔드 개발" 
-    },
-    { 
-      name: "이재영", 
-      role: "프론트엔드 개발", 
-      color: "from-bento-blue-500 to-bento-blue-700",
-      icon: <FiLayers />,
-      description: "사용자 경험 및 인터랙션 디자인" 
-    },
-    { 
-      name: "정채원", 
-      role: "인공지능 개발", 
-      color: "from-bento-blue-500 to-bento-blue-700",
-      icon: <FiCpu />,
-      description: "머신러닝 모델 개발 및 데이터 분석" 
-    },
-    { 
-      name: "배진우", 
-      role: "인공지능 개발", 
-      color: "from-bento-blue-500 to-bento-blue-700",
-      icon: <FiCpu />,
-      description: "AI 모델 최적화 및 인프라 관리" 
-    },
-    { 
-      name: "이수혁", 
-      role: "백엔드 개발", 
-      color: "from-bento-blue-500 to-bento-blue-700",
-      icon: <FiDatabase />,
-      description: "백엔드 API 개발 및 데이터베이스 설계" 
-    },
-  ];
+  const teamMembers = {
+    ai: [
+      { 
+        name: "장원준", 
+        role: "인공지능 개발", 
+        color: "from-bento-blue-500 to-bento-blue-700",
+        icon: <FiCpu />,
+        description: "AI 모델 설계 및 개발 총괄" 
+      },
+      { 
+        name: "정채원", 
+        role: "인공지능 개발", 
+        color: "from-bento-blue-500 to-bento-blue-700",
+        icon: <FiCpu />,
+        description: "머신러닝 모델 개발 및 데이터 분석" 
+      },
+      { 
+        name: "배진우", 
+        role: "인공지능 개발", 
+        color: "from-bento-blue-500 to-bento-blue-700",
+        icon: <FiCpu />,
+        description: "AI 모델 최적화 및 인프라 관리" 
+      },
+    ],
+    frontend: [
+      { 
+        name: "임혜진", 
+        role: "프론트엔드 개발", 
+        color: "from-bento-blue-500 to-bento-blue-700",
+        icon: <FiLayers />,
+        description: "사용자 인터페이스 설계 및 프론트엔드 개발" 
+      },
+      { 
+        name: "권세건", 
+        role: "프론트엔드 개발", 
+        color: "from-bento-blue-500 to-bento-blue-700",
+        icon: <FiLayers />,
+        description: "컴포넌트 설계 및 프론트엔드 개발" 
+      },
+      { 
+        name: "이재영", 
+        role: "프론트엔드 개발", 
+        color: "from-bento-blue-500 to-bento-blue-700",
+        icon: <FiLayers />,
+        description: "사용자 경험 및 인터랙션 디자인" 
+      },
+    ],
+    backend: [
+      { 
+        name: "이수혁", 
+        role: "백엔드 개발", 
+        color: "from-bento-blue-500 to-bento-blue-700",
+        icon: <FiDatabase />,
+        description: "백엔드 API 개발 및 데이터베이스 설계" 
+      },
+    ]
+  };
+
+  const roleTitles = {
+    ai: "인공지능 개발",
+    frontend: "프론트엔드 개발",
+    backend: "백엔드 개발"
+  };
+
+  const MemberCard = ({ member, index }) => (
+    <div 
+      className="group relative transform transition-all duration-300 animate-fade-in-up"
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 rounded-xl opacity-0 group-hover:opacity-100 blur transition-all duration-500"></div>
+      
+      <div className="relative flex flex-col items-center p-6 h-full bg-bento-dark-800/70 backdrop-blur-sm border border-bento-gray-700/50 rounded-xl overflow-hidden group-hover:shadow-xl transition-all duration-300">
+        <div className="relative mb-5">
+          <div className="absolute inset-0 bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 rounded-full blur-sm opacity-70"></div>
+          <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-bento-dark-800 border border-bento-gray-700/50 backdrop-blur-sm z-10">
+            <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-bento-blue-500 to-bento-accent-600 overflow-hidden p-4 text-white">
+              {member.icon}
+              <span className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-4xl font-bold">
+                {member.name.substring(0, 1)}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <h3 className="text-xl font-bold text-white mb-1 group-hover:bg-gradient-to-r from-white to-bento-blue-200 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+          {member.name}
+        </h3>
+        
+        <p className="bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 bg-clip-text text-transparent font-medium text-sm mb-3">
+          {member.role}
+        </p>
+        
+        <div className="h-px w-0 group-hover:w-32 bg-gradient-to-r from-transparent via-bento-gray-500 to-transparent my-3 transition-all duration-700"></div>
+        
+        <p className="text-bento-gray-300 text-sm text-center opacity-0 group-hover:opacity-100 transition-all duration-500 mt-1">
+          {member.description}
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <section id="team" className="relative py-24 overflow-hidden">
@@ -89,50 +138,20 @@ const Team = () => {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {teamMembers.map((member, index) => (
-            <div 
-              key={index} 
-              className="group relative transform transition-all duration-300 animate-fade-in-up"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {/* 카드 배경 그라디언트 효과 */}
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 rounded-xl opacity-0 group-hover:opacity-100 blur transition-all duration-500"></div>
-              
-              <div className="relative flex flex-col items-center p-6 h-full bg-bento-dark-800/70 backdrop-blur-sm border border-bento-gray-700/50 rounded-xl overflow-hidden group-hover:shadow-xl transition-all duration-300">
-                {/* 아바타 영역 */}
-                <div className="relative mb-5">
-                  <div className="absolute inset-0 bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 rounded-full blur-sm opacity-70"></div>
-                  <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-bento-dark-800 border border-bento-gray-700/50 backdrop-blur-sm z-10">
-                    <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-bento-blue-500 to-bento-accent-600 overflow-hidden p-4 text-white">
-                      {member.icon}
-                      <span className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-4xl font-bold">
-                        {member.name.substring(0, 1)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* 이름 및 역할 */}
-                <h3 className="text-xl font-bold text-white mb-1 group-hover:bg-gradient-to-r from-white to-bento-blue-200 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-                  {member.name}
-                </h3>
-                
-                <p className="bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 bg-clip-text text-transparent font-medium text-sm mb-3">
-                  {member.role}
-                </p>
-                
-                {/* 구분선 */}
-                <div className="h-px w-0 group-hover:w-32 bg-gradient-to-r from-transparent via-bento-gray-500 to-transparent my-3 transition-all duration-700"></div>
-                
-                {/* 설명 */}
-                <p className="text-bento-gray-300 text-sm text-center opacity-0 group-hover:opacity-100 transition-all duration-500 mt-1">
-                  {member.description}
-                </p>
-              </div>
+        {Object.entries(teamMembers).map(([role, members]) => (
+          <div key={role} className="mb-16">
+            <h3 className="text-2xl font-bold text-white mb-8 text-center">
+              <span className="bg-gradient-to-r from-bento-blue-500 to-bento-accent-600 bg-clip-text text-transparent">
+                {roleTitles[role]}
+              </span>
+            </h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {members.map((member, index) => (
+                <MemberCard key={index} member={member} index={index} />
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* 추가적인 장식 요소 - 바닥 글로우 */}
