@@ -31,9 +31,10 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 ---
 
 ## 2. 소개 영상
-_(추가 예정)_
 
-[소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
+### [Bento 시연영상](https://www.youtube.com/watch?v=o_7Hi4Ujmps)
+
+### [소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
 ---
 
 ## 3. 팀 소개
