@@ -73,11 +73,11 @@ const TechStack = () => {
       category: "AI",
       technologies: "Python",
       details: [
-        "LangChain 0.3.21",
-        "OpenAI 1.65.5",
-        "PyMuPDF 1.25.3",
-        "Pandas 2.2.3/NumPy 2.2.2",
-        "Matplotlib 3.10.0/Seaborn 0.13.2"
+        "PyMuPDF 1.25.5",
+        "Shap 0.47.2",
+        "xgboost 3.0.0",
+        "scikit-learn 1.6.1",
+        "Pandas 2.2.3/NumPy 2.2.5"
       ],
       icon: <FiCpu />,
       color: "from-green-400 to-blue-500"
