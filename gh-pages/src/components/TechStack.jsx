@@ -59,17 +59,6 @@ const TechStack = () => {
       color: "from-teal-400 to-bento-blue-600"
     },
     {
-      category: "코호트 쿼리 서비스",
-      technologies: "Express.js",
-      details: [
-        "OHDSI 코호트 쿼리 서비스 TypeScript 포팅",
-        "SqlRender 기능",
-        "Circe-BE 기능"
-      ],
-      icon: <FiCode />,
-      color: "from-bento-accent-500 to-bento-blue-600"
-    },
-    {
       category: "AI",
       technologies: "Python",
       details: [
