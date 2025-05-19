@@ -189,7 +189,7 @@ const Introduction = () => {
                 </span>
               </a>
               <a 
-                href="https://youtube.com/example" 
+                href="https://www.youtube.com/watch?v=o_7Hi4Ujmps"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="group relative inline-flex items-center px-6 py-3 overflow-hidden rounded-lg font-semibold"

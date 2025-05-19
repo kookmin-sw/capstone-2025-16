@@ -6,7 +6,7 @@ const Features = () => {
     {
       icon: <FiUsers />,
       title: "코호트 정의",
-      description: "드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다. 직관적인 UI/UX와 LLM을 활용한 코호트 구성, 쿼리 load/export 기능을 제공합니다."
+      description: "드래그 앤 드롭으로 필터 조건을 손쉽게 설정하고, 그 결과 선별된 환자 수를 실시간으로 확인할 수 있습니다. 직관적인 UI/UX와 LLM을 활용한 코호트 구성 기능을 제공합니다."
     },
     {
       icon: <FiBarChart2 />,
@@ -21,7 +21,7 @@ const Features = () => {
     {
       icon: <FiZap />,
       title: "압도적인 속도",
-      description: "Clickhouse 데이터베이스의 쿼리 빌더 라이브러리 문제 해결 및 쿼리 병목 현상 해소로, 업계 표준인 Atlas보다 950배 빠른 속도를 자랑합니다."
+      description: "Clickhouse 데이터베이스의 쿼리 빌더 라이브러리 문제 해결 및 쿼리 병목 현상 해소로, 업계 표준인 Atlas보다 최대 3,000배 빠른 속도를 자랑합니다."
     }
   ];
 

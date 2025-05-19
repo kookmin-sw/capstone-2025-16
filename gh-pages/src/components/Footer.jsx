@@ -32,7 +32,7 @@ const Footer = () => {
           Bento 프로젝트는 MIT 라이센스에 따라 배포됩니다.
         </p>
         <p className="text-sm text-gray-500">
-          &copy; {currentYear} 2025 Capstone 16조. All Rights Reserved.
+          &copy; {currentYear} Capstone 16조. All Rights Reserved.
         </p>
       </div>
     </footer>
