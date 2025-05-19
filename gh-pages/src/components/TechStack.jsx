@@ -49,11 +49,11 @@ const TechStack = () => {
       category: "Backend API",
       technologies: "NestJS 11.0.1",
       details: [
-        "ClickHouse 클라이언트 1.11.1",
+        "@clickhouse/client 1.11.1",
         "Kysely 0.28.2 (쿼리 빌더)",
-        "Swagger",
+        "@nestjs/swagger 11.1.5",
         "class-validator/transformer",
-        "Jest"
+        "NATS 2.29.3 (메시징)"
       ],
       icon: <FiServer />,
       color: "from-teal-400 to-bento-blue-600"
