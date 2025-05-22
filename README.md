@@ -1,5 +1,9 @@
 # 다학제간캡스톤디자인 16조 - 도시락
 
+
+### [소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
+
+
 **산학 협력 기관**
 
 ![서울대학교병원 로고](./Logo/SNUH로고.svg)
@@ -34,7 +38,6 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 
 ### [Bento 시연영상](https://www.youtube.com/watch?v=o_7Hi4Ujmps)
 
-### [소개 페이지 바로가기](https://kookmin-sw.github.io/capstone-2025-16/)
 ---
 
 ## 3. 팀 소개
