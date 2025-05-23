@@ -36,7 +36,9 @@ Bento는 방대한 데이터 처리 병목 현상을 해소하고, AI 분석 도
 
 ## 2. 소개 영상
 
-### [Bento 시연영상](https://www.youtube.com/watch?v=o_7Hi4Ujmps)
+https://github.com/user-attachments/assets/742aeb8d-c6e0-4767-8108-067f511962a0
+
+
 
 ---
 
@@ -91,3 +93,14 @@ docker-compose up -d --build
 ### [BackEnd](https://github.com/kookmin-sw/capstone-2025-16/blob/master/backend/README.md)
 
 ### [AI](https://github.com/kookmin-sw/capstone-2025-16/blob/master/ai/README.md)
+
+
+## 8. 자료
+
+###  [수행결과보고서](https://drive.google.com/file/d/187poF4tA_rKigQdZVndxTlYsBd9_rq9K/view?usp=sharing)
+
+###  [최종 발표 자료](https://docs.google.com/presentation/d/1zCH6ALBThP_DoLtRTX5CfKezufAJfqrdxlFSga51iZo/edit?usp=sharing)
+
+###  [중간 보고서](https://drive.google.com/file/d/1dwZYTkhRjgD2PxC9_R966Q6TK7ALgQoy/view)
+
+###  [최종 발표 자료](https://docs.google.com/presentation/d/1m8ZfF86a8V60IBtBNyvKFZNfo-JA1_djyo5pibJZh50/edit?slide=id.g34d51548fcf_0_578#slide=id.g34d51548fcf_0_578)
