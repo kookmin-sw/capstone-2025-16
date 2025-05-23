@@ -70,8 +70,9 @@ async def main():
         except nats.errors.TimeoutError:
             pass
         except Exception as e:
-            now_running = False
             print("Error:", e)
+        finally:
+            now_running = False
 
 
 def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
@@ -82,22 +83,26 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
     df_target = df_target.head(3000)
     df_comp_origin = get_comparator_cohort(cohort_id)
     cols_to_drop = get_drop_id(cohort_id)
-    df_comp = prepare_psm_features(df_target, df_comp_origin, k=k, normalize=True)
+    df_comp = prepare_psm_features(
+        df_target, df_comp_origin, k=k, normalize=True)
 
     df_full = pd.concat([df_target, df_comp]).reset_index(drop=True).drop(
-        columns=[c for c in ['age','gender'] if c in df_target.columns]
+        columns=[c for c in ['age', 'gender'] if c in df_target.columns]
     )
 
     for col in ("procedure_ids", "condition_ids"):
         if col not in df_full.columns:
-            df_full[col] = [ [] for _ in range(len(df_full)) ]
+            df_full[col] = [[] for _ in range(len(df_full))]
 
-    X_proc_csr, proc_feats = process_boolean_mlb(df_full, "procedure_ids", normalize=True)
-    X_cond_csr, cond_feats = process_boolean_mlb(df_full, "condition_ids", normalize=True)
+    X_proc_csr, proc_feats = process_boolean_mlb(
+        df_full, "procedure_ids", normalize=True)
+    X_cond_csr, cond_feats = process_boolean_mlb(
+        df_full, "condition_ids", normalize=True)
     y_all = df_full["label"].to_numpy()
+
     def drop_feats(X, feats):
-        keep_idx = [i for i,f in enumerate(feats) if f not in cols_to_drop]
-        return X[:, keep_idx], [f for i,f in enumerate(feats) if i in keep_idx]
+        keep_idx = [i for i, f in enumerate(feats) if f not in cols_to_drop]
+        return X[:, keep_idx], [f for i, f in enumerate(feats) if i in keep_idx]
 
     X_proc_csr, proc_feats = drop_feats(X_proc_csr, proc_feats)
     X_cond_csr, cond_feats = drop_feats(X_cond_csr, cond_feats)
@@ -137,7 +142,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
                 max_iter=3
             )
             proc_importances.append(
-                imp_proc.rename(columns={'mean_pct':'importance'})
+                imp_proc.rename(columns={'mean_pct': 'importance'})
             )
             proc_f1_scores.append(best_proc)
 
@@ -183,7 +188,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
                 max_iter=3
             )
             cond_importances.append(
-                imp_cond.rename(columns={'mean_pct':'importance'})
+                imp_cond.rename(columns={'mean_pct': 'importance'})
             )
             cond_f1_scores.append(best_cond)
 
@@ -211,7 +216,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
                     else:
                         cond_avg_ref_set = curr_cond_avg_set
                         cond_avg_stable_count = 1
-            
+
                 if cond_avg_stable_count >= max_same_top_n:
                     cond_done = True
 
@@ -228,6 +233,7 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
         avg_proc_f1=avg_proc_f1,
         avg_cond_f1=avg_cond_f1
     )
+
 
 if __name__ == "__main__":
     # Start Flask server in a separate thread
