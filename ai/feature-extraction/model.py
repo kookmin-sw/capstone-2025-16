@@ -183,27 +183,24 @@ def iterative_shap_train(
     improvement_threshold=0.01,
     max_iter=3
 ):
-    # 1) 초기 평가
     best_results  = cross_validate_model(model, X_val, y_val)
     best_model    = model
     best_features = feature_names.copy()
     iteration     = 0
     current_ratio = initial_ratio
-
+    current_feature_names_list = list(best_features)
     while iteration < max_iter:
         explainer = shap.TreeExplainer(best_model)
         shap_vals = explainer.shap_values(X_train)
         if isinstance(shap_vals, list):
             shap_vals = shap_vals[1]
 
-        # 2) feature importance 계산
         abs_vals  = np.abs(shap_vals)
         total_abs = abs_vals.sum(axis=1, keepdims=True)
         total_abs[total_abs == 0] = 1
         rel_pct   = abs_vals / total_abs * 100
         mean_pct  = rel_pct.mean(axis=0)
 
-        # 3) DataFrame 없이 바로 사용
         fi = (
             pd.DataFrame({
                 "feature": feature_names,
@@ -212,9 +209,10 @@ def iterative_shap_train(
             .sort_values("mean_pct", ascending=False)
         )
 
-        top_n = int(len(feature_names) * current_ratio)
-        top_feats = fi["feature"].iloc[:top_n].tolist()
-        top_idx   = [feature_names.index(f) for f in top_feats]
+        top_n = int(len(current_feature_names_list) * current_ratio)
+        top_feats = fi["feature"].iloc[:top_n].tolist() # top_feats는 항상 list
+        
+        top_idx   = [current_feature_names_list.index(f) for f in top_feats]
 
         X_tr_sub = X_train[:, top_idx]
         X_va_sub = X_val[:,   top_idx]
