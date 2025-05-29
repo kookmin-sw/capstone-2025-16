@@ -26,36 +26,53 @@ XGB_COMMON_PARAMS = {
 }
 from scipy.sparse import csr_matrix
 
-def process_boolean_mlb(df, column_name: str, normalize: bool = False, max_features: int = 30000):
+def process_boolean_mlb(df, column_name: str, cols_to_drop: list, normalize: bool = False, max_features: int = 30000):
     mlb = MultiLabelBinarizer(sparse_output=True)
-    X = mlb.fit_transform(df[column_name])  
+    X = mlb.fit_transform(df[column_name])
+    all_feature_names_numeric = mlb.classes_ 
+    all_feature_names_as_strings = [str(name) for name in all_feature_names_numeric]
+    cols_to_drop_set = set(cols_to_drop)
+    
+    keep_indices_after_drop = [
+        i for i, name_str in enumerate(all_feature_names_as_strings) 
+        if name_str not in cols_to_drop_set
+    ]
+    
+    X = X[:, keep_indices_after_drop]
+    remaining_feature_names = all_feature_names_numeric[keep_indices_after_drop]
+    
+    n_features = X.shape[1]  # Number of features after dropping specified columns
 
-    n_features = X.shape[1]
     if n_features > max_features:
-        counts = np.asarray(X.sum(axis=0)).flatten()  
+        counts = np.asarray(X.sum(axis=0)).flatten()
         
         idx_one = np.where(counts == 1)[0]
-
         remove_count = n_features - max_features
+
         if len(idx_one) >= remove_count:
-            idx_to_remove = idx_one[:remove_count]
+            idx_to_remove_for_max_features = idx_one[:remove_count]
         else:
-            idx_to_remove = idx_one
-            remain = remove_count - len(idx_one)
+            idx_to_remove_for_max_features = idx_one
+            remaining_to_remove = remove_count - len(idx_one)
+            
             idx_gt_one = np.where(counts > 1)[0]
-            sorted_idx = idx_gt_one[np.argsort(counts[idx_gt_one])]
-            idx_to_remove = np.concatenate([idx_to_remove, sorted_idx[:remain]])
+            sorted_indices_gt_one_original = idx_gt_one[np.argsort(counts[idx_gt_one])]
+            
+            idx_to_remove_for_max_features = np.concatenate(
+                [idx_to_remove_for_max_features, sorted_indices_gt_one_original[:remaining_to_remove]]
+            )
 
-        idx_to_keep = np.setdiff1d(np.arange(n_features), idx_to_remove)
-
-        X = X[:, idx_to_keep]
-        mlb_classes = mlb.classes_[idx_to_keep]
+        idx_to_keep_after_max_features = np.setdiff1d(np.arange(n_features), idx_to_remove_for_max_features)
+        
+        X = X[:, idx_to_keep_after_max_features]
+        final_mlb_classes = remaining_feature_names[idx_to_keep_after_max_features]
     else:
-        mlb_classes = mlb.classes_
+        final_mlb_classes = remaining_feature_names
 
     if normalize:
         X = skl_normalize(X, norm='l2', axis=1, copy=False)
-    return X, mlb_classes
+        
+    return X, final_mlb_classes
 
 def calculate_propensity_scores(df_target, df_comparator, feature_cols):
     df_full = pd.concat([df_target[feature_cols], df_comparator[feature_cols]]).reset_index(drop=True)
