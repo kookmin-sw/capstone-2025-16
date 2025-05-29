@@ -94,18 +94,9 @@ def run(cohort_id="0196815f-1e2d-7db9-b630-a747f8393a2d", k=30):
         if col not in df_full.columns:
             df_full[col] = [[] for _ in range(len(df_full))]
 
-    X_proc_csr, proc_feats = process_boolean_mlb(
-        df_full, "procedure_ids", normalize=True)
-    X_cond_csr, cond_feats = process_boolean_mlb(
-        df_full, "condition_ids", normalize=True)
+    X_proc_csr, proc_feats = process_boolean_mlb(df_full, "procedure_ids", normalize=True, cols_to_drop=cols_to_drop)
+    X_cond_csr, cond_feats = process_boolean_mlb(df_full, "condition_ids", normalize=True, cols_to_drop=cols_to_drop)
     y_all = df_full["label"].to_numpy()
-
-    def drop_feats(X, feats):
-        keep_idx = [i for i, f in enumerate(feats) if f not in cols_to_drop]
-        return X[:, keep_idx], [f for i, f in enumerate(feats) if i in keep_idx]
-
-    X_proc_csr, proc_feats = drop_feats(X_proc_csr, proc_feats)
-    X_cond_csr, cond_feats = drop_feats(X_cond_csr, cond_feats)
 
     epochs = 100
     proc_importances, cond_importances = [], []
